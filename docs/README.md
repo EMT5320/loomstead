@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: context-governance
-last_verified: 2026-05-19
+last_verified: 2026-05-20
 startup_load: index
 source_of_truth: true
 scope: 文档分层索引与渐进式读取路线
@@ -25,11 +25,14 @@ scope: 文档分层索引与渐进式读取路线
 ## 3. 决策源文档
 
 - [`project_vision.md`](./project_vision.md)：最高优先级产品愿景，定义长期方向、差异化主轴和成功标准。
+- [`research_framing_motivational_delegation.md`](./research_framing_motivational_delegation.md)：研究定位与核心反论点，定义 narrative-primary / task-secondary、Motivational Delegation、Process Fidelity Eval、baseline matrix。
 - [`agentic_game_design.md`](./agentic_game_design.md)：多层 Agent 系统设计源（Director / Event Skill / Memory / Model 分工）。
 - [`agent_loop_architecture.md`](./agent_loop_architecture.md)：NPC agent loop 核心圣经（三层工具、动机系统、记忆架构、启发式学习、Arbitration、Eval）。
 - [`world_entity_model.md`](./world_entity_model.md)：世界实体作为 agent 工具空间（FarmPlot / Item / Inventory / Shop / Building / Time / Weather）。
 - [`gameplay_system_architecture.md`](./gameplay_system_architecture.md)：游戏本体架构、地图主循环、Godot / 后端边界。
 - [`production_roadmap.md`](./production_roadmap.md)：阶段路线（Phase 1 收口 / Phase 2-6 重排）。
+- [`process_fidelity_eval_spec.md`](./process_fidelity_eval_spec.md)：研究向 Eval 指标、hard delegation baseline、ablation protocol、dataset 输出规格。
+- [`cross_domain_adapter.md`](./cross_domain_adapter.md)：跨域 adapter 接口，保证小镇 primary、为 task-secondary 验证保留路径。
 - [`open_questions.md`](./open_questions.md)：已确认决策、剩余问题和实现中验证点。
 
 ## 4. 按开发线读取
@@ -57,6 +60,13 @@ scope: 文档分层索引与渐进式读取路线
 - [`model_profile_template_guide.md`](./model_profile_template_guide.md)
 - [`agentic_game_design.md`](./agentic_game_design.md)
 - [`agent_loop_architecture.md`](./agent_loop_architecture.md)（含 Eval Framework）
+- [`process_fidelity_eval_spec.md`](./process_fidelity_eval_spec.md)（研究向 Eval 指标、hard delegation baseline、ablation protocol）
+
+### 研究 framing / 跨域 adapter
+
+- [`research_framing_motivational_delegation.md`](./research_framing_motivational_delegation.md)：研究定位、核心反论点、baseline matrix、最小可行实验集。
+- [`process_fidelity_eval_spec.md`](./process_fidelity_eval_spec.md)：Process Fidelity 指标公式、Hard Delegation baseline、关系记忆 ablation 专项。
+- [`cross_domain_adapter.md`](./cross_domain_adapter.md)：DomainAdapter Protocol、Narrative / Coding domain 对比、directory proposal。
 
 ### 资产管线
 
@@ -108,6 +118,9 @@ scope: 文档分层索引与渐进式读取路线
 | [`project_vision.md`](./project_vision.md) | active | vision | on-demand | true |
 | [`README.md`](./README.md) | active | context-governance | index | true |
 | [`world_entity_model.md`](./world_entity_model.md) | active | backend-director | on-demand | true |
+| [`cross_domain_adapter.md`](./cross_domain_adapter.md) | active | research-runtime | on-demand | true |
+| [`process_fidelity_eval_spec.md`](./process_fidelity_eval_spec.md) | active | eval | on-demand | true |
+| [`research_framing_motivational_delegation.md`](./research_framing_motivational_delegation.md) | active | research | on-demand | true |
 | [`archive/README.md`](./archive/README.md) | archived | context-governance | never | false |
 
 ## 7. 当前决策摘要
@@ -121,6 +134,7 @@ scope: 文档分层索引与渐进式读取路线
 - 启发式系统（Heuristic Library）作为 Phase 2 骨架核心，从失败/痛苦记忆自动提取，影响后续决策权重。
 - Phase 1 收口后直接切换到 MotivationEngine（不并行）。
 - Eval Framework 作为第五条核心能力，scripts/run_agent_eval.py 跑分层 scenario suite。
+- 2026-05-20 研究 framing 增补：narrative-primary / task-secondary；研究主卖点改为 Motivational Delegation + Process Fidelity Eval；Phase 2 加入 Hard Delegation baseline 与关系记忆 ablation 作为硬验收（详见 `research_framing_motivational_delegation.md` / `process_fidelity_eval_spec.md` / `cross_domain_adapter.md`）。
 - LLM Provider：DeepSeek V4 Flash 优先，RuleBasedProvider fallback；密钥只放 `config/models.local.json` 或环境变量。
 - 视觉风格：二次元轻幻想轻异世界田园风（保留为 demo scenario 视觉外壳）。
 - 玩家身份：参与者 + 观察者双模式，观察者模式从 Phase 5 提升为核心模式。

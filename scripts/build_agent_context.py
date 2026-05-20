@@ -33,7 +33,8 @@ REQUIRED_DOCS = [
     "docs/current_status.md",
     "docs/open_questions.md",
     "docs/agentic_game_design.md",
-    "docs/vertical_slice_spec.md",
+    "docs/agent_loop_architecture.md",
+    "docs/research_framing_motivational_delegation.md",
 ]
 
 REQUIRED_METADATA_KEYS = [
@@ -71,7 +72,8 @@ ROUTED_PATHS = [
     "docs/model_profile_template_guide.md",
     "docs/art_direction.md",
     "docs/asset_generation_prompts.md",
-    "docs/initial_asset_generation_plan.md",
+    "docs/process_fidelity_eval_spec.md",
+    "docs/cross_domain_adapter.md",
 ]
 
 

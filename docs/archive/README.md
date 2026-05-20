@@ -1,7 +1,7 @@
 ---
 status: archived
 owner_lane: context-governance
-last_verified: 2026-05-19
+last_verified: 2026-05-20
 startup_load: never
 source_of_truth: false
 scope: 已归档历史文档说明
@@ -26,6 +26,7 @@ scope: 已归档历史文档说明
 | `initial_asset_generation_plan.md` | `asset_batches/` 目录 + `art_direction.md` | 早期资产生成计划，已被批次目录与艺术方向覆盖 |
 | `map_sprite_first_batch_review.md` | —— | 单次资产复盘 |
 | `map_sprite_second_batch_review.md` | —— | 单次资产复盘 |
+| `phase2_research_addendum.md` | `research_framing_motivational_delegation.md` + `process_fidelity_eval_spec.md` + `cross_domain_adapter.md` + `project_vision.md` / `production_roadmap.md` / `agent_loop_architecture.md` 内研究 framing 增补 | 2026-05-20 一次性 patch notes，内容已应用到三份新决策源 + 三份既有事实源文档 |
 
 ## 使用规则
 

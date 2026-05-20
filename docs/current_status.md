@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: project-status
-last_verified: 2026-05-19
+last_verified: 2026-05-20
 startup_load: after-agent-context
 source_of_truth: true
 scope: current implementation facts, verification state, and work constraints
@@ -9,8 +9,8 @@ scope: current implementation facts, verification state, and work constraints
 
 # 当前项目状态与开发前约束
 
-> 状态更新时间：2026-05-19（项目重定位 + 文档治理）
-> 本文只记录当前仓库中已核对、命令已检或明确标注人工未验收的事实。长期方向见 `docs/project_vision.md`，NPC agent loop 设计见 `docs/agent_loop_architecture.md`，世界实体 schema 见 `docs/world_entity_model.md`，多层 Agent 系统设计见 `docs/agentic_game_design.md`。
+> 状态更新时间：2026-05-20（研究 framing 增补：narrative-primary / Motivational Delegation / Process Fidelity Eval）
+> 本文只记录当前仓库中已核对、命令已检或明确标注人工未验收的事实。长期方向见 `docs/project_vision.md`，研究 framing 见 `docs/research_framing_motivational_delegation.md`，NPC agent loop 设计见 `docs/agent_loop_architecture.md`，世界实体 schema 见 `docs/world_entity_model.md`，Process Fidelity Eval 规格见 `docs/process_fidelity_eval_spec.md`，跨域 adapter 接口见 `docs/cross_domain_adapter.md`，多层 Agent 系统设计见 `docs/agentic_game_design.md`。
 
 ## 1. 当前阶段判断
 
@@ -135,25 +135,30 @@ scope: current implementation facts, verification state, and work constraints
 2. **核心圣经文档已落地**：`docs/agent_loop_architecture.md`（NPC agent loop）+ `docs/world_entity_model.md`（世界实体 schema）。
 3. **方向文档已重写**：`project_vision.md` 重定位 + `production_roadmap.md` Phase 2 设计 + `gameplay_system_architecture.md` §2.4 软日程 → 动机系统。
 4. **历史文档已归档**：9 份过时文档移到 `docs/archive/`。
+5. **2026-05-20 研究 framing 增补已落地**：
+   - 新增 `docs/research_framing_motivational_delegation.md`、`docs/process_fidelity_eval_spec.md`、`docs/cross_domain_adapter.md` 三份决策源。
+   - `project_vision.md` / `production_roadmap.md` / `agent_loop_architecture.md` / `docs/README.md` / `AGENTS.md` / `docs/agent_context.md` 已同步研究 framing 增补。
+   - Phase 2 骨架清单新增 ResearchFraming / DomainAdapter / ProcessFidelityEval 三项，Phase 2 收口标准新增 Hard Delegation baseline 与关系记忆 ablation 硬验收。
+   - `scripts/build_agent_context.py` 与 `.claude/rules/backend.md` 历史死链（指向 `vertical_slice_spec.md` / `initial_asset_generation_plan.md`）已修复，`npm.cmd run context:check` 通过。
 
 ### Phase 2 启动后的实施缺口（pending）
 
-5. **三层工具分层 + ToolDefinition 注册表**：完整接口 + 8-12 个工具实现，pending。
-6. **MotivationEngine（替换 LifeActionExecutor）**：完整决策周期 + 三层路由 + 决策预算 + Fallback，pending。
-7. **CapabilityRegistry**：4 层动态过滤齐全，pending。
-8. **双轨主观记忆**：SubjectiveMemoryStore + RelationshipEdgeStore + ResultObserver + BiasFilter（模板版），pending。
-9. **HeuristicLibrary**：完整 schema + 规则提取 + 设计师 seed 注入 + Debug 可视化，pending。
-10. **ArbitrationLayer**：完整裁决 + contributing_sources Trace，pending。
-11. **WorldEntities**：FarmPlot / Item / Inventory / Shop / Building / Time / Weather schema 实现，pending。
-12. **EvalFramework**：scripts/run_agent_eval.py + L1 scenario suite (5-8 个) + ablation 实验入口，pending。
-13. **Godot 观察者模式最小骨架**：Tab 切换 + NPC 信息面板，pending。
-14. **NPC 深度卡 schema 增补**：motivationProfile / capabilityPreferences / heuristicSeeds 三个字段（schema only，数据 Phase 3 填），pending。
+6. **三层工具分层 + ToolDefinition 注册表**：完整接口 + 8-12 个工具实现，pending。
+7. **MotivationEngine（替换 LifeActionExecutor）**：完整决策周期 + 三层路由 + 决策预算 + Fallback，pending。
+8. **CapabilityRegistry**：4 层动态过滤齐全，pending。
+9. **双轨主观记忆**：SubjectiveMemoryStore + RelationshipEdgeStore + ResultObserver + BiasFilter（模板版），pending。
+10. **HeuristicLibrary**：完整 schema + 规则提取 + 设计师 seed 注入 + Debug 可视化，pending。
+11. **ArbitrationLayer**：完整裁决 + contributing_sources Trace，pending。
+12. **WorldEntities**：FarmPlot / Item / Inventory / Shop / Building / Time / Weather schema 实现，pending。
+13. **EvalFramework**：scripts/run_agent_eval.py + L1 scenario suite (5-8 个) + ablation 实验入口，pending。
+14. **Godot 观察者模式最小骨架**：Tab 切换 + NPC 信息面板，pending。
+15. **NPC 深度卡 schema 增补**：motivationProfile / capabilityPreferences / heuristicSeeds 三个字段（schema only，数据 Phase 3 填），pending。
 
 ### 持续维持
 
-15. **真实 LLM 证据刷新**：当前本机 `config/models.json` 已跑通真实 smoke；切换模型/key/profile 后需要重新验证。
-16. **资产补齐**：表情差分、UI 组件和行动反馈图标已进入三批 `prompt_ready` backlog 和导出清单，仍待生成、筛选、登记源图和接入；地图小人晋级状态需主人确认。
-17. **Debug Console 扩展**：后端已有 Debug / Memory 查询 API，Web 侧仍需展示 Director 队列、Skill 激活、fallback 和成本字段。Phase 2 后还要新增 Heuristic Library / Arbitration trace / 主观记忆对比视图。
+16. **真实 LLM 证据刷新**：当前本机 `config/models.json` 已跑通真实 smoke；切换模型/key/profile 后需要重新验证。
+17. **资产补齐**：表情差分、UI 组件和行动反馈图标已进入三批 `prompt_ready` backlog 和导出清单，仍待生成、筛选、登记源图和接入；地图小人晋级状态需主人确认。
+18. **Debug Console 扩展**：后端已有 Debug / Memory 查询 API，Web 侧仍需展示 Director 队列、Skill 激活、fallback 和成本字段。Phase 2 后还要新增 Heuristic Library / Arbitration trace / 主观记忆对比视图。
 
 ## 5. 开发前硬性约束
 
