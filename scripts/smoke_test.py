@@ -83,6 +83,7 @@ REQUIRED_DEBUG_SNAPSHOT_FIELDS = {
     "memory",
     "playerProfile",
     "providerFallbacks",
+    "phase2",
     "influenceChain",
 }
 
@@ -466,6 +467,18 @@ def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
         raise RuntimeError(f"{label} 缺少字段：{missing}")
     if not payload.get("skills", {}).get("items"):
         raise RuntimeError(f"{label}.skills 应返回 Skill 快照")
+    phase2 = payload.get("phase2")
+    if not isinstance(phase2, dict):
+        raise RuntimeError(f"{label}.phase2 应返回 Phase 2 调试快照")
+    tools = phase2.get("tools")
+    if not isinstance(tools, dict) or int(tools.get("count") or 0) < 5:
+        raise RuntimeError(f"{label}.phase2.tools 应返回 ToolDefinition 注册表")
+    motivation = phase2.get("motivation")
+    if not isinstance(motivation, dict) or motivation.get("version") != "motivation_engine.v0" or not motivation.get("items"):
+        raise RuntimeError(f"{label}.phase2.motivation 应返回 MotivationEngine 快照")
+    first_decision = motivation["items"][0].get("decision", {})
+    if not first_decision.get("contributingSources"):
+        raise RuntimeError(f"{label}.phase2.motivation.decision 应包含 contributingSources")
     assert_compact_debug_turns(payload["debugTurns"], f"{label}.debugTurns")
 
 

@@ -47,6 +47,10 @@ smoke = subprocess.run([sys.executable, "scripts/smoke_test.py"], cwd=ROOT)
 if smoke.returncode != 0:
     raise SystemExit(smoke.returncode)
 
+agent_eval = subprocess.run([sys.executable, "scripts/run_agent_eval.py"], cwd=ROOT)
+if agent_eval.returncode != 0:
+    raise SystemExit(agent_eval.returncode)
+
 asset_manifest_check = subprocess.run([sys.executable, "scripts/check_asset_manifest.py"], cwd=ROOT)
 if asset_manifest_check.returncode != 0:
     raise SystemExit(asset_manifest_check.returncode)

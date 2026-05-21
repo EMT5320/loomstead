@@ -31,6 +31,8 @@ from app.providers.response_parser import parse_feature_response
 from app.providers.rule_based_provider import RuleBasedProvider
 from app.runtime.action_executor import execute_action, maybe_population_event
 from app.runtime.action_parser import parse_provider_output
+from app.runtime.capability_registry import CapabilityRegistry
+from app.runtime.motivation_engine import MotivationEngine
 from app.simulation import LifeActionExecutor, build_life_action_plan_snapshot
 from app.skills import (
     STARLIGHT_FESTIVAL_SHORTAGE_SKILL_ID,
@@ -83,6 +85,8 @@ class AgentRuntime:
         self.model_config = ModelConfigStore(model_config_path)
         self.rule_provider = RuleBasedProvider()
         self.cloud_provider = CloudApiProvider()
+        self.capability_registry = CapabilityRegistry()
+        self.motivation_engine = MotivationEngine(self.capability_registry)
         self.life_action_executor = LifeActionExecutor()
         self.provider_mode_override = provider_mode
         self.provider_mode = self._resolve_runtime_provider_mode()
@@ -146,7 +150,17 @@ class AgentRuntime:
             "memory": self.get_memory_debug(filters),
             "playerProfile": self._player_profile_payload(),
             "providerFallbacks": self._provider_fallback_debug(filters),
+            "phase2": self.get_phase2_debug_snapshot(filters),
             "influenceChain": self.get_influence_chain_debug(filters),
+        }
+
+    def get_phase2_debug_snapshot(self, filters: dict[str, Any] | None = None) -> dict[str, Any]:
+        filters = filters or {}
+        npc_id = self._str_filter(filters, "agentId") or self._str_filter(filters, "agent_id")
+        npc_ids = [npc_id] if npc_id else list(DAY1_NPC_IDS)
+        return {
+            "tools": self.capability_registry.tool_registry.to_debug_payload(),
+            "motivation": self.motivation_engine.debug_snapshot(self.world, npc_ids=npc_ids, limit=6),
         }
 
     def get_director_debug_snapshot(self, filters: dict[str, Any] | None = None) -> dict[str, Any]:
