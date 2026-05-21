@@ -3,7 +3,7 @@
     "version":  "0.1.0",
     "private":  true,
     "type":  "module",
-    "description":  "Backend-first AI Agent town simulation lab with an observer console.",
+    "description":  "Narrative-primary explainable multi-agent runtime research environment.",
     "scripts":  {
                     "start":  "python scripts/start_server.py",
                     "check":  "python scripts/check.py",

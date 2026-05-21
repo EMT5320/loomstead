@@ -1,382 +1,165 @@
-# AI Agent 小镇实验室
+# Agent Valley
 
-> 用游戏小镇作为可视化沙盒，观察多个 AI Agent 的决策、协作、冲突、记忆和工具调用过程。
+> Narrative-primary 的可解释多 Agent 叙事运行时与研究环境，用于研究 Motivational Delegation 与 Process Fidelity Eval 在持久多 Agent 叙事世界中的效果。
 
-> Agent 助手启动入口请先读 [`AGENTS.md`](AGENTS.md) 与 [`docs/agent_context.md`](docs/agent_context.md)。本文件保留项目演进背景和早期观察台口径，当前事实以 [`docs/current_status.md`](docs/current_status.md) 为准。
+`Agent Valley` 使用一个可玩的 Godot 田园生活切片作为 primary validation domain。项目重点不是做大规模“小镇模拟”或完整商业游戏，而是验证：当用户目标带有过程约束时，Director 如何通过动机偏置、事件 Skill、机会/资源调度、信息暴露和约束注入，间接推动拥有长期记忆与关系的自主 NPC 产生可信行动链，并用可复现指标评估过程是否可信。
 
-## 2026-05-14 方向更新：Agent Valley
+Agent 助手启动入口请先读 [AGENTS.md](AGENTS.md) 与 [docs/agent_context.md](docs/agent_context.md)。当前事实以 [docs/current_status.md](docs/current_status.md) 为准，长期方向以 [docs/project_vision.md](docs/project_vision.md) 为准，研究 framing 以 [docs/research_framing_motivational_delegation.md](docs/research_framing_motivational_delegation.md) 为准。
 
-项目当前已从“多 Agent 观察台”升级为 `Agent Valley`：一个由 LLM NPC 驱动的生活模拟 RPG 垂直切片。
+## 当前定位
 
-最新推进口径以 [`docs/agent_context.md`](docs/agent_context.md)、[`docs/current_status.md`](docs/current_status.md)、[`docs/goal_board.md`](docs/goal_board.md)、[`docs/project_vision.md`](docs/project_vision.md) 和 [`docs/open_questions.md`](docs/open_questions.md) 为准：
-
-- 主游戏客户端确定使用 Godot。
-- 首版聚焦 6 个 NPC、3 个地点、1 个完整游戏日和 1 个小镇事件。
-- 玩家身份是新搬来的农场主，Debug / 研究控制台保留研究院视角。
-- 首版直接接入 LLM 测试，DeepSeek V4 Flash 作为低成本优先模型，规则 Provider 作为 fallback。
-- 视觉风格采用二次元轻幻想轻异世界田园风，像素风暂作地图小人占位或后续专项方向。
-- 当前项目与论文无关，运行数据主要服务于调试、回放和作品集讲解。
-
-## 早期项目定位（观察台阶段）
-
-这是一个偏 AI Agent 实验的平台。小镇地图和 NPC 是外层表现，核心目标是让主人能清楚观察 Agent 的运行链路：输入状态、生成计划、自由交流、选择行动、影响世界、写入记忆。
-
-玩家默认是旁观者，主要观察小镇如何自行运转；同时保留开发者通道，用于必要时注入事件、调整状态、触发实验场景。
-
-## 核心观察链路
+短句版本：
 
 ```text
-世界状态 -> Agent 上下文 -> 云端模型/规则决策 -> 对话或行动 -> 世界状态变化 -> 记忆更新 -> Debug 日志/回放
+Motivational Delegation for process-constrained goals in persistent multi-agent narratives.
 ```
 
-## 早期观察台设计决策（历史口径）
+项目差异化主轴：
 
-- 首版 Agent 数量定为 10 个，形成更接近真实小镇的社交网络。
-- 小镇人口支持动态变化：孩子出生、老人去世、新居民迁入、居民迁出。
-- 动态人口事件会成为关键观察点，用于观察其他 NPC 的情绪、关系和行为反应。
-- 云端 API 优先，本地模型作为备选 Provider。
-- 云端 API 初步优先考虑 DeepSeek，原因是成本优势、长上下文潜力，以及角色扮演类指令适配度高。
-- Agent 输出不强制全部走工具调用，NPC 之间允许自然对话交流。
-- 玩家是旁观者；开发者通道保留世界干预能力。
-- Debug 面板展示完整上下文、完整模型输入、完整模型输出、解析结果和执行结果。
+- **少而深**：首版聚焦 4 个核心 NPC + 2 个 stub NPC，优先做深主观记忆、关系演化、启发式经验和可解释决策链路。
+- **可解释**：Director、Event Skill、NPC 决策、工具调用、世界变更、主观记忆和关系变化都写入可追踪 trace。
+- **可评估**：Process Fidelity Eval 不只看最终状态，还检查是否绕过过程、是否强制 NPC 行动、关系变化是否有记忆证据、Director 是否过度干预。
+- **玩家可见**：研究能力必须落到屏幕上的 NPC 行动、事件反应、关系变化、记忆差异和 Debug / 观察者视图，而不是只停留在后端抽象。
 
-## MVP 范围
+## 为什么仍然是“小镇”
 
-- 10 个初始 NPC Agent。
-- 5 个地点：住宅区、广场、商店、诊所、酒馆。
-- 每个 Agent 有角色卡、家庭关系、今日目标、短期记忆、关系数据、可用行动。
-- 时间按回合推进，每回合部分 Agent 根据状态做决策，避免 10 个 Agent 同时请求模型导致成本过高。
-- 后端优先实现完整 Agent Runtime：世界状态、调度器、Provider、记忆、事件、日志和实验记录。
-- 支持 `RuleBasedProvider`，保证无模型时也能跑通后端闭环。
-- 优先实现 `CloudApiProvider`，本地模型 Provider 保留接口。
-- 前端定位为观察台和开发者控制台，展示小镇状态、Agent 状态、对话记录、行动记录、事件日志、人口变化和每日总结。
-- Debug 面板完整展示 Provider 输入/输出，便于观察 Agent 行为。
+小镇是项目的第一研究环境，不是通用架构的开场 demo。Process Fidelity 需要人类能直觉判断“这个过程像不像真的发生过”：
 
-## 人口动态设计
+- “两名 NPC 变亲近”不能只看关系数值变高。
+- “布兰娜原谅玩家”不能只看 `forgiven=true`。
+- “星灯祭顺利举办”不能只看 `festival_success=true`。
 
-### 1. 人口事件类型
+这些目标的价值在于中间过程：动机变化、共同经历、误会修复、旁观者反应、长期记忆沉淀和后续行为引用。Godot 生活模拟切片让这些过程能被玩家看到，也让 Debug / Eval 能对照真实世界事件链。
 
-- 出生：家庭新增孩子，亲属关系自动更新。
-- 死亡：老人或高风险角色离世，触发哀悼、继承、关系重排。
-- 迁入：新居民带着背景、目标和关系空白进入小镇。
-- 迁出：居民因冲突、经济压力或目标变化离开小镇。
-- 成长：孩子逐渐长大，性格和目标发生变化。
+## 当前阶段
 
-### 2. 观察重点
+- **Phase 1：活着的世界** 已落地，等待真实 Godot 窗口复验。
+  - 后端提供权威世界状态、玩家动作 API、Director v0、单个星灯祭 Event Skill、Debug / Memory 查询入口。
+  - Godot 默认主场景已接入地图移动、NPC 小人、`/api/world/tick`、世界动态面板、远处事件提示、`E` 键对话和 VN 回执。
+  - 仍需人工复验 NPC 分散行动、HUD 暂停/倍速、`WorldPulsePanel`、远处事件 beacon、`E` talk 和错误提示。
+- **Phase 2：骨架建立期** 尚未启动。
+  - 目标是一次性铺好 ToolDefinition 注册表、MotivationEngine、CapabilityRegistry、双轨主观记忆、HeuristicLibrary、ArbitrationLayer、WorldEntities、EvalFramework、观察者模式和研究 baseline。
+  - Phase 2 启动后旧 `LifeActionExecutor` 退役，不与新 MotivationEngine 并行运行。
 
-- 亲友是否主动安慰相关 NPC。
-- 敌对关系是否因重大事件缓和或恶化。
-- 孩子出生是否改变家庭成员的工作和社交选择。
-- 老人去世是否影响社区记忆、财产和长期关系。
-- 新居民是否能被小镇接纳。
-
-## Agent 数据草案
-
-- 基础信息：姓名、年龄、生命阶段、职业、当前位置、性格。
-- 家庭信息：父母、配偶、子女、同居者。
-- 目标系统：今日目标、长期目标、当前意图。
-- 状态数值：精力、心情、金钱、健康、社交需求、压力。
-- 记忆系统：最近事件、重要人物、承诺、冲突、人生大事。
-- 关系系统：好感、信任、矛盾值、亲密度、亲属关系。
-- 决策记录：输入上下文、模型输出、解析动作、执行结果。
-
-## 行动与对话系统草案
-
-NPC 输出可以是自然对话、行动意图或二者组合。系统会尝试把输出解析为可执行事件，同时保留原始文本。
-
-### 行动类型
-
-- `moveTo(location)`：移动到目标地点。
-- `talkTo(npc, topic, message)`：和指定 NPC 交谈，保留自然语言内容。
-- `work(job)`：执行职业相关工作并影响金钱/精力。
-- `buy(item)`：在商店购买物品。
-- `rest()`：恢复精力并推进时间。
-- `careFor(npc)`：照顾孩子、老人或生病居民。
-- `attendEvent(event)`：参加葬礼、庆祝会、集会等小镇事件。
-- `remember(event)`：写入短期或重要记忆。
-- `planDay()`：生成当天行动计划。
-
-## Provider 抽象
+## 核心系统
 
 ```text
-AgentProvider
-├── CloudApiProvider        # 优先路线，初步考虑 DeepSeek / OpenAI-compatible endpoint
-├── RuleBasedProvider       # 规则决策，用于无模型开发、离线测试和成本控制
-└── LocalModelProvider      # 备选路线，例如 Ollama / llama.cpp / OpenAI-compatible local server
+Godot Client
+  ├─ 玩家移动 / VN 演出 / NPC 与事件可视化
+  └─ 观察者模式与 Debug UI（Phase 2+）
+
+Python Agent Server
+  ├─ World / Simulation：权威世界状态、合法工具执行、事件流
+  ├─ Director：低频叙事节奏、间接干预、Event Skill 激活
+  ├─ Event Skill：局部压力源、约束、后果类型、fallback 文本与资产提示
+  ├─ NPC Agent Loop：动机、能力过滤、主观记忆、启发式学习、仲裁
+  ├─ Provider：RuleBasedProvider + OpenAI-compatible CloudApiProvider
+  └─ Eval / Debug：Trace、ablation、Process Fidelity 指标、公开 dataset 输出
 ```
 
-### Provider 输入草案
-
-- 当前 Agent 角色卡。
-- 当前世界状态。
-- 当前地点和附近 NPC。
-- Agent 近期记忆和关键长期记忆。
-- 家庭与关系摘要。
-- 最近发生的人口事件或重大事件。
-- 可用行动 schema。
-- 上一轮行动结果。
-
-### Provider 输出草案
-
-Agent 输出不强制 JSON。系统支持以下几类结果：
-
-1. 自然语言对话：直接作为 NPC 发言进入事件日志。
-2. 结构化 JSON：直接执行对应行动。
-3. 混合输出：保留原始文本，并尝试抽取行动意图。
-
-```json
-{
-  "speech": "Mira，我听说你家添了孩子，今晚需要我帮忙看店吗？",
-  "action": "talkTo",
-  "args": { "npc": "Mira", "topic": "new_child", "message": "今晚需要我帮忙看店吗？" },
-  "memory_to_save": "Mira 家新添了孩子，我主动提出帮忙。"
-}
-```
-
-## 开发者通道
-
-开发者通道用于实验，不作为普通玩家玩法核心。
-
-- 注入事件：出生、死亡、失业、冲突、节日、灾害。
-- 修改状态：调整 NPC 心情、健康、金钱、关系。
-- 指定观察目标：重点追踪某个 NPC、家庭或事件链。
-- 暂停/单步推进：方便查看每一轮 Agent 输入输出。
-- 导出实验记录：保存完整 prompt、输出、事件和状态快照。
-
-## Debug 面板构思
-
-- 完整 Prompt / messages。
-- 完整模型原始输出。
-- 解析后的行动或对话。
-- 工具/行动执行结果。
-- 本轮状态差异。
-- 写入的记忆。
-- Token / 成本 / 延迟统计。
-- 错误与重试记录。
-
-## 首版技术路线候选
-
-项目从第一版开始按完整后端 Agent 系统设计，前端负责观察、调试和必要干预。
-
-### 1. 后端优先
-
-- 建立 Agent Runtime，负责时间推进、Agent 调度、Provider 调用、行动解析、世界状态更新和日志落盘。
-- 建立 World State 层，统一管理 NPC、地点、家庭、关系、人口事件、记忆和每日摘要。
-- 建立 Event Store，保存完整事件流，便于回放、调试和后续实验分析。
-- 建立 Provider 层，优先适配云端 OpenAI-compatible API，DeepSeek 作为优先候选；本地模型作为后续备选。
-- 建立 Developer API，支持暂停、单步推进、注入事件、修改状态、导出实验记录。
-
-### 2. 前端观察台
-
-- 前端作为 Agent 运行观察台，不承担核心模拟逻辑。
-- 展示小镇地图、NPC 状态、对话、行动、事件流、人口变化、Debug 信息和成本统计。
-- 支持开发者通道操作：暂停、继续、单步、注入事件、选择观察对象。
-
-### 3. 推荐技术形态
-
-- 后端：Python 优先，当前采用标准库 HTTP 适配器承载 REST / SSE，核心 Runtime 与 API 层解耦，后续可平滑切到 FastAPI。
-- 存储：开发期可先用 SQLite，事件流和状态快照都能落盘。
-- 前端：轻量 Web 控制台，后续再考虑更强的小镇可视化。
-- 通信：REST API 起步，实时日志可用 Server-Sent Events 或 WebSocket。
-
-### 4. 接入策略
-
-- 先实现 `RuleBasedProvider`，验证后端 Agent 循环和事件流。
-- 随后实现 `CloudApiProvider`，优先适配 OpenAI-compatible API 形态。
-- DeepSeek 具体模型名、上下文长度、角色扮演指令和 API 参数在接入前按官方文档核查。
-- 本地模型 Provider 保留接口，等云端链路稳定后再接 Ollama / llama.cpp / 本地 OpenAI-compatible server。
-
-## 建议后端模块划分
+核心研究链路：
 
 ```text
-backend/
-├── runtime/          # Agent 调度、时间推进、回合循环
-├── world/            # NPC、地点、家庭、关系、人口事件、世界状态
-├── providers/        # RuleBasedProvider、CloudApiProvider、LocalModelProvider
-├── memory/           # 短期记忆、长期记忆、重要事件沉淀
-├── events/           # 事件流、状态快照、回放数据
-├── developer/        # 开发者通道 API：注入事件、单步、状态修改
-└── api/              # HTTP/SSE/WebSocket 接口
+Process-constrained Goal
+  -> Director Interventions
+  -> NPC Motivation / Opportunity / Information / Constraint Changes
+  -> Autonomous Tool Actions
+  -> Objective Event Log
+  -> Subjective Memory Views + Relationship Edges
+  -> Process Fidelity Eval + Debug Trace
 ```
 
-## 当前待细化问题
+## 已有能力概览
 
-1. 10 个初始 NPC 的职业、家庭结构和年龄分布。
-2. 人口动态在 MVP 里是真实自动触发，还是先通过开发者通道注入。
-3. 云端 API 密钥和模型配置放在前端本地配置，还是起一个轻量后端代理。
-4. Agent 每回合调用模型的频率和成本控制策略。
-5. 首版 UI 是偏地图可视化，还是偏调试仪表盘。
+- Python Agent Server：`GET /api/world/state`、`POST /api/player/action`、`POST /api/world/tick`、Debug / Memory / model config API。
+- Director v0：`WorldDigest`、`TensionDetector`、`SkillRouter`、`DirectorBeat`、`DirectorValidator`、`DirectorQueueManager`。
+- Event Skill：星灯祭供应短缺事件，包含查看、选择、关系变化、记忆写入、事件反应、夜间反思和统一 outcome record。
+- Content Codex：6 份首发 NPC 深度卡，包含语气、秘密、关系阶段、礼物反应、独白种子、谣言钩子和生活行动素材。
+- LLM / Debug：RuleBasedProvider、OpenAI-compatible CloudApiProvider、profile 路由、热重载、fallback、token/成本/延迟记录。
+- Godot 客户端：Godot 4.x 项目、默认 `world_main.tscn`、地图移动、NPC / 事件 marker、VN 面板、世界动态面板。
+- 资产管线：静态背景、事件 CG、角色立绘、地图小人、交互 marker、manifest 校验与 prompt_ready backlog。
 
-## 下一步
+更细的当前事实请读 [docs/current_status.md](docs/current_status.md)。
 
-先确定 10 个初始 NPC、世界规则和后端技术栈，再搭建 Agent Runtime 骨架。
+## 本地运行
 
+建议在 Windows PowerShell 中使用 `npm.cmd`，避免 shell 解析差异。
 
-
-## 第一版已落地模块
-
-### 后端 Agent 系统
-
-- `backend/app/main.py`：Python HTTP 服务，提供静态前端、REST API 和 SSE 事件流。
-- `backend/app/runtime/`：Agent 调度、回合推进、行动解析、行动执行和人口事件触发。
-- `backend/app/world/`：5 个地点、10 个初始 NPC、家庭关系、关系图谱和公开状态视图。
-- `backend/app/providers/`：`RuleBasedProvider` 可离线跑通闭环，`CloudApiProvider` 预留 OpenAI-compatible 云端接入。
-- `backend/app/memory/`：短期记忆写入和摘要。
-- `backend/app/events/`：事件流、快照和 SSE 推送。
-- `backend/app/developer/`：暂停、继续、聚焦、注入事件、调整 Agent 状态。
-
-### 前端观察台
-
-- `frontend/index.html`：小镇观察台页面。
-- `frontend/style.css`：暗色玻璃质感界面、小镇地图、卡片面板和响应式布局。
-- `frontend/app.js`：调用后端状态、单步推进、自动运行、开发者事件注入、Debug 展示。
-
-### 本地运行
+### 启动后端
 
 ```powershell
-cd D:\Work\fun-projects-lab\projects\ai-agent-town-lab
-npm start
+npm.cmd run start
 ```
 
-打开：`http://localhost:8787`
+后端默认监听本地开发端口，迁移期 Web Debug / 观察台可通过浏览器打开本地服务页面。
 
-### 验证
+### 打开 Godot 主客户端
 
 ```powershell
-npm run check
+npm.cmd run client:run
 ```
 
-验证内容包括：后端入口语法检查、前端脚本语法检查、核心 Runtime smoke test。
-
-### 云端 Provider 配置
-
-第一版默认使用 `RuleBasedProvider`，无需 API Key。若要尝试 OpenAI-compatible 云端 Provider，可设置：
+当前默认进入 `clients/godot/scenes/world_main.tscn`。旧 P0 UI 仍可用：
 
 ```powershell
-$env:AGENT_TOWN_PROVIDER = 'cloud'
-$env:DEEPSEEK_API_KEY = '<your-key>'
-$env:AGENT_TOWN_BASE_URL = 'https://api.deepseek.com'
-$env:AGENT_TOWN_MODEL = 'deepseek-chat'
-npm start
+npm.cmd run client:run:legacy
 ```
 
-具体模型名和参数在正式接入前需要按官方文档再次核查。
-
-## 2026-04-26 架构调整：后端转向 Python
-
-为了降低后续 Agent 系统维护成本，第一版后端已经从纯 JS Runtime 调整为 Python 分层架构。前端仍然复用 `frontend/` 观察台，API 形状保持兼容。
-
-### 当前目录结构
-
-```text
-backend/
-└── app/
-    ├── main.py                  # Python HTTP/SSE 入口
-    ├── runtime/                 # Agent Runtime、调度、行动解析和执行
-    ├── world/                   # 世界状态、地点、NPC、关系图谱
-    ├── providers/               # RuleBasedProvider / CloudApiProvider
-    ├── memory/                  # 记忆写入和摘要
-    ├── events/                  # EventStore 与 SSE 事件队列
-    └── developer/               # 开发者通道命令
-legacy_backend_js/               # 旧 JS 后端归档，只作参考
-frontend/                        # 观察台前端
-scripts/                         # 启动、检查、smoke test
-```
-
-### 为什么当前先用 Python 标准库 HTTP
-
-- 核心 Agent Runtime 已经是 Python，后续接 SQLite、向量记忆、实验分析、异步任务会更自然。
-- HTTP 层保持轻量，当前无需安装依赖即可运行。
-- Runtime、Provider、World、EventStore 已和 HTTP 适配器解耦，后续迁到 FastAPI 时主要替换 `backend/app/main.py` 的 API 外壳。
-
-### 启动方式
+### 常用检查
 
 ```powershell
-cd D:\Work\fun-projects-lab\projects\ai-agent-town-lab
-npm start
+npm.cmd run context:check
+npm.cmd run check
+npm.cmd run smoke
+npm.cmd run asset:check
+npm.cmd run client:env
+npm.cmd run client:run:check
+git diff --check
 ```
 
-等价于：
+按任务线选择最小必要命令；修改上下文治理或文档入口时至少运行 `npm.cmd run context:check` 和 `git diff --check`。
 
-```powershell
-python scripts/start_server.py
-```
+## 模型配置
 
-### 检查方式
+提交态默认使用规则 fallback，避免无密钥环境阻塞开发。
 
-```powershell
-npm run check
-```
-
-检查内容：Python 后端编译、前端 JS 语法检查、Python Runtime smoke test。
-
-## 模型配置文件
-
-本机实际模型配置位于：
-
-```text
-config/models.json
-```
-
-`config/models.json` 已加入 gitignore，首次使用时可从 `config/models.example.json` 复制一份。后续可以在 `models.json` 里配置不同 NPC 和不同功能使用的模型。
-
-### 关键字段
-
-```json
-{
-  "activeProvider": "rule",
-  "defaultProfile": "default_deepseek",
-  "profiles": {
-    "default_deepseek": {
-      "provider": "cloud",
-      "baseUrl": "https://api.deepseek.com",
-      "apiKeyEnv": "DEEPSEEK_API_KEY",
-      "model": "deepseek-chat",
-      "temperature": 0.8,
-      "maxTokens": 900,
-      "timeoutSeconds": 60
-    }
-  },
-  "npcProfiles": {
-    "kai": "creative_dialogue"
-  },
-  "featureProfiles": {
-    "agent_decision": "default_deepseek",
-    "daily_summary": "cheap_daily"
-  },
-  "fallbackProfile": "rule_fallback"
-}
-```
-
-### 启用云端模型
-
-把 `config/models.json` 里的：
-
-```json
-"activeProvider": "cloud"
-```
-
-然后在 PowerShell 设置密钥：
-
-```powershell
-$env:DEEPSEEK_API_KEY = "你的 API Key"
-npm start
-```
-
-### Profile 选择优先级
-
-```text
-npcProfiles[agentId] > featureProfiles[feature] > defaultProfile > fallbackProfile
-```
-
-Debug 面板会显示本轮实际使用的 `profile`、`model`、`baseUrl`、`temperature`、`maxTokens` 和 `apiKeyConfigured`，不会显示真实 API Key。
-
-也可以通过 `GET /api/model-config` 查看当前可公开展示的配置。
-
-开发期推荐先跑结构检查：
+- 模板：`config/models.example.json`
+- 本机配置：`config/models.json`、`config/models.local.json`（已忽略，不提交密钥）
+- 推荐检查：
 
 ```powershell
 npm.cmd run model:check
 ```
 
-启动服务后，迁移期 Web 观察台右侧的 **LLM 配置** 卡片会展示当前运行模式、profiles、NPC / feature 路由、key 是否已配置和校验结果。修改 `config/models.json` 或本地 overlay 后，可点击“重载配置”热重载；点击“对话 Smoke”会触发一次玩家对话，用于快速确认真实模型输出或 fallback 情况。
+配置支持按 NPC / feature 选择 profile，并在 Debug 记录中展示 provider、profile、messages、rawText、parsed、usage、latency 和 fallbackReason。真实 API key 只能放本地 overlay 或环境变量。
+
+## 文档入口
+
+- [docs/README.md](docs/README.md)：文档索引与渐进式读取路线。
+- [docs/project_vision.md](docs/project_vision.md)：长期愿景、差异化和成功标准。
+- [docs/research_framing_motivational_delegation.md](docs/research_framing_motivational_delegation.md)：研究定位、核心反论点、baseline matrix。
+- [docs/process_fidelity_eval_spec.md](docs/process_fidelity_eval_spec.md)：Process Fidelity 指标、hard delegation baseline、ablation protocol。
+- [docs/agent_loop_architecture.md](docs/agent_loop_architecture.md)：NPC agent loop 核心设计。
+- [docs/world_entity_model.md](docs/world_entity_model.md)：世界实体 schema 与工具空间。
+- [docs/production_roadmap.md](docs/production_roadmap.md)：阶段路线与 Phase 2 骨架清单。
+- [docs/current_status.md](docs/current_status.md)：当前实现事实、缺口和人工验收状态。
+- [docs/goal_board.md](docs/goal_board.md)：开发线看板、写入边界和交接格式。
+
+归档文档位于 [docs/archive/](docs/archive/)，只供历史溯源，不作为当前事实源。
+
+## 开发边界
+
+- 后端 Runtime 持有权威世界状态；Godot 只读状态、提交玩家动作和展示结果。
+- LLM 只生成文本、结构化建议或工具意图；世界状态变更必须经过规则执行、校验和事件记录。
+- 新增 NPC / 地点 / 事件 / 工具 / 存档字段前先明确数据契约和 Debug 证据。
+- 未经代码、命令或真实窗口验证的能力只能写成待验证，不写成已完成。
+- 不提交密钥、本地绝对路径、未登记来源的资产或临时运行文件。
+
+## 研究输出定位
+
+当前目标是研究原型、benchmark environment、demo / dataset / evaluation work，而不是直接承诺 full paper。Phase 2 的硬证据包括：
+
+- process-constrained goal specs。
+- Hard Delegation baseline、Direct State Setter、no-memory ablation 等对照。
+- EventStore、SubjectiveMemory、RelationshipEdges、Interventions、EvalSummary 可复现导出。
+- 能回答“为什么不直接 task delegation”“关系记忆是不是装饰”“与 Smallville 类模拟相比新问题在哪”的量化表格。

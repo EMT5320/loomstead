@@ -18,7 +18,7 @@ description: 为指定 NPC 撰写一份符合 npc_deep_card_spec 的深度卡 JS
 
 1. [`docs/npc_deep_card_spec.md`](../../docs/npc_deep_card_spec.md) — 字段契约。
 2. [`backend/app/world/seed_data.py`](../../backend/app/world/seed_data.py) — 取该 NPC 的 seed 字段（personality / longTermGoals / job / age / 关系）。
-3. [`docs/vertical_slice_spec.md`](../../docs/vertical_slice_spec.md) §"首发 NPC 规格" — 取该 NPC 的核心张力与恋爱铺垫倾向。
+3. [`docs/game_content_storyline.md`](../../docs/game_content_storyline.md) 与 [`docs/project_vision.md`](../../docs/project_vision.md) — 取该 NPC 的内容定位、关系张力、研究展示价值与少而深边界。
 4. [`docs/art_direction.md`](../../docs/art_direction.md) — 取该 NPC 的视觉与人设描述。
 5. [`backend/app/content/data/npc/kai.json`](../../backend/app/content/data/npc/kai.json) — 参考样板，把握粒度与语气。
 6. [`assets/manifests/asset_manifest.json`](../../assets/manifests/asset_manifest.json) — 找到该 NPC 的 `portrait` 与 `mapSprite` 真实 id（关键字 `npc_<id>_neutral` 与 `npc_<id>_map_idle`）。
@@ -65,7 +65,7 @@ description: 为指定 NPC 撰写一份符合 npc_deep_card_spec 的深度卡 JS
 1. 读取必读上下文（§必读上下文 1–6）。
 2. 整理出该 NPC 的：
    - `seed` 字段（id / age / job / personality / longTermGoals）。
-   - `vertical_slice_spec` 中的核心张力与恋爱铺垫。
+   - 内容定位中的核心张力、关系阶段入口和研究展示价值。
    - `asset_manifest` 中真实可用的 portrait / mapSprite id。
 3. 按 [`docs/npc_deep_card_spec.md`](../../docs/npc_deep_card_spec.md) §5 字段顺序起草 JSON。
 4. 使用 `write_to_file` 写入 `backend/app/content/data/npc/<id>.json`。

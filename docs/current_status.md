@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: project-status
-last_verified: 2026-05-20
+last_verified: 2026-05-21
 startup_load: after-agent-context
 source_of_truth: true
 scope: current implementation facts, verification state, and work constraints
@@ -9,7 +9,7 @@ scope: current implementation facts, verification state, and work constraints
 
 # 当前项目状态与开发前约束
 
-> 状态更新时间：2026-05-20（研究 framing 增补：narrative-primary / Motivational Delegation / Process Fidelity Eval）
+> 状态更新时间：2026-05-21（README 对外口径、研究输出范围和历史 seed / 当前切片边界同步）
 > 本文只记录当前仓库中已核对、命令已检或明确标注人工未验收的事实。长期方向见 `docs/project_vision.md`，研究 framing 见 `docs/research_framing_motivational_delegation.md`，NPC agent loop 设计见 `docs/agent_loop_architecture.md`，世界实体 schema 见 `docs/world_entity_model.md`，Process Fidelity Eval 规格见 `docs/process_fidelity_eval_spec.md`，跨域 adapter 接口见 `docs/cross_domain_adapter.md`，多层 Agent 系统设计见 `docs/agentic_game_design.md`。
 
 ## 1. 当前阶段判断
@@ -50,7 +50,7 @@ scope: current implementation facts, verification state, and work constraints
 ### 后端 Runtime
 
 - Python HTTP 服务入口已存在。
-- 世界状态初始化、10 个初始 NPC、5 个地点、关系图谱、基础状态数值和 Agent 记忆列表已存在。
+- 世界状态初始化仍保留 10 个 seed NPC、5 个地点、关系图谱、基础状态数值和 Agent 记忆列表；当前 Day 1 / Godot 切片只暴露 6 个首发 NPC，Phase 2 研究骨架按 4 核心 + 2 stub 深化。
 - 时间推进、Agent 轮换调度、事件记录和公开状态导出已存在。
 - 玩家游戏 API 已存在：`GET /api/world/state`、`POST /api/player/action`、`POST /api/world/tick`。
 - 玩家动作已覆盖 `move`、`move_to_anchor`、`scene_action`、`farm_action`、`end_phase`、`talk`、`give_gift`、`inspect`、`attend_event`。

@@ -3,10 +3,10 @@
   "style": "anime_light_fantasy_isekai_farming",
   "scope": "day1_vertical_slice",
   "sourceOfTruth": [
+    "docs/project_vision.md",
     "docs/art_direction.md",
     "docs/asset_generation_prompts.md",
-    "docs/vertical_slice_spec.md",
-    "docs/initial_asset_generation_plan.md"
+    "docs/asset_batches/README.md"
   ],
   "batches": [
     {

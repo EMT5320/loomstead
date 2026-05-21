@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: decisions
-last_verified: 2026-05-19
+last_verified: 2026-05-21
 startup_load: on-demand
 source_of_truth: true
 scope: confirmed decisions, unresolved questions, and validation points
@@ -10,6 +10,8 @@ scope: confirmed decisions, unresolved questions, and validation points
 # 决策记录与剩余问题
 
 本文记录主人已经拍板的边界，以及后续仍需要在实现中验证的问题。当前信息已经足够启动 Phase 2 骨架建立期。
+
+> 2026-05-21 更新：同步研究输出范围，从早期非研究定位改为研究原型 / benchmark / demo / dataset 优先。
 
 ## 2026-05-19 项目重定位决策（最高优先级）
 
@@ -156,11 +158,11 @@ scope: confirmed decisions, unresolved questions, and validation points
 - RuleBasedProvider 保留为离线兜底、测试夹具和异常 fallback。
 - 首版需要尽早记录 token、延迟、失败率和每次 Demo 的大致调用成本。
 
-### 6. 论文范围
+### 6. 研究输出范围
 
-- 本项目当前与论文无关。
-- 后续文档不再使用“论文支撑”作为阶段目标。
-- 可导出数据服务于调试、回放、作品集讲解和后续产品化分析。
+- 本项目当前定位为研究原型、benchmark environment、demo / dataset / evaluation work，第一目标不是直接承诺 full paper。
+- 后续文档不再使用“论文支撑”作为泛化阶段目标；研究 claims 必须由 Process Fidelity Eval、baseline 和 ablation 数据支撑。
+- 可导出数据服务于调试、回放、作品集讲解、benchmark 复现、技术报告和后续产品化分析。
 
 ### 7. 仓库演进
 

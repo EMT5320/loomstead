@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: content-codex
-last_verified: 2026-05-17
+last_verified: 2026-05-21
 startup_load: on-demand
 source_of_truth: true
 scope: storyline, first-day content, NPC roles, and narrative system plan
@@ -9,7 +9,7 @@ scope: storyline, first-day content, NPC roles, and narrative system plan
 
 # 游戏内容剧本线工作台
 
-> 更新时间：2026-05-17
+> 更新时间：2026-05-21（NPC 写作工作流源文档路径同步到重定位后口径）
 > 用途：沉淀主人与 Windsurf 的内容扩充讨论、当前 Codex 收尾结果，以及后续把“游戏内容剧本线”拆成独立开发主线时的入口。
 
 ## 1. 主人原始需求
@@ -104,7 +104,7 @@ scope: storyline, first-day content, NPC roles, and narrative system plan
 
 - `.windsurf/workflows/author-npc-deep-card.md`
 
-该工作流定义了 NPC 深度卡写作流程：读取数据契约、seed、垂直切片规格、视觉设定和资产 manifest，输出 `backend/app/content/data/npc/<id>.json`，并要求通过 `python scripts/check_npc_codex.py`。
+该工作流定义了 NPC 深度卡写作流程：读取数据契约、seed、内容定位、视觉设定和资产 manifest，输出 `backend/app/content/data/npc/<id>.json`，并要求通过 `python scripts/check_npc_codex.py`。
 
 ### 4.3 校验与运行时集成
 
