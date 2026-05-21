@@ -33,7 +33,6 @@ from app.runtime.action_executor import execute_action, maybe_population_event
 from app.runtime.action_parser import parse_provider_output
 from app.runtime.capability_registry import CapabilityRegistry
 from app.runtime.motivation_engine import MotivationEngine
-from app.simulation import LifeActionExecutor, build_life_action_plan_snapshot
 from app.skills import (
     STARLIGHT_FESTIVAL_SHORTAGE_SKILL_ID,
     EventChoiceOutcome,
@@ -61,6 +60,7 @@ from app.world.world_state import (
     sync_agents_from_presence,
     sync_farm_interactables,
 )
+from app.tools import ToolExecutor
 
 
 CLIENT_CONTEXT_FIELDS = ("memoryEvidence", "relationshipEvidence", "playerProfile", "currentObjective", "availableInteractions")
@@ -87,7 +87,7 @@ class AgentRuntime:
         self.cloud_provider = CloudApiProvider()
         self.capability_registry = CapabilityRegistry()
         self.motivation_engine = MotivationEngine(self.capability_registry)
-        self.life_action_executor = LifeActionExecutor()
+        self.tool_executor = ToolExecutor(self.capability_registry.tool_registry)
         self.provider_mode_override = provider_mode
         self.provider_mode = self._resolve_runtime_provider_mode()
         self.event_skills = {skill.skill_id: skill for skill in list_event_skills()}
@@ -136,6 +136,10 @@ class AgentRuntime:
         state["relationshipEvidence"] = self._relationship_evidence_payload()
         state["currentObjective"] = self._current_objective_payload()
         state["availableInteractions"] = self._available_interactions_payload()
+        npc_schedules, motivation_plan = self._phase2_motivation_plan_snapshot()
+        state["npcSchedules"] = npc_schedules
+        state["lifeActionPlan"] = motivation_plan
+        state.setdefault("slice", {})["scheduleSnapshotVersion"] = "motivation_plan.v1"
         return state
 
     def get_debug_snapshot(self, filters: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -161,7 +165,103 @@ class AgentRuntime:
         return {
             "tools": self.capability_registry.tool_registry.to_debug_payload(),
             "motivation": self.motivation_engine.debug_snapshot(self.world, npc_ids=npc_ids, limit=6),
+            "toolRuntime": self._phase2_tool_runtime_snapshot(npc_ids),
         }
+
+    def _phase2_motivation_plan_snapshot(self, npc_ids: list[str] | None = None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+        npc_ids = npc_ids or list(DAY1_NPC_IDS)
+        clock = self.world.get("clock", {})
+        schedules: list[dict[str, Any]] = []
+        selected_actions: list[dict[str, Any]] = []
+        for decision in self._phase2_decisions(npc_ids):
+            planned = self.tool_executor.plan_action(self.world, decision)
+            npc_id = str(planned.get("npcId") or "")
+            agent = self.world.get("agents", {}).get(npc_id)
+            if not npc_id or not isinstance(agent, dict):
+                continue
+            active_action = {
+                "id": planned.get("toolId"),
+                "toolId": planned.get("toolId"),
+                "summary": planned.get("summary"),
+                "timeWindow": "motivation_cycle",
+                "primaryNeed": planned.get("primaryNeed"),
+                "decision": decision.get("decision"),
+                "spaceActionCandidates": [
+                    {
+                        "anchorId": planned.get("targetAnchorId"),
+                        "locationId": planned.get("targetLocationId"),
+                        "reason": "tool_target",
+                    }
+                ],
+            }
+            schedules.append(
+                {
+                    "npcId": npc_id,
+                    "day": int(clock.get("day", 1)),
+                    "phase": str(clock.get("phase") or "morning"),
+                    "generatedAtTick": int(clock.get("tick", 0)),
+                    "displayName": agent.get("name", npc_id),
+                    "locationId": agent.get("locationId"),
+                    "anchorId": agent.get("anchorId"),
+                    "presenceSource": "motivation_engine",
+                    "activeLifeAction": active_action,
+                    "lifeActionCandidates": [active_action],
+                    "rumorBeatCandidates": [],
+                    "relationshipBeatCandidates": [],
+                    "worldMutationPolicy": {"llmMayMutateWorld": False, "mutationPath": "ToolExecutor"},
+                }
+            )
+            selected_actions.append(
+                {
+                    "npcId": npc_id,
+                    "actionId": planned.get("toolId"),
+                    "toolId": planned.get("toolId"),
+                    "summary": planned.get("summary"),
+                    "locationId": planned.get("targetLocationId"),
+                    "anchorId": planned.get("targetAnchorId"),
+                    "primaryNeed": planned.get("primaryNeed"),
+                }
+            )
+        location_buckets: dict[str, list[str]] = {}
+        for action in selected_actions:
+            location_id = str(action.get("locationId") or "")
+            location_buckets.setdefault(location_id, []).append(str(action.get("npcId") or ""))
+        return schedules, {
+            "version": "motivation_plan.v1",
+            "day": int(clock.get("day", 1)),
+            "phase": str(clock.get("phase") or "morning"),
+            "generatedAtTick": int(clock.get("tick", 0)),
+            "decisionSource": "MotivationEngine",
+            "selectedActions": selected_actions,
+            "locationBuckets": location_buckets,
+            "policy": {"llmMayMutateWorld": False, "mutationPath": "ToolExecutor"},
+            "legacyLifeActionExecutorActive": False,
+        }
+
+    def _phase2_decisions(self, npc_ids: list[str], delta_minutes: float = 20.0) -> list[dict[str, Any]]:
+        return [self.motivation_engine.evaluate_npc(self.world, npc_id, delta_minutes=delta_minutes) for npc_id in npc_ids]
+
+    def _phase2_tool_runtime_snapshot(self, npc_ids: list[str]) -> dict[str, Any]:
+        runtime_state = self.world.get("toolRuntime", {}) if isinstance(self.world.get("toolRuntime"), dict) else {}
+        items = []
+        for npc_id in npc_ids:
+            state = runtime_state.get(npc_id)
+            if not isinstance(state, dict):
+                continue
+            items.append(
+                {
+                    "npcId": npc_id,
+                    "toolId": state.get("toolId"),
+                    "phase": state.get("phase"),
+                    "targetAnchorId": state.get("targetAnchorId"),
+                    "targetLocationId": state.get("targetLocationId"),
+                    "moveProgress": round(float(state.get("moveProgress", 0.0)), 3),
+                    "elapsedSeconds": round(float(state.get("actionElapsedSeconds", 0.0)), 2),
+                    "durationSeconds": round(float(state.get("actionDurationSeconds", 0.0)), 2),
+                    "contributingSources": list(state.get("contributingSources") or []),
+                }
+            )
+        return {"version": "tool_runtime.v1", "items": items}
 
     def get_director_debug_snapshot(self, filters: dict[str, Any] | None = None) -> dict[str, Any]:
         """输出 Director Digest、Beat 队列和生命周期事件。"""
@@ -822,24 +922,27 @@ class AgentRuntime:
             self.world["npcPresence"] = build_npc_presence(self.world)
             sync_agents_from_presence(self.world, self.world["npcPresence"])
 
-        schedules, plan = build_life_action_plan_snapshot(self.world, self.world["npcPresence"])
-        selected_actions = self._build_tick_selected_actions(schedules=schedules, plan=plan)
-        execution = self.life_action_executor.tick(
+        decisions = self._phase2_decisions(list(DAY1_NPC_IDS), delta_minutes=20.0)
+        execution = self.tool_executor.tick(
             world=self.world,
-            selected_actions=selected_actions,
+            decisions=decisions,
             delta_seconds=game_seconds,
         )
 
         tick_events: list[dict[str, Any]] = []
+        completion_event_ids: dict[tuple[str, str], str] = {}
         for payload in execution.get("events", []):
             event_type = str(payload.get("type") or "")
             if not event_type:
                 continue
             stored = self.event_store.append(event_type, {key: value for key, value in payload.items() if key != "type"})
             tick_events.append(stored)
+            if event_type == "npc.action_completed":
+                completion_event_ids[(str(payload.get("npcId") or ""), str(payload.get("toolId") or payload.get("actionId") or ""))] = str(stored.get("id") or "")
 
         for completion in execution.get("completedActions", []):
-            self._apply_life_action_completion(completion)
+            source_event_id = completion_event_ids.get((str(completion.get("npcId") or ""), str(completion.get("toolId") or completion.get("actionId") or "")))
+            self.tool_executor.apply_completion(world=self.world, completion=completion, event_store=self.event_store, source_event_id=source_event_id)
 
         self._run_director_v0()
         self.event_store.add_snapshot(self.world)
@@ -859,50 +962,6 @@ class AgentRuntime:
             "events": [self._debug_safe_event(event) for event in tick_events],
             "agents": execution.get("agents", []),
         }
-
-    def _build_tick_selected_actions(self, *, schedules: list[dict[str, Any]], plan: dict[str, Any]) -> list[dict[str, Any]]:
-        """把 planner 快照转换成 executor 可直接消费的最小动作集。"""
-        schedule_map = {str(item.get("npcId") or ""): item for item in schedules if isinstance(item, dict) and item.get("npcId")}
-        selected: list[dict[str, Any]] = []
-        for action in plan.get("selectedActions", []):
-            if not isinstance(action, dict):
-                continue
-            npc_id = str(action.get("npcId") or "")
-            if not npc_id:
-                continue
-            action_id = str(action.get("actionId") or "")
-            schedule = schedule_map.get(npc_id, {})
-            active = schedule.get("activeLifeAction") if isinstance(schedule.get("activeLifeAction"), dict) else {}
-            space_candidates = active.get("spaceActionCandidates") if isinstance(active.get("spaceActionCandidates"), list) else []
-            current_anchor_id = str(action.get("anchorId") or schedule.get("anchorId") or "")
-            runtime_state = self.world.get("lifeActionRuntime", {}).get(npc_id)
-            if isinstance(runtime_state, dict) and runtime_state.get("actionId") == action_id and runtime_state.get("targetAnchorId"):
-                target_anchor_id = str(runtime_state.get("targetAnchorId") or "")
-                target_location_id = str(runtime_state.get("targetLocationId") or action.get("locationId") or "")
-            else:
-                space_choice = next(
-                    (
-                        item
-                        for item in space_candidates
-                        if isinstance(item, dict) and item.get("anchorId") and str(item.get("anchorId")) != current_anchor_id
-                    ),
-                    {},
-                )
-                if not space_choice:
-                    space_choice = next((item for item in space_candidates if isinstance(item, dict) and item.get("anchorId")), {})
-                target_anchor_id = str(space_choice.get("anchorId") or action.get("anchorId") or "")
-                target_location_id = str(space_choice.get("locationId") or action.get("locationId") or "")
-            selected.append(
-                {
-                    "npcId": npc_id,
-                    "actionId": action_id,
-                    "summary": str(action.get("summary") or active.get("summary") or ""),
-                    "targetAnchorId": target_anchor_id,
-                    "targetLocationId": target_location_id,
-                    "relatedNpcIds": list(active.get("relatedNpcIds") or []),
-                }
-            )
-        return selected
 
     def _advance_clock_by_game_seconds(self, delta_seconds: float) -> None:
         """只基于游戏时间推进时钟，避免任何墙钟依赖。"""
@@ -939,31 +998,6 @@ class AgentRuntime:
             "tick": int(clock.get("tick", 0)),
         }
 
-    def _apply_life_action_completion(self, completion: dict[str, Any]) -> None:
-        """动作完成时复用既有 runtime 行动执行路径写入副作用。"""
-        npc_id = str(completion.get("npcId") or "")
-        agent = self.world.get("agents", {}).get(npc_id)
-        if not isinstance(agent, dict):
-            return
-        runtime_action = self._map_life_completion_to_runtime_action(completion)
-        execute_action(self.world, agent, runtime_action, self.event_store)
-
-    def _map_life_completion_to_runtime_action(self, completion: dict[str, Any]) -> dict[str, Any]:
-        """把 life action 归一化到现有 execute_action 契约。"""
-        action_id = str(completion.get("actionId") or "").lower()
-        summary = str(completion.get("summary") or "")
-        related_ids = [str(item) for item in completion.get("relatedNpcIds", []) if str(item)]
-        if "farm" in action_id:
-            return {"action": "work", "args": {"job": "farm"}}
-        if "shop" in action_id or "market" in action_id or "trade" in action_id:
-            return {"action": "work", "args": {"job": "service"}}
-        if "chat" in action_id or "talk" in action_id or related_ids:
-            target_npc_id = next((item for item in related_ids if item in self.world.get("agents", {})), "")
-            if target_npc_id and target_npc_id != str(completion.get("npcId") or ""):
-                return {"action": "talkTo", "args": {"npc": target_npc_id, "message": summary or "聊聊近况。"}}
-        if "rest" in action_id or "home" in action_id:
-            return {"action": "rest"}
-        return {"action": "remember", "memory_to_save": summary or f"{completion.get('npcId')} 完成了生活行动。"}
 
     def pick_actors(self) -> list[dict[str, Any]]:
         agents = living_agents(self.world)

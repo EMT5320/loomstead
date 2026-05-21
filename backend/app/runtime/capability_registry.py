@@ -8,11 +8,11 @@ from app.tools import ToolDefinition, ToolRegistry
 NEED_TO_TOOL_PREFIXES = {
     "energy": ("life.rest",),
     "sleep_pressure": ("life.rest",),
-    "hunger": ("life.",),
+    "hunger": ("life.eat_food", "cook."),
     "money_anxiety": ("shop.", "farm."),
     "affiliation": ("social.",),
-    "recognition": ("social.", "shop.", "farm."),
-    "goal_progress": ("farm.", "shop.", "social."),
+    "recognition": ("social.", "shop.", "farm.", "craft.", "cook."),
+    "goal_progress": ("farm.", "shop.", "social.", "craft.", "cook."),
 }
 
 
@@ -60,11 +60,17 @@ class CapabilityRegistry:
         location_id = str(agent.get("locationId") or "")
         has_farm_context = location_id == "farm" or any(plot.get("locationId") == location_id for plot in world.get("farmPlots", {}).values())
         has_shop_context = location_id in {"plaza", "tavern"}
+        has_cook_context = location_id in {"tavern", "farm"}
+        has_craft_context = location_id in {"plaza", "farm"}
         filtered: list[ToolDefinition] = []
         for tool in tools:
             if tool.tool_id.startswith("farm.") and not has_farm_context:
                 continue
             if tool.tool_id.startswith("shop.") and not has_shop_context:
+                continue
+            if tool.tool_id.startswith("cook.") and not has_cook_context:
+                continue
+            if tool.tool_id.startswith("craft.") and not has_craft_context:
                 continue
             filtered.append(tool)
         return filtered

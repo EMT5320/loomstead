@@ -30,7 +30,7 @@ scope: current implementation facts, verification state, and work constraints
 ### 当前阶段位置
 
 - **Phase 1（活着的世界）**：done。2026-05-21 主人确认 Phase 1 可以收口，默认 `world_main` 作为已验收完成基线进入冻结维护。
-- **Phase 2（骨架建立期）**：启动中。文档前置工作已完成，NPC 深度卡 schema 已增补 `motivationProfile` / `capabilityPreferences` / `heuristicSeeds` 占位字段；后端 ToolDefinition / CapabilityRegistry / MotivationEngine / ArbitrationLayer / SubjectiveMemoryStore / DomainAdapter / WorldEntity / Eval L1 rule scenario 的最小骨架已落地并接入 Debug snapshot 与 `npm.cmd run check`，仍未替换旧 `LifeActionExecutor`。
+- **Phase 2（骨架建立期）**：启动中。文档前置工作已完成，NPC 深度卡 schema 已增补 `motivationProfile` / `capabilityPreferences` / `heuristicSeeds` 占位字段；后端 ToolDefinition / CapabilityRegistry / MotivationEngine / ArbitrationLayer / ToolExecutor / SubjectiveMemoryStore / DomainAdapter / WorldEntity / Eval L1 rule suite 的最小骨架已落地并接入 Debug snapshot、`/api/world/tick` 与 `npm.cmd run check`。旧 `LifeActionExecutor` 不再服务 tick 主路径。
 
 ## 2. 本轮核对结果
 
@@ -38,7 +38,7 @@ scope: current implementation facts, verification state, and work constraints
 
 | 开发线 | 当前状态 | 已验证事实 | 仍需验证或实现 |
 | --- | --- | --- | --- |
-| 后端 Director / Event Skill | 部分完成 | `WorldDigest`、`DirectorBeat`、`TensionDetector`、`SkillRouter`、`DirectorValidator`、`DirectorQueueManager` 已落地；Runtime 会生成、校验、消费或丢弃 `activate_event_skill` Beat；星灯祭单技能已注册；玩家画像证据模板、玩家风格信号 `styleSignal`、事件反应记忆模板、asset hints 和通用 fallback 台词模板已迁入 Event Skill；星灯祭结算已统一输出 `event_skill_outcome.v1`，API `eventResult`、事件流和 `completedEvents` 共用 `outcomeRecord`；Debug / Memory / influence 查询 API 已由 smoke 走真实 HTTP 路由验证；Phase 2 后端最小骨架已新增 ToolDefinition registry、CapabilityRegistry、MotivationEngine、ArbitrationLayer，并通过 `/api/debug` 的 `phase2` 快照暴露 tools / motivation / contributingSources | Event Skill 仍只有一个；星灯祭仍有部分结算模板留在 Runtime；通用 DirectorPlanner 和多事件 Skill 尚未完成；Phase 2 骨架尚未执行权威世界状态变更，旧 `LifeActionExecutor` 仍服务 `/api/world/tick` |
+| 后端 Director / Event Skill | 部分完成 | `WorldDigest`、`DirectorBeat`、`TensionDetector`、`SkillRouter`、`DirectorValidator`、`DirectorQueueManager` 已落地；Runtime 会生成、校验、消费或丢弃 `activate_event_skill` Beat；星灯祭单技能已注册；玩家画像证据模板、玩家风格信号 `styleSignal`、事件反应记忆模板、asset hints 和通用 fallback 台词模板已迁入 Event Skill；星灯祭结算已统一输出 `event_skill_outcome.v1`，API `eventResult`、事件流和 `completedEvents` 共用 `outcomeRecord`；Debug / Memory / influence 查询 API 已由 smoke 走真实 HTTP 路由验证；Phase 2 后端骨架已新增 10 个 ToolDefinition、CapabilityRegistry、MotivationEngine、ArbitrationLayer、ToolExecutor，并通过 `/api/debug.phase2` 暴露 tools / motivation / toolRuntime / contributingSources；`/api/world/tick` 已切到 MotivationEngine -> ToolExecutor 主路径 | Event Skill 仍只有一个；星灯祭仍有部分结算模板留在 Runtime；通用 DirectorPlanner 和多事件 Skill 尚未完成；ToolExecutor 仍是首版事务和规则副作用，NeedAccumulator / ResultObserver / RelationshipEdgeStore / HeuristicLibrary 尚未接入 |
 | Content Codex / NPC 深度卡 | 已完成首批 + Phase 2 schema 占位 | `docs/npc_deep_card_spec.md` 已定义数据契约；`.windsurf/workflows/author-npc-deep-card.md` 已定义批量写作流程；`backend/app/content/data/npc/` 已入库 `kai`、`bram`、`mira`、`tomas`、`orren`、`lena` 6 份卡；`monologueSeeds` 已接入夜间反思上下文、compact evidence 和规则 fallback；`gossipHooks` 已进入校验、对话上下文 `gossipEvidence`、选择理由、传播草案、`candidateDebugSummary`、`gossip_propagation` 契约和 validator；6 张卡已新增 `lifeActionSeeds`、`dailyRumorBeats`、`relationshipBeatSeeds`，每卡当前为 `3/2/3` 条 Day 1 素材；已新增 `motivationProfile` / `capabilityPreferences` / `heuristicSeeds` 空占位字段；Runtime 会写入 `gossip.propagation_validated` 校验事件；`npm.cmd run content:check` 通过；smoke 覆盖 `deepCard`、对话 Prompt、送礼、关系阶段、monologue evidence、gossip evidence 与合法 / 非法传播样例 | 谣言传播仍只记录校验结果，不写入世界状态、关系或记忆扩散；Phase 2 ToolDefinition / MotivationEngine 尚未驱动 NPC 实际工具行动；后续批量 Event Skill 工作流未开始 |
 | Godot 客户端 | Phase 1 done，Phase 2 观察者模式待实现 | 代码已接入：地点背景层、NPC 选择、底部 VN 对话层、聊天提交、进行中事件区、`inspect`、choices、`attend_event`、VN 结果展示；地图角色层已渲染玩家与当前场景 NPC / event marker；WASD 独立连续移动、地图层直接点击当前场景空地落点、落点标记、单个最近交互目标高亮、MapMoveHint 和更大舞台移动范围已接入；已移除小人淡黄色矩形背景；已补 UI 点击穿透、按钮禁用键盘焦点、WASD 物理键兜底、玩家 / NPC 分离站位槽、玩家出生点上移、收紧交互半径、点击落点边界修正、动态地图 bounds、靠近目标滞回和 NPC 小人保持可点；地图上下文候选面板、`E`/`Space` 执行、`Tab`/`Q` 切换、`actionFeedback` VN 回执已接入；`check_godot_project.py`、Godot headless import、`client:env` 与 `client:run:check` 通过；2026-05-21 主人确认 Phase 1 可以收口 | 本地 WASD 与点击移动仍只做表现层；Phase 2 Godot 观察者模式、NPC 信息面板和更自然的内容节奏仍待推进 |
 | 资产管线 | 部分完成 | manifest 当前有 55 条资产：21 条 `source_selected`、3 条 `style_anchor_candidate`、7 条 `pending_review`、24 条 `prompt_ready`；新增 backlog 覆盖 14 张 `happy/troubled` 表情差分、5 张行动反馈图标和 5 个生活行动 UI 小组件；`prompt_ready` 条目均引用 `docs/asset_generation_prompts.md` 锚点，并补齐 `promptBatchId`、`godotTargetPath`、`godotTargetSlot`；`docs/asset_batches/` 已生成批次计划、机器可读导出和人工筛选表；`scripts/export_prompt_ready_assets.py` 可重复导出；`AssetRegistry` 已支持表情回退；地图小人与交互 marker 已进入 Godot 场景显示链路 | `prompt_ready` 仍只是可生成 backlog，尚未生成、筛选或接入 Godot registry；地图小人是否晋级 `source_selected` 仍需主人明确筛选结论 |
@@ -56,9 +56,9 @@ scope: current implementation facts, verification state, and work constraints
 - 玩家动作已覆盖 `move`、`move_to_anchor`、`scene_action`、`farm_action`、`end_phase`、`talk`、`give_gift`、`inspect`、`attend_event`。
 - 星灯祭供应短缺事件已有查看、选择、关系变化、即时记忆、事件反应、夜间反思和结算记录。
 - `/api/player/action` 的根节点、`result` 和 `state` 均带有 Godot 可直接展示的 `memoryEvidence`、`relationshipEvidence`、`playerProfile`、`currentObjective`、`availableInteractions`；锚点移动和场景行动会返回统一 `actionFeedback`。
-- `GET /api/world/state` 已新增 `npcSchedules` 与 `lifeActionPlan`，由 `backend/app/simulation/life_action_planner.py` 根据 NPC 深度卡 seeds、当前 Presence、锚点和交互体生成只读快照；`slice.scheduleSnapshotVersion=life_action_plan.v1`。
-- `POST /api/world/tick` 已接入 `LifeActionExecutor`，按游戏时间推进 NPC 生活行动，返回 `clock`、EventStore 包装后的 `events` 和 `agents` diff；移动事件已透出 `npcId/fromAnchorId/toAnchorId` 供 Godot 扁平化消费。
-- 2026-05-17 已修正 Day 1 生活行动目标分布：`lifeActionSeeds.locationHints` 优先绑定可见 anchor id，新增 `scripts/check_life_action_targets.py` 校验 morning / afternoon / evening 目标不超出当前客户端切片且不超过锚点容量。
+- `GET /api/world/state` 的 `npcSchedules` 与 `lifeActionPlan` 已切到 `motivation_plan.v1`，由 MotivationEngine / ToolExecutor 基于当前需求和工具目标生成只读候选快照；字段外形继续兼容 Godot 现有 WorldPulsePanel。
+- `POST /api/world/tick` 已切到 `MotivationEngine -> ToolExecutor`，按游戏时间推进 NPC 工具行动，返回 `clock`、EventStore 包装后的 `events` 和 `agents` diff；移动事件已透出 `npcId/fromAnchorId/toAnchorId` 供 Godot 扁平化消费，工具完成会写入 `tool.execution_completed` 或 `tool.execution_failed`。
+- 2026-05-17 已修正 Day 1 生活行动目标分布；2026-05-21 `scripts/check_life_action_targets.py` 已改为校验 `motivation_plan.v1` 在 morning / afternoon / evening 的工具目标不超出当前客户端切片且不超过锚点容量。
 
 ### Director / Skill
 
@@ -144,14 +144,14 @@ scope: current implementation facts, verification state, and work constraints
 
 ### Phase 2 启动后的实施缺口（pending）
 
-6. **三层工具分层 + ToolDefinition 注册表**：最小 schema 与 6 个首批工具已落地（life / farm / shop / social / strategic），仍需 ToolExecutor 事务、副作用回滚和完整 8-12 工具实现。
-7. **MotivationEngine（替换 LifeActionExecutor）**：最小决策骨架已落地，可按 status / 空占位 motivationProfile 计算 primaryNeed、经 CapabilityRegistry 取候选工具并由 ArbitrationLayer 产出 selectedToolId 与 contributingSources；当前只作为 `/api/debug.phase2` 和 Eval 输入，不替换 `/api/world/tick`。
+6. **三层工具分层 + ToolDefinition 注册表**：最小 schema 与 10 个首批工具已落地（life / farm / shop / cook / craft / social / strategic），ToolExecutor 已具备首版持续动作、移动、事务快照、失败回滚和规则副作用；完整工具输入校验、更多失败模式和预算路由仍待扩展。
+7. **MotivationEngine（替换 LifeActionExecutor）**：最小决策骨架已落地，可按 status / 空占位 motivationProfile 计算 primaryNeed、经 CapabilityRegistry 取候选工具并由 ArbitrationLayer 产出 selectedToolId 与 contributingSources；`/api/world/tick` 已切到 MotivationEngine -> ToolExecutor 主路径，旧 LifeActionExecutor 不并行运行。
 8. **CapabilityRegistry**：最小 need → tool namespace 过滤与地点上下文过滤已落地，仍需 4 层动态过滤齐全。
 9. **双轨主观记忆**：SubjectiveMemoryStore 最小 record/list/debug_snapshot 骨架已落地，仍未接入 ResultObserver、BiasFilter 或运行时事件分发。
 10. **HeuristicLibrary**：完整 schema + 规则提取 + 设计师 seed 注入 + Debug 可视化，pending。
 11. **ArbitrationLayer**：最小候选工具裁决与 contributing_sources Trace 已落地，仍需完整竞争上下文裁决规则。
 12. **WorldEntities**：WorldEntity dataclass 与 farm_plot / time 快照转换骨架已落地，完整 FarmPlot / Item / Inventory / Shop / Building / Time / Weather schema 仍待扩展。
-13. **EvalFramework**：`scripts/run_agent_eval.py`、`backend/app/eval/` 与第一个 L1 rule scenario（低 energy → life.rest）已落地，并纳入 `npm.cmd run check`；5-8 个 scenario、ablation 和 Hard Delegation baseline 仍待补齐。
+13. **EvalFramework**：`scripts/run_agent_eval.py`、`backend/app/eval/` 与 5 个 L1 rule scenario 已落地，并纳入 `npm.cmd run check`；输出已包含 `mean/std/n`。Hard Delegation baseline、关系记忆 ablation、`ablation_comparison.json` 和 24 游戏小时稳定性仍待补齐。
 14. **Godot 观察者模式最小骨架**：Tab 切换 + NPC 信息面板，pending。
 15. **NPC 深度卡实际数据填充**：4 核心 NPC 的 motivationProfile / capabilityPreferences / heuristicSeeds 实际内容，Phase 3 填；2 stub 继续默认权重或按需要升级。
 
@@ -216,8 +216,8 @@ Get-Content docs\archive\daytime_integration_handoff.md
 
 ### 立即（Phase 2 启动）
 
-1. 后端骨架线继续从最小 Debug 骨架推进到 ToolExecutor 事务和 `/api/world/tick` 的 MotivationEngine shadow-run 对比，不直接替换旧 `LifeActionExecutor`。
-2. Eval 线继续扩展 `backend/app/eval/`，从当前 1 个 L1 rule scenario 增到 5-8 个，并补 hard delegation baseline / relationship memory ablation 入口。
+1. 后端骨架线继续从当前 MotivationEngine -> ToolExecutor tick 主路径推进到 NeedAccumulator、ResultObserver / BiasFilter、RelationshipEdgeStore 和 HeuristicLibrary，不再做旧 LifeActionExecutor shadow-run。
+2. Eval 线继续扩展 `backend/app/eval/`，在当前 5 个 L1 rule scenario 基础上补 hard delegation baseline / relationship memory ablation / ablation_comparison 输出。
 3. Godot 观察者线先做 Tab 切换 + 点击 NPC 空白信息面板，等待后端 motivation / trace API 后再填数据。
 
 ### Phase 2 硬约束

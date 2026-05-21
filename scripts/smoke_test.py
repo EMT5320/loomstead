@@ -331,8 +331,8 @@ def assert_npc_schedule_contract(state: dict, label: str) -> None:
     for field in ("version", "day", "phase", "generatedAtTick", "selectedActions", "locationBuckets", "policy"):
         if field not in plan:
             raise RuntimeError(f"{label}.lifeActionPlan 缺少字段：{field}")
-    if plan["version"] != "life_action_plan.v1":
-        raise RuntimeError(f"{label}.lifeActionPlan.version 期望 life_action_plan.v1，实际为 {plan['version']}")
+    if plan["version"] != "motivation_plan.v1":
+        raise RuntimeError(f"{label}.lifeActionPlan.version 期望 motivation_plan.v1，实际为 {plan['version']}")
     if not isinstance(plan.get("selectedActions"), list) or not plan["selectedActions"]:
         raise RuntimeError(f"{label}.lifeActionPlan.selectedActions 应为非空数组")
     plan_policy = plan.get("policy")
@@ -378,8 +378,8 @@ def assert_game_state_contract(state: dict, label: str) -> None:
         raise RuntimeError(f"{label}.player.inventory 应为数组")
     if not isinstance(state["slice"], dict) or not state["slice"].get("npcIds") or not state["slice"].get("locationIds"):
         raise RuntimeError(f"{label}.slice 应包含 npcIds 和 locationIds")
-    if state["slice"].get("scheduleSnapshotVersion") != "life_action_plan.v1":
-        raise RuntimeError(f"{label}.slice.scheduleSnapshotVersion 应为 life_action_plan.v1")
+    if state["slice"].get("scheduleSnapshotVersion") != "motivation_plan.v1":
+        raise RuntimeError(f"{label}.slice.scheduleSnapshotVersion 应为 motivation_plan.v1")
     if not isinstance(state["slice"].get("supportedLifeActionWindows"), list):
         raise RuntimeError(f"{label}.slice.supportedLifeActionWindows 应为数组")
     supported_sources = set(state["slice"].get("supportedNpcPresenceSources", []))
@@ -471,14 +471,17 @@ def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
     if not isinstance(phase2, dict):
         raise RuntimeError(f"{label}.phase2 应返回 Phase 2 调试快照")
     tools = phase2.get("tools")
-    if not isinstance(tools, dict) or int(tools.get("count") or 0) < 5:
-        raise RuntimeError(f"{label}.phase2.tools 应返回 ToolDefinition 注册表")
+    if not isinstance(tools, dict) or int(tools.get("count") or 0) < 8:
+        raise RuntimeError(f"{label}.phase2.tools 应返回至少 8 个 ToolDefinition")
     motivation = phase2.get("motivation")
     if not isinstance(motivation, dict) or motivation.get("version") != "motivation_engine.v0" or not motivation.get("items"):
         raise RuntimeError(f"{label}.phase2.motivation 应返回 MotivationEngine 快照")
     first_decision = motivation["items"][0].get("decision", {})
     if not first_decision.get("contributingSources"):
         raise RuntimeError(f"{label}.phase2.motivation.decision 应包含 contributingSources")
+    tool_runtime = phase2.get("toolRuntime")
+    if not isinstance(tool_runtime, dict) or tool_runtime.get("version") != "tool_runtime.v1" or not tool_runtime.get("items"):
+        raise RuntimeError(f"{label}.phase2.toolRuntime 应返回 ToolExecutor 运行态")
     assert_compact_debug_turns(payload["debugTurns"], f"{label}.debugTurns")
 
 
