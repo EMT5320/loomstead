@@ -14,7 +14,7 @@ scope: storyline, first-day content, NPC roles, and narrative system plan
 
 ## 1. 主人原始需求
 
-主人希望为 `Agent Valley` 搭建一条可复用的内容生产工作流，借助模型写作能力批量生产游戏内容资产。内容范围包括：
+主人希望为 `Loomstead` 搭建一条可复用的内容生产工作流，借助模型写作能力批量生产游戏内容资产。内容范围包括：
 
 - 后续事件扩充。
 - 整体叙事节奏与剧本走向。
@@ -23,7 +23,7 @@ scope: storyline, first-day content, NPC roles, and narrative system plan
 
 ## 2. 本线核心判断
 
-项目定调来自 `docs/agentic_game_design.md`：`Agent Valley` 追求“涌现社会”的可玩观察与互动体验。内容扩充应优先生成可被系统组合、触发和解释的素材层。
+项目定调来自 `docs/agentic_game_design.md`：`Loomstead` 追求“涌现社会”的可玩观察与互动体验。内容扩充应优先生成可被系统组合、触发和解释的素材层。
 
 当前内容资产的优先类型：
 

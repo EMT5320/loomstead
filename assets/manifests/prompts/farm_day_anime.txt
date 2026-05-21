@@ -1,5 +1,5 @@
 Use case: illustration-story
-Asset type: 16:9 location background for Agent Valley first playable day
+Asset type: 16:9 location background for Loomstead first playable day
 Primary request: Create a bright anime light fantasy farm background at morning for Dawn Dew Farm, the new female farmer protagonist's starting location in Starlight Valley.
 Scene/backdrop: small cozy farmhouse, vegetable plots with dew, wooden fence, seed bags near the door, tiny starlight charm hanging by the entrance, distant village and gentle hills.
 Subject: peaceful playable farm location, readable as a farming life sim home base, low-magic rural fantasy.

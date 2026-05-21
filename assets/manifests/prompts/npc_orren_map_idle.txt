@@ -2,7 +2,7 @@ Use case: map-sprite-redraw-closure
 Asset type: static idle_front map sprite candidate
 Output asset: assets/source/sprites/npc_orren_map_idle.png
 Style anchors: player_farmer_map_idle, npc_mira_map_idle, npc_tomas_map_idle only.
-Primary request: Redraw Orren / Aurea as a centered full-body anime chibi low-pixel map sprite for Agent Valley.
+Primary request: Redraw Orren / Aurea as a centered full-body anime chibi low-pixel map sprite for Loomstead.
 Identity lock: elderly female retired teacher and town historian, silver hair in a large compact bun, small round glasses, dark green short coat or vest, cream scarf, tiny pocket-watch charm at belt. Optional tiny dark blue book as a small belt-side square only.
 Style lock: very short 2.1-head-tall super-deformed tiny map person, oversized round head, compact tiny body, short legs, soft anime low-pixel rendering, pixel-art inspired, crisp 1-2 px dark outline after resize, limited warm palette, readable at 64x64 and 32x32.
 Composition lock: centered full body, slight top-down front view, feet visible, simple idle_front pose, arms close to body, large head and tiny body fit a 48x56 safe character area after resizing, generous empty margin.

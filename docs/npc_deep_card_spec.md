@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: content-codex
-last_verified: 2026-05-17
+last_verified: 2026-05-21
 startup_load: on-demand
 source_of_truth: true
 scope: NPC deep-card schema, writing rules, and validation contract
@@ -10,7 +10,7 @@ scope: NPC deep-card schema, writing rules, and validation contract
 # NPC 深度卡数据契约
 
 > 起草时间：2026-05-16
-> 用途：定义 `Agent Valley` 第二轮内容扩充的 NPC 深度卡（`npc_codex`）数据契约，作为后续批量内容写作工作流的统一蓝本。
+> 用途：定义 `Loomstead` 第二轮内容扩充的 NPC 深度卡（`npc_codex`）数据契约，作为后续批量内容写作工作流的统一蓝本。
 > 设计依据：[`project_vision.md`](./project_vision.md)、[`agentic_game_design.md`](./agentic_game_design.md)、[`agent_loop_architecture.md`](./agent_loop_architecture.md)、[`current_status.md`](./current_status.md)。
 
 ## 1. 设计目标

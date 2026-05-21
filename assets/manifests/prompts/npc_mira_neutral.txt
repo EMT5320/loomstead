@@ -1,5 +1,5 @@
 Use case: stylized-concept
-Asset type: visual novel half-body character portrait for Agent Valley
+Asset type: visual novel half-body character portrait for Loomstead
 Primary request: Create Mia Starwheat as a neutral visual novel half-body portrait for a bright anime light fantasy farming life sim.
 Subject: Mia Starwheat, ownerId mira, 31 years old female grocery shop owner, chestnut medium-length hair with a side braid, amber or olive green eyes, gentle practical neutral face, reliable big-sister aura, cream blouse, warm orange apron, seed packets, small shop ledger, grocery paper bag detail, star-shaped hairpin.
 Composition: single character only, vertical 2:3 portrait, half-body from head to waist, centered with generous padding, clean silhouette, looking toward the viewer, no extra characters, no item callout sheet, no labels.

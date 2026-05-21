@@ -1,4 +1,4 @@
-"""生成 Agent Valley 上下文 brief，并检查上下文治理文件。"""
+"""生成 Loomstead 上下文 brief，并检查上下文治理文件。"""
 
 from __future__ import annotations
 
@@ -260,7 +260,7 @@ def build_doc_inventory() -> str:
             + f" | {metadata.get('startup_load', '')}"
             + f" | {metadata.get('source_of_truth', '')} |"
         )
-    return "\n".join(["# Agent Valley 文档清单", "", *rows])
+    return "\n".join(["# Loomstead 文档清单", "", *rows])
 
 
 def build_brief() -> str:
@@ -277,7 +277,7 @@ def build_brief() -> str:
 
     return "\n".join(
         [
-            "# Agent Valley brief 草稿",
+            "# Loomstead brief 草稿",
             "",
             "## 一句话定位",
             "",
@@ -323,7 +323,7 @@ def print_validation_report(errors: list[str], warnings: list[str]) -> None:
 
 def main() -> int:
     """命令行入口：默认输出 brief，--check 只做治理校验。"""
-    parser = argparse.ArgumentParser(description="生成或校验 Agent Valley 上下文入口。")
+    parser = argparse.ArgumentParser(description="生成或校验 Loomstead 上下文入口。")
     parser.add_argument("--check", action="store_true", help="只运行上下文治理校验。")
     parser.add_argument("--docs", action="store_true", help="输出文档清单。")
     args = parser.parse_args()

@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: backend-director
-last_verified: 2026-05-16
+last_verified: 2026-05-21
 startup_load: on-demand
 source_of_truth: true
 scope: multi-layer agent design, director system, event skills, memory, and model routing
@@ -10,11 +10,11 @@ scope: multi-layer agent design, director system, event skills, memory, and mode
 # 多层 Agent 游戏系统设计
 
 > 状态更新时间：2026-05-15
-> 本文沉淀 `Agent Valley` 后续开发的核心定调：项目把游戏世界设计为由多层 Agent、世界规则、事件 Skill 和可解释调试链路共同驱动的可游玩小镇社会，避免停留在传统固定剧情游戏加 LLM 对话的浅层形态。
+> 本文沉淀 `Loomstead` 后续开发的核心定调：项目把游戏世界设计为由多层 Agent、世界规则、事件 Skill 和可解释调试链路共同驱动的可游玩小镇社会，避免停留在传统固定剧情游戏加 LLM 对话的浅层形态。
 
 ## 核心结论
 
-`Agent Valley` 的长期方向是 **可被游玩的涌现社会**。
+`Loomstead` 的长期方向是 **可被游玩的涌现社会**。
 
 设计师负责提供土壤、舞台、规则和压力源；LLM Agent 负责在这些边界内做主观判断、表达、记忆和关系演化。游戏体验来自两部分的结合：
 
@@ -29,7 +29,7 @@ scope: multi-layer agent design, director system, event skills, memory, and mode
 
 传统游戏通常由设计师预先写好剧情、分支、任务条件和 NPC 行为逻辑。玩家每次游玩会看到大体稳定的内容。
 
-`Agent Valley` 的核心价值在于 NPC 具备人设、目标、关系和记忆后的自主演化。如果强制要求每个 LLM NPC 都走向设计师预设结局，会削弱项目最有辨识度的部分。
+`Loomstead` 的核心价值在于 NPC 具备人设、目标、关系和记忆后的自主演化。如果强制要求每个 LLM NPC 都走向设计师预设结局，会削弱项目最有辨识度的部分。
 
 更合适的边界是：
 

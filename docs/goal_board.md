@@ -1,13 +1,13 @@
 ---
 status: active
 owner_lane: planning
-last_verified: 2026-05-20
+last_verified: 2026-05-21
 startup_load: after-agent-context
 source_of_truth: true
 scope: lane board, write boundaries, and handoff format
 ---
 
-# Agent Valley 目标看板
+# Loomstead 目标看板
 
 > 更新时间：2026-05-19（项目重定位 + 文档治理）
 > 用途：为无人值守开发、并行子代理和下一轮收口提供状态、写入范围和验收命令。

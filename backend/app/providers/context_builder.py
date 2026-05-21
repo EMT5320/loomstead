@@ -64,7 +64,7 @@ def build_agent_context(world: dict[str, Any], agent: dict[str, Any], event_stor
 def build_prompt_messages(context: dict[str, Any]) -> list[dict[str, str]]:
     """云端 Provider 使用 OpenAI-compatible messages，同时用于完整 debug。"""
     return [
-        {"role": "system", "content": "你是 AI Agent 小镇实验中的居民。请根据角色、关系、记忆和当前地点，自然地选择一个行动或说一句话。输出可为 JSON，也可为自然语言。"},
+        {"role": "system", "content": "你是 Loomstead 叙事小镇中的居民。请根据角色、关系、记忆和当前地点，自然地选择一个行动或说一句话。输出可为 JSON，也可为自然语言。"},
         {"role": "user", "content": json.dumps(context, ensure_ascii=False, indent=2)},
     ]
 
@@ -558,7 +558,7 @@ def build_structured_system_prompt(
     rules = extra_rules or []
     rules_text = "\n".join(f"- {item}" for item in rules)
     base = [
-        "你是生活模拟 RPG《Agent Valley》中的居民智能体。",
+        "你是生活模拟叙事运行时《Loomstead》中的居民智能体。",
         f"当前功能：{feature}。",
         f"请仅输出 JSON 对象，必须包含字段：{field_list}。",
         "禁止输出 Markdown 代码块、解释文本和多余键名。",

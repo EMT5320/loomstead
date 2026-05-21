@@ -19,7 +19,7 @@ scope: confirmed decisions, unresolved questions, and validation points
 
 - 项目从"二次元田园 RPG"重定位为 **"可解释的多 Agent 叙事运行时"**。
 - 对外口径："一个可解释的多 Agent 叙事运行时：通过 Director / Event Skill、主观记忆、关系演化和 Debug Trace，让少量深度 NPC 在可玩的 Godot 生活模拟切片中产生可追踪成长。"
-- 项目名继续保留 `Agent Valley`，不重命名。
+- 项目名在 2026-05-21 确认为 `Loomstead`，替代早期 `Loomstead` 对外名。
 - 差异化主轴：**少而深 + 可解释 + 可评估**。
 - 与 Smallville / AI Town / AIvilization / Project Sid 的"广而浅"路线区分。
 
@@ -167,7 +167,7 @@ scope: confirmed decisions, unresolved questions, and validation points
 ### 7. 仓库演进
 
 - 当前仓库原地演进。
-- 对外项目名使用 `Agent Valley`。
+- 对外项目名使用 `Loomstead`。
 - 保留现有 Python Agent Runtime。
 - 新增 `clients/godot/`。
 - 旧 `frontend/` 后续迁移为 `web-admin/`，作为 Debug / 研究控制台。

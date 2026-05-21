@@ -1,5 +1,5 @@
 Use case: stylized-concept
-Asset type: visual novel half-body character portrait for Agent Valley
+Asset type: visual novel half-body character portrait for Loomstead
 Primary request: Create Aurea Asterchron as a neutral visual novel half-body portrait for a bright anime light fantasy farming life sim.
 Subject: Aurea Asterchron, ownerId orren, 72 years old elegant elderly female retired teacher and town historian, silver hair pinned up or neatly cut, pale gray or blue eyes, wise strict neutral expression, old green vest or long coat over a parchment-colored shirt, long scarf, pocket watch, ancient book with star map, small starlight lantern charm, dignified strict but lovable elder aura.
 Composition: single character only, vertical 2:3 portrait, half-body from head to waist, centered with generous padding, clean silhouette, looking toward the viewer, no extra characters, no item callout sheet, no labels.

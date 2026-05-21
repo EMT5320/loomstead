@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: asset-pipeline
-last_verified: 2026-05-17
+last_verified: 2026-05-21
 startup_load: on-demand
 source_of_truth: true
 scope: art style, asset generation order, acceptance rules, and visual consistency
@@ -9,11 +9,11 @@ scope: art style, asset generation order, acceptance rules, and visual consisten
 
 ﻿# 美术风格与资产生成指南：二次元轻幻想轻异世界田园风
 
-> 本文用于指导 `Agent Valley` 首版视觉资产生成、筛选、命名、导入和后续扩展。后续调用生图能力前，优先参考本文与 `assets/manifests/asset_manifest.json`。可直接复制的首版提示词见 [`asset_generation_prompts.md`](./asset_generation_prompts.md)；地图小人的细粒度返工规范见 [`map_sprite_style_guide.md`](./map_sprite_style_guide.md)。
+> 本文用于指导 `Loomstead` 首版视觉资产生成、筛选、命名、导入和后续扩展。后续调用生图能力前，优先参考本文与 `assets/manifests/asset_manifest.json`。可直接复制的首版提示词见 [`asset_generation_prompts.md`](./asset_generation_prompts.md)；地图小人的细粒度返工规范见 [`map_sprite_style_guide.md`](./map_sprite_style_guide.md)。
 
 ## 核心定位
 
-`Agent Valley` 首版视觉路线确定为：**二次元轻幻想轻异世界田园生活模拟**。
+`Loomstead` 首版视觉路线确定为：**二次元轻幻想轻异世界田园生活模拟**。
 
 目标观感：
 
@@ -61,7 +61,7 @@ photorealistic, western storybook watercolor, heavy oil painting, dark grim fant
 
 ### 星灯谷
 
-首版对内可称为“星灯谷”，对外继续使用 `Agent Valley`。星灯谷是一座被温和星光祝福的小镇，农作物、节日和居民关系都与“星灯”意象有关。
+首版对内可称为“星灯谷”，对外继续使用 `Loomstead`。星灯谷是一座被温和星光祝福的小镇，农作物、节日和居民关系都与“星灯”意象有关。
 
 核心意象：
 
@@ -169,14 +169,14 @@ UI 风格要求：
 首批建议先生成 3 张，用于确定整体审美：
 
 ```text
-assets/source/style/style_key_art_agent_valley.png
+assets/source/style/style_key_art_loomstead.png
 assets/source/style/style_character_lineup_day1.png
 assets/source/ui/anime_dialogue_panel_style.png
 ```
 
 用途：
 
-- `style_key_art_agent_valley.png`：展示星灯谷的整体气质，包含农场、广场、远处小镇和星灯元素。
+- `style_key_art_loomstead.png`：展示星灯谷的整体气质，包含农场、广场、远处小镇和星灯元素。
 - `style_character_lineup_day1.png`：6 个 NPC 的同框设计草图，用于统一比例、线稿、饱和度和服饰复杂度。
 - `anime_dialogue_panel_style.png`：对话框、名牌、选项按钮和记忆卡片的 UI 风格参考。
 
@@ -531,7 +531,7 @@ reviewNotes
 
 建议按以下顺序推进，避免一次生成太多后风格失控：
 
-1. 生成 `style_key_art_agent_valley.png`，确认整体颜色、线稿、魔法浓度。
+1. 生成 `style_key_art_loomstead.png`，确认整体颜色、线稿、魔法浓度。
 2. 生成 `style_character_lineup_day1.png`，确认 6 个 NPC 的比例和服饰复杂度。
 3. 生成 `anime_dialogue_panel_style.png`，确认 UI 能承载中文文本。
 4. 生成偏少女玩家农场主 1 张 `neutral` 表情立绘。

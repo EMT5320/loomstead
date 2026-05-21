@@ -14,7 +14,7 @@ scope: current implementation facts, verification state, and work constraints
 
 ## 1. 当前阶段判断
 
-项目已经从早期 `AI Agent 小镇观察台` 进入 `Agent Valley` 第一版垂直切片收束阶段。**2026-05-19 项目重定位**为"可解释多 Agent 叙事运行时"，差异化主轴改为"少而深 + 可解释 + 可评估"。
+项目已经从早期观察台阶段进入 `Loomstead` 第一版垂直切片收束阶段。**2026-05-19 项目重定位**为"可解释多 Agent 叙事运行时"，差异化主轴改为"少而深 + 可解释 + 可评估"；**2026-05-21 对外项目名确认改为 `Loomstead`**。
 
 当前仓库具备：
 

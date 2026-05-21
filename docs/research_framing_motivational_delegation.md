@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: research
-last_verified: 2026-05-20
+last_verified: 2026-05-21
 startup_load: on-demand
 source_of_truth: true
 scope: research framing, motivational delegation, process fidelity, baselines, rebuttal map
@@ -13,7 +13,7 @@ scope: research framing, motivational delegation, process fidelity, baselines, r
 
 ## 1. 一句话定位
 
-`Agent Valley` 是一个 **narrative-primary** 的多 Agent 研究环境，用于研究：当用户目标不能被直接执行、也不能通过硬改最终状态完成时，Director 如何通过动机偏置、事件 Skill、资源/机会调度、信息暴露和约束注入，间接驱动拥有长期记忆与关系的自主 Agent 朝目标演化，并用 Process Fidelity Eval 验证“过程是否可信”。
+`Loomstead` 是一个 **narrative-primary** 的多 Agent 研究环境，用于研究：当用户目标不能被直接执行、也不能通过硬改最终状态完成时，Director 如何通过动机偏置、事件 Skill、资源/机会调度、信息暴露和约束注入，间接驱动拥有长期记忆与关系的自主 Agent 朝目标演化，并用 Process Fidelity Eval 验证“过程是否可信”。
 
 短句版本：
 
@@ -177,13 +177,13 @@ Scenario: Branna Forgiveness
 
 ```text
 Generative Agents 主要研究 believable simulation：Agent 如何记忆、反思、计划并产生可信社会行为。
-Agent Valley 研究 goal-conditioned orchestration：用户给出过程约束目标后，Director 如何通过间接动机干预推动多 Agent 世界朝目标演化，并如何评估过程保真度。
+Loomstead 研究 goal-conditioned orchestration：用户给出过程约束目标后，Director 如何通过间接动机干预推动多 Agent 世界朝目标演化，并如何评估过程保真度。
 ```
 
 换句话说：
 
 - Smallville 的重点是模拟可信人类行为。
-- Agent Valley 的重点是“目标 → 间接干预 → 多主体反应 → 过程保真评估”。
+- Loomstead 的重点是“目标 → 间接干预 → 多主体反应 → 过程保真评估”。
 
 ## 6. Baseline Matrix
 

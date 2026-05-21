@@ -1,5 +1,5 @@
 Use case: stylized-concept
-Asset type: visual novel half-body character portrait for Agent Valley
+Asset type: visual novel half-body character portrait for Loomstead
 Primary request: Create Lena Birchveil as a neutral visual novel half-body portrait for a bright anime light fantasy farming life sim.
 Subject: Lena Birchveil, ownerId lena, 27 years old female doctor in a rural light fantasy clinic, dark teal or blue-black medium-short hair, tired gentle eyes, calm rational neutral observation expression, white short medical coat with mint green accents, herb brooch, medical satchel, small herb bundle, blue notebook, restrained caring aura.
 Composition: single character only, vertical 2:3 portrait, half-body from head to waist, centered with generous padding, clean silhouette, looking toward the viewer, no extra characters, no item callout sheet, no labels.

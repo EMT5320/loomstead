@@ -2,7 +2,7 @@ Use case: ui-mockup
 Asset type: sharper anime visual novel UI style reference for game art direction baseline
 Primary request: Create a polished anime visual novel UI style sheet for a bright light fantasy isekai farming life sim. Include a large semi-transparent dialogue box, character nameplate, choice buttons, relationship change badge, memory card panel, and night diary panel.
 Scene/backdrop: clean UI kit presentation sheet on a simple flat pale background, no illustrated landscape, no paper collage, no parchment texture.
-Subject: Agent Valley UI components with crisp anime game shape language, star lantern corner ornaments, subtle leaf details, low-magic starlight accents, and blank text-safe spaces for Chinese UI rendered later.
+Subject: Loomstead UI components with crisp anime game shape language, star lantern corner ornaments, subtle leaf details, low-magic starlight accents, and blank text-safe spaces for Chinese UI rendered later.
 Composition: clear separated components, large empty text areas, show normal hover selected button states using color and border changes only, no readable text, no placeholder letters, no labels.
 Style: modern anime farming life sim UI, Visual Novel interface, crisp cel-shaded edges, semi-transparent frosted glass panels, warm cream amber soft green palette, clean vector-like ornament details, polished game UI mockup, high quality, readable at game scale.
 Avoid: actual text, readable letters, logo, watermark, western storybook watercolor, parchment texture, old paper scrapbook, heavy oil painting, photorealistic, dark grim fantasy, cyberpunk, horror, cluttered layout, tiny unreadable details.

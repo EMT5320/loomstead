@@ -1,13 +1,13 @@
 ---
 status: active
 owner_lane: planning
-last_verified: 2026-05-20
+last_verified: 2026-05-21
 startup_load: on-demand
 source_of_truth: true
 scope: production roadmap, phase axis, phase 1 closeout, phase 2 skeleton design
 ---
 
-# Agent Valley 生产化路线图
+# Loomstead 生产化路线图
 
 > 制定时间：2026-05-17，2026-05-19 重排
 > 触发原因：项目当前体验被诊断为"UI 点击看板"——后端有厚实的 Director / Skill / NPC 深度卡 / 记忆 / gossip schema，但客户端只是"表单提交+状态展示"。本文档作为新的事实源，取代旧实施计划（已归档至 `docs/archive/implementation_plan.md`）作为路线执行依据。

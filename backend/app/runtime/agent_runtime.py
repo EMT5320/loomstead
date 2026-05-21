@@ -95,7 +95,7 @@ class AgentRuntime:
         )
         self.director_queue = DirectorQueueManager(self.director_validator)
         self.world.setdefault("directorState", {"activatedEventSkills": [], "consumedBeatIds": []})
-        self.event_store.append("system.ready", {"message": "AI Agent 小镇 Python 运行时已启动。", "providerMode": self.provider_mode})
+        self.event_store.append("system.ready", {"message": "Loomstead Python 运行时已启动。", "providerMode": self.provider_mode})
 
     def reload_model_config(self) -> dict[str, Any]:
         """热重载模型配置，避免每次调整 profile 后都重启开发服务器。"""
@@ -3147,7 +3147,7 @@ class AgentRuntime:
         elif "店主" in target["job"]:
             speech = "欢迎你，农场主。需要种子、食材或生活用品时，可以来星露杂货铺找我。"
         else:
-            speech = f"欢迎来到 Agent Valley。我听见你说“{message}”，之后我们可以慢慢熟悉。"
+            speech = f"欢迎来到 Loomstead。我听见你说“{message}”，之后我们可以慢慢熟悉。"
         response = {
             "speech": speech,
             "action": "talkTo",

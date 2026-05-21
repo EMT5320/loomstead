@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: godot-client
-last_verified: 2026-05-19
+last_verified: 2026-05-21
 startup_load: on-demand
 source_of_truth: true
 scope: gameplay loop, map interactions, motivation-driven npc actions, godot/backend boundaries
@@ -10,12 +10,12 @@ scope: gameplay loop, map interactions, motivation-driven npc actions, godot/bac
 # 游戏本体架构定调：可解释多 Agent 叙事运行时的可玩切片
 
 > 状态更新时间：2026-05-19
-> 本文用于约束 `Agent Valley` 的游戏本体路线，定义 Godot 切片如何承载 [`agent_loop_architecture.md`](./agent_loop_architecture.md) 定义的 NPC agent loop。后续客户端、后端玩法系统、资产、Debug 与无人值守 goal 都应先对齐本文。
+> 本文用于约束 `Loomstead` 的游戏本体路线，定义 Godot 切片如何承载 [`agent_loop_architecture.md`](./agent_loop_architecture.md) 定义的 NPC agent loop。后续客户端、后端玩法系统、资产、Debug 与无人值守 goal 都应先对齐本文。
 > 边界：本文聚焦"游戏切片如何呈现 agent 系统"。NPC 决策机制详见 `agent_loop_architecture.md`，世界实体 schema 详见 `world_entity_model.md`。
 
 ## 1. 核心结论
 
-`Agent Valley` 的游戏本体目标是 **由多层 Agent 系统驱动的二次元轻幻想田园生活模拟 RPG**。
+`Loomstead` 的游戏本体目标是 **由多层 Agent 系统驱动的二次元轻幻想田园生活模拟 RPG**。
 
 首版内容量可以很小，系统结构需要提前按正式游戏骨架设计：
 
@@ -639,5 +639,5 @@ NPC 后续行动也应走结构化工具：
 后续所有客户端和玩法系统 goal 可以复用这段约束：
 
 ```text
-Agent Valley 的游戏本体已经定调为涌现式田园生活模拟 RPG。后续实现要把玩家主要交互迁移到地图、移动、靠近提示和 VN 演出层；NPC 位置与行动由软日程权重、世界约束、Director Beat、Event Skill 和 NPC 自主判断共同生成；不要把 NPC 写死成固定排班，也不要继续把主体验扩写成背景图加 UI 按钮列表。后端保持权威状态，Godot 只展示状态并提交合法动作。
+Loomstead 的游戏本体已经定调为涌现式田园生活模拟 RPG。后续实现要把玩家主要交互迁移到地图、移动、靠近提示和 VN 演出层；NPC 位置与行动由软日程权重、世界约束、Director Beat、Event Skill 和 NPC 自主判断共同生成；不要把 NPC 写死成固定排班，也不要继续把主体验扩写成背景图加 UI 按钮列表。后端保持权威状态，Godot 只展示状态并提交合法动作。
 ```

@@ -7,13 +7,13 @@ source_of_truth: true
 scope: 文档分层索引与渐进式读取路线
 ---
 
-# Agent Valley 文档索引
+# Loomstead 文档索引
 
-本目录用于沉淀 `ai-agent-town-lab` 的核心共识。当前治理原则：新对话先读短入口，再按任务线渐进加载源文档；归档文档放在 `docs/archive/`，仅供历史溯源。
+本目录用于沉淀 `loomstead` 的核心共识。当前治理原则：新对话先读短入口，再按任务线渐进加载源文档；归档文档放在 `docs/archive/`，仅供历史溯源。
 
 ## 1. 当前定位（2026-05-19 重定位 + 2026-05-20 研究 framing）
 
-`Agent Valley` 是一个 **narrative-primary 的可解释多 Agent 叙事运行时与研究环境**：通过 Director / Event Skill、主观记忆、关系演化、启发式学习与 Debug Trace，研究 Director 如何以 Motivational Delegation 间接驱动少量深度 NPC 朝过程约束目标演化，并用 Process Fidelity Eval 验证“过程是否可信”。项目以 **少而深 + 可解释 + 可评估** 为差异化主轴，小镇是 primary validation domain，跨域任务环境只作 secondary validation。详见 [`project_vision.md`](./project_vision.md)、[`research_framing_motivational_delegation.md`](./research_framing_motivational_delegation.md) 和 [`agent_loop_architecture.md`](./agent_loop_architecture.md)。
+`Loomstead` 是一个 **narrative-primary 的可解释多 Agent 叙事运行时与研究环境**：通过 Director / Event Skill、主观记忆、关系演化、启发式学习与 Debug Trace，研究 Director 如何以 Motivational Delegation 间接驱动少量深度 NPC 朝过程约束目标演化，并用 Process Fidelity Eval 验证“过程是否可信”。项目以 **少而深 + 可解释 + 可评估** 为差异化主轴，小镇是 primary validation domain，跨域任务环境只作 secondary validation。详见 [`project_vision.md`](./project_vision.md)、[`research_framing_motivational_delegation.md`](./research_framing_motivational_delegation.md) 和 [`agent_loop_architecture.md`](./agent_loop_architecture.md)。
 
 ## 2. 新对话最小读取
 

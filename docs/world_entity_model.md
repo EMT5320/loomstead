@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: backend-director
-last_verified: 2026-05-19
+last_verified: 2026-05-21
 startup_load: on-demand
 source_of_truth: true
 scope: world entities (FarmPlot, Item, Inventory, Shop, Building, Time, Weather), tool action space, content scale targets
@@ -10,7 +10,7 @@ scope: world entities (FarmPlot, Item, Inventory, Shop, Building, Time, Weather)
 # 世界实体模型（Agent 工具空间）
 
 > 制定时间：2026-05-19
-> 用途：定义 `Agent Valley` 的世界实体 schema，作为 NPC Agent 工具调用的"行动空间"。本文档与 [`agent_loop_architecture.md`](./agent_loop_architecture.md) 配套，前者讲 NPC 怎么决策，本文讲 NPC 决策的对象和效果作用在什么状态上。
+> 用途：定义 `Loomstead` 的世界实体 schema，作为 NPC Agent 工具调用的"行动空间"。本文档与 [`agent_loop_architecture.md`](./agent_loop_architecture.md) 配套，前者讲 NPC 怎么决策，本文讲 NPC 决策的对象和效果作用在什么状态上。
 > 边界：本文聚焦数据契约和状态规则，不讲 Godot 渲染层细节；不讲具体 NPC 内容（见 `npc_deep_card_spec.md` 和 `game_content_storyline.md`）；不讲资产 manifest（见 `art_direction.md` 和 `assets/manifests/`）。
 
 ## 0. 设计原则

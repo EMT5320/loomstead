@@ -1,5 +1,5 @@
 Use case: stylized-concept
-Asset type: visual novel half-body character portrait for Agent Valley
+Asset type: visual novel half-body character portrait for Loomstead
 Primary request: Create Kaya Moonstring as a neutral visual novel half-body portrait for a bright anime light fantasy farming life sim.
 Subject: Kaya Moonstring, ownerId kai, 22 years old cheerful young female tavern musician, wavy auburn or reddish-purple hair, golden or purple expressive eyes, confident playful neutral smile, burgundy short cape, lively rural tavern performer outfit with practical boots, modest blouse, knee-length skirt or fitted trousers, belt accessories, star pendant, lute or violin, Moon Cat Tavern charm, warm theatrical but cozy village aura.
 Composition: single character only, vertical 2:3 portrait, half-body from head to waist, centered with generous padding, clean silhouette, looking toward the viewer, no extra characters, no item callout sheet, no labels.

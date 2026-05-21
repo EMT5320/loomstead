@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: backend-director
-last_verified: 2026-05-20
+last_verified: 2026-05-21
 startup_load: on-demand
 source_of_truth: true
 scope: NPC agent loop, motivation engine, capability registry, subjective memory, heuristic learning, arbitration, evaluation framework
@@ -15,7 +15,7 @@ scope: NPC agent loop, motivation engine, capability registry, subjective memory
 
 ## 0. 项目重定位（前言）
 
-`Agent Valley` 不再以"涌现式田园生活模拟 RPG"作为项目核心叙事。新定位：
+`Loomstead` 不再以"涌现式田园生活模拟 RPG"作为项目核心叙事。新定位：
 
 > **一个可解释的多 Agent 叙事运行时：通过 Director / Event Skill、主观记忆、关系演化、启发式学习与 Debug Trace，让少量深度 NPC 在可玩的 Godot 生活模拟切片中产生可追踪成长。**
 

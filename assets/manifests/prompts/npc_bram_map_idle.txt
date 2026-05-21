@@ -2,7 +2,7 @@ Use case: map-sprite-redraw-closure
 Asset type: static idle_front map sprite candidate
 Output asset: assets/source/sprites/npc_bram_map_idle.png
 Style anchors: player_farmer_map_idle, npc_mira_map_idle, npc_tomas_map_idle only.
-Primary request: Redraw Bram / Branna Wheatrow as a centered full-body anime chibi low-pixel map sprite for Agent Valley.
+Primary request: Redraw Bram / Branna Wheatrow as a centered full-body anime chibi low-pixel map sprite for Loomstead.
 Identity lock: mature strong female farm owner, warm tan skin, compact dark brown ponytail, earthy cream work shirt, olive green overalls or suspenders, brown work gloves, tiny straw-hat accent behind shoulder or on head, tiny wheat sprig attached at the belt.
 Style lock: very short 2.1-head-tall super-deformed tiny map person, oversized round head, compact tiny body, short legs, soft anime low-pixel rendering, pixel-art inspired, crisp 1-2 px dark outline after resize, limited warm palette, readable at 64x64 and 32x32.
 Composition lock: centered full body, slight top-down front view, feet visible, simple idle_front pose, arms close to body, body fits a 48x56 safe character area after resizing, generous empty margin.

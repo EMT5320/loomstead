@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: asset-pipeline
-last_verified: 2026-05-16
+last_verified: 2026-05-21
 startup_load: on-demand
 source_of_truth: true
 scope: map-sprite style constraints, failure rules, and prompt structure
@@ -9,7 +9,7 @@ scope: map-sprite style constraints, failure rules, and prompt structure
 
 # 地图小人风格指南：二次元 Q 版低像素
 
-> 本指南用于 `Agent Valley` 地图层小人的返工准备。当前只做文档与提示词准备，不生成新图片，不修改 Godot 代码，也不把任何既有 `pending_review` 小人提升为 `source_selected`。
+> 本指南用于 `Loomstead` 地图层小人的返工准备。当前只做文档与提示词准备，不生成新图片，不修改 Godot 代码，也不把任何既有 `pending_review` 小人提升为 `source_selected`。
 
 ## 目标定位
 

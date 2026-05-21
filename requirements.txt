@@ -1,3 +1,3 @@
-﻿# AI Agent 小镇后端依赖
+﻿# Loomstead 后端依赖
 # 第一版 Python 后端当前仅使用标准库，便于主人无需安装依赖即可运行。
 # 后续接入 FastAPI / SQLite / 向量记忆时再逐步加入依赖。

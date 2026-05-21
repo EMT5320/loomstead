@@ -1,10 +1,10 @@
-# Agent Valley 项目代理入口
+# Loomstead 项目代理入口
 
-本文是 `ai-agent-town-lab` 的共享代理入口，供 Codex、Claude Code 和其他开发助手在新会话启动时读取。它只放长期有效的工作规则和渐进式加载路线，具体事实以 `docs/` 中对应源文档为准。
+本文是 `loomstead` 的共享代理入口，供 Codex、Claude Code 和其他开发助手在新会话启动时读取。它只放长期有效的工作规则和渐进式加载路线，具体事实以 `docs/` 中对应源文档为准。
 
 ## 1. 项目定位
 
-- 项目名：`Agent Valley`。
+- 项目名：`Loomstead`。
 - 当前方向（2026-05-19 重定位后）：**可解释的多 Agent 叙事运行时**——通过 Director / Event Skill、主观记忆、关系演化、启发式学习与 Debug Trace，让少量深度 NPC（4 核心 + 2 stub）在可玩的 Godot 生活模拟切片中产生可追踪成长。差异化主轴：**少而深 + 可解释 + 可评估**。
 - 技术骨架：Godot 4.x 客户端 + Python Agent Server + Web Debug / 研究控制台。
 - 当前阶段：Phase 1（活着的世界）收口中，Phase 2（骨架建立期）待启动。

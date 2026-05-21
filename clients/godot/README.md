@@ -1,6 +1,6 @@
-# Agent Valley Godot 客户端
+# Loomstead Godot 客户端
 
-这是 `Agent Valley` 的首版 Godot 游戏客户端骨架。当前目标是验证 Godot 能读取 Python Agent Server 的权威世界状态，并在游戏窗口中显示玩家、地点、NPC、进行中事件和 VN 结果回执。
+这是 `Loomstead` 的首版 Godot 游戏客户端骨架。当前目标是验证 Godot 能读取 Python Agent Server 的权威世界状态，并在游戏窗口中显示玩家、地点、NPC、进行中事件和 VN 结果回执。
 
 ## 当前能力
 

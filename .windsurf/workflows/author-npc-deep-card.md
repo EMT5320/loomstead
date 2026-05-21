@@ -4,7 +4,7 @@ description: 为指定 NPC 撰写一份符合 npc_deep_card_spec 的深度卡 JS
 
 # /author-npc-deep-card
 
-为 `Agent Valley` 中某位 NPC 撰写一份符合 [`docs/npc_deep_card_spec.md`](../../docs/npc_deep_card_spec.md) 的深度卡 JSON 文件。本工作流不直接生成剧情，只生成 **压力源 / 口癖 / 秘密 / 反应倾向 / 关系阶段 / 独白种子** 等可被 LLM 在线调用的角色基底。
+为 `Loomstead` 中某位 NPC 撰写一份符合 [`docs/npc_deep_card_spec.md`](../../docs/npc_deep_card_spec.md) 的深度卡 JSON 文件。本工作流不直接生成剧情，只生成 **压力源 / 口癖 / 秘密 / 反应倾向 / 关系阶段 / 独白种子** 等可被 LLM 在线调用的角色基底。
 
 ## 启动条件
 

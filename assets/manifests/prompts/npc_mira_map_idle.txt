@@ -5,7 +5,7 @@ Reference inputs: assets/source/characters/reference/npc_mira_reference.png and 
 Primary request: Create Mia Starwheat as a low-pixel chibi map idle sprite.
 Identity lock: warm grocery shop owner, chestnut side braid, orange apron, small seed packet or ledger, small star hairpin, gentle practical posture.
 Distinction lock: keep her clearly different from the player farmer; orange apron and side braid must be the main read.
-Style lock: anime chibi low-pixel map sprite for Agent Valley, pixel-art inspired, light fantasy farming life sim, 2.0 to 2.5 heads tall, slight top-down front view, centered full body, crisp 1-2 px dark outline, limited warm palette, readable at 64x64 and 32x32, single character only.
+Style lock: anime chibi low-pixel map sprite for Loomstead, pixel-art inspired, light fantasy farming life sim, 2.0 to 2.5 heads tall, slight top-down front view, centered full body, crisp 1-2 px dark outline, limited warm palette, readable at 64x64 and 32x32, single character only.
 Canvas: square composition for later 64x64 transparent PNG processing; keep the body inside a 48x56 safe area with a small foot margin.
 Background: transparent background preferred. If transparency is unavailable, use a perfectly flat #ff00ff chroma key background with no shadows or gradients; do not use #ff00ff inside the character.
 Avoid: text, labels, watermark, logo, extra characters, portrait crop, tall realistic body, 3D model look, side-scroller view, heavy gradients, noisy dithering, muddy outline, huge prop covering the body, malformed limbs, wrong identity.

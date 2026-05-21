@@ -1,13 +1,13 @@
 ---
 status: active
 owner_lane: vision
-last_verified: 2026-05-20
+last_verified: 2026-05-21
 startup_load: on-demand
 source_of_truth: true
 scope: long-term product vision, differentiation, and success criteria
 ---
 
-# 项目整体愿景：Agent Valley
+# 项目整体愿景：Loomstead
 
 > 本文是项目后续推进的核心依据。后续设计、实现、取舍和阶段验收都优先对齐这里定义的方向。
 > 2026-05-19 项目重定位：从"二次元田园 RPG"调整为"可解释的多 Agent 叙事运行时"。差异化主轴是"少而深 + 可解释 + 可评估"。
@@ -15,7 +15,7 @@ scope: long-term product vision, differentiation, and success criteria
 
 ## 一句话定位
 
-`Agent Valley` 是一个 **narrative-primary 的可解释多 Agent 叙事运行时与研究环境**：通过 Director / Event Skill、主观记忆、关系演化、启发式学习与 Debug Trace，研究 Director 如何以 **Motivational Delegation** 的方式间接驱动少量深度 NPC 朝过程约束目标演化，并用 **Process Fidelity Eval** 验证"目标达成过程是否可信"。
+`Loomstead` 是一个 **narrative-primary 的可解释多 Agent 叙事运行时与研究环境**：通过 Director / Event Skill、主观记忆、关系演化、启发式学习与 Debug Trace，研究 Director 如何以 **Motivational Delegation** 的方式间接驱动少量深度 NPC 朝过程约束目标演化，并用 **Process Fidelity Eval** 验证"目标达成过程是否可信"。
 
 2026-05-20 研究 framing 更新：小镇不再被描述为"通用架构的引言"，而是 primary validation domain。Process Fidelity 需要人类能直觉判断过程是否合理的场景；恋爱、和解、节日、信任修复和谣言传播这类叙事目标天然暴露"直接硬改状态"和"可信过程演化"的区别。跨域任务环境保留为 secondary validation，用于证明 GoalSpec / Intervention / Trace / Eval 抽象具备迁移可能，但不反客为主。
 
@@ -68,7 +68,7 @@ scope: long-term product vision, differentiation, and success criteria
 
 ### 0. 多层 Agent 游戏系统
 
-`Agent Valley` 的核心是可被游玩的涌现社会，由规则、压力源、记忆和 Agent 主观判断共同生成体验。
+`Loomstead` 的核心是可被游玩的涌现社会，由规则、压力源、记忆和 Agent 主观判断共同生成体验。
 
 系统分为：
 
@@ -239,7 +239,7 @@ Phase 1（活着的世界）正在收口；Phase 2（骨架建立期）启动后
 
 ### 多元关系
 
-Agent Valley 的小镇关系按叙事需要自然存在，不默认排斥同性配偶、双母家庭、单亲家庭、收养关系、非血缘家庭或其他多元亲密关系。角色关系的边界、亲密度和冲突通过角色卡、记忆和玩家选择表达。
+Loomstead 的小镇关系按叙事需要自然存在，不默认排斥同性配偶、双母家庭、单亲家庭、收养关系、非血缘家庭或其他多元亲密关系。角色关系的边界、亲密度和冲突通过角色卡、记忆和玩家选择表达。
 
 ### 玩家身份
 

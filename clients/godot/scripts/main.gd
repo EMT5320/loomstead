@@ -256,7 +256,7 @@ func _build_top_layer() -> void:
 	columns.add_theme_constant_override("separation", _scaled_int(22))
 	margin.add_child(columns)
 
-	var left_panel_frame := _create_panel(columns, Vector2(330, 0), "✦ Agent Valley · VN UI")
+	var left_panel_frame := _create_panel(columns, Vector2(330, 0), "✦ Loomstead · VN UI")
 	var left_panel := _create_scroll_body(left_panel_frame)
 
 	status_label = Label.new()

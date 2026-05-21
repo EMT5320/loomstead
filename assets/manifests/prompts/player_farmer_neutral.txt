@@ -1,5 +1,5 @@
 Use case: stylized-concept
-Asset type: visual novel half-body character portrait for Agent Valley
+Asset type: visual novel half-body character portrait for Loomstead
 Primary request: Create the approved young female farmer protagonist as a neutral visual novel half-body portrait for a bright anime light fantasy farming life sim.
 Subject: female farmer protagonist, age 18 to 22, approachable and refreshing newcomer aura, short light-brown bob hair or loose low ponytail, green or hazel eyes, friendly curious neutral expression, practical short jacket, simple apron, light boots, crossbody seed pouch, small starlight charm, cream white, leaf green and wheat gold palette.
 Composition: single character only, vertical 2:3 portrait, half-body from head to waist, centered with generous padding, clean silhouette, looking toward the viewer, no extra characters, no item callout sheet, no labels.

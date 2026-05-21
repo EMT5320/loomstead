@@ -1,13 +1,13 @@
 ---
 status: active
 owner_lane: context-governance
-last_verified: 2026-05-20
+last_verified: 2026-05-21
 startup_load: first-read
 source_of_truth: true
 scope: new-session entrypoint, boundaries, commands, and next steps
 ---
 
-# Agent Valley 新对话入口
+# Loomstead 新对话入口
 
 > 更新时间：2026-05-20（研究 framing 增补：narrative-primary / Motivational Delegation / Process Fidelity Eval）
 > 用途：下一轮新对话、无人值守开发、并行子代理任务的第一入口。
@@ -29,7 +29,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 
 ## 2. 一句话定位（2026-05-19 重定位 + 2026-05-20 研究 framing 增补）
 
-`Agent Valley` 是一个 **narrative-primary 的可解释多 Agent 叙事运行时与研究环境**：通过 Director / Event Skill、主观记忆、关系演化、启发式学习与 Debug Trace，研究 Director 如何以 Motivational Delegation 间接驱动少量深度 NPC（4 核心 + 2 stub）朝过程约束目标演化，并用 Process Fidelity Eval 验证"过程是否可信"。差异化主轴：**少而深 + 可解释 + 可评估**。
+`Loomstead` 是一个 **narrative-primary 的可解释多 Agent 叙事运行时与研究环境**：通过 Director / Event Skill、主观记忆、关系演化、启发式学习与 Debug Trace，研究 Director 如何以 Motivational Delegation 间接驱动少量深度 NPC（4 核心 + 2 stub）朝过程约束目标演化，并用 Process Fidelity Eval 验证"过程是否可信"。差异化主轴：**少而深 + 可解释 + 可评估**。
 
 ## 3. 当前已验证事实
 

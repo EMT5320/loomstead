@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: llm-debug
-last_verified: 2026-05-16
+last_verified: 2026-05-21
 startup_load: on-demand
 source_of_truth: true
 scope: model profile templates, local overrides, and configuration checks
@@ -67,6 +67,8 @@ $env:AGENT_TOWN_API_KEY = "你的真实 key"
 $env:AGENT_TOWN_BASE_URL = "https://api.deepseek.com"
 $env:AGENT_TOWN_MODEL = "请按官方文档复核后的模型名"
 ```
+
+当前环境变量前缀仍保留 `AGENT_TOWN_*`，用于兼容既有脚本、本机配置和 smoke 流程。Phase 2 骨架重构时可迁移到 `LOOMSTEAD_*`，并保留兼容 shim。
 
 ### 方式 B：本地覆盖文件
 

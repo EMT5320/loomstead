@@ -202,7 +202,7 @@ def run_server(port: int = 8787) -> None:
     project_root = Path(__file__).resolve().parents[2]
     app = create_town_app()
     server = ThreadingHTTPServer(("127.0.0.1", port), create_handler(app, project_root))
-    print(f"AI Agent 小镇 Python 后端已启动：http://localhost:{port}")
+    print(f"Loomstead Python 后端已启动：http://localhost:{port}")
     print(f"模型配置：provider={app.runtime.provider_mode}, config={app.runtime.model_config.config_path}, local={app.runtime.model_config.local_config_path.exists()}")
     server.serve_forever()
 

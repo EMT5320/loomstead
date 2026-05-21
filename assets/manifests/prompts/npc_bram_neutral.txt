@@ -1,5 +1,5 @@
 Use case: stylized-concept
-Asset type: visual novel half-body character portrait for Agent Valley
+Asset type: visual novel half-body character portrait for Loomstead
 Primary request: Create Branna Wheatrow as a neutral visual novel half-body portrait for a bright anime light fantasy farming life sim.
 Subject: Branna Wheatrow, ownerId bram, 36 years old strong adult female farm owner, tanned skin, short dark brown hair or practical high ponytail with sunlit streaks, serious direct neutral gaze, earthy shirt, suspenders or work overalls, old work gloves, sturdy boots, straw hat or towel over shoulder, crop crate detail, wheat yellow, soil brown and olive green palette, capable adult laborer strength.
 Composition: single character only, vertical 2:3 portrait, half-body from head to waist, centered with generous padding, clean silhouette, looking toward the viewer, no extra characters, no item callout sheet, no labels.

@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: asset-pipeline
-last_verified: 2026-05-17
+last_verified: 2026-05-21
 startup_load: on-demand
 source_of_truth: true
 scope: asset prompt pack and manifest registration examples
@@ -45,10 +45,10 @@ photorealistic, western storybook watercolor, heavy oil painting, dark grim fant
 
 ## 生成批次 0：风格锁定
 
-### `assets/source/style/style_key_art_agent_valley.png`
+### `assets/source/style/style_key_art_loomstead.png`
 
 ```text
-Key art for Agent Valley, a bright anime light fantasy isekai farming life sim. A cozy rural valley town called Starlight Valley, small farmhouse with vegetable plots in the foreground, sunny plaza and Moon Cat Tavern in the distance, strings of star lanterns, tiny magical sparkles around crops, warm morning sunlight, soft pastoral fantasy atmosphere, clean cel-shaded anime illustration, wholesome slice-of-life anime mood, 16:9, high quality, no text, no watermark.
+Key art for Loomstead, a bright anime light fantasy isekai farming life sim. A cozy rural homestead valley town called Starlight Valley, small farmhouse with vegetable plots in the foreground, sunny plaza and Moon Cat Tavern in the distance, strings of star lanterns, tiny magical sparkles around crops, warm morning sunlight, soft pastoral fantasy atmosphere, clean cel-shaded anime illustration, wholesome slice-of-life anime mood, 16:9, high quality, no text, no watermark.
 ```
 
 ### `assets/source/style/style_character_lineup_day1.png`

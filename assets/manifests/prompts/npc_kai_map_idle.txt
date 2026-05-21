@@ -2,7 +2,7 @@ Use case: map-sprite-redraw-closure
 Asset type: static idle_front map sprite candidate
 Output asset: assets/source/sprites/npc_kai_map_idle.png
 Style anchors: player_farmer_map_idle, npc_mira_map_idle, npc_tomas_map_idle only.
-Primary request: Redraw Kai / Kaya Moonstring as a centered full-body anime chibi low-pixel map sprite for Agent Valley.
+Primary request: Redraw Kai / Kaya Moonstring as a centered full-body anime chibi low-pixel map sprite for Loomstead.
 Identity lock: cheerful young female Moon Cat Tavern musician, warm red-auburn hair in a compact wavy side ponytail, burgundy short cape or shawl, cream blouse, dark skirt, small gold star pendant, tiny lute or music-note charm close to the hip.
 Style lock: 2.0 to 2.5 heads tall, soft anime chibi low-pixel rendering, pixel-art inspired, compact full-body map sprite, crisp 1-2 px dark outline after resize, limited warm palette, readable at 64x64 and 32x32.
 Composition lock: centered full body, slight top-down front view, feet visible, simple idle_front pose, body fits a 48x56 safe character area after resizing, generous empty margin.

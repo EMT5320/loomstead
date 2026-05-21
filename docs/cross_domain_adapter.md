@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: research-runtime
-last_verified: 2026-05-20
+last_verified: 2026-05-21
 startup_load: on-demand
 source_of_truth: true
 scope: cross-domain adapter interface, narrative primary boundary, optional task domain portability
@@ -9,7 +9,7 @@ scope: cross-domain adapter interface, narrative primary boundary, optional task
 
 # 跨域 Adapter 接口：Narrative-primary, Task-secondary
 
-> 本文定义跨域 adapter 的最小接口。目的不是把项目扩张成通用 Agent 平台，而是让 `Agent Valley` 的核心研究抽象可以离开小镇被验证。小镇仍是 primary domain；task / coding domain 只作为 secondary validation。
+> 本文定义跨域 adapter 的最小接口。目的不是把项目扩张成通用 Agent 平台，而是让 `Loomstead` 的核心研究抽象可以离开小镇被验证。小镇仍是 primary domain；task / coding domain 只作为 secondary validation。
 
 ## 1. 设计原则
 

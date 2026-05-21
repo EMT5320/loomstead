@@ -1,6 +1,6 @@
 Use case: illustration-story
 Asset type: 16:9 key art for game art direction baseline
-Primary request: Create key art for Agent Valley, a bright anime light fantasy isekai farming life sim. A cozy rural valley town called Starlight Valley, with a small farmhouse and vegetable plots in the foreground, a sunny plaza and Moon Cat Tavern in the distance, strings of star lanterns, tiny magical sparkles around crops, warm morning sunlight, soft pastoral fantasy atmosphere.
+Primary request: Create key art for Loomstead, a bright anime light fantasy isekai farming life sim. A cozy rural homestead valley town called Starlight Valley, with a small farmhouse and vegetable plots in the foreground, a sunny plaza and Moon Cat Tavern in the distance, strings of star lanterns, tiny magical sparkles around crops, warm morning sunlight, soft pastoral fantasy atmosphere.
 Scene/backdrop: low-magic rural fantasy town in a green valley, readable farm foreground, village middle ground, gentle hills background.
 Subject: Starlight Valley overall mood and visual identity; no main character close-up.
 Composition: cinematic 16:9, clear foreground/midground/background, central view kept readable, edges and lower third suitable for later visual novel UI overlay.
