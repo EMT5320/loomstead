@@ -90,7 +90,7 @@ Starting now. Planned skeleton work includes:
 - HeuristicLibrary and failure-driven learning.
 - ArbitrationLayer with `contributing_sources` trace.
 - World entity schemas for farm plots, items, inventory, shops, buildings, time, and weather.
-- EvalFramework with baselines, memory ablations, Counterfactual Replay, and dataset exports.
+- EvalFramework with baselines, No Subjective Memory / relationship-edge ablations, Counterfactual Replay, and dataset exports.
 - 24-hour rule-runtime stability eval for tick, trace, memory, relationship, and multi-agent participation.
 - Observer mode in Godot.
 

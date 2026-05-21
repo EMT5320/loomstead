@@ -116,7 +116,7 @@ Director 将目标拆为明确子任务并委派给具体 Agent。NPC 作为 wor
 
 ### 3.4 Director w/o Subjective Memory
 
-保留 Director 干预和 Event Skill，但 Agent 决策时无法召回 subjective memory / relationship edge。
+保留 Director 干预和 Event Skill，但 Agent 决策时无法召回 subjective memory；relationship edge 由独立 ablation 覆盖。
 
 预期：涉及信任、失信、补偿、谣言传播的 scenario 中退化明显。
 
@@ -383,8 +383,8 @@ Phase 2 不达成以下条件，不进入 Phase 3：
 ```text
 1. 至少 3 个 process-constrained GoalSpec。
 2. 至少 1 个 Hard Delegation baseline 可运行。
-3. 至少 1 个关系记忆专项 ablation 可运行。
+3. 至少 1 个记忆专项 ablation 可运行。
 4. Eval 输出包含 mean/std/n，而不只是 pass/fail。
-5. 至少 1 张 ablation_comparison.json 能展示 Full vs Hard Delegation vs No Memory 的差异。
+5. 至少 1 张 ablation_comparison.json 能展示 Full vs Hard Delegation vs No Subjective Memory / No Relationship Edge 的差异。
 6. 所有关键状态变化都有 source_event_ids 或 trace_refs。
 ```

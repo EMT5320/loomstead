@@ -15,6 +15,7 @@ from app.world.world_state import create_initial_world
 
 BASELINE_FULL = "full_motivational_delegation"
 BASELINE_HARD_DELEGATION = "hard_delegation"
+ABLATION_NO_SUBJECTIVE_MEMORY = "no_subjective_memory"
 ABLATION_NO_RELATIONSHIP_EDGE = "no_relationship_edge"
 ABLATION_SHUFFLED_MEMORY_OWNER = "shuffled_memory_owner"
 ABLATION_EVIDENCE_LINK_REMOVAL = "evidence_link_removal"
@@ -23,10 +24,13 @@ ABLATION_EVIDENCE_LINK_REMOVAL = "evidence_link_removal"
 PROCESS_BASELINES = (
     BASELINE_FULL,
     BASELINE_HARD_DELEGATION,
+    ABLATION_NO_SUBJECTIVE_MEMORY,
     ABLATION_NO_RELATIONSHIP_EDGE,
     ABLATION_SHUFFLED_MEMORY_OWNER,
     ABLATION_EVIDENCE_LINK_REMOVAL,
 )
+SUBJECTIVE_MEMORY_ABLATION_NONE = "none"
+SUBJECTIVE_MEMORY_ABLATION_NO_MEMORY = "no_subjective_memory"
 RELATIONSHIP_ABLATION_NONE = "none"
 RELATIONSHIP_ABLATION_NO_EDGE = "no_relationship_edge"
 RELATIONSHIP_ABLATION_SHUFFLED_OWNER = "shuffled_memory_owner"
@@ -77,6 +81,7 @@ def run_process_fidelity_scenarios(
     runs = {
         BASELINE_FULL: _run_process_baseline(scenarios, baseline=BASELINE_FULL),
         BASELINE_HARD_DELEGATION: _run_process_baseline(scenarios, baseline=BASELINE_HARD_DELEGATION),
+        ABLATION_NO_SUBJECTIVE_MEMORY: _run_process_baseline(scenarios, baseline=ABLATION_NO_SUBJECTIVE_MEMORY),
         ABLATION_NO_RELATIONSHIP_EDGE: _run_process_baseline(scenarios, baseline=ABLATION_NO_RELATIONSHIP_EDGE),
         ABLATION_SHUFFLED_MEMORY_OWNER: _run_process_baseline(scenarios, baseline=ABLATION_SHUFFLED_MEMORY_OWNER),
         ABLATION_EVIDENCE_LINK_REMOVAL: _run_process_baseline(scenarios, baseline=ABLATION_EVIDENCE_LINK_REMOVAL),
@@ -366,6 +371,7 @@ def _run_process_baseline(scenarios: tuple[ProcessGoalSpec, ...], *, baseline: s
             item = _run_runtime_process_scenario(
                 scenario,
                 baseline=baseline,
+                subjective_memory_ablation=_subjective_memory_ablation_for_baseline(baseline),
                 relationship_ablation=_relationship_ablation_for_baseline(baseline),
             )
         items.append(item)
@@ -388,10 +394,17 @@ def _relationship_ablation_for_baseline(baseline: str) -> str:
     }.get(baseline, RELATIONSHIP_ABLATION_NONE)
 
 
+def _subjective_memory_ablation_for_baseline(baseline: str) -> str:
+    return {
+        ABLATION_NO_SUBJECTIVE_MEMORY: SUBJECTIVE_MEMORY_ABLATION_NO_MEMORY,
+    }.get(baseline, SUBJECTIVE_MEMORY_ABLATION_NONE)
+
+
 def _run_runtime_process_scenario(
     scenario: ProcessGoalSpec,
     *,
     baseline: str,
+    subjective_memory_ablation: str = SUBJECTIVE_MEMORY_ABLATION_NONE,
     relationship_ablation: str = RELATIONSHIP_ABLATION_NONE,
 ) -> dict[str, Any]:
     runtime = AgentRuntime(provider_mode="rule")
@@ -400,6 +413,11 @@ def _run_runtime_process_scenario(
     snapshot = runtime.get_phase2_debug_snapshot({"agentId": scenario.npc_id, "limit": 50})
     recent_trace_events = snapshot.get("recentTraceEvents", []) if isinstance(snapshot.get("recentTraceEvents"), list) else []
     subjective_items = _debug_items(snapshot.get("subjectiveMemory", {}))
+    ablated_subjective_memory = _apply_subjective_memory_ablation(
+        mode=subjective_memory_ablation,
+        subjective_items=subjective_items,
+    )
+    subjective_items = ablated_subjective_memory["subjectiveItems"]
     relationship_items = _debug_items(snapshot.get("relationshipEdges", {}))
     relationship_edges_for_decision = [
         edge.to_dict()
@@ -493,6 +511,7 @@ def _run_runtime_process_scenario(
             "relationshipSourceIds": sorted(relationship_source_ids),
             "memoryTraceLinks": memory_trace_links,
             "counterfactualReplay": counterfactual_replay,
+            "subjectiveMemoryAblation": ablated_subjective_memory["evidence"],
             "relationshipAblation": ablated_relationships["evidence"],
             "traceSchemaVersion": snapshot.get("traceSchemaVersion"),
         },
@@ -555,6 +574,26 @@ def _event_tool_matches(runtime: AgentRuntime, event: dict[str, Any], prefix: st
 
 def _same_relationship_pair(edge: dict[str, Any], source_id: str, target_id: str) -> bool:
     return {str(edge.get("sourceAgentId") or ""), str(edge.get("targetAgentId") or "")} == {source_id, target_id}
+
+
+def _apply_subjective_memory_ablation(
+    *,
+    mode: str,
+    subjective_items: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """构造主观记忆反事实输入，验证 process coverage 是否依赖 subjective memory。"""
+    if mode == SUBJECTIVE_MEMORY_ABLATION_NO_MEMORY:
+        return {
+            "subjectiveItems": [],
+            "evidence": {
+                "mode": mode,
+                "removedSubjectiveMemoryCount": len(subjective_items),
+            },
+        }
+    return {
+        "subjectiveItems": subjective_items,
+        "evidence": {"mode": SUBJECTIVE_MEMORY_ABLATION_NONE},
+    }
 
 
 def _apply_relationship_ablation(
@@ -811,6 +850,7 @@ def _counterfactual_replay_items(result: dict[str, Any], baseline: str) -> list[
 def _memory_ablation_trace_items(result: dict[str, Any]) -> list[dict[str, Any]]:
     items: list[dict[str, Any]] = []
     for baseline in (
+        ABLATION_NO_SUBJECTIVE_MEMORY,
         ABLATION_NO_RELATIONSHIP_EDGE,
         ABLATION_SHUFFLED_MEMORY_OWNER,
         ABLATION_EVIDENCE_LINK_REMOVAL,
@@ -825,6 +865,7 @@ def _memory_ablation_trace_items(result: dict[str, Any]) -> list[dict[str, Any]]
                     "baseline": baseline,
                     "processChecks": item.get("processChecks", {}),
                     "metrics": item.get("metrics", {}),
+                    "subjectiveMemoryAblation": evidence.get("subjectiveMemoryAblation", {}),
                     "relationshipAblation": evidence.get("relationshipAblation", {}),
                     "counterfactualEffect": replay.get("effect") if isinstance(replay, dict) else None,
                 }

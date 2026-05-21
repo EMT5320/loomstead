@@ -259,7 +259,7 @@ Phase 2 启动时 **直接退役** Phase 1 的 `LifeActionExecutor`，不并行�
 | EvalFramework | scripts/run_agent_eval.py + L1 scenario suite (5-8 个) | `scripts/run_agent_eval.py`, `backend/app/eval/` |
 | ResearchFraming | Motivational Delegation + Process Fidelity Eval 研究文档 | `docs/research_framing_motivational_delegation.md` |
 | DomainAdapter | GoalSpec / Observation / Intervention / EvalTrace 抽象接口 | `backend/app/domain/base.py`、`docs/cross_domain_adapter.md` |
-| ProcessFidelityEval | 过程保真指标 + hard delegation baseline + ablation protocol + Counterfactual Replay + memory ablation + 24h stability | `backend/app/eval/process_fidelity.py`、`docs/process_fidelity_eval_spec.md` |
+| ProcessFidelityEval | 过程保真指标 + hard delegation baseline + ablation protocol + Counterfactual Replay + subjective / relationship memory ablation + 24h stability | `backend/app/eval/process_fidelity.py`、`docs/process_fidelity_eval_spec.md` |
 | 观察者模式 | Godot 内最小可用：切换 + NPC 信息面板 | `clients/godot/scripts/ui/observer_panel.gd` |
 
 ### 4.4 NPC 数量调整：4 核心 + 2 stub
@@ -275,7 +275,7 @@ Phase 2 收口标准：
 
 - `npm.cmd run eval:rule` 通过
 - L1 scenario suite 全部通过
-- 至少 1 次 ablation 实验数据（关闭 subjective_memory 或 heuristic_library，对比关键指标）
+- 至少 1 次 ablation 实验数据（关闭 subjective_memory 或 heuristic_library，对比关键指标；No Subjective Memory 已纳入 process baseline）
 - 规则版 NPC 决策周期可稳定运行 24 游戏小时不崩溃
 - `npm.cmd run eval:stability` 输出 `stability_tick_success_rate=1.0` 且 `tool_failure_rate=0.0`
 - Debug Trace 可完整解释任意一次决策
@@ -284,9 +284,9 @@ Phase 2 收口标准：
 
 - 至少 3 个 process-constrained GoalSpec。
 - 至少 1 个 Hard Delegation baseline 可运行。
-- 至少 1 个关系记忆 ablation 可运行：No Subjective Memory / No Relationship Edge / Shuffled Memory Owner / Evidence-Link Removal 四选一。
+- 至少 1 个记忆专项 ablation 可运行：No Subjective Memory / No Relationship Edge / Shuffled Memory Owner / Evidence-Link Removal 四选一；当前四项已进入 process baseline。
 - Eval 输出 mean/std/n，不只输出 pass/fail。
-- 至少 1 张 `ablation_comparison.json` 能比较 Full vs Hard Delegation vs No Memory。
+- 至少 1 张 `ablation_comparison.json` 能比较 Full vs Hard Delegation vs No Subjective Memory / No Relationship Edge。
 - Counterfactual Replay 能证明至少一类关系记忆对 Arbitration winner 有因果影响。
 - 任意关键目标状态变化必须能追溯到 `source_event_ids` 或 `trace_refs`。
 
