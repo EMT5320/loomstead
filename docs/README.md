@@ -17,10 +17,10 @@ scope: 文档分层索引与渐进式读取路线
 
 ## 2. 新对话最小读取
 
-1. [`../AGENTS.md`](../AGENTS.md)：所有开发助手共享的启动协议、任务线路由和验收规则。
+1. [`../AGENTS.md`](../AGENTS.md)：所有开发助手共享的项目背景、任务线路由和常用验证入口。
 2. [`agent_context.md`](./agent_context.md)：下一轮对话第一入口，记录当前边界、命令和最近下一步。
 3. [`current_status.md`](./current_status.md)：当前实现事实、主要缺口、开发前硬性约束和人工验收清单。
-4. [`goal_board.md`](./goal_board.md)：开发线看板、写入范围、并行任务拆分和交接格式。
+4. [`goal_board.md`](./goal_board.md)：开发线看板、协作参考、并行任务拆分和推荐排程。
 
 ## 3. 决策源文档
 
@@ -78,7 +78,7 @@ scope: 文档分层索引与渐进式读取路线
 ### 上下文治理 / 助手适配
 
 - [`../CLAUDE.md`](../CLAUDE.md)：Claude Code 适配层，导入根目录 `AGENTS.md`。
-- [`../.claude/rules/`](../.claude/rules/)：Claude Code 路径规则。
+- [`../.claude/rules/`](../.claude/rules/)：Claude Code 路径触发提示。
 - [`../scripts/build_agent_context.py`](../scripts/build_agent_context.py)：上下文 brief 生成和治理校验脚本。
 
 ## 5. 归档区
@@ -94,7 +94,7 @@ scope: 文档分层索引与渐进式读取路线
 - `initial_asset_generation_plan.md`（早期资产生成计划）
 - `map_sprite_first_batch_review.md` / `map_sprite_second_batch_review.md`（单次资产复盘）
 
-归档文档**不得作为当前事实源**。如需复活某段结论，需在新核心文档中显式吸收。
+归档文档通常只作历史背景。如需复活某段结论，建议在新核心文档中显式吸收。
 
 ## 6. 文档状态表
 
@@ -139,14 +139,14 @@ scope: 文档分层索引与渐进式读取路线
 - 视觉风格：二次元轻幻想轻异世界田园风（保留为 demo scenario 视觉外壳）。
 - 玩家身份：参与者 + 观察者双模式，观察者模式从 Phase 5 提升为核心模式。
 
-## 8. 文档维护规则
+## 8. 文档维护建议
 
 - `agent_context.md` 保持短入口，不堆长篇设计。
-- `current_status.md` 只写当前已核对事实，未人工验收内容必须显式标注。
+- `current_status.md` 主要记录当前已核对事实，未人工验收内容建议显式标注。
 - `goal_board.md` 记录当前开发线、验收证据和下一轮排程。
 - 长期愿景和阶段事实冲突时，先更新事实文档，再决定是否需要修订愿景或规格。
-- 归档区文档不得作为当前事实源；如需复活结论，需在新核心文档中显式吸收。
-- 每次调整上下文治理后运行：
+- 归档区文档通常只作历史背景；如需复活结论，建议在新核心文档中显式吸收。
+- 调整上下文治理后，建议运行：
 
 ```powershell
 npm.cmd run context:check

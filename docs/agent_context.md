@@ -25,7 +25,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - 当前事实以 `docs/current_status.md` 为准。
 - 并行写入范围以 `docs/goal_board.md` 为准。
 - 视觉和资产细节见 `docs/art_direction.md`、`docs/asset_generation_prompts.md`、`assets/manifests/asset_manifest.json`。
-- 历史草案、已归档文档统一放在 `docs/archive/`，**不得作为当前事实源**。
+- 历史草案、已归档文档统一放在 `docs/archive/`，通常不作为当前事实源。
 
 ## 2. 一句话定位（2026-05-19 重定位 + 2026-05-20 研究 framing 增补）
 
@@ -91,12 +91,12 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 ## 4. 当前边界
 
 - 后端持有权威世界状态；Godot 只做表现层、本地交互缓存和 API 调用。
-- LLM 只生成文本、结构化建议或工具意图；世界状态变更必须经过 Runtime 规则和校验。
+- LLM 当前只生成文本、结构化建议或工具意图；世界状态变更路径经过 Runtime 规则和校验。
 - 密钥只放 `config/models.local.json` 或环境变量，不写入仓库。
-- 资产入库必须登记来源、提示词引用、用途、状态、授权备注和 Godot 引用。
-- 未在当前轮次复验的云端 LLM、表情差分、资产晋级和新增玩法循环只能记录为待验证项。
+- 资产入库路径包含来源、提示词引用、用途、状态、授权备注和 Godot 引用。
+- 未在当前轮次复验的云端 LLM、表情差分、资产晋级和新增玩法循环当前记录为待验证项。
 - `frontend/` 继续作为迁移期 Debug 观察台；正式 Web Debug 后续再收敛到 `web-admin/`。
-- 重定位后硬约束：所有 NPC 决策必须可解释（contributing_sources 写入 EventStore）；广度铺开不能稀释主观记忆/启发式学习/Eval 三条核心能力。
+- 重定位后核心方向：NPC 决策可解释（contributing_sources 写入 EventStore）；广度铺开不稀释主观记忆/启发式学习/Eval 三条核心能力。
 - Phase 2 启动后旧 `LifeActionExecutor` 退役，**不并行运行**（详见 `agent_loop_architecture.md` §13.2）。
 
 ## 5. 常用命令
@@ -143,7 +143,7 @@ git diff --check
 2. 后端第一刀：`backend/app/tools/`、`motivation_engine.py`、`capability_registry.py`、`arbitration.py` 最小接口。
 3. Eval 第一刀：`scripts/run_agent_eval.py` + `backend/app/eval/` + 第一个 L1 rule scenario。
 4. Godot 第一刀：Tab 观察者模式 + 点击 NPC 空白信息面板。
-5. `LifeActionExecutor` 旧线冻结，只做回归修复；Phase 2 不并行运行旧规则和 MotivationEngine。
+5. `LifeActionExecutor` 旧线定位为回归修复；Phase 2 计划不并行运行旧规则和 MotivationEngine。
 
 ### 离线基线检查
 

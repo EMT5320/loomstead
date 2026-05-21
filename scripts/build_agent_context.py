@@ -169,13 +169,13 @@ def validate_metadata(relative_path: str) -> list[str]:
 
     source_of_truth = metadata.get("source_of_truth")
     if source_of_truth and source_of_truth not in {"true", "false"}:
-        errors.append(f"{relative_path} 的 source_of_truth 必须是 true 或 false")
+        errors.append(f"{relative_path} 的 source_of_truth 需要是 true 或 false")
     if status in {"snapshot", "archive"} and source_of_truth == "true":
-        errors.append(f"{relative_path} 是 {status}，source_of_truth 必须为 false")
+        errors.append(f"{relative_path} 是 {status}，source_of_truth 需要为 false")
 
     last_verified = metadata.get("last_verified")
     if last_verified and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", last_verified):
-        errors.append(f"{relative_path} 的 last_verified 必须使用 YYYY-MM-DD")
+        errors.append(f"{relative_path} 的 last_verified 需要使用 YYYY-MM-DD")
 
     return errors
 
@@ -214,7 +214,7 @@ def validate_context() -> tuple[list[str], list[str]]:
         gitignore_text = read_text(".gitignore")
 
         if "@AGENTS.md" not in claude_text:
-            errors.append("CLAUDE.md 必须导入 @AGENTS.md")
+            errors.append("CLAUDE.md 需要导入 @AGENTS.md")
         for required_reference in ["docs/agent_context.md", "docs/current_status.md", "docs/goal_board.md"]:
             if required_reference not in agents_text:
                 errors.append(f"AGENTS.md 缺少入口引用 `{required_reference}`")
@@ -225,7 +225,7 @@ def validate_context() -> tuple[list[str], list[str]]:
     for rule_path in sorted((ROOT / ".claude" / "rules").glob("*.md")):
         rule_text = rule_path.read_text(encoding="utf-8")
         if not rule_text.startswith("---\n") or "paths:" not in rule_text.split("---", 2)[1]:
-            errors.append(f"{rule_path.relative_to(ROOT).as_posix()} 必须使用 paths frontmatter")
+            errors.append(f"{rule_path.relative_to(ROOT).as_posix()} 需要使用 paths frontmatter")
 
     doc_paths = list_doc_paths()
     for path in doc_paths:
@@ -299,9 +299,9 @@ def build_brief() -> str:
             "",
             "## 建议下一步",
             "",
-            "- 先读 `AGENTS.md` 和 `docs/agent_context.md`。",
-            "- 再按任务线读取 `docs/goal_board.md` 和对应源文档。",
-            "- 修改后运行 `npm.cmd run context:check` 与 `git diff --check`。",
+            "- 可先读 `AGENTS.md` 和 `docs/agent_context.md`。",
+            "- 可按任务线读取 `docs/goal_board.md` 和对应源文档。",
+            "- 调整上下文治理后，建议运行 `npm.cmd run context:check` 与 `git diff --check`。",
         ]
     )
 

@@ -7,9 +7,9 @@ paths:
   - "scripts/build_agent_context.py"
 ---
 
-# Context governance rules
+# Context governance notes
 
-- Treat `AGENTS.md` and `docs/agent_context.md` as the startup route.
-- Check each doc frontmatter before using it: `active` is current, `snapshot` is stage evidence.
-- Keep `docs/current_status.md` as current facts and `docs/project_vision.md` as long-term direction.
-- After context or docs changes, run `npm.cmd run context:check` and `git diff --check`.
+- `AGENTS.md` and `docs/agent_context.md` are the shared orientation route.
+- Doc frontmatter clarifies status: `active` is current, `snapshot` is stage evidence.
+- `docs/current_status.md` carries current facts; `docs/project_vision.md` carries long-term direction.
+- After context or docs changes, useful checks include `npm.cmd run context:check` and `git diff --check`.

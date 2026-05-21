@@ -43,7 +43,7 @@ scope: current implementation facts, verification state, and work constraints
 | Godot 客户端 | Phase 1 done，Phase 2 观察者模式待实现 | 代码已接入：地点背景层、NPC 选择、底部 VN 对话层、聊天提交、进行中事件区、`inspect`、choices、`attend_event`、VN 结果展示；地图角色层已渲染玩家与当前场景 NPC / event marker；WASD 独立连续移动、地图层直接点击当前场景空地落点、落点标记、单个最近交互目标高亮、MapMoveHint 和更大舞台移动范围已接入；已移除小人淡黄色矩形背景；已补 UI 点击穿透、按钮禁用键盘焦点、WASD 物理键兜底、玩家 / NPC 分离站位槽、玩家出生点上移、收紧交互半径、点击落点边界修正、动态地图 bounds、靠近目标滞回和 NPC 小人保持可点；地图上下文候选面板、`E`/`Space` 执行、`Tab`/`Q` 切换、`actionFeedback` VN 回执已接入；`check_godot_project.py`、Godot headless import、`client:env` 与 `client:run:check` 通过；2026-05-21 主人确认 Phase 1 可以收口 | 本地 WASD 与点击移动仍只做表现层；Phase 2 Godot 观察者模式、NPC 信息面板和更自然的内容节奏仍待推进 |
 | 资产管线 | 部分完成 | manifest 当前有 55 条资产：21 条 `source_selected`、3 条 `style_anchor_candidate`、7 条 `pending_review`、24 条 `prompt_ready`；新增 backlog 覆盖 14 张 `happy/troubled` 表情差分、5 张行动反馈图标和 5 个生活行动 UI 小组件；`prompt_ready` 条目均引用 `docs/asset_generation_prompts.md` 锚点，并补齐 `promptBatchId`、`godotTargetPath`、`godotTargetSlot`；`docs/asset_batches/` 已生成批次计划、机器可读导出和人工筛选表；`scripts/export_prompt_ready_assets.py` 可重复导出；`AssetRegistry` 已支持表情回退；地图小人与交互 marker 已进入 Godot 场景显示链路 | `prompt_ready` 仍只是可生成 backlog，尚未生成、筛选或接入 Godot registry；地图小人是否晋级 `source_selected` 仍需主人明确筛选结论 |
 | LLM / Debug | 部分完成 | 代码已接入：OpenAI-compatible cloud provider、profile 解析、本地 overlay 示例、Debug 字段记录、规则 fallback、`model:check` 配置校验、Web LLM 配置卡片和热重载接口；2026-05-17 曾用本机 `config/models.json` 跑通真实 `CloudApiProvider` smoke，dialogue / event_reaction / night_reflection 均为 `deepseek-v4-flash` 且 `fallbackReason=None`；smoke 覆盖 compact Debug payload、RAG-lite memory search、玩家影响链 | 提交态不包含真实 API key；2026-05-21 当前环境真实 cloud smoke 返回 HTTP 401 并按规则 fallback，通过离线检查但不算真实 LLM 通过；`debug_analysis` profile 只在配置中存在；切换模型、key 或 profile 后需重新刷新真实延迟、成本和失败率 |
-| 文档治理 | 已完成本轮入口 | `AGENTS.md`、`CLAUDE.md`、`docs/README.md`、`agent_context`、`goal_board`、`current_status`、`open_questions` 已形成新对话入口、分层索引和状态看板 | 后续每轮只记录已验证变化，避免复制源设计长文 |
+| 文档治理 | 已完成本轮入口 | `AGENTS.md`、`CLAUDE.md`、`docs/README.md`、`agent_context`、`goal_board`、`current_status`、`open_questions` 已形成新对话入口、分层索引和状态看板 | 后续状态维护以已验证变化为主，避免复制源设计长文 |
 
 ## 3. 当前已实现能力
 
@@ -161,15 +161,15 @@ scope: current implementation facts, verification state, and work constraints
 17. **资产补齐**：表情差分、UI 组件和行动反馈图标已进入三批 `prompt_ready` backlog 和导出清单，仍待生成、筛选、登记源图和接入；地图小人晋级状态需主人确认。
 18. **Debug Console 扩展**：后端已有 Debug / Memory 查询 API，Web 侧仍需展示 Director 队列、Skill 激活、fallback 和成本字段。Phase 2 后还要新增 Heuristic Library / Arbitration trace / 主观记忆对比视图。
 
-## 5. 开发前硬性约束
+## 5. 开发前关注点
 
-- 权威世界状态只由后端 Runtime 修改。
-- Godot 客户端只读状态、提交玩家动作、展示结果。
-- LLM 输出必须经过解析、校验、fallback 和事件记录后才能影响可见结果。
-- 密钥只允许放本地 overlay 或环境变量。
-- 新增资产必须更新 manifest；新增 Godot 可用资产必须同步 registry 或检查脚本。
-- 新增 API、存档字段、事件类型、资产目录、Debug 字段前先写清数据契约。
-- 未由代码、命令或人工窗口验证的能力只能写入缺口或待验证项。
+- 后端 Runtime 是权威世界状态修改点。
+- Godot 客户端当前负责读取状态、提交玩家动作、展示结果。
+- LLM 输出进入可见结果前的路径包含解析、校验、fallback 和事件记录。
+- 密钥配置路径为本地 overlay 或环境变量。
+- 新增资产通常同步 manifest；新增 Godot 可用资产通常同步 registry 或检查脚本。
+- 新增 API、存档字段、事件类型、资产目录、Debug 字段前，建议先写清数据契约。
+- 未由代码、命令或人工窗口验证的能力在状态文档中保留为缺口或待验证项。
 
 ## 6. 当前可运行命令
 

@@ -14,7 +14,7 @@ Short research tagline:
 Motivational Delegation for process-constrained goals in persistent multi-agent narratives.
 ```
 
-Agent assistants should start with [AGENTS.md](AGENTS.md) and [docs/agent_context.md](docs/agent_context.md). Current implementation facts live in [docs/current_status.md](docs/current_status.md), long-term direction in [docs/project_vision.md](docs/project_vision.md), and research framing in [docs/research_framing_motivational_delegation.md](docs/research_framing_motivational_delegation.md).
+For orientation, agent assistants can start with [AGENTS.md](AGENTS.md) and [docs/agent_context.md](docs/agent_context.md). Current implementation facts live in [docs/current_status.md](docs/current_status.md), long-term direction in [docs/project_vision.md](docs/project_vision.md), and research framing in [docs/research_framing_motivational_delegation.md](docs/research_framing_motivational_delegation.md).
 
 ## Why Loomstead
 
@@ -41,7 +41,7 @@ Core axes:
 - **Few but deep**: 4 core NPCs + 2 stub NPCs in Phase 2, emphasizing subjective memory, relationship evolution, heuristics, and explainable decisions over scale.
 - **Explainable**: Director interventions, Event Skill activation, NPC decisions, tool calls, world changes, subjective memories, and relationship deltas are traceable.
 - **Evaluable**: Process Fidelity Eval checks shortcut violations, forced actions, required process coverage, relationship-memory causal use, and Director overreach.
-- **Player-visible**: research claims must surface as on-screen NPC behavior, event reactions, relationship changes, memory differences, observer views, or Debug traces.
+- **Player-visible**: research claims surface as on-screen NPC behavior, event reactions, relationship changes, memory differences, observer views, or Debug traces.
 
 ## Entry points
 
@@ -60,7 +60,7 @@ Start here if you care about the research claim, evaluation setup, baselines, or
 Start here if you want to run, modify, or validate the project locally:
 
 1. [Current status](docs/current_status.md): implemented facts, verification state, gaps, and manual validation notes.
-2. [Goal board](docs/goal_board.md): active lanes, write boundaries, validation commands, handoff format.
+2. [Goal board](docs/goal_board.md): active lanes, collaboration notes, validation commands, recommended schedule.
 3. [Documentation index](docs/README.md): source-of-truth map and task-line reading routes.
 4. [Godot client README](clients/godot/README.md): client entry point and Godot environment notes.
 5. [Model profile guide](docs/model_profile_template_guide.md): local model config, provider routing, and real LLM smoke workflow.
@@ -93,7 +93,7 @@ Starting now. Planned skeleton work includes:
 - EvalFramework with baselines, ablations, and dataset exports.
 - Observer mode in Godot.
 
-Phase 2 should retire the old `LifeActionExecutor` directly rather than running it in parallel with MotivationEngine.
+Phase 2 is planned to retire the old `LifeActionExecutor` directly rather than running it in parallel with MotivationEngine.
 
 ## Runtime shape
 
@@ -180,7 +180,7 @@ $env:AGENT_TOWN_REQUIRE_REAL_LLM_SMOKE = "1"
 $env:AGENT_TOWN_MODEL_CONFIG = "config/models.local.json"
 ```
 
-API keys must stay in local ignored config or environment variables, never in committed files.
+API keys stay in local ignored config or environment variables, outside committed files.
 
 ## Repository metadata checklist
 
@@ -210,11 +210,11 @@ motivational-delegation
 
 Citation information will be added when the research preprint or technical report is available.
 
-## Development boundaries
+## Development Notes
 
 - Backend Runtime owns authoritative world state.
 - Godot reads state, submits legal player actions, and presents results.
-- LLM output must pass parsing, validation, fallback, and event recording before it affects visible state.
-- New NPCs, locations, events, tools, save fields, or Debug fields should start with a data contract.
-- Unverified behavior must be recorded as pending or manually unverified, not as completed.
-- Do not commit secrets, local absolute paths, unregistered assets, or temporary runtime files.
+- LLM output enters visible state through parsing, validation, fallback, and event recording.
+- New NPCs, locations, events, tools, save fields, or Debug fields usually start with a data contract.
+- Unverified behavior is tracked as pending or manually unverified rather than completed.
+- Secrets, local absolute paths, unregistered assets, and temporary runtime files stay outside committed files.

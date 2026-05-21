@@ -28,8 +28,8 @@ scope: 已归档历史文档说明
 | `map_sprite_second_batch_review.md` | —— | 单次资产复盘 |
 | `phase2_research_addendum.md` | `research_framing_motivational_delegation.md` + `process_fidelity_eval_spec.md` + `cross_domain_adapter.md` + `project_vision.md` / `production_roadmap.md` / `agent_loop_architecture.md` 内研究 framing 增补 | 2026-05-20 一次性 patch notes，内容已应用到三份新决策源 + 三份既有事实源文档 |
 
-## 使用规则
+## 使用说明
 
-- 归档文档仅供历史背景查阅与需求溯源，**不得作为当前实现事实**。
+- 归档文档仅供历史背景查阅与需求溯源，当前实现事实以 active 文档为准。
 - 长期方向冲突时以 `docs/project_vision.md` 为准，当前事实冲突时以 `docs/current_status.md` 为准。
-- 如需复活某段历史结论，先确认其与新核心文档不冲突，再在新文档中显式吸收，不要直接引用归档文档。
+- 如需复活某段历史结论，建议先确认其与新核心文档不冲突，再在新文档中显式吸收。

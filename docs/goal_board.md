@@ -4,13 +4,13 @@ owner_lane: planning
 last_verified: 2026-05-21
 startup_load: after-agent-context
 source_of_truth: true
-scope: lane board, write boundaries, and handoff format
+scope: lane board, collaboration notes, and recommended schedule
 ---
 
 # Loomstead 目标看板
 
 > 更新时间：2026-05-21（Phase 1 收口确认 + Phase 2 启动看板）
-> 用途：为无人值守开发、并行子代理和下一轮收口提供状态、写入范围和验收命令。
+> 用途：为无人值守开发、并行子代理和下一轮收口提供状态、协作参考和验证命令。
 > 2026-05-19 项目重定位为"可解释多 Agent 叙事运行时"，差异化主轴改为"少而深 + 可解释 + 可评估"。Phase 2-6 已重排，详见 `docs/production_roadmap.md`。
 
 ## 1. 状态标记
@@ -93,17 +93,17 @@ scope: lane board, write boundaries, and handoff format
 
 ## 4. 开发线看板
 
-| 开发线 | 当前状态 | 下一步 | 主要写入范围 | 禁止/谨慎范围 | 验收命令 |
+| 开发线 | 当前状态 | 下一步 | 主要写入范围 | 注意事项 | 验收命令 |
 | --- | --- | --- | --- | --- | --- |
-| Phase 1 sprint · 活着的世界 | done | 2026-05-21 主人确认 Phase 1 可以收口；`world_main.tscn` + tick 闭环 + NPC 移动/行动 + HUD + `E` talk + `WorldPulsePanel` + 远处事件提示进入完成基线 | Phase 1 代码只做回归修复 | 不继续在 `LifeActionExecutor` 旧线上扩写新能力；Phase 2 直接切 MotivationEngine | `npm.cmd run client:env`、`npm.cmd run client:run:check`、`npm.cmd run check` |
-| Phase 2 skeleton · 骨架建立期 | partial | 当前启动中；NPC 深度卡 schema 占位已补；下一步铺 ToolDefinition / MotivationEngine / CapabilityRegistry / SubjectiveMemoryStore / HeuristicLibrary / ArbitrationLayer / EvalFramework / DomainAdapter / ProcessFidelityEval / Godot 观察者模式 | `backend/app/tools/`、`backend/app/runtime/`、`backend/app/memory/`、`backend/app/world/entities/`、`backend/app/domain/`、`backend/app/eval/`、`scripts/run_agent_eval.py`、`clients/godot/scripts/ui/observer_panel.gd` | 不与旧 `LifeActionExecutor` 并行；不直接改关系/记忆最终状态绕过 ToolExecutor；不把 Eval 延后到实现末尾 | `npm.cmd run content:check`、`npm.cmd run smoke`、`npm.cmd run check`、后续新增 `npm.cmd run eval:rule` |
-| Godot 玩法客户端 | partial | Phase 1 主玩法入口完成；下一步进入 Phase 2 观察者模式：Tab 切换 + 点击 NPC 信息面板最小骨架 | `clients/godot/`、必要时 `scripts/check_godot_project.py` | 不在客户端保存权威世界状态；不把后端结算规则复制进 GDScript | `npm.cmd run client:env`、`npm.cmd run client:run:check`、`npm.cmd run check` |
-| Content Codex / NPC 深度卡 | partial | `monologueSeeds` / `gossipHooks` / `lifeActionSeeds` 已接入；`motivationProfile` / `capabilityPreferences` / `heuristicSeeds` 空占位已落地；实际 4 核心 NPC 数据 Phase 3 填 | `backend/app/content/`、`scripts/check_npc_codex.py`、相关 docs | 不写固定剧情节点；不让内容卡直接改世界状态；不伪造资产 id；Phase 2 不继续扩写旧 `lifeActionPlan` 行为 | `npm.cmd run content:check`、`npm.cmd run check` |
-| 后端 Director / Event Skill | partial | 单星灯祭 Skill 与 Director v0 已可用；Phase 2 重点转向 Tool / Motivation / Memory / Eval 骨架，事件结算硬编码迁移后置 | `backend/app/director/`、`backend/app/skills/`、必要 `backend/app/runtime/agent_runtime.py` | 不让 LLM 直接改世界状态；不破坏旧 `/api/state` 与 Debug 观察台 | `npm.cmd run smoke`、`npm.cmd run check` |
-| 资产管线 | partial | 24 条 `prompt_ready` backlog 已登记并导出到 `docs/asset_batches/prompt_ready_export.md`，下一步生成并筛选表情差分、生活 UI 组件和行动反馈图标；地图小人晋级等待主人筛选 | `assets/source/`、`assets/processed/`、`assets/manifests/`、`docs/asset_batches/`、`clients/godot/assets/` | 不覆盖原图；不提交来源不清的资产；不把未人工确认的小人标成 `source_selected` | `npm.cmd run asset:check`、`python scripts/export_prompt_ready_assets.py`、`npm.cmd run check` |
-| LLM / Debug | partial | 当前离线 fallback 正常；真实 cloud smoke 返回 HTTP 401，修复 key 后用 `AGENT_TOWN_REQUIRE_REAL_LLM_SMOKE=1` 刷新 dialogue / event_reaction / night_reflection 证据 | `backend/app/providers/`、`backend/app/providers/context_builder.py`、Debug 记录结构、迁移期 `frontend/`、相关 docs | 不提交密钥；不隐藏 token、延迟、错误；不把跳过或 fallback 的 live smoke 写成通过 | `npm.cmd run model:check`、`npm.cmd run smoke`、真实 LLM 手动记录 |
-| Web Debug Console | watch | 等事件 UI 和 Skill 链路更稳定后展示 Director 队列、Skill、fallback、成本 | 迁移期 `frontend/`，后续 `web-admin/` | 不阻塞 Godot 主体验；不泄漏玩家叙事视角 | `npm.cmd run check` |
-| 文档与治理 | done | 每轮结束只更新入口、状态、下一步和仍需验证问题 | `AGENTS.md`、`CLAUDE.md`、`docs/README.md`、`docs/agent_context.md`、`docs/goal_board.md`、`docs/current_status.md`、`docs/open_questions.md`、`scripts/build_agent_context.py` | 不复制源设计长文；不把未验证能力写成完成 | `npm.cmd run context:check`、`npm.cmd run check`、`git diff --check` |
+| Phase 1 sprint · 活着的世界 | done | 2026-05-21 主人确认 Phase 1 可以收口；`world_main.tscn` + tick 闭环 + NPC 移动/行动 + HUD + `E` talk + `WorldPulsePanel` + 远处事件提示进入完成基线 | Phase 1 代码只做回归修复 | Phase 1 旧线以回归维护为主；Phase 2 直接切 MotivationEngine | `npm.cmd run client:env`、`npm.cmd run client:run:check`、`npm.cmd run check` |
+| Phase 2 skeleton · 骨架建立期 | partial | 当前启动中；NPC 深度卡 schema 占位已补；下一步铺 ToolDefinition / MotivationEngine / CapabilityRegistry / SubjectiveMemoryStore / HeuristicLibrary / ArbitrationLayer / EvalFramework / DomainAdapter / ProcessFidelityEval / Godot 观察者模式 | `backend/app/tools/`、`backend/app/runtime/`、`backend/app/memory/`、`backend/app/world/entities/`、`backend/app/domain/`、`backend/app/eval/`、`scripts/run_agent_eval.py`、`clients/godot/scripts/ui/observer_panel.gd` | 关注与旧 `LifeActionExecutor` 的迁移边界；关系/记忆最终状态通过 ToolExecutor；Eval 跟随骨架同步推进 | `npm.cmd run content:check`、`npm.cmd run smoke`、`npm.cmd run check`、后续新增 `npm.cmd run eval:rule` |
+| Godot 玩法客户端 | partial | Phase 1 主玩法入口完成；下一步进入 Phase 2 观察者模式：Tab 切换 + 点击 NPC 信息面板最小骨架 | `clients/godot/`、必要时 `scripts/check_godot_project.py` | 客户端保持表现和输入层定位；后端保留权威结算规则 | `npm.cmd run client:env`、`npm.cmd run client:run:check`、`npm.cmd run check` |
+| Content Codex / NPC 深度卡 | partial | `monologueSeeds` / `gossipHooks` / `lifeActionSeeds` 已接入；`motivationProfile` / `capabilityPreferences` / `heuristicSeeds` 空占位已落地；实际 4 核心 NPC 数据 Phase 3 填 | `backend/app/content/`、`scripts/check_npc_codex.py`、相关 docs | 内容卡提供素材和偏好，不直接落权威世界状态；资产 id 保持来源清晰；Phase 2 侧重 schema 维护 | `npm.cmd run content:check`、`npm.cmd run check` |
+| 后端 Director / Event Skill | partial | 单星灯祭 Skill 与 Director v0 已可用；Phase 2 重点转向 Tool / Motivation / Memory / Eval 骨架，事件结算硬编码迁移后置 | `backend/app/director/`、`backend/app/skills/`、必要 `backend/app/runtime/agent_runtime.py` | LLM 输出保持文本、建议或工具意图；世界状态变更经 Runtime；旧 `/api/state` 与 Debug 观察台兼容性仍有价值 | `npm.cmd run smoke`、`npm.cmd run check` |
+| 资产管线 | partial | 24 条 `prompt_ready` backlog 已登记并导出到 `docs/asset_batches/prompt_ready_export.md`，下一步生成并筛选表情差分、生活 UI 组件和行动反馈图标；地图小人晋级等待主人筛选 | `assets/source/`、`assets/processed/`、`assets/manifests/`、`docs/asset_batches/`、`clients/godot/assets/` | 保留原图和来源信息；人工确认状态保持清晰；晋级到 `source_selected` 前需要筛选证据 | `npm.cmd run asset:check`、`python scripts/export_prompt_ready_assets.py`、`npm.cmd run check` |
+| LLM / Debug | partial | 当前离线 fallback 正常；真实 cloud smoke 返回 HTTP 401，修复 key 后用 `AGENT_TOWN_REQUIRE_REAL_LLM_SMOKE=1` 刷新 dialogue / event_reaction / night_reflection 证据 | `backend/app/providers/`、`backend/app/providers/context_builder.py`、Debug 记录结构、迁移期 `frontend/`、相关 docs | 密钥保留本地；token、延迟、错误和 fallback 状态保留 Debug 证据；live smoke 与 fallback 证据分开标注 | `npm.cmd run model:check`、`npm.cmd run smoke`、真实 LLM 手动记录 |
+| Web Debug Console | watch | 等事件 UI 和 Skill 链路更稳定后展示 Director 队列、Skill、fallback、成本 | 迁移期 `frontend/`，后续 `web-admin/` | 调试台不阻塞 Godot 主体验；玩家叙事视角与研究视角分离 | `npm.cmd run check` |
+| 文档与治理 | done | 常态维护入口、状态、下一步和仍需验证问题 | `AGENTS.md`、`CLAUDE.md`、`docs/README.md`、`docs/agent_context.md`、`docs/goal_board.md`、`docs/current_status.md`、`docs/open_questions.md`、`scripts/build_agent_context.py` | 保持短入口；未验证能力留在缺口或待验证项 | `npm.cmd run context:check`、`npm.cmd run check`、`git diff --check` |
 
 ## 5. 人工验收状态
 
@@ -113,29 +113,18 @@ scope: lane board, write boundaries, and handoff format
 
 ## 6. 并行任务拆分建议
 
-- Phase 2 backend worker：只改 `backend/app/tools/`、`backend/app/runtime/`、`backend/app/memory/`、`backend/app/world/entities/`，目标是铺 ToolDefinition / MotivationEngine / CapabilityRegistry / Arbitration / SubjectiveMemory 骨架。
-- Eval worker：只改 `scripts/run_agent_eval.py`、`backend/app/eval/`、`backend/app/domain/` 和必要测试夹具，目标是先跑第一个 L1 rule scenario。
-- Godot observer worker：只改 `clients/godot/` 和必要检查脚本，目标是 Tab 观察者模式 + NPC 信息面板空骨架。
-- Content worker：Phase 2 只维护 schema 和校验；实际 motivationProfile / capabilityPreferences / heuristicSeeds 数据填充放 Phase 3。
-- 资产 worker：只改资产目录、manifest、`docs/asset_batches/` 和必要 Godot asset mirror，目标是按批生成表情差分、生活 UI 组件和行动反馈图标。
-- Reviewer：只读核对契约、过标表述、验收输出和工作区状态。
+- Phase 2 backend worker：主要涉及 `backend/app/tools/`、`backend/app/runtime/`、`backend/app/memory/`、`backend/app/world/entities/`，目标是铺 ToolDefinition / MotivationEngine / CapabilityRegistry / Arbitration / SubjectiveMemory 骨架。
+- Eval worker：主要涉及 `scripts/run_agent_eval.py`、`backend/app/eval/`、`backend/app/domain/` 和必要测试夹具，目标是先跑第一个 L1 rule scenario。
+- Godot observer worker：主要涉及 `clients/godot/` 和必要检查脚本，目标是 Tab 观察者模式 + NPC 信息面板空骨架。
+- Content worker：Phase 2 侧重维护 schema 和校验；实际 motivationProfile / capabilityPreferences / heuristicSeeds 数据填充放 Phase 3。
+- 资产 worker：主要涉及资产目录、manifest、`docs/asset_batches/` 和必要 Godot asset mirror，目标是按批生成表情差分、生活 UI 组件和行动反馈图标。
+- Reviewer：以核对契约、过标表述、验收输出和工作区状态为主。
 
-不要让多个 worker 同时修改 `docs/current_status.md`、`docs/agent_context.md`、`docs/goal_board.md`。
+多 worker 并行时，建议避免同时修改 `docs/current_status.md`、`docs/agent_context.md`、`docs/goal_board.md`。
 
-## 7. 每轮交接格式
+## 7. 协作信息参考
 
-```markdown
-## 本轮开发线
-
-- 线别：
-- 写入范围：
-- 已完成：
-- 部分完成：
-- 阻塞项：
-- 验收命令：
-- 风险：
-- 下一步：
-```
+后续协作中通常有用的信息包括触达的开发线、主要文件、实际验证命令、仍依赖人工或外部条件的验证点，以及自然的后续任务。
 
 ## 8. 下一轮推荐排程
 

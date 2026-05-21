@@ -4,10 +4,10 @@ paths:
   - "scripts/*.py"
 ---
 
-# Backend rules
+# Backend context notes
 
 - Backend owns authoritative world state; Godot submits actions and displays results.
-- Preserve `RuleBasedProvider` fallback when changing LLM, Director, Runtime, or Skill code.
-- For Director or Event Skill work, read `docs/agentic_game_design.md` and `docs/agent_loop_architecture.md` on demand.
-- For Eval / research framing work, read `docs/research_framing_motivational_delegation.md` and `docs/process_fidelity_eval_spec.md` on demand.
-- Validate backend changes with the smallest relevant command first, then `npm.cmd run smoke` or `npm.cmd run check`.
+- `RuleBasedProvider` fallback is the current safety net for LLM, Director, Runtime, and Skill changes.
+- Director or Event Skill work usually references `docs/agentic_game_design.md` and `docs/agent_loop_architecture.md`.
+- Eval / research framing work usually references `docs/research_framing_motivational_delegation.md` and `docs/process_fidelity_eval_spec.md`.
+- Useful validation commands include the smallest relevant command first, then `npm.cmd run smoke` or `npm.cmd run check`.
