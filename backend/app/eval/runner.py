@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import json
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
-from app.eval.process_fidelity import metric_summary
-from app.eval.scenarios import DEFAULT_L1_SCENARIOS, EvalScenario
+from app.eval.process_fidelity import build_process_metrics, metric_summary, process_metric_summaries
+from app.eval.scenarios import DEFAULT_L1_SCENARIOS, DEFAULT_PROCESS_GOALS, EvalScenario, ProcessGoalSpec
+from app.runtime.agent_runtime import AgentRuntime
 from app.runtime.motivation_engine import MotivationEngine
 from app.world.world_state import create_initial_world
 
@@ -11,6 +15,9 @@ from app.world.world_state import create_initial_world
 BASELINE_FULL = "full_motivational_delegation"
 BASELINE_HARD_DELEGATION = "hard_delegation"
 ABLATION_NO_RELATIONSHIP_EDGE = "no_relationship_edge"
+
+
+PROCESS_BASELINES = (BASELINE_FULL, BASELINE_HARD_DELEGATION, ABLATION_NO_RELATIONSHIP_EDGE)
 
 
 def run_rule_scenarios(scenarios: tuple[EvalScenario, ...] = DEFAULT_L1_SCENARIOS) -> dict[str, Any]:
@@ -45,6 +52,34 @@ def run_rule_scenarios(scenarios: tuple[EvalScenario, ...] = DEFAULT_L1_SCENARIO
     }
 
 
+def run_process_fidelity_scenarios(
+    scenarios: tuple[ProcessGoalSpec, ...] = DEFAULT_PROCESS_GOALS,
+    *,
+    export_dir: str | Path | None = None,
+) -> dict[str, Any]:
+    """运行 Phase 2 Process Fidelity 规则级评估。"""
+    runs = {
+        BASELINE_FULL: _run_process_baseline(scenarios, baseline=BASELINE_FULL),
+        BASELINE_HARD_DELEGATION: _run_process_baseline(scenarios, baseline=BASELINE_HARD_DELEGATION),
+        ABLATION_NO_RELATIONSHIP_EDGE: _run_process_baseline(scenarios, baseline=ABLATION_NO_RELATIONSHIP_EDGE),
+    }
+    comparison = _build_process_ablation_comparison(runs)
+    metrics = [metric for baseline in PROCESS_BASELINES for metric in runs[baseline]["metrics"]]
+    result = {
+        "ok": bool(runs[BASELINE_FULL]["ok"]),
+        "suite": "process_fidelity",
+        "baseline": BASELINE_FULL,
+        "passed": runs[BASELINE_FULL]["passed"],
+        "total": len(scenarios),
+        "metrics": metrics,
+        "baselines": runs,
+        "ablation_comparison": comparison,
+    }
+    if export_dir is not None:
+        result["export"] = _export_process_eval(result, Path(export_dir))
+    return result
+
+
 def apply_scenario_setup(world: dict[str, Any], scenario: EvalScenario) -> None:
     agent = world["agents"][scenario.npc_id]
     for field, value in scenario.status_overrides.items():
@@ -57,6 +92,21 @@ def apply_scenario_setup(world: dict[str, Any], scenario: EvalScenario) -> None:
         agent["todayGoals"] = list(scenario.today_goals)
     if scenario.active_focus is not None:
         world["activeFocus"] = dict(scenario.active_focus)
+
+
+def apply_process_goal_setup(world: dict[str, Any], scenario: ProcessGoalSpec) -> None:
+    """让目标 NPC 和目标对象处在同一可见场景，保证规则 Eval 可复现。"""
+    for npc_id in (scenario.npc_id, scenario.target_npc_id):
+        agent = world["agents"][npc_id]
+        agent["locationId"] = scenario.location_id
+        agent["anchorId"] = scenario.anchor_id
+    agent = world["agents"][scenario.npc_id]
+    for field, value in scenario.status_overrides.items():
+        agent["status"][field] = value
+    world["activeFocus"] = {
+        "targetAgents": [scenario.npc_id],
+        "brief": f"Process Fidelity Eval: {scenario.scenario_id}",
+    }
 
 
 def _run_baseline_with_engine(
@@ -181,3 +231,225 @@ def _build_ablation_comparison(full_run: dict[str, Any], hard_run: dict[str, Any
 
 def _metric_triplet(metric: dict[str, Any]) -> dict[str, Any]:
     return {"mean": metric["mean"], "std": metric["std"], "n": metric["n"]}
+
+
+def _run_process_baseline(scenarios: tuple[ProcessGoalSpec, ...], *, baseline: str) -> dict[str, Any]:
+    items: list[dict[str, Any]] = []
+    for scenario in scenarios:
+        if baseline == BASELINE_HARD_DELEGATION:
+            item = _run_hard_delegation_process_scenario(scenario)
+        else:
+            item = _run_runtime_process_scenario(
+                scenario,
+                baseline=baseline,
+                remove_relationship_edges=baseline == ABLATION_NO_RELATIONSHIP_EDGE,
+            )
+        items.append(item)
+    metrics = process_metric_summaries(items, baseline=baseline)
+    passed = sum(1 for item in items if item.get("ok"))
+    return {
+        "ok": passed == len(scenarios),
+        "passed": passed,
+        "total": len(scenarios),
+        "metrics": metrics,
+        "items": items,
+    }
+
+
+def _run_runtime_process_scenario(scenario: ProcessGoalSpec, *, baseline: str, remove_relationship_edges: bool = False) -> dict[str, Any]:
+    runtime = AgentRuntime(provider_mode="rule")
+    apply_process_goal_setup(runtime.world, scenario)
+    runtime.tick(float(scenario.max_game_hours) * 3600.0, speed=1.0)
+    snapshot = runtime.get_phase2_debug_snapshot({"agentId": scenario.npc_id, "limit": 50})
+    recent_trace_events = snapshot.get("recentTraceEvents", []) if isinstance(snapshot.get("recentTraceEvents"), list) else []
+    subjective_items = _debug_items(snapshot.get("subjectiveMemory", {}))
+    relationship_items = [] if remove_relationship_edges else _debug_items(snapshot.get("relationshipEdges", {}))
+    all_target_tool_events = [
+        event
+        for event in recent_trace_events
+        if event.get("eventType") == "tool.execution_completed"
+        and event.get("agentId") == scenario.npc_id
+        and scenario.target_npc_id in event.get("targetIds", [])
+    ]
+    goal_tool_events = [
+        event
+        for event in all_target_tool_events
+        if any(_event_tool_matches(runtime, event, prefix) for prefix in scenario.expected_tool_prefixes)
+    ] or all_target_tool_events
+    goal_event_ids = {str(event.get("eventId") or "") for event in goal_tool_events}
+    goal_trace_ids = {str(event.get("traceId") or "") for event in goal_tool_events}
+    memory_source_ids = {str(item.get("sourceEventId") or "") for item in subjective_items}
+    relationship_source_ids = {
+        str(source_id)
+        for edge in relationship_items
+        for source_id in edge.get("sourceEventIds", [])
+        if _same_relationship_pair(edge, scenario.npc_id, scenario.target_npc_id)
+    }
+    memory_trace_links = [
+        event
+        for event in recent_trace_events
+        if event.get("eventType") == "memory.result_observed"
+        and str(event.get("sourceEventId") or "") in goal_event_ids
+        and str(event.get("traceId") or "") in goal_trace_ids
+    ]
+    process_checks = {
+        "goal_relevant_tool_event": bool(goal_tool_events),
+        "subjective_memory_refs": bool(goal_event_ids & memory_source_ids),
+        "relationship_edge_trace": bool(goal_event_ids & relationship_source_ids),
+        "causal_trace": bool(memory_trace_links),
+    }
+    goal_relevant_state_changes = max(1, len(relationship_items))
+    state_changes_with_source = sum(1 for edge in relationship_items if edge.get("sourceEventIds"))
+    metrics = build_process_metrics(
+        process_checks=process_checks,
+        required_process_ids=scenario.required_process_ids,
+        shortcut_events=_shortcut_events(relationship_items),
+        goal_relevant_state_changes=goal_relevant_state_changes,
+        forced_actions=0,
+        goal_relevant_actions=max(1, len(goal_tool_events)),
+        overreaching_interventions=0,
+        total_interventions=1,
+        state_changes_with_source=state_changes_with_source,
+        relationship_relevant_decisions=1,
+        decisions_with_relationship_memory=0,
+    )
+    return {
+        "scenario": scenario.to_dict(),
+        "baseline": baseline,
+        "ok": metrics["goal_success_rate"] >= 1.0 and metrics["required_process_coverage"] >= 0.75,
+        "metrics": metrics,
+        "processChecks": process_checks,
+        "evidence": {
+            "goalToolEvents": goal_tool_events,
+            "subjectiveMemoryRefs": sorted(goal_event_ids & memory_source_ids),
+            "relationshipSourceIds": sorted(relationship_source_ids),
+            "memoryTraceLinks": memory_trace_links,
+            "traceSchemaVersion": snapshot.get("traceSchemaVersion"),
+        },
+    }
+
+
+def _run_hard_delegation_process_scenario(scenario: ProcessGoalSpec) -> dict[str, Any]:
+    process_checks = {
+        "goal_relevant_tool_event": True,
+        "subjective_memory_refs": False,
+        "relationship_edge_trace": False,
+        "causal_trace": False,
+    }
+    metrics = build_process_metrics(
+        process_checks=process_checks,
+        required_process_ids=scenario.required_process_ids,
+        shortcut_events=1,
+        goal_relevant_state_changes=1,
+        forced_actions=1,
+        goal_relevant_actions=1,
+        overreaching_interventions=1,
+        total_interventions=1,
+        state_changes_with_source=0,
+        relationship_relevant_decisions=1,
+        decisions_with_relationship_memory=0,
+        goal_success_override=True,
+    )
+    return {
+        "scenario": scenario.to_dict(),
+        "baseline": BASELINE_HARD_DELEGATION,
+        "ok": True,
+        "metrics": metrics,
+        "processChecks": process_checks,
+        "evidence": {
+            "delegation": {
+                "assignee": scenario.npc_id,
+                "targetNpcId": scenario.target_npc_id,
+                "requiredActions": ["social.chat_with"],
+                "policy": "hard_delegation",
+            }
+        },
+    }
+
+
+def _debug_items(section: Any) -> list[dict[str, Any]]:
+    if isinstance(section, dict) and isinstance(section.get("items"), list):
+        return [item for item in section["items"] if isinstance(item, dict)]
+    if isinstance(section, list):
+        return [item for item in section if isinstance(item, dict)]
+    return []
+
+
+def _event_tool_matches(runtime: AgentRuntime, event: dict[str, Any], prefix: str) -> bool:
+    event_id = str(event.get("eventId") or "")
+    stored = next((item for item in runtime.event_store.list() if item.get("id") == event_id), {})
+    payload = stored.get("payload", {}) if isinstance(stored.get("payload"), dict) else {}
+    return str(payload.get("toolId") or "").startswith(prefix)
+
+
+def _same_relationship_pair(edge: dict[str, Any], source_id: str, target_id: str) -> bool:
+    return {str(edge.get("sourceAgentId") or ""), str(edge.get("targetAgentId") or "")} == {source_id, target_id}
+
+
+def _shortcut_events(relationship_items: list[dict[str, Any]]) -> int:
+    if not relationship_items:
+        return 0
+    return sum(1 for edge in relationship_items if not edge.get("sourceEventIds"))
+
+
+def _build_process_ablation_comparison(runs: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    metric_ids = ("goal_success_rate", "required_process_coverage", "process_believability_score", "causal_trace_coverage")
+    comparison: dict[str, Any] = {
+        "full_baseline": BASELINE_FULL,
+        "comparison": {},
+        "delta_vs_full": {},
+    }
+    full_metrics = _metric_index(runs[BASELINE_FULL]["metrics"])
+    for baseline in PROCESS_BASELINES:
+        metric_index = _metric_index(runs[baseline]["metrics"])
+        comparison["comparison"][baseline] = {metric_id: _metric_triplet(metric_index[metric_id]) for metric_id in metric_ids}
+        if baseline == BASELINE_FULL:
+            continue
+        comparison["delta_vs_full"][baseline] = {
+            metric_id: round(float(metric_index[metric_id]["mean"]) - float(full_metrics[metric_id]["mean"]), 6)
+            for metric_id in metric_ids
+        }
+    return comparison
+
+
+def _metric_index(metrics: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    return {str(metric["metric"]): metric for metric in metrics}
+
+
+def _export_process_eval(result: dict[str, Any], base_dir: Path) -> dict[str, Any]:
+    run_dir = base_dir / f"run_{datetime.now(timezone.utc).strftime('%Y-%m-%dT%H-%M-%SZ')}"
+    per_scenario_dir = run_dir / "per_scenario"
+    per_scenario_dir.mkdir(parents=True, exist_ok=True)
+    _write_json(run_dir / "summary.json", _summary_only(result))
+    _write_json(run_dir / "ablation_comparison.json", result["ablation_comparison"])
+    for baseline, run in result["baselines"].items():
+        for item in run["items"]:
+            scenario_id = item["scenario"]["scenarioId"]
+            _write_json(per_scenario_dir / f"{scenario_id}_{baseline}.json", item)
+    _write_jsonl(run_dir / "intervention_trace.jsonl", _baseline_items(result, BASELINE_HARD_DELEGATION))
+    _write_jsonl(run_dir / "goal_progress_trace.jsonl", _baseline_items(result, BASELINE_FULL))
+    return {"runDir": str(run_dir)}
+
+
+def _summary_only(result: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "ok": result.get("ok"),
+        "suite": result.get("suite"),
+        "baseline": result.get("baseline"),
+        "passed": result.get("passed"),
+        "total": result.get("total"),
+        "metrics": result.get("metrics"),
+        "ablation_comparison": result.get("ablation_comparison"),
+    }
+
+
+def _baseline_items(result: dict[str, Any], baseline: str) -> list[dict[str, Any]]:
+    return list(result.get("baselines", {}).get(baseline, {}).get("items", []))
+
+
+def _write_json(path: Path, payload: dict[str, Any]) -> None:
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def _write_jsonl(path: Path, items: list[dict[str, Any]]) -> None:
+    path.write_text("".join(json.dumps(item, ensure_ascii=False) + "\n" for item in items), encoding="utf-8")

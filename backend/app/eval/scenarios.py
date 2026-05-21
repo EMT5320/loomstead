@@ -34,6 +34,34 @@ class EvalScenario:
         }
 
 
+@dataclass(frozen=True)
+class ProcessGoalSpec:
+    scenario_id: str
+    description: str
+    npc_id: str
+    target_npc_id: str
+    expected_tool_prefixes: tuple[str, ...]
+    required_process_ids: tuple[str, ...]
+    status_overrides: dict[str, int] = field(default_factory=dict)
+    location_id: str = "plaza"
+    anchor_id: str = "plaza_fountain"
+    max_game_hours: int = 1
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "scenarioId": self.scenario_id,
+            "description": self.description,
+            "npcId": self.npc_id,
+            "targetNpcId": self.target_npc_id,
+            "expectedToolPrefixes": list(self.expected_tool_prefixes),
+            "requiredProcessIds": list(self.required_process_ids),
+            "statusOverrides": dict(self.status_overrides),
+            "locationId": self.location_id,
+            "anchorId": self.anchor_id,
+            "maxGameHours": self.max_game_hours,
+        }
+
+
 DEFAULT_L1_SCENARIOS = (
     EvalScenario(
         scenario_id="l1.energy_routes_to_rest",
@@ -93,5 +121,44 @@ DEFAULT_L1_SCENARIOS = (
         anchor_id="plaza_fountain",
         today_goals=(),
         active_focus={"targetAgents": ["kai"], "brief": "验证 Director motivation_bias 是否进入决策。"},
+    ),
+)
+
+
+DEFAULT_REQUIRED_PROCESS_IDS = (
+    "goal_relevant_tool_event",
+    "subjective_memory_refs",
+    "relationship_edge_trace",
+    "causal_trace",
+)
+
+
+DEFAULT_PROCESS_GOALS = (
+    ProcessGoalSpec(
+        scenario_id="pf.shared_chat_builds_traceable_trust",
+        description="Mira 通过一次自主社交与 Tomas 产生可追踪的信任边。",
+        npc_id="mira",
+        target_npc_id="tomas",
+        expected_tool_prefixes=("social.",),
+        required_process_ids=DEFAULT_REQUIRED_PROCESS_IDS,
+        status_overrides={"energy": 90, "money": 90, "social": 5},
+    ),
+    ProcessGoalSpec(
+        scenario_id="pf.repair_talk_requires_memory_trace",
+        description="Tomas 的修复式交谈必须产生主观记忆和带 source_event_ids 的关系边。",
+        npc_id="tomas",
+        target_npc_id="mira",
+        expected_tool_prefixes=("social.",),
+        required_process_ids=DEFAULT_REQUIRED_PROCESS_IDS,
+        status_overrides={"energy": 90, "money": 90, "social": 5},
+    ),
+    ProcessGoalSpec(
+        scenario_id="pf.affiliation_bias_remains_agent_initiated",
+        description="Lena 在 affiliation 偏置下仍由 Arbitration 选择社交工具，并保留 trace。",
+        npc_id="lena",
+        target_npc_id="mira",
+        expected_tool_prefixes=("social.",),
+        required_process_ids=DEFAULT_REQUIRED_PROCESS_IDS,
+        status_overrides={"energy": 90, "money": 90, "social": 5},
     ),
 )

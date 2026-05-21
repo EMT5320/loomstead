@@ -152,7 +152,7 @@ scope: current implementation facts, verification state, and work constraints
 10. **HeuristicLibrary**：最小 schema、规则提取和 Debug snapshot 已落地；设计师 seed 注入、衰减、冲突处理和 LLM 提取仍待扩展。
 11. **ArbitrationLayer**：最小候选工具裁决与 contributing_sources Trace 已落地，仍需完整竞争上下文裁决规则。
 12. **WorldEntities**：WorldEntity dataclass 与 farm_plot / time 快照转换骨架已落地，完整 FarmPlot / Item / Inventory / Shop / Building / Time / Weather schema 仍待扩展。
-13. **EvalFramework**：`scripts/run_agent_eval.py`、`backend/app/eval/` 与 5 个 L1 rule scenario 已落地，并纳入 `npm.cmd run check`；输出已包含 Full / Hard Delegation / No Relationship Edge 三组 baseline、`mean/std/n` 和 `ablation_comparison`。Process Fidelity 指标族、关系记忆专项 scenario、导出文件落盘和 24 游戏小时稳定性仍待补齐。
+13. **EvalFramework**：`scripts/run_agent_eval.py`、`backend/app/eval/` 与 5 个 L1 rule scenario 已落地，并纳入 `npm.cmd run check`；输出已包含 Full / Hard Delegation / No Relationship Edge 三组 baseline、`mean/std/n` 和 `ablation_comparison`。`npm.cmd run eval:process` 已新增 3 个 process-constrained GoalSpec、10 项 Process Fidelity 指标、Hard Delegation / No Relationship Edge 对照和 `.run/eval-runs` 导出脚本；`relationship_memory_causal_use_rate` 当前仍为 0，说明关系记忆尚未进入真实仲裁因果使用，关系记忆专项反事实、导出文件长期归档和 24 游戏小时稳定性仍待补齐。
 14. **Godot 观察者模式**：Tab 切换、点击 NPC / `E` talk 同步选中、NPC 信息面板和 `/api/debug.phase2` 摘要读取已落地；后续补 recentTraceEvents 展开、真实窗口体验验收和更细的 trace 可视化。
 15. **NPC 深度卡实际数据填充**：4 核心 NPC 的 motivationProfile / capabilityPreferences / heuristicSeeds 实际内容，Phase 3 填；2 stub 继续默认权重或按需要升级。
 
@@ -218,7 +218,7 @@ Get-Content docs\archive\daytime_integration_handoff.md
 ### 立即（Phase 2 启动）
 
 1. 后端骨架线继续从当前 NeedAccumulator -> MotivationEngine -> ToolExecutor -> ResultObserver -> `phase2.trace.v1` 主路径推进到更完整的旁观者可见性、RelationshipEdgeStore 召回、HeuristicLibrary 衰减 / 冲突和 trace span 串联，不再做旧 LifeActionExecutor shadow-run。
-2. Eval 线继续扩展 `backend/app/eval/`，在当前 L1 + Hard Delegation + No Relationship Edge 输出基础上补 Process Fidelity 指标、关系记忆专项 scenario、导出文件落盘和 24 游戏小时稳定性。
+2. Eval 线继续扩展 `backend/app/eval/`，在当前 L1 + Process Fidelity 指标输出基础上补关系记忆因果使用、Counterfactual Replay、Shuffled Memory Owner / Evidence-Link Removal 和 24 游戏小时稳定性。
 3. Godot 观察者线已读取后端 phase2 debug 的 motivation / subjectiveMemory / relationshipEdges / heuristics；下一步补 recentTraceEvents 展开、空态文案和真实窗口手感验收。
 
 ### Phase 2 硬约束
