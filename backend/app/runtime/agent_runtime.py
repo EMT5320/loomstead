@@ -13,7 +13,11 @@ from app.content.codex_loader import (
 )
 from app.director import DirectorBeat, DirectorQueueManager, DirectorValidator, SkillRouter, TensionDetector, WorldDigest
 from app.events.event_store import EventStore
+from app.memory.heuristic import HeuristicLibrary
 from app.memory.memory_store import memory_summary_payload, rag_lite_search, remember, world_memory_summaries
+from app.memory.observer import ResultObserver
+from app.memory.relationship_edges import RelationshipEdgeStore
+from app.memory.subjective_memory import SubjectiveMemoryStore
 from app.providers.cloud_api_provider import CloudApiProvider
 from app.providers.context_builder import (
     build_agent_context,
@@ -88,6 +92,10 @@ class AgentRuntime:
         self.capability_registry = CapabilityRegistry()
         self.motivation_engine = MotivationEngine(self.capability_registry)
         self.tool_executor = ToolExecutor(self.capability_registry.tool_registry)
+        self.subjective_memory_store = SubjectiveMemoryStore()
+        self.relationship_edge_store = RelationshipEdgeStore()
+        self.heuristic_library = HeuristicLibrary()
+        self.result_observer = ResultObserver()
         self.provider_mode_override = provider_mode
         self.provider_mode = self._resolve_runtime_provider_mode()
         self.event_skills = {skill.skill_id: skill for skill in list_event_skills()}
@@ -164,8 +172,12 @@ class AgentRuntime:
         npc_ids = [npc_id] if npc_id else list(DAY1_NPC_IDS)
         return {
             "tools": self.capability_registry.tool_registry.to_debug_payload(),
+            "needAccumulator": self.motivation_engine.need_accumulator.debug_snapshot(self.world, npc_ids=npc_ids, delta_minutes=20.0),
             "motivation": self.motivation_engine.debug_snapshot(self.world, npc_ids=npc_ids, limit=6),
             "toolRuntime": self._phase2_tool_runtime_snapshot(npc_ids),
+            "subjectiveMemory": self.subjective_memory_store.debug_snapshot(agent_id=npc_id, limit=20),
+            "relationshipEdges": self.relationship_edge_store.debug_snapshot(agent_id=npc_id, limit=30),
+            "heuristics": self.heuristic_library.debug_snapshot(agent_id=npc_id, limit=20),
         }
 
     def _phase2_motivation_plan_snapshot(self, npc_ids: list[str] | None = None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
@@ -942,7 +954,17 @@ class AgentRuntime:
 
         for completion in execution.get("completedActions", []):
             source_event_id = completion_event_ids.get((str(completion.get("npcId") or ""), str(completion.get("toolId") or completion.get("actionId") or "")))
-            self.tool_executor.apply_completion(world=self.world, completion=completion, event_store=self.event_store, source_event_id=source_event_id)
+            completion_event = self.tool_executor.apply_completion(world=self.world, completion=completion, event_store=self.event_store, source_event_id=source_event_id)
+            tick_events.append(completion_event)
+            observation = self.result_observer.distribute(
+                world=self.world,
+                event=completion_event,
+                subjective_memory=self.subjective_memory_store,
+                relationship_edges=self.relationship_edge_store,
+                heuristic_library=self.heuristic_library,
+            )
+            # 主观记忆与关系边也进入 EventStore，保证 Eval / Debug 能从同一条事件流回放因果。
+            tick_events.append(self.event_store.append("memory.result_observed", observation))
 
         self._run_director_v0()
         self.event_store.add_snapshot(self.world)

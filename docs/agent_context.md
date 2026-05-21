@@ -66,7 +66,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - 已有按 NPC / feature 选择 profile 的配置路径：`config/models.example.json` 为提交模板，`config/models.json` 和 `config/models.local.json` 为本机忽略配置；当前 `model:check` 显示提交态 rule fallback 正常。
 - Web 观察台已有 LLM 配置卡片，可查看 profile、路由、key 状态，支持热重载与一次对话 smoke。
 - Debug 记录已包含 `providerMode`、`profileName`、`apiKeyConfigured`、`messages`、`rawText`、`parsed`、`executed`、`usage`、`latency`、`fallbackReason`。
-- 2026-05-17 曾用本机 `config/models.json` 跑通真实 `CloudApiProvider` smoke；2026-05-21 当前 cloud smoke 返回 HTTP 401 并 fallback，真实 LLM 证据需刷新。
+- 2026-05-17 曾用本机 `config/models.json` 跑通真实 `CloudApiProvider` smoke；2026-05-21 本轮 `npm.cmd run check` 再次跑通真实 cloud smoke，dialogue / event_reaction / night_reflection 均为 `deepseek-v4-flash` 且 `fallbackReason=None`。
 
 ### Godot 客户端
 
@@ -77,7 +77,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - 已支持 WASD / 点击落点本地移动、靠近高亮、`E` talk、HUD 暂停/倍速、`WorldPulsePanel`、`RemoteEventCompass` 与事件 beacon；本地坐标只做表现，不改后端权威状态。
 - 2026-05-17 主人确认玩家移动手感没有问题；2026-05-21 主人确认 Phase 1 可以收口。
 - `check_godot_project.py`、Godot headless import、`npm.cmd run client:env`、`npm.cmd run client:run:check` 已通过。
-- Phase 2 Godot 缺口转为观察者模式：Tab 切换 + 点击 NPC 信息面板最小骨架。
+- Phase 2 Godot 观察者模式最小骨架已落地：Tab 切换、点击 NPC / `E` talk 同步选中，并显示 NPC 信息占位面板。
 
 ### 资产与文档治理
 
@@ -94,7 +94,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - LLM 当前只生成文本、结构化建议或工具意图；世界状态变更路径经过 Runtime 规则和校验。
 - 密钥只放 `config/models.local.json` 或环境变量，不写入仓库。
 - 资产入库路径包含来源、提示词引用、用途、状态、授权备注和 Godot 引用。
-- 未在当前轮次复验的云端 LLM、表情差分、资产晋级和新增玩法循环当前记录为待验证项。
+- 未在当前轮次复验的表情差分、资产晋级和新增玩法循环当前记录为待验证项；真实云端 LLM 本轮已通过普通 `npm.cmd run check` 刷新。
 - `frontend/` 继续作为迁移期 Debug 观察台；正式 Web Debug 后续再收敛到 `web-admin/`。
 - 重定位后核心方向：NPC 决策可解释（contributing_sources 写入 EventStore）；广度铺开不稀释主观记忆/启发式学习/Eval 三条核心能力。
 - Phase 2 启动后旧 `LifeActionExecutor` 退役，**不并行运行**（详见 `agent_loop_architecture.md` §13.2）。
@@ -134,15 +134,15 @@ git diff --check
 ### 当前状态
 
 - Phase 1（活着的世界）done：2026-05-21 主人确认可以收口，`world_main.tscn` 进入完成基线。
-- Phase 2（骨架建立期）启动中：NPC 深度卡 schema 占位已补，后端 Tool / Motivation / ToolExecutor / Eval L1 suite 已接入 tick 与 Debug；NeedAccumulator、ResultObserver / BiasFilter、RelationshipEdgeStore、HeuristicLibrary、ProcessFidelity baseline / ablation 与 Godot 观察者模式待实现。
+- Phase 2（骨架建立期）启动中：NPC 深度卡 schema 占位已补，后端 Tool / NeedAccumulator / Motivation / ToolExecutor / ResultObserver / SubjectiveMemory / RelationshipEdge / HeuristicLibrary / Eval L1 suite 已接入 tick 与 Debug；Hard Delegation baseline、No Relationship Edge ablation 和 Godot 观察者模式占位面板已落地。
 - 项目方向：narrative-primary 的可解释多 Agent 叙事运行时，差异化主轴为"少而深 + 可解释 + 可评估"。
 
 ### Phase 2 第一入口
 
 1. 完整总骨架以 `docs/production_roadmap.md` §4.3 的 15 项为准；`docs/agent_loop_architecture.md` §13.3 是 Agent Loop 内部 11 项。
-2. 后端第一刀已过：`backend/app/tools/`、`motivation_engine.py`、`capability_registry.py`、`arbitration.py`、`ToolExecutor` 最小接口和 tick 主路径已接入；下一刀补 NeedAccumulator / ResultObserver / RelationshipEdgeStore / HeuristicLibrary。
-3. Eval 第一刀已过：`scripts/run_agent_eval.py` + `backend/app/eval/` + 5 个 L1 rule scenario + mean/std/n；下一刀补 Hard Delegation baseline 和关系记忆 ablation。
-4. Godot 第一刀：Tab 观察者模式 + 点击 NPC 空白信息面板。
+2. 后端第二刀已过：`NeedAccumulator`、`ResultObserver + BiasFilter`、`RelationshipEdgeStore`、`HeuristicLibrary` 最小链路已接入工具完成事件；下一刀补可见性、召回、衰减、冲突和 trace schema。
+3. Eval 第二刀已过：`scripts/run_agent_eval.py` + `backend/app/eval/` 已输出 Full / Hard Delegation / No Relationship Edge 三组 baseline、mean/std/n 和 `ablation_comparison`；下一刀补 Process Fidelity 指标与专项 scenario。
+4. Godot 第一刀已过：Tab 观察者模式 + 点击 NPC 占位信息面板；下一刀接后端 phase2 debug 数据。
 5. `LifeActionExecutor` 旧线定位为回归修复；Phase 2 计划不并行运行旧规则和 MotivationEngine。
 
 ### 离线基线检查

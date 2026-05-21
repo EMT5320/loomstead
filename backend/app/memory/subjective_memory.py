@@ -42,6 +42,19 @@ class SubjectiveMemoryStore:
         records = [record for record in self._records if agent_id is None or record.agent_id == agent_id]
         return records[-limit:]
 
+    def recall(self, *, agent_id: str, query: str = "", limit: int = 8) -> list[SubjectiveMemoryRecord]:
+        """按关键词召回主观记忆；Phase 2 先用规则匹配，后续可替换为向量检索。"""
+        terms = [term for term in str(query or "").lower().split() if term]
+        records = [record for record in self._records if record.agent_id == agent_id]
+        if terms:
+            records = [
+                record
+                for record in records
+                if any(term in record.text.lower() or any(term in tag.lower() for tag in record.tags) for term in terms)
+            ]
+        records.sort(key=lambda record: (record.confidence + abs(record.emotional_valence), record.record_id), reverse=True)
+        return records[:limit]
+
     def debug_snapshot(self, agent_id: str | None = None, limit: int = 20) -> dict[str, Any]:
         records = self.list(agent_id=agent_id, limit=limit)
         return {

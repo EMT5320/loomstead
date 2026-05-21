@@ -5,10 +5,12 @@ const ApiClientScript := preload("res://scripts/api_client.gd")
 const AssetRegistryScript := preload("res://scripts/asset_registry.gd")
 const PlayerControllerScript := preload("res://scripts/world/player_controller.gd")
 const VnPanelScript := preload("res://scripts/ui/vn_panel.gd")
+const ObserverPanelScript := preload("res://scripts/ui/observer_panel.gd")
 
 const STAGE_WIDTH := 640.0
 const STAGE_HEIGHT := 1080.0
 const PLAYER_INTERACT_RADIUS := 128.0
+const OBSERVER_NPC_CLICK_RADIUS := 72.0
 const ROUTE_LINE_VISIBLE_MSEC := 2200
 const PULSE_PANEL_MAX_LINES := 6
 const STAGE_ORDER := ["farm", "plaza", "tavern"]
@@ -94,7 +96,9 @@ var _event_compass_label: Label
 var _player_controller
 var _camera: Camera2D
 var _vn_panel
+var _observer_panel
 var _nearest_npc_id := ""
+var _selected_observer_npc_id := ""
 var _talk_in_flight := false
 var _snapshot_in_flight := false
 var _latest_clock: Dictionary = {}
@@ -124,6 +128,7 @@ func _ready() -> void:
 	_spawn_player()
 	_build_camera()
 	_build_vn_panel()
+	_build_observer_panel()
 	_connect_event_bus()
 	_connect_world_clock()
 	call_deferred("_request_initial_world_snapshot")
@@ -136,14 +141,26 @@ func _process(_delta: float) -> void:
 	_expire_route_lines()
 	_update_event_beacons()
 	_refresh_event_compass()
+	_refresh_selected_observer_npc()
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey:
 		var key_event := event as InputEventKey
-		if key_event.pressed and not key_event.echo and key_event.keycode == KEY_E:
-			if _nearest_npc_id != "":
+		if key_event.pressed and not key_event.echo:
+			if key_event.keycode == KEY_TAB:
+				_toggle_observer_panel()
+				get_viewport().set_input_as_handled()
+				return
+			if key_event.keycode == KEY_E and _nearest_npc_id != "":
+				_select_observer_npc(_nearest_npc_id)
 				_submit_talk(_nearest_npc_id)
+				get_viewport().set_input_as_handled()
+				return
+	if event is InputEventMouseButton:
+		var mouse_event := event as InputEventMouseButton
+		if mouse_event.pressed and mouse_event.button_index == MOUSE_BUTTON_LEFT:
+			if _select_observer_npc_by_mouse():
 				get_viewport().set_input_as_handled()
 
 
@@ -398,6 +415,92 @@ func _build_vn_panel() -> void:
 	_vn_panel = VnPanelScript.new()
 	_vn_panel.name = "WorldVnPanel"
 	add_child(_vn_panel)
+
+
+func _build_observer_panel() -> void:
+	_observer_panel = ObserverPanelScript.new()
+	_observer_panel.name = "ObserverPanel"
+	add_child(_observer_panel)
+
+
+func _toggle_observer_panel() -> void:
+	if _observer_panel == null:
+		return
+	var visible_now: bool = bool(_observer_panel.toggle_panel_visible())
+	if not visible_now:
+		return
+	if _selected_observer_npc_id == "":
+		_observer_panel.show_empty_selection()
+		return
+	_refresh_observer_panel_for(_selected_observer_npc_id)
+
+
+func _select_observer_npc_by_mouse() -> bool:
+	var clicked_point := get_global_mouse_position()
+	var selected_id := ""
+	var selected_distance := OBSERVER_NPC_CLICK_RADIUS
+	for npc_key in _npc_nodes.keys():
+		var npc_id := str(npc_key)
+		var controller := _npc_nodes.get(npc_id, null) as NpcController
+		if controller == null:
+			continue
+		var distance := clicked_point.distance_to(controller.global_position)
+		if distance > selected_distance:
+			continue
+		selected_distance = distance
+		selected_id = npc_id
+	if selected_id == "":
+		return false
+	_select_observer_npc(selected_id)
+	return true
+
+
+func _select_observer_npc(npc_id: String) -> void:
+	_selected_observer_npc_id = npc_id
+	if _observer_panel != null:
+		_observer_panel.set_panel_visible(true)
+	_refresh_observer_panel_for(npc_id)
+
+
+func _refresh_observer_panel_for(npc_id: String) -> void:
+	if _observer_panel == null:
+		return
+	var controller := _npc_nodes.get(npc_id, null) as NpcController
+	var location_id := ""
+	if controller != null:
+		location_id = _stage_id_for_position(controller.global_position)
+	var plan_data = _npc_plans.get(npc_id, {})
+	if plan_data is Dictionary:
+		var plan_dict := plan_data as Dictionary
+		var plan_location := str(plan_dict.get("locationId", ""))
+		if plan_location != "":
+			location_id = plan_location
+	var npc_payload := {
+		"npcId": npc_id,
+		"name": str(NPC_DISPLAY_NAMES.get(npc_id, npc_id)),
+		"location": location_id,
+		"anchor": _observer_anchor_for(controller, plan_data),
+	}
+	_observer_panel.set_selected_npc(npc_payload)
+
+
+func _observer_anchor_for(controller: NpcController, plan_data) -> String:
+	if controller != null:
+		if controller.current_anchor_id != "":
+			return controller.current_anchor_id
+		if controller.target_anchor_id != "":
+			return controller.target_anchor_id
+	if plan_data is Dictionary:
+		return str((plan_data as Dictionary).get("targetAnchor", ""))
+	return ""
+
+
+func _refresh_selected_observer_npc() -> void:
+	if _selected_observer_npc_id == "":
+		return
+	if _observer_panel == null or not bool(_observer_panel.is_panel_visible()):
+		return
+	_refresh_observer_panel_for(_selected_observer_npc_id)
 
 
 func _connect_event_bus() -> void:

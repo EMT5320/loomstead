@@ -125,16 +125,23 @@ def extract_section_after_heading(text: str, heading: str, max_lines: int = 2) -
 def extract_bullet_section(text: str, heading: str, max_items: int = 6) -> list[str]:
     """提取某个标题下的首批列表项，供 brief 输出当前入口。"""
     lines = text.splitlines()
+    heading_level = len(heading) - len(heading.lstrip("#"))
     for index, line in enumerate(lines):
         if line.strip() == heading:
             collected: list[str] = []
             for next_line in lines[index + 1 :]:
                 stripped = next_line.strip()
                 if stripped.startswith("#"):
-                    break
-                # 支持普通列表和编号列表，避免状态文档格式变化后 brief 失效。
-                if stripped.startswith("- ") or (stripped[:2].strip(".").isdigit() and ". " in stripped[:4]):
-                    collected.append(stripped)
+                    next_level = len(stripped) - len(stripped.lstrip("#"))
+                    if next_level <= heading_level:
+                        break
+                    continue
+                if not stripped:
+                    continue
+                normalized = stripped.lstrip()
+                is_numbered = bool(re.match(r"\d+\.\s+", normalized))
+                if normalized.startswith("- ") or is_numbered:
+                    collected.append(normalized)
                 if len(collected) >= max_items:
                     break
             return collected

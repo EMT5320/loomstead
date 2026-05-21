@@ -132,6 +132,11 @@ class ToolExecutor:
                     "npcName": agent.get("name", npc_id),
                     "toolId": tool_id,
                     "reason": str(exc),
+                    "targetNpcId": self._target_npc_id(completion),
+                    "targetAnchorId": completion.get("targetAnchorId"),
+                    "targetLocationId": completion.get("targetLocationId"),
+                    "input": deepcopy(completion.get("input") or {}),
+                    "observerVisibility": tool.observer_visibility,
                     "sourceEventIds": self._source_ids(source_event_id),
                     "traceRefs": list(completion.get("contributingSources") or []),
                 },
@@ -144,6 +149,11 @@ class ToolExecutor:
                 "npcName": agent.get("name", npc_id),
                 "toolId": tool_id,
                 "summary": effect_summary,
+                "targetNpcId": self._target_npc_id(completion),
+                "targetAnchorId": completion.get("targetAnchorId"),
+                "targetLocationId": completion.get("targetLocationId"),
+                "input": deepcopy(completion.get("input") or {}),
+                "observerVisibility": tool.observer_visibility,
                 "worldEffects": [effect.__dict__ for effect in tool.world_effects],
                 "sourceEventIds": self._source_ids(source_event_id),
                 "traceRefs": list(completion.get("contributingSources") or []),
@@ -363,6 +373,11 @@ class ToolExecutor:
             if isinstance(candidate, dict) and str(candidate.get("locationId") or "") == location_id:
                 return candidate_id
         return next((candidate_id for candidate_id in DAY1_NPC_IDS if candidate_id != npc_id), None)
+
+    def _target_npc_id(self, completion: dict[str, Any]) -> str | None:
+        tool_input = completion.get("input") if isinstance(completion.get("input"), dict) else {}
+        target_id = str(tool_input.get("targetNpcId") or "")
+        return target_id or None
 
     def _first_farm_plot_id(self, world: dict[str, Any]) -> str | None:
         return next(iter(world.get("farmPlots", {}).keys()), None)
