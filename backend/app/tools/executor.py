@@ -4,6 +4,7 @@ from copy import deepcopy
 from typing import Any
 
 from app.memory.memory_store import remember
+from app.runtime.trace_schema import build_trace_envelope, with_trace_payload, world_time_payload
 from app.tools.registry import ToolRegistry
 from app.world.seed_data import DAY1_LOCATION_IDS, DAY1_NPC_IDS
 from app.world.world_state import adjust_relation, clamp, sync_farm_interactables
@@ -117,16 +118,34 @@ class ToolExecutor:
         tool_id = str(completion.get("toolId") or completion.get("actionId") or "")
         agent = world.get("agents", {}).get(npc_id)
         tool = self.tool_registry.get(tool_id)
+        trace_id = self._trace_id(source_event_id, completion)
+        world_time = world_time_payload(world)
         if not isinstance(agent, dict) or tool is None:
-            return event_store.append("tool.execution_failed", {"npcId": npc_id, "toolId": tool_id, "reason": "missing_agent_or_tool", "sourceEventIds": self._source_ids(source_event_id)})
+            failed_payload = with_trace_payload(
+                {
+                    "npcId": npc_id,
+                    "toolId": tool_id,
+                    "reason": "missing_agent_or_tool",
+                    "sourceEventIds": self._source_ids(source_event_id),
+                },
+                build_trace_envelope(
+                    event_type="tool.execution_failed",
+                    summary=f"{tool_id or 'unknown_tool'} 执行失败：missing_agent_or_tool",
+                    world_time=world_time,
+                    trace_id=trace_id,
+                    source_event_id=source_event_id,
+                    agent_id=npc_id,
+                    target_ids=self._target_ids_from_completion(completion),
+                ),
+            )
+            return event_store.append("tool.execution_failed", failed_payload)
 
         snapshot = self._transaction_snapshot(world, agent)
         try:
             effect_summary = self._apply_tool_effect(world, agent, completion)
         except Exception as exc:  # noqa: BLE001 - 事务边界需要把未知失败转成事件。
             self._rollback_transaction(world, agent, snapshot)
-            return event_store.append(
-                "tool.execution_failed",
+            failure_payload = with_trace_payload(
                 {
                     "npcId": npc_id,
                     "npcName": agent.get("name", npc_id),
@@ -140,10 +159,22 @@ class ToolExecutor:
                     "sourceEventIds": self._source_ids(source_event_id),
                     "traceRefs": list(completion.get("contributingSources") or []),
                 },
+                build_trace_envelope(
+                    event_type="tool.execution_failed",
+                    summary=f"{tool_id} 执行失败：{exc}",
+                    world_time=world_time,
+                    trace_id=trace_id,
+                    source_event_id=source_event_id,
+                    agent_id=npc_id,
+                    target_ids=self._target_ids_from_completion(completion),
+                ),
+            )
+            return event_store.append(
+                "tool.execution_failed",
+                failure_payload,
             )
 
-        return event_store.append(
-            "tool.execution_completed",
+        success_payload = with_trace_payload(
             {
                 "npcId": npc_id,
                 "npcName": agent.get("name", npc_id),
@@ -158,6 +189,19 @@ class ToolExecutor:
                 "sourceEventIds": self._source_ids(source_event_id),
                 "traceRefs": list(completion.get("contributingSources") or []),
             },
+            build_trace_envelope(
+                event_type="tool.execution_completed",
+                summary=effect_summary,
+                world_time=world_time,
+                trace_id=trace_id,
+                source_event_id=source_event_id,
+                agent_id=npc_id,
+                target_ids=self._target_ids_from_completion(completion),
+            ),
+        )
+        return event_store.append(
+            "tool.execution_completed",
+            success_payload,
         )
 
     def _reset_state_if_needed(self, *, state: dict[str, Any], selected: dict[str, Any], current_anchor_id: str, target_anchor_id: str, target_location_id: str) -> None:
@@ -448,3 +492,16 @@ class ToolExecutor:
 
     def _source_ids(self, source_event_id: str | None) -> list[str]:
         return [source_event_id] if source_event_id else []
+
+    def _target_ids_from_completion(self, completion: dict[str, Any]) -> list[str]:
+        target_ids: list[str] = []
+        target_npc_id = self._target_npc_id(completion)
+        if target_npc_id:
+            target_ids.append(target_npc_id)
+        return target_ids
+
+    def _trace_id(self, source_event_id: str | None, completion: dict[str, Any]) -> str | None:
+        trace_id = str(completion.get("traceId") or "").strip()
+        if trace_id:
+            return trace_id
+        return source_event_id

@@ -9,7 +9,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 
 # Loomstead 新对话入口
 
-> 更新时间：2026-05-21（Phase 1 收口确认 + Phase 2 骨架建立期启动）
+> 更新时间：2026-05-21（Phase 2 trace schema + 观察者面板接入）
 > 用途：下一轮新对话、无人值守开发、并行子代理任务的第一入口。
 
 ## 1. 当前入口
@@ -36,7 +36,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 ### 后端 Runtime / Director
 
 - Python Agent Server 仍是权威世界状态入口。
-- 已有 `GET /api/world/state`、`POST /api/player/action`、`/api/state`、`/api/model-config`、`POST /api/model-config/reload`、`/api/events`、`/api/developer`。
+- 已有 `GET /api/world/state`、`POST /api/player/action`、`/api/state`、`/api/model-config`、`POST /api/model-config/reload`、`/api/events`、`/api/developer`、`GET /api/debug.phase2`。
 - 玩家动作已覆盖 `move`、`move_to_anchor`、`scene_action`、`farm_action`、`end_phase`、`talk`、`give_gift`、`inspect`、`attend_event`。
 - `backend/app/director/v0.py` 已落地 `WorldDigest`、`TensionDetector`、`SkillRouter`、`DirectorBeat`、`DirectorValidator`、`DirectorQueueManager`。
 - Runtime 会运行规则版 Director v0，并写入 `director.digest_created`、`director.beat_created`、`director.beat_validated`、`director.beat_consumed`、`director.beat_discarded`。
@@ -46,7 +46,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - 星灯祭结算会输出统一 `event_skill_outcome.v1`，API `eventResult`、`town.event_resolved.payload.outcomeRecord` 和 `completedEvents[].resolution.outcomeRecord` 共用该记录。
 - 服务端已透出 `playerAnchor`，并为 `move_to_anchor` 与 `scene_action` 返回统一 `actionFeedback`。
 - `/api/world/state` 已把 `npcSchedules` 与 `lifeActionPlan` 切到 `motivation_plan.v1` 只读快照，由 MotivationEngine / ToolExecutor 生成下一步候选，继续保持 Godot 可消费的旧字段外形。
-- `POST /api/world/tick` 已切到 Phase 2 `MotivationEngine -> ToolExecutor` 最小闭环，返回 `clock`、`events` 与 `agents` diff；tick 事件继续覆盖 `npc.move_started`、`npc.move_progress`、`npc.arrived` 和 `npc.action_*`。
+- `POST /api/world/tick` 已切到 Phase 2 `MotivationEngine -> ToolExecutor` 最小闭环，返回 `clock`、`events` 与 `agents` diff；tick 事件继续覆盖 `npc.move_started`、`npc.move_progress`、`npc.arrived` 和 `npc.action_*`，工具结果和观察结果已携带 `phase2.trace.v1`。
 
 ### Content Codex / NPC 深度卡
 
@@ -77,7 +77,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - 已支持 WASD / 点击落点本地移动、靠近高亮、`E` talk、HUD 暂停/倍速、`WorldPulsePanel`、`RemoteEventCompass` 与事件 beacon；本地坐标只做表现，不改后端权威状态。
 - 2026-05-17 主人确认玩家移动手感没有问题；2026-05-21 主人确认 Phase 1 可以收口。
 - `check_godot_project.py`、Godot headless import、`npm.cmd run client:env`、`npm.cmd run client:run:check` 已通过。
-- Phase 2 Godot 观察者模式最小骨架已落地：Tab 切换、点击 NPC / `E` talk 同步选中，并显示 NPC 信息占位面板。
+- Phase 2 Godot 观察者面板已落地：Tab 切换、点击 NPC / `E` talk 同步选中，并读取 `/api/debug.phase2?agentId=...` 展示 motivation / subjectiveMemory / relationshipEdges / heuristics 摘要。
 
 ### 资产与文档治理
 
@@ -134,15 +134,15 @@ git diff --check
 ### 当前状态
 
 - Phase 1（活着的世界）done：2026-05-21 主人确认可以收口，`world_main.tscn` 进入完成基线。
-- Phase 2（骨架建立期）启动中：NPC 深度卡 schema 占位已补，后端 Tool / NeedAccumulator / Motivation / ToolExecutor / ResultObserver / SubjectiveMemory / RelationshipEdge / HeuristicLibrary / Eval L1 suite 已接入 tick 与 Debug；Hard Delegation baseline、No Relationship Edge ablation 和 Godot 观察者模式占位面板已落地。
+- Phase 2（骨架建立期）启动中：NPC 深度卡 schema 占位已补，后端 Tool / NeedAccumulator / Motivation / ToolExecutor / ResultObserver / SubjectiveMemory / RelationshipEdge / HeuristicLibrary / `phase2.trace.v1` / Eval L1 suite 已接入 tick 与 Debug；Hard Delegation baseline、No Relationship Edge ablation 和 Godot 观察者 debug 摘要面板已落地。
 - 项目方向：narrative-primary 的可解释多 Agent 叙事运行时，差异化主轴为"少而深 + 可解释 + 可评估"。
 
 ### Phase 2 第一入口
 
 1. 完整总骨架以 `docs/production_roadmap.md` §4.3 的 15 项为准；`docs/agent_loop_architecture.md` §13.3 是 Agent Loop 内部 11 项。
-2. 后端第二刀已过：`NeedAccumulator`、`ResultObserver + BiasFilter`、`RelationshipEdgeStore`、`HeuristicLibrary` 最小链路已接入工具完成事件；下一刀补可见性、召回、衰减、冲突和 trace schema。
+2. 后端第二刀已过：`NeedAccumulator`、`ResultObserver + BiasFilter`、`RelationshipEdgeStore`、`HeuristicLibrary` 与 `phase2.trace.v1` 最小链路已接入工具完成事件；下一刀补可见性、召回、衰减、冲突和 trace span 串联。
 3. Eval 第二刀已过：`scripts/run_agent_eval.py` + `backend/app/eval/` 已输出 Full / Hard Delegation / No Relationship Edge 三组 baseline、mean/std/n 和 `ablation_comparison`；下一刀补 Process Fidelity 指标与专项 scenario。
-4. Godot 第一刀已过：Tab 观察者模式 + 点击 NPC 占位信息面板；下一刀接后端 phase2 debug 数据。
+4. Godot 第二刀已过：Tab 观察者面板已读取后端 phase2 debug 摘要；下一刀补 recentTraceEvents 展开和真实窗口体验验收。
 5. `LifeActionExecutor` 旧线定位为回归修复；Phase 2 计划不并行运行旧规则和 MotivationEngine。
 
 ### 离线基线检查

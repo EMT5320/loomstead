@@ -61,6 +61,10 @@ class TownApplication:
         """首日玩家影响链查询入口。"""
         return self.runtime.get_influence_chain_debug(query or {})
 
+    def debug_phase2(self, query: dict[str, Any] | None = None) -> dict[str, Any]:
+        """Phase 2 可解释调试查询入口。"""
+        return self.runtime.get_phase2_debug_snapshot(query or {})
+
     def debug_skill_explain(self, query: dict[str, Any] | None = None) -> dict[str, Any]:
         """单个 Event Skill 可解释说明入口。"""
         return self.runtime.explain_event_skill(query or {})
@@ -108,6 +112,8 @@ def create_handler(app: TownApplication, project_root: Path):
                     return self.write_json(app.debug_turns(query))
                 if route == "/api/debug/influence":
                     return self.write_json(app.debug_influence(query))
+                if route == "/api/debug.phase2":
+                    return self.write_json(app.debug_phase2(query))
                 if route == "/api/debug/skill":
                     return self.write_json(app.debug_skill_explain(query))
                 if route == "/api/memory/summary":

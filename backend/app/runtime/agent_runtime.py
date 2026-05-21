@@ -37,6 +37,7 @@ from app.runtime.action_executor import execute_action, maybe_population_event
 from app.runtime.action_parser import parse_provider_output
 from app.runtime.capability_registry import CapabilityRegistry
 from app.runtime.motivation_engine import MotivationEngine
+from app.runtime.trace_schema import TRACE_SCHEMA_VERSION, trace_event_snapshot
 from app.skills import (
     STARLIGHT_FESTIVAL_SHORTAGE_SKILL_ID,
     EventChoiceOutcome,
@@ -171,6 +172,7 @@ class AgentRuntime:
         npc_id = self._str_filter(filters, "agentId") or self._str_filter(filters, "agent_id")
         npc_ids = [npc_id] if npc_id else list(DAY1_NPC_IDS)
         return {
+            "traceSchemaVersion": TRACE_SCHEMA_VERSION,
             "tools": self.capability_registry.tool_registry.to_debug_payload(),
             "needAccumulator": self.motivation_engine.need_accumulator.debug_snapshot(self.world, npc_ids=npc_ids, delta_minutes=20.0),
             "motivation": self.motivation_engine.debug_snapshot(self.world, npc_ids=npc_ids, limit=6),
@@ -178,6 +180,7 @@ class AgentRuntime:
             "subjectiveMemory": self.subjective_memory_store.debug_snapshot(agent_id=npc_id, limit=20),
             "relationshipEdges": self.relationship_edge_store.debug_snapshot(agent_id=npc_id, limit=30),
             "heuristics": self.heuristic_library.debug_snapshot(agent_id=npc_id, limit=20),
+            "recentTraceEvents": self._phase2_recent_trace_events(filters),
         }
 
     def _phase2_motivation_plan_snapshot(self, npc_ids: list[str] | None = None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
@@ -274,6 +277,25 @@ class AgentRuntime:
                 }
             )
         return {"version": "tool_runtime.v1", "items": items}
+
+    def _phase2_recent_trace_events(self, filters: dict[str, Any]) -> list[dict[str, Any]]:
+        limit = self._int_filter(filters, "limit", 20)
+        agent_id_filter = self._str_filter(filters, "agentId") or self._str_filter(filters, "agent_id")
+        event_type_filter = self._str_filter(filters, "eventType") or self._str_filter(filters, "event_type")
+        trace_types = {"tool.execution_completed", "tool.execution_failed", "memory.result_observed"}
+        items: list[dict[str, Any]] = []
+        for event in self.event_store.list():
+            event_type = str(event.get("type") or "")
+            if event_type_filter and event_type != event_type_filter:
+                continue
+            payload = event.get("payload", {}) if isinstance(event.get("payload"), dict) else {}
+            if event_type not in trace_types and not payload.get("traceSchemaVersion"):
+                continue
+            snapshot = trace_event_snapshot(event)
+            if agent_id_filter and str(snapshot.get("agentId") or "") != agent_id_filter and agent_id_filter not in snapshot.get("targetIds", []):
+                continue
+            items.append(snapshot)
+        return items[-limit:]
 
     def get_director_debug_snapshot(self, filters: dict[str, Any] | None = None) -> dict[str, Any]:
         """输出 Director Digest、Beat 队列和生命周期事件。"""

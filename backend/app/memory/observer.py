@@ -6,6 +6,7 @@ from app.memory.heuristic import HeuristicLibrary
 from app.memory.memory_store import remember
 from app.memory.relationship_edges import RelationshipEdgeStore
 from app.memory.subjective_memory import SubjectiveMemoryRecord, SubjectiveMemoryStore
+from app.runtime.trace_schema import build_trace_envelope, with_trace_payload, world_time_payload
 
 
 class BiasFilter:
@@ -78,13 +79,27 @@ class ResultObserver:
 
         relationship_items = [edge.to_dict() for edge in relationship_edges.apply_tool_event(world, event)]
         heuristic = heuristic_library.extract_from_event(event)
-        return {
+        payload = {
             "sourceEventId": event.get("id"),
             "observers": observer_ids,
             "memories": memory_items,
             "relationshipEdges": relationship_items,
             "heuristic": heuristic.to_dict() if heuristic else None,
         }
+        source_payload = event.get("payload", {}) if isinstance(event.get("payload"), dict) else {}
+        summary = f"观察到 {len(memory_items)} 条主观记忆，{len(relationship_items)} 条关系边"
+        return with_trace_payload(
+            payload,
+            build_trace_envelope(
+                event_type="memory.result_observed",
+                summary=summary,
+                world_time=world_time_payload(world),
+                trace_id=str(source_payload.get("traceId") or event.get("id") or ""),
+                source_event_id=str(event.get("id") or ""),
+                agent_id=str(source_payload.get("agentId") or source_payload.get("npcId") or ""),
+                target_ids=[str(observer_id) for observer_id in observer_ids],
+            ),
+        )
 
     def _observer_ids(self, world: dict[str, Any], event: dict[str, Any]) -> list[str]:
         payload = event.get("payload", {}) if isinstance(event.get("payload"), dict) else {}

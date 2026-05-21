@@ -11,6 +11,8 @@ const STAGE_WIDTH := 640.0
 const STAGE_HEIGHT := 1080.0
 const PLAYER_INTERACT_RADIUS := 128.0
 const OBSERVER_NPC_CLICK_RADIUS := 72.0
+const OBSERVER_PHASE2_CACHE_MSEC := 12000
+const OBSERVER_PHASE2_REQUEST_INTERVAL_MSEC := 800
 const ROUTE_LINE_VISIBLE_MSEC := 2200
 const PULSE_PANEL_MAX_LINES := 6
 const STAGE_ORDER := ["farm", "plaza", "tavern"]
@@ -99,6 +101,9 @@ var _vn_panel
 var _observer_panel
 var _nearest_npc_id := ""
 var _selected_observer_npc_id := ""
+var _observer_phase2_cache: Dictionary = {}
+var _observer_phase2_request_msec: Dictionary = {}
+var _observer_phase2_in_flight: Dictionary = {}
 var _talk_in_flight := false
 var _snapshot_in_flight := false
 var _latest_clock: Dictionary = {}
@@ -482,6 +487,8 @@ func _refresh_observer_panel_for(npc_id: String) -> void:
 		"anchor": _observer_anchor_for(controller, plan_data),
 	}
 	_observer_panel.set_selected_npc(npc_payload)
+	_apply_cached_phase2_debug(npc_id)
+	_request_phase2_debug_for_observer(npc_id)
 
 
 func _observer_anchor_for(controller: NpcController, plan_data) -> String:
@@ -501,6 +508,163 @@ func _refresh_selected_observer_npc() -> void:
 	if _observer_panel == null or not bool(_observer_panel.is_panel_visible()):
 		return
 	_refresh_observer_panel_for(_selected_observer_npc_id)
+
+
+func _apply_cached_phase2_debug(npc_id: String) -> void:
+	if _observer_panel == null:
+		return
+	var cached = _observer_phase2_cache.get(npc_id, null)
+	if not (cached is Dictionary):
+		return
+	var cached_dict := cached as Dictionary
+	var fetched_at := int(cached_dict.get("fetchedAtMsec", 0))
+	if fetched_at <= 0:
+		return
+	if Time.get_ticks_msec() - fetched_at > OBSERVER_PHASE2_CACHE_MSEC:
+		_observer_phase2_cache.erase(npc_id)
+		return
+	var summary = cached_dict.get("summary", {})
+	if summary is Dictionary:
+		_observer_panel.set_phase2_debug_summary(summary)
+
+
+func _request_phase2_debug_for_observer(npc_id: String) -> void:
+	if _observer_panel == null or _api_client == null:
+		return
+	if npc_id == "":
+		return
+	if bool(_observer_phase2_in_flight.get(npc_id, false)):
+		return
+	var now_msec := Time.get_ticks_msec()
+	var last_request_msec := int(_observer_phase2_request_msec.get(npc_id, 0))
+	if now_msec - last_request_msec < OBSERVER_PHASE2_REQUEST_INTERVAL_MSEC:
+		return
+	var cached = _observer_phase2_cache.get(npc_id, null)
+	if cached is Dictionary:
+		var cached_dict := cached as Dictionary
+		var fetched_at := int(cached_dict.get("fetchedAtMsec", 0))
+		if fetched_at > 0 and now_msec - fetched_at <= OBSERVER_PHASE2_CACHE_MSEC:
+			return
+	_observer_phase2_request_msec[npc_id] = now_msec
+	_observer_phase2_in_flight[npc_id] = true
+	if _selected_observer_npc_id == npc_id and bool(_observer_panel.is_panel_visible()):
+		_observer_panel.show_phase2_loading()
+	call_deferred("_fetch_phase2_debug_for_observer", npc_id)
+
+
+func _fetch_phase2_debug_for_observer(npc_id: String) -> void:
+	await _fetch_phase2_debug_for_observer_async(npc_id)
+
+
+func _fetch_phase2_debug_for_observer_async(npc_id: String) -> void:
+	var response := await _api_client.get_phase2_debug(npc_id)
+	_observer_phase2_in_flight.erase(npc_id)
+	if not bool(response.get("ok", false)):
+		if _selected_observer_npc_id == npc_id and _observer_panel != null and bool(_observer_panel.is_panel_visible()):
+			_observer_panel.show_phase2_error(str(response.get("error", "unknown error")))
+		return
+	var payload = response.get("data", {})
+	if not (payload is Dictionary):
+		if _selected_observer_npc_id == npc_id and _observer_panel != null and bool(_observer_panel.is_panel_visible()):
+			_observer_panel.show_phase2_error("phase2 调试响应格式错误")
+		return
+	var summary := _build_phase2_observer_summary(payload as Dictionary)
+	_observer_phase2_cache[npc_id] = {
+		"fetchedAtMsec": Time.get_ticks_msec(),
+		"summary": summary,
+	}
+	if _selected_observer_npc_id == npc_id and _observer_panel != null and bool(_observer_panel.is_panel_visible()):
+		_observer_panel.set_phase2_debug_summary(summary)
+
+
+func _build_phase2_observer_summary(payload: Dictionary) -> Dictionary:
+	return {
+		"motivation": _summarize_phase2_motivation(payload.get("motivation", {})),
+		"subjectiveMemory": _summarize_phase2_subjective_memory(payload.get("subjectiveMemory", {})),
+		"relationshipEdges": _summarize_phase2_relationship_edges(payload.get("relationshipEdges", {})),
+		"heuristics": _summarize_phase2_heuristics(payload.get("heuristics", {})),
+	}
+
+
+func _summarize_phase2_motivation(section) -> String:
+	var items := _phase2_items(section)
+	if items.is_empty():
+		return "无 motivation 记录"
+	var focus = items[0]
+	if not (focus is Dictionary):
+		return "motivation 数据不可读"
+	var focus_dict := focus as Dictionary
+	var primary_need = focus_dict.get("primaryNeed", {})
+	var need_id := str(primary_need.get("needId", "unknown")) if primary_need is Dictionary else "unknown"
+	var urgency := float(primary_need.get("urgency", 0.0)) if primary_need is Dictionary else 0.0
+	var decision = focus_dict.get("decision", {})
+	var tool_id := str(decision.get("toolId", "")) if decision is Dictionary else ""
+	if tool_id == "":
+		tool_id = str(decision.get("reason", "pending")) if decision is Dictionary else "pending"
+	return "need=%s(%.2f) / decision=%s" % [need_id, urgency, tool_id]
+
+
+func _summarize_phase2_subjective_memory(section) -> String:
+	var items := _phase2_items(section)
+	if items.is_empty():
+		return "无 subjective memory"
+	var latest = items[items.size() - 1]
+	if not (latest is Dictionary):
+		return "subjective memory 数据不可读"
+	var latest_dict := latest as Dictionary
+	var text := str(latest_dict.get("text", ""))
+	var valence := float(latest_dict.get("emotionalValence", 0.0))
+	return "%d 条，最新 valence=%.2f：%s" % [items.size(), valence, _truncate_text(text, 44)]
+
+
+func _summarize_phase2_relationship_edges(section) -> String:
+	var items := _phase2_items(section)
+	if items.is_empty():
+		return "无 relationship edge"
+	var strongest: Dictionary = {}
+	var strongest_strength := -1.0
+	for item in items:
+		if not (item is Dictionary):
+			continue
+		var entry := item as Dictionary
+		var strength: float = absf(float(entry.get("strength", 0.0)))
+		if strength > strongest_strength:
+			strongest_strength = strength
+			strongest = entry
+	if strongest.is_empty():
+		return "%d 条，暂无可读 edge" % items.size()
+	return "%d 条，最强 %s %.2f (%s→%s)" % [
+		items.size(),
+		str(strongest.get("edgeType", "edge")),
+		float(strongest.get("strength", 0.0)),
+		str(strongest.get("sourceAgentId", "?")),
+		str(strongest.get("targetAgentId", "?")),
+	]
+
+
+func _summarize_phase2_heuristics(section) -> String:
+	var items := _phase2_items(section)
+	if items.is_empty():
+		return "无 heuristic"
+	var top = items[0]
+	if not (top is Dictionary):
+		return "heuristic 数据不可读"
+	var top_dict := top as Dictionary
+	return "%d 条，top=%s (%.2f)" % [
+		items.size(),
+		str(top_dict.get("triggerPattern", top_dict.get("heuristicId", "unknown"))),
+		float(top_dict.get("confidence", 0.0)),
+	]
+
+
+func _phase2_items(section) -> Array:
+	if section is Array:
+		return section
+	if section is Dictionary:
+		var items = (section as Dictionary).get("items", [])
+		if items is Array:
+			return items
+	return []
 
 
 func _connect_event_bus() -> void:

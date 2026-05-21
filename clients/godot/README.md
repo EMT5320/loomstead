@@ -1,12 +1,12 @@
 # Loomstead Godot 客户端
 
-这是 `Loomstead` 的首版 Godot 游戏客户端骨架。Phase 1 已于 2026-05-21 收口，当前客户端进入 Phase 2 观察者模式与 Debug 信息面板准备期。
+这是 `Loomstead` 的首版 Godot 游戏客户端骨架。Phase 1 已于 2026-05-21 收口，当前客户端进入 Phase 2 观察者模式与 Debug 信息面板接入期。
 
 ## 当前能力
 
 - 默认主场景：`scenes/world_main.tscn`
 - Legacy 回看场景：`scenes/main.tscn`
-- API 客户端：`scripts/api_client.gd`，包含 `GET /api/world/state`、`POST /api/player/action` 与 `POST /api/world/tick`
+- API 客户端：`scripts/api_client.gd`，包含 `GET /api/world/state`、`POST /api/player/action`、`POST /api/world/tick` 与 `GET /api/debug.phase2?agentId=...`
 - 资产注册：`scripts/asset_registry.gd`
 - 世界状态缓存：`scripts/world_sync.gd`
 - 运行后读取：`GET /api/world/state`
@@ -15,7 +15,7 @@
 - 已能加载 3 张地点背景和玩家 + 6 个首发 NPC 的 `neutral` 半身立绘
 - 已能展示 `activeEvents` 中的星灯祭供应短缺事件，并通过 `inspect` / `attend_event` 展示选择结果
 - 已支持地图上下文交互：靠近锚点 / 交互体 / 居民 / 事件后显示候选动作，`E`/`Space` 执行；`world_main` 中 `Tab` 打开 Phase 2 观察者面板
-- 已新增 Phase 2 观察者模式占位面板：`Tab` 显隐，点击 NPC 或按 `E` talk 时同步选中，并显示 npcId / 名称 / location / anchor
+- 已新增 Phase 2 观察者面板：`Tab` 显隐，点击 NPC 或按 `E` talk 时同步选中，并显示 npcId / 名称 / location / anchor / motivation / subjectiveMemory / relationshipEdges / heuristics 摘要
 - `world_main.tscn` 已接入三场景横向拼图、HUD 暂停/倍速和 NPC tick 移动骨架
 - 可通过一条命令直接运行当前 Phase 1 完成基线窗口
 
@@ -98,7 +98,7 @@
 
 ## 下一步
 
-- Phase 2 下一步把后端 `/api/debug.phase2` 的 motivation / subjectiveMemory / relationshipEdges / heuristics 接入观察者面板。
+- Phase 2 下一步在观察者面板展开 `recentTraceEvents`，并做真实窗口手感验收。
 - 后续再补 arbitration trace / process fidelity trace 的可视化展开。
 - 等行动反馈图标和生活 UI 组件通过人工筛选后，再接入 `AssetRegistry`。
 
