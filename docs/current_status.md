@@ -9,7 +9,7 @@ scope: current implementation facts, verification state, and work constraints
 
 # 当前项目状态与开发前约束
 
-> 状态更新时间：2026-05-21（README 对外口径、研究输出范围和历史 seed / 当前切片边界同步）
+> 状态更新时间：2026-05-21（Phase 1 收口确认 + Phase 2 启动准备）
 > 本文只记录当前仓库中已核对、命令已检或明确标注人工未验收的事实。长期方向见 `docs/project_vision.md`，研究 framing 见 `docs/research_framing_motivational_delegation.md`，NPC agent loop 设计见 `docs/agent_loop_architecture.md`，世界实体 schema 见 `docs/world_entity_model.md`，Process Fidelity Eval 规格见 `docs/process_fidelity_eval_spec.md`，跨域 adapter 接口见 `docs/cross_domain_adapter.md`，多层 Agent 系统设计见 `docs/agentic_game_design.md`。
 
 ## 1. 当前阶段判断
@@ -20,7 +20,7 @@ scope: current implementation facts, verification state, and work constraints
 
 - 可运行的 Python Agent Server。
 - Godot 4.x P0 客户端骨架，已接入事件查看、事件选择、地图角色层和交互 marker；真实窗口已由主人验收旧 P0 版本基本可用。
-- Phase 1 sprint 已落地：`world_main.tscn` + tick 闭环 + `LifeActionExecutor`（即将退役）+ 玩家本地控制 + `E` talk + `WorldPulsePanel` + 远处事件提示 + 三场景横向拼图。
+- Phase 1 sprint 已收口：`world_main.tscn` + tick 闭环 + `LifeActionExecutor`（Phase 2 即将退役）+ 玩家本地控制 + `E` talk + `WorldPulsePanel` + 远处事件提示 + 三场景横向拼图已作为 Phase 1 完成基线。
 - 首批静态视觉资产、地图小人候选与 manifest 校验。
 - 规则版 Director v0 + 单个 Event Skill 的最小闭环。
 - LLM profile、fallback、Debug 字段记录路径，以及 Debug / Memory / influence 查询 API。
@@ -29,8 +29,8 @@ scope: current implementation facts, verification state, and work constraints
 
 ### 当前阶段位置
 
-- **Phase 1（活着的世界）**：sprint 已落地，**待主人窗口验收**（NPC 分散行动、`WorldPulsePanel`、远处事件提示、`E` talk、HUD 暂停/倍速）。
-- **Phase 2（骨架建立期）**：未启动。文档前置工作已完成（`agent_loop_architecture.md` + `world_entity_model.md` 落地，`project_vision.md` + `production_roadmap.md` + `gameplay_system_architecture.md` 重写）。Phase 1 验收完成后启动。
+- **Phase 1（活着的世界）**：done。2026-05-21 主人确认 Phase 1 可以收口，默认 `world_main` 作为已验收完成基线进入冻结维护。
+- **Phase 2（骨架建立期）**：启动中。文档前置工作已完成，NPC 深度卡 schema 已增补 `motivationProfile` / `capabilityPreferences` / `heuristicSeeds` 占位字段；后端 Tool / Motivation / Memory / Eval 骨架待实现。
 
 ## 2. 本轮核对结果
 
@@ -39,10 +39,10 @@ scope: current implementation facts, verification state, and work constraints
 | 开发线 | 当前状态 | 已验证事实 | 仍需验证或实现 |
 | --- | --- | --- | --- |
 | 后端 Director / Event Skill | 部分完成 | `WorldDigest`、`DirectorBeat`、`TensionDetector`、`SkillRouter`、`DirectorValidator`、`DirectorQueueManager` 已落地；Runtime 会生成、校验、消费或丢弃 `activate_event_skill` Beat；星灯祭单技能已注册；玩家画像证据模板、玩家风格信号 `styleSignal`、事件反应记忆模板、asset hints 和通用 fallback 台词模板已迁入 Event Skill；星灯祭结算已统一输出 `event_skill_outcome.v1`，API `eventResult`、事件流和 `completedEvents` 共用 `outcomeRecord`；Debug / Memory / influence 查询 API 已由 smoke 走真实 HTTP 路由验证 | Event Skill 仍只有一个；星灯祭仍有部分结算模板留在 Runtime；通用 DirectorPlanner 和多事件 Skill 尚未完成 |
-| Content Codex / NPC 深度卡 | 已完成首批 | `docs/npc_deep_card_spec.md` 已定义数据契约；`.windsurf/workflows/author-npc-deep-card.md` 已定义批量写作流程；`backend/app/content/data/npc/` 已入库 `kai`、`bram`、`mira`、`tomas`、`orren`、`lena` 6 份卡；`monologueSeeds` 已接入夜间反思上下文、compact evidence 和规则 fallback；`gossipHooks` 已进入校验、对话上下文 `gossipEvidence`、选择理由、传播草案、`candidateDebugSummary`、`gossip_propagation` 契约和 validator；6 张卡已新增 `lifeActionSeeds`、`dailyRumorBeats`、`relationshipBeatSeeds`，每卡当前为 `3/2/3` 条 Day 1 素材；`backend/app/simulation/life_action_planner.py` 已把这些素材转成 `npcSchedules` 与 `lifeActionPlan` 只读快照；Runtime 会写入 `gossip.propagation_validated` 校验事件；`npm.cmd run content:check` 通过；smoke 覆盖 `deepCard`、对话 Prompt、送礼、关系阶段、monologue evidence、gossip evidence 与合法 / 非法传播样例 | 谣言传播仍只记录校验结果，不写入世界状态、关系或记忆扩散；生活行动快照尚未驱动 NPC 实际工具行动；后续批量 Event Skill 工作流未开始 |
-| Godot 客户端 | 部分完成 | 代码已接入：地点背景层、NPC 选择、底部 VN 对话层、聊天提交、进行中事件区、`inspect`、choices、`attend_event`、VN 结果展示；地图角色层已渲染玩家与当前场景 NPC / event marker；WASD 独立连续移动、地图层直接点击当前场景空地落点、落点标记、单个最近交互目标高亮、MapMoveHint 和更大舞台移动范围已接入；已移除小人淡黄色矩形背景；已补 UI 点击穿透、按钮禁用键盘焦点、WASD 物理键兜底、玩家 / NPC 分离站位槽、玩家出生点上移、收紧交互半径、点击落点边界修正、动态地图 bounds、靠近目标滞回和 NPC 小人保持可点；本轮新增地图上下文候选面板，靠近锚点 / 交互体 / 居民 / 事件后可用 `E`/`Space` 执行，`Tab`/`Q` 切换，侧栏按钮降级为调试兜底；`actionFeedback` 继续进入 VN 回执；命令已检：`check_godot_project.py`、Godot headless import、`client:env` 与 `client:run:check` 通过；主人已完成上一版真实窗口人工验收，2026-05-17 已确认点击落点正常 | 本轮新增地图上下文候选面板、快捷键动作、锚点 / 场景行动 / 行动反馈 UI 仍需主人窗口复验；本地 WASD 与点击移动仍只做表现层；日程可视化和更自然的内容节奏仍待推进 |
+| Content Codex / NPC 深度卡 | 已完成首批 + Phase 2 schema 占位 | `docs/npc_deep_card_spec.md` 已定义数据契约；`.windsurf/workflows/author-npc-deep-card.md` 已定义批量写作流程；`backend/app/content/data/npc/` 已入库 `kai`、`bram`、`mira`、`tomas`、`orren`、`lena` 6 份卡；`monologueSeeds` 已接入夜间反思上下文、compact evidence 和规则 fallback；`gossipHooks` 已进入校验、对话上下文 `gossipEvidence`、选择理由、传播草案、`candidateDebugSummary`、`gossip_propagation` 契约和 validator；6 张卡已新增 `lifeActionSeeds`、`dailyRumorBeats`、`relationshipBeatSeeds`，每卡当前为 `3/2/3` 条 Day 1 素材；已新增 `motivationProfile` / `capabilityPreferences` / `heuristicSeeds` 空占位字段；Runtime 会写入 `gossip.propagation_validated` 校验事件；`npm.cmd run content:check` 通过；smoke 覆盖 `deepCard`、对话 Prompt、送礼、关系阶段、monologue evidence、gossip evidence 与合法 / 非法传播样例 | 谣言传播仍只记录校验结果，不写入世界状态、关系或记忆扩散；Phase 2 ToolDefinition / MotivationEngine 尚未驱动 NPC 实际工具行动；后续批量 Event Skill 工作流未开始 |
+| Godot 客户端 | Phase 1 done，Phase 2 观察者模式待实现 | 代码已接入：地点背景层、NPC 选择、底部 VN 对话层、聊天提交、进行中事件区、`inspect`、choices、`attend_event`、VN 结果展示；地图角色层已渲染玩家与当前场景 NPC / event marker；WASD 独立连续移动、地图层直接点击当前场景空地落点、落点标记、单个最近交互目标高亮、MapMoveHint 和更大舞台移动范围已接入；已移除小人淡黄色矩形背景；已补 UI 点击穿透、按钮禁用键盘焦点、WASD 物理键兜底、玩家 / NPC 分离站位槽、玩家出生点上移、收紧交互半径、点击落点边界修正、动态地图 bounds、靠近目标滞回和 NPC 小人保持可点；地图上下文候选面板、`E`/`Space` 执行、`Tab`/`Q` 切换、`actionFeedback` VN 回执已接入；`check_godot_project.py`、Godot headless import、`client:env` 与 `client:run:check` 通过；2026-05-21 主人确认 Phase 1 可以收口 | 本地 WASD 与点击移动仍只做表现层；Phase 2 Godot 观察者模式、NPC 信息面板和更自然的内容节奏仍待推进 |
 | 资产管线 | 部分完成 | manifest 当前有 55 条资产：21 条 `source_selected`、3 条 `style_anchor_candidate`、7 条 `pending_review`、24 条 `prompt_ready`；新增 backlog 覆盖 14 张 `happy/troubled` 表情差分、5 张行动反馈图标和 5 个生活行动 UI 小组件；`prompt_ready` 条目均引用 `docs/asset_generation_prompts.md` 锚点，并补齐 `promptBatchId`、`godotTargetPath`、`godotTargetSlot`；`docs/asset_batches/` 已生成批次计划、机器可读导出和人工筛选表；`scripts/export_prompt_ready_assets.py` 可重复导出；`AssetRegistry` 已支持表情回退；地图小人与交互 marker 已进入 Godot 场景显示链路 | `prompt_ready` 仍只是可生成 backlog，尚未生成、筛选或接入 Godot registry；地图小人是否晋级 `source_selected` 仍需主人明确筛选结论 |
-| LLM / Debug | 部分完成 | 代码已接入：OpenAI-compatible cloud provider、profile 解析、本地 overlay 示例、Debug 字段记录、规则 fallback、`model:check` 配置校验、Web LLM 配置卡片和热重载接口；2026-05-17 已用当前本机 `config/models.json` 跑通真实 `CloudApiProvider` smoke，dialogue / event_reaction / night_reflection 均为 `deepseek-v4-flash` 且 `fallbackReason=None`；smoke 覆盖 compact Debug payload、RAG-lite memory search、玩家影响链 | 提交态不包含真实 API key；fresh env 或无 key 沙箱会跳过真实 LLM 调用；`debug_analysis` profile 只在配置中存在；切换模型、key 或 profile 后需重新刷新真实延迟、成本和失败率 |
+| LLM / Debug | 部分完成 | 代码已接入：OpenAI-compatible cloud provider、profile 解析、本地 overlay 示例、Debug 字段记录、规则 fallback、`model:check` 配置校验、Web LLM 配置卡片和热重载接口；2026-05-17 曾用本机 `config/models.json` 跑通真实 `CloudApiProvider` smoke，dialogue / event_reaction / night_reflection 均为 `deepseek-v4-flash` 且 `fallbackReason=None`；smoke 覆盖 compact Debug payload、RAG-lite memory search、玩家影响链 | 提交态不包含真实 API key；2026-05-21 当前环境真实 cloud smoke 返回 HTTP 401 并按规则 fallback，通过离线检查但不算真实 LLM 通过；`debug_analysis` profile 只在配置中存在；切换模型、key 或 profile 后需重新刷新真实延迟、成本和失败率 |
 | 文档治理 | 已完成本轮入口 | `AGENTS.md`、`CLAUDE.md`、`docs/README.md`、`agent_context`、`goal_board`、`current_status`、`open_questions` 已形成新对话入口、分层索引和状态看板 | 后续每轮只记录已验证变化，避免复制源设计长文 |
 
 ## 3. 当前已实现能力
@@ -126,9 +126,9 @@ scope: current implementation facts, verification state, and work constraints
 
 ## 4. 当前主要缺口
 
-### Phase 1 收口缺口
+### Phase 1 收口结果
 
-1. **Phase 1 主人窗口验收**：旧 P0 窗口基础链路已通过；新默认 `world_main` 已具备 tick 驱动 NPC 移动骨架、HUD 暂停/倍速、玩家移动、`E` 键 VN talk、右上角世界动态面板、远处事件提示和三场景横向拼图；玩家移动手感已由主人确认，本轮 NPC 轨迹异常已修复但仍需要主人用 `npm.cmd run start` + `npm.cmd run client:run` 复验 NPC 分散行动、路径线弱化、日程可视化和事件提示节奏。
+1. **Phase 1 done**：旧 P0 窗口基础链路已通过；新默认 `world_main` 具备 tick 驱动 NPC 移动骨架、HUD 暂停/倍速、玩家移动、`E` 键 VN talk、右上角世界动态面板、远处事件提示和三场景横向拼图。2026-05-21 主人确认 Phase 1 可以收口，后续只做回归修复，不继续在 `LifeActionExecutor` 旧线上扩写新能力。
 
 ### Phase 2 启动前置（已完成的文档前置工作）
 
@@ -138,8 +138,9 @@ scope: current implementation facts, verification state, and work constraints
 5. **2026-05-20 研究 framing 增补已落地**：
    - 新增 `docs/research_framing_motivational_delegation.md`、`docs/process_fidelity_eval_spec.md`、`docs/cross_domain_adapter.md` 三份决策源。
    - `project_vision.md` / `production_roadmap.md` / `agent_loop_architecture.md` / `docs/README.md` / `AGENTS.md` / `docs/agent_context.md` 已同步研究 framing 增补。
-   - Phase 2 骨架清单新增 ResearchFraming / DomainAdapter / ProcessFidelityEval 三项，Phase 2 收口标准新增 Hard Delegation baseline 与关系记忆 ablation 硬验收。
-   - `scripts/build_agent_context.py` 与 `.claude/rules/backend.md` 历史死链（指向 `vertical_slice_spec.md` / `initial_asset_generation_plan.md`）已修复，`npm.cmd run context:check` 通过。
+    - Phase 2 骨架清单新增 ResearchFraming / DomainAdapter / ProcessFidelityEval 三项，Phase 2 收口标准新增 Hard Delegation baseline 与关系记忆 ablation 硬验收。
+    - `scripts/build_agent_context.py` 与 `.claude/rules/backend.md` 历史死链（指向 `vertical_slice_spec.md` / `initial_asset_generation_plan.md`）已修复，`npm.cmd run context:check` 通过。
+6. **NPC 深度卡 Phase 2 schema 占位已落地**：6 张首发 NPC 卡已新增 `motivationProfile` / `capabilityPreferences` / `heuristicSeeds` 字段；当前为空占位，实际动机权重、工具偏好和启发式种子在 Phase 3 内容期填充。
 
 ### Phase 2 启动后的实施缺口（pending）
 
@@ -152,11 +153,11 @@ scope: current implementation facts, verification state, and work constraints
 12. **WorldEntities**：FarmPlot / Item / Inventory / Shop / Building / Time / Weather schema 实现，pending。
 13. **EvalFramework**：scripts/run_agent_eval.py + L1 scenario suite (5-8 个) + ablation 实验入口，pending。
 14. **Godot 观察者模式最小骨架**：Tab 切换 + NPC 信息面板，pending。
-15. **NPC 深度卡 schema 增补**：motivationProfile / capabilityPreferences / heuristicSeeds 三个字段（schema only，数据 Phase 3 填），pending。
+15. **NPC 深度卡实际数据填充**：4 核心 NPC 的 motivationProfile / capabilityPreferences / heuristicSeeds 实际内容，Phase 3 填；2 stub 继续默认权重或按需要升级。
 
 ### 持续维持
 
-16. **真实 LLM 证据刷新**：当前本机 `config/models.json` 已跑通真实 smoke；切换模型/key/profile 后需要重新验证。
+16. **真实 LLM 证据刷新**：历史本机 `config/models.json` 曾跑通真实 smoke；当前环境 cloud smoke 返回 HTTP 401 并 fallback，切换模型/key/profile 后需要重新验证。
 17. **资产补齐**：表情差分、UI 组件和行动反馈图标已进入三批 `prompt_ready` backlog 和导出清单，仍待生成、筛选、登记源图和接入；地图小人晋级状态需主人确认。
 18. **Debug Console 扩展**：后端已有 Debug / Memory 查询 API，Web 侧仍需展示 Director 队列、Skill 激活、fallback 和成本字段。Phase 2 后还要新增 Heuristic Library / Arbitration trace / 主观记忆对比视图。
 
@@ -209,25 +210,21 @@ Get-Content docs\archive\daytime_integration_handoff.md
 
 2026-05-16，主人已运行真实 Godot 窗口并确认当前基础体验基本无问题。该结论覆盖：地点切换、背景切换、NPC 选择、`talk` 提交、星灯祭事件查看、choices 展示和事件结算展示。
 
-仍需人工未验收的内容：默认 `world_main.tscn` 的 NPC 分散行动、弱化路径线、右上角 `WorldPulsePanel` 日程可读性、`RemoteEventCompass` 与事件 beacon 观感、HUD 暂停/倍速、`E` 键 talk、后端未启动时的错误提示，以及表情差分、UI 组件和真实 LLM profile 切换。玩家移动手感已于 2026-05-17 由主人确认没有问题。
+2026-05-21，主人确认 Phase 1 可以收口，默认 `world_main.tscn` 进入完成基线。仍需后续人工验证的内容只保留 Phase 1 外延项：表情差分、UI 组件、真实 LLM profile 切换，以及 Phase 2 新增观察者模式 / Debug 视图。
 
 ## 8. 下一轮建议
 
-### 立即（Phase 1 收口）
+### 立即（Phase 2 启动）
 
-1. 主人在 Windows 真实窗口运行 `npm.cmd run start` + `npm.cmd run client:run`，按 30 秒标尺验收 NPC 分散行动、HUD 暂停/倍速、`E` talk、`WorldPulsePanel`、远处事件提示。
-2. 验收完成后在 `current_status.md` §1 标记 Phase 1 done。
+1. 后端骨架线先建 `backend/app/tools/`、`backend/app/runtime/motivation_engine.py`、`backend/app/runtime/capability_registry.py`、`backend/app/runtime/arbitration.py` 的最小接口。
+2. Eval 线同步建 `scripts/run_agent_eval.py` 与 `backend/app/eval/`，先跑 L1 rule scenario，不等后端全部做完再补 Eval。
+3. Godot 观察者线先做 Tab 切换 + 点击 NPC 空白信息面板，等待后端 motivation / trace API 后再填数据。
 
-### 短期（Phase 2 启动前置）
+### Phase 2 硬约束
 
-3. NPC 深度卡 schema 增补 motivationProfile / capabilityPreferences / heuristicSeeds 占位字段（schema only）。
-4. 跑通完整离线基线 + `git diff --check`，确认重定位后的文档治理无残留链接错误。
-5. 阅读 `agent_loop_architecture.md` §13.3（12 项骨架清单）和 `world_entity_model.md` §10（Phase 2 验收标准），熟悉 Phase 2 写入范围。
-
-### 中期（Phase 2 启动后）
-
-6. 后端骨架线、Eval 线、Godot 观察者线、内容 schema 线四条并行启动（详见 `production_roadmap.md` §4.6）。
-7. Eval 是 Phase 2 硬验收线，不达标不进入 Phase 3。
+4. `LifeActionExecutor` 旧线冻结，只做回归修复；Phase 2 直接切到 MotivationEngine，不并行运行。
+5. 完整 Phase 2 总骨架以 `production_roadmap.md` §4.3 的 15 项为准；`agent_loop_architecture.md` §13.3 是 Agent Loop 内部 11 项清单。
+6. Eval 是 Phase 2 硬验收线，不达标不进入 Phase 3。
 
 ### 持续维持
 

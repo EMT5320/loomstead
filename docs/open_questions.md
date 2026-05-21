@@ -59,7 +59,7 @@ scope: confirmed decisions, unresolved questions, and validation points
 
 ### 广度骨架优先（不收窄）
 
-- Phase 2 必须一次性铺好 12 项骨架（详见 `agent_loop_architecture.md` §13.3）。
+- Phase 2 必须一次性铺好完整总骨架：以 `production_roadmap.md` §4.3 的 15 项为准；`agent_loop_architecture.md` §13.3 是 Agent Loop 内部 11 项。
 - 内容可以稀薄（Phase 2 只实现 8-12 工具 + 1 作物），但骨架不能稀薄。
 - 防止 AI 助手协作下的"无意识收窄项目"。
 

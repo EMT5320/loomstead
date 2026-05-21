@@ -27,6 +27,12 @@
     "today": ["撑过星灯祭前夜的演出，让大家至少笑一次"],
     "fears": ["节日冷场", "被布兰娜当众指责欠账", "失去酒馆驻场资格"]
   },
+  "motivationProfile": {
+    "needs": {},
+    "personalityModifiers": {}
+  },
+  "capabilityPreferences": {},
+  "heuristicSeeds": [],
   "secrets": [
     {
       "id": "secret_kai_debt",

@@ -27,6 +27,12 @@
     "today": ["确认奥蕾娅的药茶配方", "提醒米娅带妮娜来检查咳嗽"],
     "fears": ["错过早期的危险信号", "节日热闹掩盖了健康风险", "倒在病人之前先倒下"]
   },
+  "motivationProfile": {
+    "needs": {},
+    "personalityModifiers": {}
+  },
+  "capabilityPreferences": {},
+  "heuristicSeeds": [],
   "secrets": [
     {
       "id": "secret_lena_own_health",

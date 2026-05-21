@@ -27,6 +27,12 @@
     "today": ["把酒馆门廊吱呀作响的那块板换掉", "傍晚之前回家给妮娜削一只小木鸟"],
     "fears": ["米娅累垮", "自己沉默被误解为冷漠", "妮娜将来回想起的父亲只是背影"]
   },
+  "motivationProfile": {
+    "needs": {},
+    "personalityModifiers": {}
+  },
+  "capabilityPreferences": {},
+  "heuristicSeeds": [],
   "secrets": [
     {
       "id": "secret_tomas_silent_repairs",

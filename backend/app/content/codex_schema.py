@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Any, Literal
 
 CURRENT_SCHEMA_VERSION = 1
 
@@ -45,6 +45,25 @@ class Goals:
     long_term: tuple[str, ...]
     today: tuple[str, ...]
     fears: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class MotivationProfile:
+    """Phase 2 动机系统占位；实际权重在内容期填充。"""
+
+    needs: dict[str, Any] = field(default_factory=dict)
+    personality_modifiers: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class HeuristicSeed:
+    """设计师注入的启发式种子，Phase 2 先允许为空。"""
+
+    heuristic_id: str
+    trigger_pattern: dict[str, Any]
+    adjustment: dict[str, Any]
+    confidence: float
+    narrative: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -181,6 +200,9 @@ class NpcDeepCard:
     identity: Identity
     personality: Personality
     goals: Goals
+    motivation_profile: MotivationProfile
+    capability_preferences: dict[str, dict[str, Any]]
+    heuristic_seeds: tuple[HeuristicSeed, ...]
     secrets: tuple[Secret, ...]
     likes: tuple[Preference, ...]
     dislikes: tuple[Preference, ...]

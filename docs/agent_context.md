@@ -9,7 +9,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 
 # Loomstead 新对话入口
 
-> 更新时间：2026-05-20（研究 framing 增补：narrative-primary / Motivational Delegation / Process Fidelity Eval）
+> 更新时间：2026-05-21（Phase 1 收口确认 + Phase 2 骨架建立期启动）
 > 用途：下一轮新对话、无人值守开发、并行子代理任务的第一入口。
 
 ## 1. 当前入口
@@ -21,7 +21,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - **世界实体 schema**：`docs/world_entity_model.md`（FarmPlot / Item / Inventory / Shop / Building / Time / Weather + 工具空间）。
 - **Process Fidelity Eval 规格**：`docs/process_fidelity_eval_spec.md`、**跨域 adapter 接口**：`docs/cross_domain_adapter.md`。
 - 多层 Agent 系统设计：`docs/agentic_game_design.md`（Director / Skill / Memory / Model 分工）。
-- 生产化阶段路线：`docs/production_roadmap.md`（Phase 1 收口中，Phase 2 骨架建立期待启动）。
+- 生产化阶段路线：`docs/production_roadmap.md`（Phase 1 done，Phase 2 骨架建立期启动中）。
 - 当前事实以 `docs/current_status.md` 为准。
 - 并行写入范围以 `docs/goal_board.md` 为准。
 - 视觉和资产细节见 `docs/art_direction.md`、`docs/asset_generation_prompts.md`、`assets/manifests/asset_manifest.json`。
@@ -57,38 +57,27 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - 送礼会根据深度卡 `giftReactions` 匹配反应档，玩家对话与送礼结果会返回 `relationshipStage`。
 - `monologueSeeds` 已接入夜间反思上下文和 compact memory evidence；规则 fallback 可独立引用独白素材生成反思。
 - `gossipHooks` 已完成首版可消费闭环：内容校验加严，玩家对话上下文会提供 `gossipEvidence`、选择理由、传播草案、`candidateDebugSummary`、`gossip_propagation` 输出契约和 validator；Runtime 会把校验结果写入 `gossip.propagation_validated`，但仍不改世界状态、关系或记忆。
-- 6 张首发 NPC 卡已准备 `lifeActionSeeds`、`dailyRumorBeats`、`relationshipBeatSeeds`，每卡当前为 `3/2/3` 条 Day 1 素材。
+- 6 张首发 NPC 卡已准备 `lifeActionSeeds`、`dailyRumorBeats`、`relationshipBeatSeeds`，并已新增 Phase 2 的 `motivationProfile` / `capabilityPreferences` / `heuristicSeeds` 空占位字段。
 - `npm.cmd run content:check` 与 `npm.cmd run check` 已覆盖 NPC 深度卡结构、seed membership、gossip hooks 可用性、资产引用 warning 和 smoke 集成。
 
 ### LLM / Debug
 
 - 已有 `RuleBasedProvider` 和 OpenAI-compatible `CloudApiProvider`。
-- 已有按 NPC / feature 选择 profile 的配置路径：`config/models.example.json` 为提交模板，`config/models.json` 和 `config/models.local.json` 为本机忽略配置；当前本机 `model:check` 显示 `activeProvider=cloud`、6 个 profiles、`localConfigLoaded=False`。
+- 已有按 NPC / feature 选择 profile 的配置路径：`config/models.example.json` 为提交模板，`config/models.json` 和 `config/models.local.json` 为本机忽略配置；当前 `model:check` 显示提交态 rule fallback 正常。
 - Web 观察台已有 LLM 配置卡片，可查看 profile、路由、key 状态，支持热重载与一次对话 smoke。
 - Debug 记录已包含 `providerMode`、`profileName`、`apiKeyConfigured`、`messages`、`rawText`、`parsed`、`executed`、`usage`、`latency`、`fallbackReason`。
-- 2026-05-17 已用当前本机 `config/models.json` 跑通真实 `CloudApiProvider` smoke：dialogue / event_reaction / night_reflection 均调用 `deepseek-v4-flash`，`fallbackReason=None`；提交态不包含密钥，fresh env 或无 key 沙箱会按规则跳过真实 LLM 调用。
+- 2026-05-17 曾用本机 `config/models.json` 跑通真实 `CloudApiProvider` smoke；2026-05-21 当前 cloud smoke 返回 HTTP 401 并 fallback，真实 LLM 证据需刷新。
 
 ### Godot 客户端
 
 - `clients/godot/` 是 Godot 4.x 项目骨架。
 - `project.godot` 默认主场景已切到 `res://scenes/world_main.tscn`；`npm.cmd run client:run` 会直接打开 Phase 1 tick 可视化场景，旧 `res://scenes/main.tscn` 保留为 legacy 回看入口。
 - 已有 `ApiClient`、`WorldSync`、`AssetRegistry`，并新增 `WorldClockService` / `EventBusService` autoload。
-- 主场景已接入 3 张地点背景、星灯祭事件 CG，以及玩家 + 6 个首发 NPC 的 `neutral` 半身立绘。
-- 已支持地点按钮、背景切换、NPC 选择、VN 风格底部对话面板、聊天动作提交。
-- 已新增事件区：展示 `activeEvents`、调用 `inspect` 查看星灯祭事件、渲染 choices、调用 `attend_event` 并展示 NPC 台词、关系变化、记忆写入和夜间反思摘要。
-- 已接入地图角色层：玩家和 6 个首发 NPC 的 `map_idle` 小人、talk / gift / event 交互 marker、NPC 点击入口均已进入主场景。
-- 已新增本地地图移动与靠近反馈：WASD 独立连续移动、当前场景空地点击落点、落点标记、靠近最近 NPC / 事件后交互高亮；该坐标只用于客户端表现，不改变后端权威状态。
-- 角色小人的淡黄色矩形背景已移除，靠近反馈改用 sprite tint 与 marker 状态表达。
-- 地图角色层按当前 `selected_location_id` 过滤 NPC 和事件 marker，玩家可移动范围已扩大到当前舞台主体区域，避开左右 UI 和底部 VN 面板。
-- 玩家出生点已和 NPC 固定站位槽分离，当前场景 NPC 使用比例槽位排布，交互半径已收紧，降低托玛等 NPC 与玩家重叠及高亮抖动概率。
-- 地图层已补 UI 点击穿透、按钮禁用键盘焦点和 WASD 物理键兜底，降低空地点击被透明 UI 吃掉、移动键被按钮焦点干扰的概率。
-- 当前场景点击落点改为先修正到可行走边界再接受，地图舞台 bounds 改为随窗口动态放宽，玩家出生点从底部边缘上移到舞台下中区，靠近目标增加滞回，NPC 小人保持可点，减少广场 / 酒馆的卡住体感。
-- 地图上下文动作面板已接入：靠近锚点 / 交互体 / 居民 / 事件后生成候选动作，`E`/`Space` 执行，`Tab`/`Q` 切换；左侧“场景行动”降级为调试兜底，VN 面板继续展示后端 `actionFeedback`。
-- `world_main.tscn` 已新增玩家本地控制闭环：`PlayerController` 显示玩家 `map_idle` 小人，WASD / 方向键移动，`Camera2D` 跟随，靠近 NPC 后按 `E` 会通过 `/api/player/action` 提交 `talk`，并由 `WorldVnPanel` 弹出后端返回对话。
-- 2026-05-17 主人已确认玩家移动手感没有问题；同轮已修正 NPC 全员同点迁徙、路径线过强和同锚点标签堆叠，当前目标分布由 `scripts/check_life_action_targets.py` 覆盖 morning / afternoon / evening 防回归。
-- 2026-05-17 新增右上角 `WorldPulsePanel`：启动读取 `/api/world/state` 的 active event 与 `npcSchedules`，tick 时用 `agents` diff 和 NPC 事件更新移动 / 行动状态，作为阶段 1 日程可视化最小入口。
-- 2026-05-17 新增远处事件提示：active event 会在事件锚点生成地图 beacon；玩家不在事件场景时，顶部 `RemoteEventCompass` 显示方向、地点和事件名。
-- `check_godot_project.py`、Godot headless import、`npm.cmd run client:env` 和 `npm.cmd run client:run:check` 已通过；2026-05-17 `world_main.tscn` 已加载现有地点背景、`map_idle` 小人、NPC 名称/状态、弱化路径线、右上角世界动态面板、远处事件提示和底部 tick 状态提示。2026-05-16 主人已完成上一版真实窗口人工验收；本轮 NPC 分散行动、`WorldPulsePanel`、远处事件提示、`E` talk 与 HUD 暂停/倍速仍需主人窗口复验。
+- 主场景已接入三场景横向拼图、地点背景、事件 CG、玩家 + 6 NPC `map_idle` 小人、VN 面板和地图上下文动作。
+- 已支持 WASD / 点击落点本地移动、靠近高亮、`E` talk、HUD 暂停/倍速、`WorldPulsePanel`、`RemoteEventCompass` 与事件 beacon；本地坐标只做表现，不改后端权威状态。
+- 2026-05-17 主人确认玩家移动手感没有问题；2026-05-21 主人确认 Phase 1 可以收口。
+- `check_godot_project.py`、Godot headless import、`npm.cmd run client:env`、`npm.cmd run client:run:check` 已通过。
+- Phase 2 Godot 缺口转为观察者模式：Tab 切换 + 点击 NPC 信息面板最小骨架。
 
 ### 资产与文档治理
 
@@ -123,11 +112,7 @@ npm.cmd run client:run:check
 npm.cmd run client:env
 npm.cmd run start
 npm.cmd run client:run
-npm.cmd run client:run:legacy
 git status --short
-git branch --show-current
-git log --oneline -8
-git worktree list
 git diff --check
 ```
 
@@ -148,23 +133,17 @@ git diff --check
 
 ### 当前状态
 
-- Phase 1（活着的世界）已落地，待主人窗口验收（NPC 分散行动、`WorldPulsePanel`、远处事件提示、`E` talk、HUD 暂停/倍速）。
-- 项目已于 2026-05-19 重定位为"可解释多 Agent 叙事运行时"，差异化主轴改为"少而深 + 可解释 + 可评估"。
-- 文档治理已完成第一轮：归档过时文档、新增 `agent_loop_architecture.md` + `world_entity_model.md`、重写 `project_vision.md` + `production_roadmap.md` Phase 2 设计 + `gameplay_system_architecture.md` §2.4。
+- Phase 1（活着的世界）done：2026-05-21 主人确认可以收口，`world_main.tscn` 进入完成基线。
+- Phase 2（骨架建立期）启动中：NPC 深度卡 schema 占位已补，后端 Tool / Motivation / Memory / Eval 与 Godot 观察者模式待实现。
+- 项目方向：narrative-primary 的可解释多 Agent 叙事运行时，差异化主轴为"少而深 + 可解释 + 可评估"。
 
-### Phase 1 收口（当前最高优先级）
+### Phase 2 第一入口
 
-1. 启动后端：`npm.cmd run start`
-2. 另开终端运行 `npm.cmd run client:run`，进入 `world_main.tscn`
-3. 验收 30 秒标尺：玩家不操作时能看到至少 3 个 NPC 在地图上走动、做事；玩家可暂停/恢复世界时间；能靠近 NPC 按 `E` 弹出 VN 对话。
-4. 验收完成后在 `current_status.md` 标记 Phase 1 done。
-
-### Phase 2 启动前置
-
-1. 阅读 `docs/agent_loop_architecture.md` §13.3 骨架清单（12 项）。
-2. 阅读 `docs/world_entity_model.md` §10 Phase 2 验收标准。
-3. NPC 深度卡 schema 增补 motivationProfile / capabilityPreferences / heuristicSeeds 占位字段（schema only）。
-4. 启动条件 checklist（详见 `production_roadmap.md` §7.2）全部满足后才能开 Phase 2 worker。
+1. 完整总骨架以 `docs/production_roadmap.md` §4.3 的 15 项为准；`docs/agent_loop_architecture.md` §13.3 是 Agent Loop 内部 11 项。
+2. 后端第一刀：`backend/app/tools/`、`motivation_engine.py`、`capability_registry.py`、`arbitration.py` 最小接口。
+3. Eval 第一刀：`scripts/run_agent_eval.py` + `backend/app/eval/` + 第一个 L1 rule scenario。
+4. Godot 第一刀：Tab 观察者模式 + 点击 NPC 空白信息面板。
+5. `LifeActionExecutor` 旧线冻结，只做回归修复；Phase 2 不并行运行旧规则和 MotivationEngine。
 
 ### 离线基线检查
 

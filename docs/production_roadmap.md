@@ -41,8 +41,8 @@ scope: production roadmap, phase axis, phase 1 closeout, phase 2 skeleton design
 | 阶段 | 名称 | 核心问题 | 30 秒验收标尺 | 状态 |
 | --- | --- | --- | --- | --- |
 | **0** | 战略对齐 | 主轴选定、客户端推翻范围、阶段验收标准 | —— | done |
-| **1** | 活着的世界 | 抛弃回合制 + 推翻 UI 主导客户端，NPC 真的在地图上做事 | 玩家不操作，30 秒内能看到至少 3 个 NPC 在地图上走动、做事 | 收口中（Phase 1 sprint 已落地，待主人窗口验收） |
-| **2** | 骨架建立期 | 三层工具分层 + 动机系统 + 双轨记忆 + 启发式学习 + 仲裁 + Eval Framework 一次性铺到位 | 关闭某条核心能力（如 subjective_memory），eval 指标可测量退化 | pending |
+| **1** | 活着的世界 | 抛弃回合制 + 推翻 UI 主导客户端，NPC 真的在地图上做事 | 玩家不操作，30 秒内能看到至少 3 个 NPC 在地图上走动、做事 | done（2026-05-21 主人确认收口） |
+| **2** | 骨架建立期 | 三层工具分层 + 动机系统 + 双轨记忆 + 启发式学习 + 仲裁 + Eval Framework 一次性铺到位 | 关闭某条核心能力（如 subjective_memory），eval 指标可测量退化 | active kickoff |
 | **3** | 内容填充期 | 5 作物 + 25 物品 + 30 工具 + 4 核心 NPC 完整接入动机/启发式数据 | NPC 自己种田、开店、做饭、社交，不需要玩家干预；启发式经验首次可观测 | pending |
 | **4** | 玩家成为变量 | 玩家行为在 NPC 之间传播，社会因果可见；observer 模式可点击追溯 | 玩家送花给 A，第二天 B 在酒馆说起这件事；玩家可点击 B 看到完整因果链 | pending |
 | **5** | 涌现式叙事 | 多 Event Skill + 多日循环 + 启发式演化展示 | 第二天的小镇和第一天不一样；某 NPC 因失败积累形成新行为模式 | pending |
@@ -381,10 +381,10 @@ curl.exe -N http://localhost:8787/api/events
 
 ## 7. 立即接续步骤
 
-### Phase 1 收口（当前）
+### Phase 1 收口（已完成）
 
-1. 主人窗口验收 NPC 分散行动、`WorldPulsePanel`、远处事件提示、`E` talk 与 HUD 暂停/倍速。
-2. 验收完成后在 `current_status.md` 标记 Phase 1 done。
+1. 2026-05-21 主人确认 Phase 1 可以收口。
+2. `world_main.tscn`、tick 闭环、NPC 移动 / 行动、HUD、`E` talk、`WorldPulsePanel` 与远处事件提示进入完成基线。
 
 ### Phase 2 启动条件
 
@@ -399,11 +399,11 @@ curl.exe -N http://localhost:8787/api/events
 - **后端骨架线**：新建 `backend/app/tools/`、`backend/app/runtime/motivation_engine.py`、`backend/app/memory/subjective.py` 雏形 + 单元测试。
 - **Eval 线**：新建 `scripts/run_agent_eval.py` 雏形 + L1 scenario 第一个用例。
 - **Godot 观察者线**：先做"按 Tab 切换 + 点击 NPC 显示空白面板"最小骨架。
-- **内容 schema 线**：在 6 份 NPC 深度卡里加三个字段占位（不填实际值）。
+- **内容 schema 线**：占位字段已补；实际 4 核心 NPC 数据填充放 Phase 3。
 
 ### Phase 2 推进前必做
 
-确认 [`agent_loop_architecture.md`](./agent_loop_architecture.md) §13.3 中的 12 项骨架清单未发生变化，避免开发线漂移。
+确认完整 Phase 2 总骨架仍以本文 §4.3 的 15 项为准；[`agent_loop_architecture.md`](./agent_loop_architecture.md) §13.3 仅是 Agent Loop 内部 11 项清单，避免开发线漂移。
 
 ## 8. 维护规则
 

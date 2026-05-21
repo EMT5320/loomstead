@@ -1235,7 +1235,7 @@ Phase 2 启动时这三个字段必须 schema 到位，每张深度卡填占位�
 
 ### 13.1 与 Phase 1 的关系
 
-Phase 1 收口（"活着的世界"）已经在做 `LifeActionExecutor` + `/api/world/tick`，这套机制 Phase 2 启动时**直接退役**：
+Phase 1（"活着的世界"）已使用 `LifeActionExecutor` + `/api/world/tick` 完成收口，这套机制 Phase 2 启动时**直接退役**：
 
 - `LifeActionExecutor` 改名为 `MotivationEngine`（或新建 MotivationEngine，LifeActionExecutor 移除）
 - `lifeActionPlan` API 字段保留，语义改为"基于当前需求的下一步候选"
@@ -1247,6 +1247,8 @@ Phase 1 收口（"活着的世界"）已经在做 `LifeActionExecutor` + `/api/w
 不做"旧规则 + 新动机"并行。原因：AI 助手协作下并行运行会导致两套代码相互污染，且新系统证据被旧系统稀释。早做断舍离对项目有利。
 
 ### 13.3 Phase 2 必须一次性到位的骨架
+
+本节只列 Agent Loop 内部 11 项。完整 Phase 2 总骨架还包括 WorldEntities / ResearchFraming / DomainAdapter / ProcessFidelityEval，详见 `production_roadmap.md` §4.3。
 
 | 模块 | 形态 | 备注 |
 |---|---|---|
@@ -1269,7 +1271,7 @@ Phase 1 收口（"活着的世界"）已经在做 `LifeActionExecutor` + `/api/w
 - 5 作物 × 5 阶段
 - 25 物品
 - 30 工具完整实现
-- 6 NPC 全接入 motivationProfile / capabilityPreferences / heuristicSeeds 实际数据
+- 4 核心 NPC 全接入 motivationProfile / capabilityPreferences / heuristicSeeds 实际数据；2 stub 继续默认权重或按需要升级
 - L2/L3 scenario suite 完整
 - 资产批次 B1-B5 落地
 
@@ -1293,4 +1295,3 @@ Phase 2 收口标准：
 - Debug Trace 可完整解释任意一次决策
 
 不达标不进入 Phase 3。
-

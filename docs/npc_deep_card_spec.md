@@ -58,6 +58,9 @@ backend/app/content/
   "identity": { ... },
   "personality": { ... },
   "goals": { ... },
+  "motivationProfile": { ... },
+  "capabilityPreferences": { ... },
+  "heuristicSeeds": [ ... ],
   "secrets": [ ... ],
   "likes": [ ... ],
   "dislikes": [ ... ],
@@ -124,6 +127,28 @@ backend/app/content/
 
 - `longTerm` 应与 seed 中 `longTermGoals` 一致或更具体。
 - `today` 在首版只写第一天目标，后续支持按日期重写。
+
+### 5.3.1 `motivationProfile` / `capabilityPreferences` / `heuristicSeeds`
+
+Phase 2 启动时新增三项字段。当前 6 张卡先填 schema 占位，实际动机权重、工具偏好和设计师启发式种子在 Phase 3 内容期填充。
+
+```jsonc
+"motivationProfile": {
+  "needs": {},
+  "personalityModifiers": {}
+},
+"capabilityPreferences": {},
+"heuristicSeeds": []
+```
+
+完整形态见 `agent_loop_architecture.md` §11：
+
+- `motivationProfile.needs`：需求权重、衰减速率和阈值。
+- `motivationProfile.personalityModifiers`：外向性、风险偏好、尽责性等人格修正。
+- `capabilityPreferences`：按 tool id 记录 NPC 对工具的偏好加权。
+- `heuristicSeeds`：设计师注入的可被经验覆盖的启发式种子。
+
+Phase 2 只要求字段存在且结构合法，不要求每位 NPC 有实际数据。
 
 ### 5.4 `secrets`
 
@@ -330,6 +355,7 @@ backend/app/content/
 - `giftReactions` 四档齐全。
 - `assetRefs` 所有 id 命中 `asset_manifest.json`（缺失给 warning，不阻塞）。
 - `monologueSeeds` 至少 8 条。
+- `motivationProfile` / `capabilityPreferences` / `heuristicSeeds` 必须存在；Phase 2 允许空占位。
 - `lifeActionSeeds` 至少 3 条并覆盖 morning/afternoon/evening，`relatedNpcIds` 仅引用其他合法 NPC。
 - `dailyRumorBeats` 至少 2 条且覆盖 hidden/town_known，`spreadTargets` 仅引用其他合法 NPC。
 - `relationshipBeatSeeds` 至少 2 条且覆盖 up 与 steady/down，`stageHint` 命中本卡关系阶段。

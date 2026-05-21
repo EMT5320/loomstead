@@ -27,6 +27,12 @@
     "today": ["把节日前最后一批菜供给敲定", "决定今晚是否再让酒馆赊一次账"],
     "fears": ["被人当成破坏节日的恶人", "供货链一夜崩盘", "因为自己的强硬错过和好的窗口"]
   },
+  "motivationProfile": {
+    "needs": {},
+    "personalityModifiers": {}
+  },
+  "capabilityPreferences": {},
+  "heuristicSeeds": [],
   "secrets": [
     {
       "id": "secret_bram_anonymous_help",

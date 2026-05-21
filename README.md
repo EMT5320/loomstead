@@ -31,7 +31,7 @@ The value is in the path: motivation shifts, shared events, misunderstanding rep
 ## Project identity
 
 - **Research status**: research preview.
-- **Current phase**: Phase 1 is implemented and awaiting real-window validation; Phase 2 skeleton work is next.
+- **Current phase**: Phase 1 is closed; Phase 2 skeleton work is starting.
 - **Primary domain**: narrative town slice.
 - **Secondary domain**: task / coding adapters for portability checks, not the main product direction.
 - **Differentiation**: few-but-deep NPCs, explainable traces, process fidelity evaluation.
@@ -69,7 +69,7 @@ Start here if you want to run, modify, or validate the project locally:
 
 ### Phase 1: living world slice
 
-Implemented and awaiting real Godot-window validation:
+Closed as the current playable baseline on 2026-05-21:
 
 - Python Agent Server as authoritative world state.
 - `GET /api/world/state`, `POST /api/player/action`, `POST /api/world/tick`, Debug / Memory / model config APIs.
@@ -77,15 +77,11 @@ Implemented and awaiting real Godot-window validation:
 - Godot `world_main.tscn` with player movement, NPC map sprites, tick-driven NPC movement/action states, world pulse panel, remote event compass, `E` talk, and VN feedback panel.
 - Six first-launch NPC deep cards with voice anchors, relationship stages, gift reactions, monologue seeds, gossip hooks, and life-action seeds.
 
-Still manually unverified:
-
-- NPC dispersed movement and path readability in the real window.
-- HUD pause / speed controls.
-- `WorldPulsePanel`, remote event beacon, `E` talk, and offline error display.
+Phase 1 is now frozen for regression fixes only. New agent-system work moves to Phase 2.
 
 ### Phase 2: runtime skeleton
 
-Not started yet. Planned skeleton work includes:
+Starting now. Planned skeleton work includes:
 
 - ToolDefinition registry and three-layer tool model.
 - MotivationEngine replacing the old `LifeActionExecutor`.

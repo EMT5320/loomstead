@@ -236,6 +236,24 @@ def _check_day1_seed_readiness(cards: dict) -> None:
                 raise SystemExit(f"[npc-codex-check] {npc_id}.{beat_id} direction 非法：{direction}")
 
 
+def _check_phase2_schema_placeholders(cards: dict) -> None:
+    """确认 Phase 2 动机/工具偏好/启发式字段已经进入每张深度卡。"""
+    for npc_id, card in cards.items():
+        motivation_profile = getattr(card, "motivation_profile", None)
+        capability_preferences = getattr(card, "capability_preferences", None)
+        heuristic_seeds = getattr(card, "heuristic_seeds", None)
+        if motivation_profile is None:
+            raise SystemExit(f"[npc-codex-check] {npc_id} 缺少 motivationProfile，占位字段必须存在")
+        if not isinstance(getattr(motivation_profile, "needs", None), dict):
+            raise SystemExit(f"[npc-codex-check] {npc_id}.motivationProfile.needs 必须是对象")
+        if not isinstance(getattr(motivation_profile, "personality_modifiers", None), dict):
+            raise SystemExit(f"[npc-codex-check] {npc_id}.motivationProfile.personalityModifiers 必须是对象")
+        if not isinstance(capability_preferences, dict):
+            raise SystemExit(f"[npc-codex-check] {npc_id}.capabilityPreferences 必须是对象")
+        if not isinstance(heuristic_seeds, tuple):
+            raise SystemExit(f"[npc-codex-check] {npc_id}.heuristicSeeds 必须是数组")
+
+
 def main() -> None:
     """串联结构校验、seed 一致性、资产引用 warning。"""
     if not NPC_CODEX_PATH.exists():
@@ -255,6 +273,7 @@ def main() -> None:
     _check_monologue_seed_readiness(cards)
     _check_gossip_hook_readiness(cards)
     _check_day1_seed_readiness(cards)
+    _check_phase2_schema_placeholders(cards)
 
     manifest_ids = _load_manifest_ids()
     warnings: list[str] = []

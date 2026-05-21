@@ -22,6 +22,8 @@ from app.content.codex_schema import (
     Identity,
     LifeActionSeed,
     MonologueSeed,
+    HeuristicSeed,
+    MotivationProfile,
     NpcDeepCard,
     Personality,
     Preference,
@@ -42,6 +44,9 @@ _REQUIRED_TOP_LEVEL_KEYS = (
     "identity",
     "personality",
     "goals",
+    "motivationProfile",
+    "capabilityPreferences",
+    "heuristicSeeds",
     "secrets",
     "likes",
     "dislikes",
@@ -130,6 +135,57 @@ def _build_goals(raw: Any, context: str) -> Goals:
         long_term=_as_str_tuple(raw["longTerm"], f"{context}.longTerm"),
         today=_as_str_tuple(raw["today"], f"{context}.today"),
         fears=_as_str_tuple(raw["fears"], f"{context}.fears"),
+    )
+
+
+def _build_motivation_profile(raw: Any, context: str) -> MotivationProfile:
+    """构造 Phase 2 动机系统占位，允许内容期再填实际权重。"""
+    _require(isinstance(raw, dict), f"{context} 必须是对象")
+    needs = raw.get("needs", {})
+    personality_modifiers = raw.get("personalityModifiers", {})
+    _require(isinstance(needs, dict), f"{context}.needs 必须是对象")
+    _require(isinstance(personality_modifiers, dict), f"{context}.personalityModifiers 必须是对象")
+    for need_id, config in needs.items():
+        _require(isinstance(need_id, str) and need_id.strip(), f"{context}.needs 存在空需求 id")
+        _require(isinstance(config, dict), f"{context}.needs.{need_id} 必须是对象")
+    return MotivationProfile(
+        needs={str(key): dict(value) for key, value in needs.items()},
+        personality_modifiers=dict(personality_modifiers),
+    )
+
+
+def _build_capability_preferences(raw: Any, context: str) -> dict[str, dict[str, Any]]:
+    """构造工具偏好占位，键为 tool_id，值为权重修正对象。"""
+    _require(isinstance(raw, dict), f"{context} 必须是对象")
+    preferences: dict[str, dict[str, Any]] = {}
+    for tool_id, config in raw.items():
+        _require(isinstance(tool_id, str) and tool_id.strip(), f"{context} 存在空 tool_id")
+        _require(isinstance(config, dict), f"{context}.{tool_id} 必须是对象")
+        preferences[str(tool_id)] = dict(config)
+    return preferences
+
+
+def _build_heuristic_seed(raw: Any, context: str) -> HeuristicSeed:
+    """构造设计师启发式种子；空数组是 Phase 2 启动占位。"""
+    _require(isinstance(raw, dict), f"{context} 必须是对象")
+    _ensure_keys(raw, ("heuristic_id", "trigger_pattern", "adjustment", "confidence", "narrative"), context)
+    heuristic_id = str(raw["heuristic_id"]).strip()
+    trigger_pattern = raw["trigger_pattern"]
+    adjustment = raw["adjustment"]
+    confidence = raw["confidence"]
+    narrative = str(raw["narrative"]).strip()
+    _require(heuristic_id != "", f"{context}.heuristic_id 不能为空")
+    _require(isinstance(trigger_pattern, dict), f"{context}.trigger_pattern 必须是对象")
+    _require(isinstance(adjustment, dict), f"{context}.adjustment 必须是对象")
+    _require(isinstance(confidence, (int, float)), f"{context}.confidence 必须是数字")
+    _require(0 <= float(confidence) <= 1, f"{context}.confidence 必须在 0-1 区间")
+    _require(narrative != "", f"{context}.narrative 不能为空")
+    return HeuristicSeed(
+        heuristic_id=heuristic_id,
+        trigger_pattern=dict(trigger_pattern),
+        adjustment=dict(adjustment),
+        confidence=float(confidence),
+        narrative=narrative,
     )
 
 
@@ -416,6 +472,16 @@ def parse_npc_deep_card(data: dict[str, Any], *, source: str = "<inline>") -> Np
     identity = _build_identity(data["identity"], f"{context}.identity")
     personality = _build_personality(data["personality"], f"{context}.personality")
     goals = _build_goals(data["goals"], f"{context}.goals")
+    motivation_profile = _build_motivation_profile(data["motivationProfile"], f"{context}.motivationProfile")
+    capability_preferences = _build_capability_preferences(
+        data["capabilityPreferences"], f"{context}.capabilityPreferences"
+    )
+    raw_heuristic_seeds = data["heuristicSeeds"]
+    _require(isinstance(raw_heuristic_seeds, list), f"{context}.heuristicSeeds 必须是数组")
+    heuristic_seeds = tuple(
+        _build_heuristic_seed(item, f"{context}.heuristicSeeds[{i}]")
+        for i, item in enumerate(raw_heuristic_seeds)
+    )
 
     raw_secrets = data["secrets"]
     _require(isinstance(raw_secrets, list), f"{context}.secrets 必须是数组")
@@ -491,6 +557,9 @@ def parse_npc_deep_card(data: dict[str, Any], *, source: str = "<inline>") -> Np
         identity=identity,
         personality=personality,
         goals=goals,
+        motivation_profile=motivation_profile,
+        capability_preferences=capability_preferences,
+        heuristic_seeds=heuristic_seeds,
         secrets=secrets,
         likes=likes,
         dislikes=dislikes,
@@ -559,6 +628,23 @@ def to_runtime_dict(card: NpcDeepCard) -> dict[str, Any]:
             "today": list(raw["goals"]["today"]),
             "fears": list(raw["goals"]["fears"]),
         },
+        "motivationProfile": {
+            "needs": dict(raw["motivation_profile"]["needs"]),
+            "personalityModifiers": dict(raw["motivation_profile"]["personality_modifiers"]),
+        },
+        "capabilityPreferences": {
+            tool_id: dict(config) for tool_id, config in raw["capability_preferences"].items()
+        },
+        "heuristicSeeds": [
+            {
+                "heuristic_id": item["heuristic_id"],
+                "trigger_pattern": dict(item["trigger_pattern"]),
+                "adjustment": dict(item["adjustment"]),
+                "confidence": item["confidence"],
+                "narrative": item["narrative"],
+            }
+            for item in raw["heuristic_seeds"]
+        ],
         "secrets": [
             {
                 "id": secret["secret_id"],

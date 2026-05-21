@@ -27,6 +27,12 @@
     "today": ["准备星灯祭前夜的备货", "在打烊前抽空回家看一眼妮娜"],
     "fears": ["店面亏到不能再供货", "妮娜的小毛病拖出大问题", "和邻居因为价格起冲突"]
   },
+  "motivationProfile": {
+    "needs": {},
+    "personalityModifiers": {}
+  },
+  "capabilityPreferences": {},
+  "heuristicSeeds": [],
   "secrets": [
     {
       "id": "secret_mira_discount_orren",

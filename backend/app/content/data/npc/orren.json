@@ -27,6 +27,12 @@
     "today": ["在广场给经过的年轻人讲一段星灯祭旧事", "把记录册的最后两页誊写完"],
     "fears": ["故事被遗忘", "记忆开始零散", "成为别人的负担"]
   },
+  "motivationProfile": {
+    "needs": {},
+    "personalityModifiers": {}
+  },
+  "capabilityPreferences": {},
+  "heuristicSeeds": [],
   "secrets": [
     {
       "id": "secret_orren_old_calendar",

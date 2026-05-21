@@ -1,6 +1,6 @@
 # Loomstead Godot 客户端
 
-这是 `Loomstead` 的首版 Godot 游戏客户端骨架。当前目标是验证 Godot 能读取 Python Agent Server 的权威世界状态，并在游戏窗口中显示玩家、地点、NPC、进行中事件和 VN 结果回执。
+这是 `Loomstead` 的首版 Godot 游戏客户端骨架。Phase 1 已于 2026-05-21 收口，当前客户端进入 Phase 2 观察者模式与 Debug 信息面板准备期。
 
 ## 当前能力
 
@@ -16,7 +16,7 @@
 - 已能展示 `activeEvents` 中的星灯祭供应短缺事件，并通过 `inspect` / `attend_event` 展示选择结果
 - 已支持地图上下文交互：靠近锚点 / 交互体 / 居民 / 事件后显示候选动作，`E`/`Space` 执行，`Tab`/`Q` 切换
 - `world_main.tscn` 已接入三场景横向拼图、HUD 暂停/倍速和 NPC tick 移动骨架
-- 可通过一条命令直接运行当前 Phase 1 可视化窗口
+- 可通过一条命令直接运行当前 Phase 1 完成基线窗口
 
 ## 本地启动
 
@@ -58,9 +58,9 @@
    clients/godot/project.godot
    ```
 
-## 人工验收步骤（本轮）
+## 人工验收步骤（Phase 1 基线）
 
-> 以下内容是人工验收步骤与检查项，需在真实窗口中逐项确认。
+> Phase 1 已收口。以下步骤保留为回归验证清单，Phase 2 新功能验收会另行追加。
 
 1. 在仓库根目录启动后端：
 
@@ -97,9 +97,8 @@
 
 ## 下一步
 
-- 在真实窗口复验默认 `world_main` 的 NPC 自动走动、HUD 暂停/倍速和三场景横向拼图。
-- 为 `world_main` 补玩家控制、相机跟随、VN 交互和轻量日程可视化。
-- 接入背包物品选择，让送礼和事件消耗从固定兜底走向玩家选择。
+- Phase 2 先接入 Tab 观察者模式与 NPC 信息面板最小骨架。
+- 等后端 motivation / memory / arbitration trace API 到位后，再把真实 Debug 数据接入面板。
 - 等行动反馈图标和生活 UI 组件通过人工筛选后，再接入 `AssetRegistry`。
 
 更完整的新手环境说明见：

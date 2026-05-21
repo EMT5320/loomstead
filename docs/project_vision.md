@@ -165,7 +165,7 @@ Ablation 实验（关闭 subjective_memory / heuristic_library / director_layer�
 
 ### 第一阶段聚焦内容
 
-Phase 1（活着的世界）正在收口；Phase 2（骨架建立期）启动后聚焦：
+Phase 1（活着的世界）已于 2026-05-21 收口；Phase 2（骨架建立期）启动后聚焦：
 
 - 1 个偏少女玩家农场主（参与者 + 观察者双模式）
 - **4 核心 NPC + 2 stub NPC**（少而深，每个有完整 motivationProfile / capabilityPreferences / heuristicSeeds）
