@@ -45,11 +45,15 @@ class ArbitrationDecision:
 class ArbitrationLayer:
     def decide(self, arbitration_input: ArbitrationInput) -> ArbitrationDecision:
         candidates = list(arbitration_input.candidates)
-        scored = self._score_candidates(candidates, arbitration_input.relationship_edges)
+        scored = self._score_candidates(
+            candidates,
+            arbitration_input.relationship_edges,
+            arbitration_input.npc_id,
+        )
         selected_score = scored[0] if scored else None
         selected = selected_score["tool"] if selected_score else None
         relationship_refs = (
-            self._relationship_refs(arbitration_input.relationship_edges)
+            self._relationship_refs(arbitration_input.relationship_edges, arbitration_input.npc_id)
             if selected and str(selected.tool_id).startswith("social.")
             else []
         )
@@ -89,10 +93,11 @@ class ArbitrationLayer:
         self,
         candidates: list[ToolDefinition],
         relationship_edges: tuple[dict[str, Any], ...],
+        npc_id: str,
     ) -> list[dict[str, Any]]:
         """对候选工具打分；关系边只影响社交工具内部排序，避免越权改需求。"""
         tier_rank = {"physiological": 0, "vocational": 1, "social_strategic": 2}
-        relationship_strength = self._relationship_strength(relationship_edges)
+        relationship_strength = self._relationship_strength(relationship_edges, npc_id)
         scored: list[dict[str, Any]] = []
         for tool in candidates:
             tier_score = 1.0 - float(tier_rank.get(tool.tier, 99)) * 0.1
@@ -121,21 +126,24 @@ class ArbitrationLayer:
             ),
         )
 
-    def _relationship_strength(self, relationship_edges: tuple[dict[str, Any], ...]) -> float:
+    def _relationship_strength(self, relationship_edges: tuple[dict[str, Any], ...], npc_id: str) -> float:
         if not relationship_edges:
             return 0.0
         positive_edges = [
             edge
             for edge in relationship_edges
             if str(edge.get("edgeType") or "") in {"affection", "trust", "respect"} and edge.get("sourceEventIds")
+            and self._edge_mentions_agent(edge, npc_id)
         ]
         if not positive_edges:
             return 0.0
         return min(1.0, sum(float(edge.get("strength", 0.0)) for edge in positive_edges) / float(len(positive_edges)))
 
-    def _relationship_refs(self, relationship_edges: tuple[dict[str, Any], ...]) -> list[dict[str, Any]]:
+    def _relationship_refs(self, relationship_edges: tuple[dict[str, Any], ...], npc_id: str) -> list[dict[str, Any]]:
         refs: list[dict[str, Any]] = []
         for edge in relationship_edges:
+            if not self._edge_mentions_agent(edge, npc_id):
+                continue
             if str(edge.get("edgeType") or "") not in {"affection", "trust", "respect"}:
                 continue
             source_event_ids = [str(event_id) for event_id in edge.get("sourceEventIds", []) if str(event_id)]
@@ -152,6 +160,10 @@ class ArbitrationLayer:
                 }
             )
         return refs[:4]
+
+    def _edge_mentions_agent(self, edge: dict[str, Any], npc_id: str) -> bool:
+        """避免错把其他 NPC 的记忆边计入当前 NPC 的仲裁。"""
+        return npc_id in {str(edge.get("sourceAgentId") or ""), str(edge.get("targetAgentId") or "")}
 
     def _score_to_debug(self, item: dict[str, Any]) -> dict[str, Any]:
         tool = item["tool"]

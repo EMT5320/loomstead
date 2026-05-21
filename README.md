@@ -90,7 +90,7 @@ Starting now. Planned skeleton work includes:
 - HeuristicLibrary and failure-driven learning.
 - ArbitrationLayer with `contributing_sources` trace.
 - World entity schemas for farm plots, items, inventory, shops, buildings, time, and weather.
-- EvalFramework with baselines, ablations, Counterfactual Replay, and dataset exports.
+- EvalFramework with baselines, memory ablations, Counterfactual Replay, and dataset exports.
 - Observer mode in Godot.
 
 Phase 2 is planned to retire the old `LifeActionExecutor` directly rather than running it in parallel with MotivationEngine.

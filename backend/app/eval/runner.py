@@ -15,9 +15,21 @@ from app.world.world_state import create_initial_world
 BASELINE_FULL = "full_motivational_delegation"
 BASELINE_HARD_DELEGATION = "hard_delegation"
 ABLATION_NO_RELATIONSHIP_EDGE = "no_relationship_edge"
+ABLATION_SHUFFLED_MEMORY_OWNER = "shuffled_memory_owner"
+ABLATION_EVIDENCE_LINK_REMOVAL = "evidence_link_removal"
 
 
-PROCESS_BASELINES = (BASELINE_FULL, BASELINE_HARD_DELEGATION, ABLATION_NO_RELATIONSHIP_EDGE)
+PROCESS_BASELINES = (
+    BASELINE_FULL,
+    BASELINE_HARD_DELEGATION,
+    ABLATION_NO_RELATIONSHIP_EDGE,
+    ABLATION_SHUFFLED_MEMORY_OWNER,
+    ABLATION_EVIDENCE_LINK_REMOVAL,
+)
+RELATIONSHIP_ABLATION_NONE = "none"
+RELATIONSHIP_ABLATION_NO_EDGE = "no_relationship_edge"
+RELATIONSHIP_ABLATION_SHUFFLED_OWNER = "shuffled_memory_owner"
+RELATIONSHIP_ABLATION_EVIDENCE_LINK_REMOVAL = "evidence_link_removal"
 
 
 def run_rule_scenarios(scenarios: tuple[EvalScenario, ...] = DEFAULT_L1_SCENARIOS) -> dict[str, Any]:
@@ -62,6 +74,8 @@ def run_process_fidelity_scenarios(
         BASELINE_FULL: _run_process_baseline(scenarios, baseline=BASELINE_FULL),
         BASELINE_HARD_DELEGATION: _run_process_baseline(scenarios, baseline=BASELINE_HARD_DELEGATION),
         ABLATION_NO_RELATIONSHIP_EDGE: _run_process_baseline(scenarios, baseline=ABLATION_NO_RELATIONSHIP_EDGE),
+        ABLATION_SHUFFLED_MEMORY_OWNER: _run_process_baseline(scenarios, baseline=ABLATION_SHUFFLED_MEMORY_OWNER),
+        ABLATION_EVIDENCE_LINK_REMOVAL: _run_process_baseline(scenarios, baseline=ABLATION_EVIDENCE_LINK_REMOVAL),
     }
     comparison = _build_process_ablation_comparison(runs)
     metrics = [metric for baseline in PROCESS_BASELINES for metric in runs[baseline]["metrics"]]
@@ -242,7 +256,7 @@ def _run_process_baseline(scenarios: tuple[ProcessGoalSpec, ...], *, baseline: s
             item = _run_runtime_process_scenario(
                 scenario,
                 baseline=baseline,
-                remove_relationship_edges=baseline == ABLATION_NO_RELATIONSHIP_EDGE,
+                relationship_ablation=_relationship_ablation_for_baseline(baseline),
             )
         items.append(item)
     metrics = process_metric_summaries(items, baseline=baseline)
@@ -256,14 +270,39 @@ def _run_process_baseline(scenarios: tuple[ProcessGoalSpec, ...], *, baseline: s
     }
 
 
-def _run_runtime_process_scenario(scenario: ProcessGoalSpec, *, baseline: str, remove_relationship_edges: bool = False) -> dict[str, Any]:
+def _relationship_ablation_for_baseline(baseline: str) -> str:
+    return {
+        ABLATION_NO_RELATIONSHIP_EDGE: RELATIONSHIP_ABLATION_NO_EDGE,
+        ABLATION_SHUFFLED_MEMORY_OWNER: RELATIONSHIP_ABLATION_SHUFFLED_OWNER,
+        ABLATION_EVIDENCE_LINK_REMOVAL: RELATIONSHIP_ABLATION_EVIDENCE_LINK_REMOVAL,
+    }.get(baseline, RELATIONSHIP_ABLATION_NONE)
+
+
+def _run_runtime_process_scenario(
+    scenario: ProcessGoalSpec,
+    *,
+    baseline: str,
+    relationship_ablation: str = RELATIONSHIP_ABLATION_NONE,
+) -> dict[str, Any]:
     runtime = AgentRuntime(provider_mode="rule")
     apply_process_goal_setup(runtime.world, scenario)
     runtime.tick(float(scenario.max_game_hours) * 3600.0, speed=1.0)
     snapshot = runtime.get_phase2_debug_snapshot({"agentId": scenario.npc_id, "limit": 50})
     recent_trace_events = snapshot.get("recentTraceEvents", []) if isinstance(snapshot.get("recentTraceEvents"), list) else []
     subjective_items = _debug_items(snapshot.get("subjectiveMemory", {}))
-    relationship_items = [] if remove_relationship_edges else _debug_items(snapshot.get("relationshipEdges", {}))
+    relationship_items = _debug_items(snapshot.get("relationshipEdges", {}))
+    relationship_edges_for_decision = [
+        edge.to_dict()
+        for edge in runtime.relationship_edge_store.list(agent_id=scenario.npc_id, limit=12)
+    ]
+    ablated_relationships = _apply_relationship_ablation(
+        scenario=scenario,
+        mode=relationship_ablation,
+        relationship_items=relationship_items,
+        decision_edges=relationship_edges_for_decision,
+    )
+    relationship_items = ablated_relationships["relationshipItems"]
+    relationship_edges_for_decision = ablated_relationships["decisionEdges"]
     all_target_tool_events = [
         event
         for event in recent_trace_events
@@ -292,11 +331,6 @@ def _run_runtime_process_scenario(scenario: ProcessGoalSpec, *, baseline: str, r
         and str(event.get("sourceEventId") or "") in goal_event_ids
         and str(event.get("traceId") or "") in goal_trace_ids
     ]
-    relationship_edges_for_decision = (
-        []
-        if remove_relationship_edges
-        else [edge.to_dict() for edge in runtime.relationship_edge_store.list(agent_id=scenario.npc_id, limit=12)]
-    )
     decision_with_relationship_memory = runtime.motivation_engine.evaluate_npc(
         runtime.world,
         scenario.npc_id,
@@ -349,6 +383,7 @@ def _run_runtime_process_scenario(scenario: ProcessGoalSpec, *, baseline: str, r
             "relationshipSourceIds": sorted(relationship_source_ids),
             "memoryTraceLinks": memory_trace_links,
             "counterfactualReplay": counterfactual_replay,
+            "relationshipAblation": ablated_relationships["evidence"],
             "traceSchemaVersion": snapshot.get("traceSchemaVersion"),
         },
     }
@@ -412,6 +447,99 @@ def _same_relationship_pair(edge: dict[str, Any], source_id: str, target_id: str
     return {str(edge.get("sourceAgentId") or ""), str(edge.get("targetAgentId") or "")} == {source_id, target_id}
 
 
+def _apply_relationship_ablation(
+    *,
+    scenario: ProcessGoalSpec,
+    mode: str,
+    relationship_items: list[dict[str, Any]],
+    decision_edges: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """构造关系记忆反事实输入，保持同一轮 goal trace 可复核。"""
+    if mode == RELATIONSHIP_ABLATION_NO_EDGE:
+        return {
+            "relationshipItems": [],
+            "decisionEdges": [],
+            "evidence": {
+                "mode": mode,
+                "removedRelationshipCount": len(relationship_items),
+                "removedDecisionEdgeCount": len(decision_edges),
+            },
+        }
+    if mode == RELATIONSHIP_ABLATION_SHUFFLED_OWNER:
+        shuffled_items = [_shuffle_relationship_owner(edge, scenario) for edge in relationship_items]
+        shuffled_decision_edges = [_shuffle_relationship_owner(edge, scenario) for edge in decision_edges]
+        return {
+            "relationshipItems": shuffled_items,
+            "decisionEdges": shuffled_decision_edges,
+            "evidence": {
+                "mode": mode,
+                "changedRelationshipCount": _changed_edge_count(relationship_items, shuffled_items),
+                "changedDecisionEdgeCount": _changed_edge_count(decision_edges, shuffled_decision_edges),
+            },
+        }
+    if mode == RELATIONSHIP_ABLATION_EVIDENCE_LINK_REMOVAL:
+        stripped_items = [_strip_relationship_evidence(edge) for edge in relationship_items]
+        stripped_decision_edges = [_strip_relationship_evidence(edge) for edge in decision_edges]
+        return {
+            "relationshipItems": stripped_items,
+            "decisionEdges": stripped_decision_edges,
+            "evidence": {
+                "mode": mode,
+                "removedSourceEventIdCount": _source_event_id_count(relationship_items)
+                + _source_event_id_count(decision_edges),
+                "removedTraceRefCount": _trace_ref_count(relationship_items) + _trace_ref_count(decision_edges),
+            },
+        }
+    return {
+        "relationshipItems": relationship_items,
+        "decisionEdges": decision_edges,
+        "evidence": {"mode": RELATIONSHIP_ABLATION_NONE},
+    }
+
+
+def _shuffle_relationship_owner(edge: dict[str, Any], scenario: ProcessGoalSpec) -> dict[str, Any]:
+    """保留边和证据数量，只替换记忆归属，用于验证 owner 是否真的参与决策。"""
+    shuffled = dict(edge)
+    source_id, target_id = _alternate_relationship_pair(scenario)
+    edge_type = str(shuffled.get("edgeType") or "affection")
+    shuffled["sourceAgentId"] = source_id
+    shuffled["targetAgentId"] = target_id
+    shuffled["edgeId"] = _relationship_edge_id(source_id, target_id, edge_type)
+    return shuffled
+
+
+def _alternate_relationship_pair(scenario: ProcessGoalSpec) -> tuple[str, str]:
+    candidates = ["orren", "kai", "bram", "mira", "tomas", "lena"]
+    picked = [npc_id for npc_id in candidates if npc_id not in {scenario.npc_id, scenario.target_npc_id}]
+    if len(picked) >= 2:
+        return picked[0], picked[1]
+    return "orren", "kai"
+
+
+def _relationship_edge_id(source_id: str, target_id: str, edge_type: str) -> str:
+    left, right = sorted([source_id, target_id])
+    return f"{left}::{right}::{edge_type}"
+
+
+def _strip_relationship_evidence(edge: dict[str, Any]) -> dict[str, Any]:
+    stripped = dict(edge)
+    stripped["sourceEventIds"] = []
+    stripped["traceRefs"] = []
+    return stripped
+
+
+def _changed_edge_count(before: list[dict[str, Any]], after: list[dict[str, Any]]) -> int:
+    return sum(1 for left, right in zip(before, after) if left != right)
+
+
+def _source_event_id_count(edges: list[dict[str, Any]]) -> int:
+    return sum(len(edge.get("sourceEventIds", [])) for edge in edges if isinstance(edge.get("sourceEventIds"), list))
+
+
+def _trace_ref_count(edges: list[dict[str, Any]]) -> int:
+    return sum(len(edge.get("traceRefs", [])) for edge in edges if isinstance(edge.get("traceRefs"), list))
+
+
 def _build_counterfactual_replay(
     *,
     scenario: ProcessGoalSpec,
@@ -472,7 +600,14 @@ def _shortcut_events(relationship_items: list[dict[str, Any]]) -> int:
 
 
 def _build_process_ablation_comparison(runs: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    metric_ids = ("goal_success_rate", "required_process_coverage", "process_believability_score", "causal_trace_coverage")
+    metric_ids = (
+        "goal_success_rate",
+        "required_process_coverage",
+        "process_believability_score",
+        "causal_trace_coverage",
+        "relationship_memory_causal_use_rate",
+        "shortcut_violation_rate",
+    )
     comparison: dict[str, Any] = {
         "full_baseline": BASELINE_FULL,
         "comparison": {},
@@ -508,6 +643,7 @@ def _export_process_eval(result: dict[str, Any], base_dir: Path) -> dict[str, An
     _write_jsonl(run_dir / "intervention_trace.jsonl", _baseline_items(result, BASELINE_HARD_DELEGATION))
     _write_jsonl(run_dir / "goal_progress_trace.jsonl", _baseline_items(result, BASELINE_FULL))
     _write_jsonl(run_dir / "counterfactual_replay.jsonl", _counterfactual_replay_items(result, BASELINE_FULL))
+    _write_jsonl(run_dir / "memory_ablation_trace.jsonl", _memory_ablation_trace_items(result))
     return {"runDir": str(run_dir)}
 
 
@@ -539,6 +675,30 @@ def _counterfactual_replay_items(result: dict[str, Any], baseline: str) -> list[
                     "scenarioId": scenario.get("scenarioId"),
                     "baseline": item.get("baseline"),
                     "counterfactualReplay": replay,
+                }
+            )
+    return items
+
+
+def _memory_ablation_trace_items(result: dict[str, Any]) -> list[dict[str, Any]]:
+    items: list[dict[str, Any]] = []
+    for baseline in (
+        ABLATION_NO_RELATIONSHIP_EDGE,
+        ABLATION_SHUFFLED_MEMORY_OWNER,
+        ABLATION_EVIDENCE_LINK_REMOVAL,
+    ):
+        for item in _baseline_items(result, baseline):
+            scenario = item.get("scenario", {}) if isinstance(item.get("scenario"), dict) else {}
+            evidence = item.get("evidence", {}) if isinstance(item.get("evidence"), dict) else {}
+            replay = evidence.get("counterfactualReplay") if isinstance(evidence, dict) else {}
+            items.append(
+                {
+                    "scenarioId": scenario.get("scenarioId"),
+                    "baseline": baseline,
+                    "processChecks": item.get("processChecks", {}),
+                    "metrics": item.get("metrics", {}),
+                    "relationshipAblation": evidence.get("relationshipAblation", {}),
+                    "counterfactualEffect": replay.get("effect") if isinstance(replay, dict) else None,
                 }
             )
     return items

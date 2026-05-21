@@ -59,6 +59,7 @@ Q3. 与已有 generative agents / social simulation 相比，我们评估的新�
 ├── intervention_trace.jsonl
 ├── goal_progress_trace.jsonl
 ├── counterfactual_replay.jsonl
+├── memory_ablation_trace.jsonl
 ├── ablation_comparison.json
 └── human_rating_samples.jsonl
 ```
@@ -258,7 +259,8 @@ A3 Hard Delegation
 A4 No Subjective Memory
 A5 No Relationship Edge in Arbitration
 A6 Shuffled Memory Owner
-A7 No Event Skill
+A7 Evidence-Link Removal
+A8 No Event Skill
 ```
 
 ### 5.2 运行次数
@@ -309,7 +311,7 @@ Branna 是否原谅，必须取决于：
 
 ### 6.3 Evidence-Link Removal
 
-保留 relationship edge，但删除 source_event_ids。
+保留 relationship edge，但删除 `source_event_ids` / `trace_refs`。
 
 如果 Debug Trace 仍声称能解释关系变化，则 trace 机制不可信。
 
