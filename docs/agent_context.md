@@ -9,7 +9,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 
 # Loomstead 新对话入口
 
-> 更新时间：2026-05-21（Phase 2 eval 关系记忆 ablation）
+> 更新时间：2026-05-21（Phase 2 eval 24h 稳定性）
 > 用途：下一轮新对话、无人值守开发、并行子代理任务的第一入口。
 
 ## 1. 当前入口
@@ -134,14 +134,14 @@ git diff --check
 ### 当前状态
 
 - Phase 1（活着的世界）done：2026-05-21 主人确认可以收口，`world_main.tscn` 进入完成基线。
-- Phase 2（骨架建立期）启动中：NPC 深度卡 schema 占位已补，后端 Tool / NeedAccumulator / Motivation / ToolExecutor / ResultObserver / SubjectiveMemory / RelationshipEdge / HeuristicLibrary / `phase2.trace.v1` / Eval L1 + Process Fidelity + Counterfactual Replay + memory ablation suite 已接入 tick 与 Debug；Hard Delegation baseline、No Relationship Edge、Shuffled Memory Owner、Evidence-Link Removal 和 Godot 观察者 debug 摘要面板已落地。
+- Phase 2（骨架建立期）启动中：NPC 深度卡 schema 占位已补，后端 Tool / NeedAccumulator / Motivation / ToolExecutor / ResultObserver / SubjectiveMemory / RelationshipEdge / HeuristicLibrary / `phase2.trace.v1` / Eval L1 + Process Fidelity + Counterfactual Replay + memory ablation + 24h stability suite 已接入 tick 与 Debug；Hard Delegation baseline、No Relationship Edge、Shuffled Memory Owner、Evidence-Link Removal 和 Godot 观察者 debug 摘要面板已落地。
 - 项目方向：narrative-primary 的可解释多 Agent 叙事运行时，差异化主轴为"少而深 + 可解释 + 可评估"。
 
 ### Phase 2 第一入口
 
 1. 完整总骨架以 `docs/production_roadmap.md` §4.3 的 15 项为准；`docs/agent_loop_architecture.md` §13.3 是 Agent Loop 内部 11 项。
 2. 后端第二刀已过：`NeedAccumulator`、`ResultObserver + BiasFilter`、`RelationshipEdgeStore`、`HeuristicLibrary` 与 `phase2.trace.v1` 最小链路已接入工具完成事件；下一刀补可见性、召回、衰减、冲突和 trace span 串联。
-3. Eval 第三刀已过：`scripts/run_agent_eval.py --suite process` 已输出 3 个 process-constrained GoalSpec、10 项 Process Fidelity 指标、Full / Hard Delegation / No Relationship Edge / Shuffled Memory Owner / Evidence-Link Removal 五组对照、`ablation_comparison`、Counterfactual Replay 和 `.run/eval-runs` 本地导出；当前 Full baseline 的 `relationship_memory_causal_use_rate=1.0`，四组对照均为 `0.0`，下一刀补 24 游戏小时稳定性与 No Subjective Memory。
+3. Eval 第三刀已过：`scripts/run_agent_eval.py --suite process` 已输出 3 个 process-constrained GoalSpec、10 项 Process Fidelity 指标、Full / Hard Delegation / No Relationship Edge / Shuffled Memory Owner / Evidence-Link Removal 五组对照、`ablation_comparison`、Counterfactual Replay 和 `.run/eval-runs` 本地导出；当前 Full baseline 的 `relationship_memory_causal_use_rate=1.0`，四组对照均为 `0.0`。`scripts/run_agent_eval.py --suite stability` 已通过 24 游戏小时稳定性：`ticksCompleted=24`、`failedToolCount=0`、`active_agent_count=6`。下一刀补 No Subjective Memory 与跨域 GoalSpec。
 4. Godot 第二刀已过：Tab 观察者面板已读取后端 phase2 debug 摘要；下一刀补 recentTraceEvents 展开和真实窗口体验验收。
 5. `LifeActionExecutor` 旧线定位为回归修复；Phase 2 计划不并行运行旧规则和 MotivationEngine。
 
@@ -153,7 +153,7 @@ git diff --check
 npm.cmd run context:check
 npm.cmd run check
 npm.cmd run smoke
-npm.cmd run eval:process
+npm.cmd run eval:process; npm.cmd run eval:stability
 npm.cmd run asset:check
 npm.cmd run client:env
 npm.cmd run client:run:check

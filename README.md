@@ -91,6 +91,7 @@ Starting now. Planned skeleton work includes:
 - ArbitrationLayer with `contributing_sources` trace.
 - World entity schemas for farm plots, items, inventory, shops, buildings, time, and weather.
 - EvalFramework with baselines, memory ablations, Counterfactual Replay, and dataset exports.
+- 24-hour rule-runtime stability eval for tick, trace, memory, relationship, and multi-agent participation.
 - Observer mode in Godot.
 
 Phase 2 is planned to retire the old `LifeActionExecutor` directly rather than running it in parallel with MotivationEngine.
@@ -151,6 +152,8 @@ npm.cmd run client:run:legacy
 npm.cmd run context:check
 npm.cmd run check
 npm.cmd run smoke
+npm.cmd run eval:process
+npm.cmd run eval:stability
 npm.cmd run asset:check
 npm.cmd run client:env
 npm.cmd run client:run:check

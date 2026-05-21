@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -30,6 +31,9 @@ RELATIONSHIP_ABLATION_NONE = "none"
 RELATIONSHIP_ABLATION_NO_EDGE = "no_relationship_edge"
 RELATIONSHIP_ABLATION_SHUFFLED_OWNER = "shuffled_memory_owner"
 RELATIONSHIP_ABLATION_EVIDENCE_LINK_REMOVAL = "evidence_link_removal"
+BASELINE_STABILITY_24H = "rule_24h_stability"
+DEFAULT_STABILITY_HOURS = 24
+STABILITY_TRACE_TYPES = {"tool.execution_completed", "tool.execution_failed", "memory.result_observed"}
 
 
 def run_rule_scenarios(scenarios: tuple[EvalScenario, ...] = DEFAULT_L1_SCENARIOS) -> dict[str, Any]:
@@ -91,6 +95,112 @@ def run_process_fidelity_scenarios(
     }
     if export_dir is not None:
         result["export"] = _export_process_eval(result, Path(export_dir))
+    return result
+
+
+def run_stability_scenarios(
+    *,
+    hours: int = DEFAULT_STABILITY_HOURS,
+    export_dir: str | Path | None = None,
+) -> dict[str, Any]:
+    """连续推进规则版 AgentRuntime，用 24 游戏小时验证 tick 主路径稳定性。"""
+    hours = max(1, int(hours))
+    runtime = AgentRuntime(provider_mode="rule")
+    initial_clock = dict(runtime.world.get("clock", {}))
+    tick_items: list[dict[str, Any]] = []
+    tick_success_values: list[float] = []
+    event_type_counts: Counter[str] = Counter()
+    trace_event_count = 0
+    trace_schema_ok_count = 0
+    completed_tool_count = 0
+    failed_tool_count = 0
+    memory_observation_count = 0
+    active_agent_ids: set[str] = set()
+
+    for hour_index in range(1, hours + 1):
+        try:
+            tick_result = runtime.tick(3600.0, speed=1.0)
+            events = [event for event in tick_result.get("events", []) if isinstance(event, dict)]
+            tick_counts = Counter(str(event.get("type") or "") for event in events)
+            event_type_counts.update(tick_counts)
+            for event in events:
+                event_type = str(event.get("type") or "")
+                payload = event.get("payload", {}) if isinstance(event.get("payload"), dict) else {}
+                npc_id = str(payload.get("npcId") or event.get("npcId") or "")
+                if npc_id:
+                    active_agent_ids.add(npc_id)
+                if event_type in STABILITY_TRACE_TYPES:
+                    trace_event_count += 1
+                    if payload.get("traceSchemaVersion") == "phase2.trace.v1":
+                        trace_schema_ok_count += 1
+                if event_type == "tool.execution_completed":
+                    completed_tool_count += 1
+                elif event_type == "tool.execution_failed":
+                    failed_tool_count += 1
+                elif event_type == "memory.result_observed":
+                    memory_observation_count += 1
+            tick_items.append(
+                {
+                    "hourIndex": hour_index,
+                    "ok": True,
+                    "clock": tick_result.get("clock", {}),
+                    "eventCounts": dict(sorted(tick_counts.items())),
+                    "agentDiffCount": len(tick_result.get("agents", [])) if isinstance(tick_result.get("agents"), list) else 0,
+                }
+            )
+            tick_success_values.append(1.0)
+        except Exception as exc:  # noqa: BLE001 - Eval 要把失败转成证据，方便 CI 和人工复盘。
+            tick_items.append({"hourIndex": hour_index, "ok": False, "error": repr(exc)})
+            tick_success_values.append(0.0)
+            break
+
+    subjective_memory_count = len(runtime.subjective_memory_store.list(limit=10000))
+    relationship_edge_count = len(runtime.relationship_edge_store.list(limit=10000))
+    heuristic_count = len(runtime.heuristic_library.list(limit=10000))
+    trace_schema_coverage = _safe_ratio(trace_schema_ok_count, trace_event_count)
+    memory_observation_ratio = _safe_ratio(memory_observation_count, completed_tool_count)
+    checks = {
+        "tick_successful": sum(tick_success_values) == float(hours),
+        "clock_reached_expected_tick": int(runtime.world.get("clock", {}).get("tick", 0)) >= hours,
+        "no_tool_failures": failed_tool_count == 0,
+        "trace_schema_complete": trace_event_count > 0 and trace_schema_coverage >= 1.0,
+        "memory_observations_follow_tools": completed_tool_count > 0 and memory_observation_count >= completed_tool_count,
+        "relationship_edges_created": relationship_edge_count > 0,
+        "multi_agent_participation": len(active_agent_ids) >= 4,
+    }
+    metrics = [
+        metric_summary("stability_tick_success_rate", tick_success_values, baseline=BASELINE_STABILITY_24H),
+        metric_summary("trace_schema_coverage", [trace_schema_coverage], baseline=BASELINE_STABILITY_24H),
+        metric_summary("memory_observation_per_completed_tool", [memory_observation_ratio], baseline=BASELINE_STABILITY_24H),
+        metric_summary("tool_failure_rate", [_safe_ratio(failed_tool_count, max(1, completed_tool_count + failed_tool_count))], baseline=BASELINE_STABILITY_24H),
+        metric_summary("active_agent_count", [float(len(active_agent_ids))], baseline=BASELINE_STABILITY_24H),
+        metric_summary("relationship_edge_count", [float(relationship_edge_count)], baseline=BASELINE_STABILITY_24H),
+    ]
+    result = {
+        "ok": all(checks.values()),
+        "suite": "stability_24h",
+        "baseline": BASELINE_STABILITY_24H,
+        "hours": hours,
+        "ticksCompleted": int(sum(tick_success_values)),
+        "checks": checks,
+        "metrics": metrics,
+        "evidence": {
+            "initialClock": initial_clock,
+            "finalClock": dict(runtime.world.get("clock", {})),
+            "eventTypeCounts": dict(sorted(event_type_counts.items())),
+            "completedToolCount": completed_tool_count,
+            "failedToolCount": failed_tool_count,
+            "memoryObservationCount": memory_observation_count,
+            "subjectiveMemoryCount": subjective_memory_count,
+            "relationshipEdgeCount": relationship_edge_count,
+            "heuristicCount": heuristic_count,
+            "activeAgentIds": sorted(active_agent_ids),
+            "retainedEventStoreCount": len(runtime.event_store.list()),
+        },
+        "items": tick_items,
+    }
+    if export_dir is not None:
+        result["export"] = _export_stability_eval(result, Path(export_dir))
     return result
 
 
@@ -630,6 +740,10 @@ def _metric_index(metrics: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     return {str(metric["metric"]): metric for metric in metrics}
 
 
+def _safe_ratio(numerator: int | float, denominator: int | float) -> float:
+    return float(numerator) / float(denominator) if float(denominator) else 0.0
+
+
 def _export_process_eval(result: dict[str, Any], base_dir: Path) -> dict[str, Any]:
     run_dir = base_dir / f"run_{datetime.now(timezone.utc).strftime('%Y-%m-%dT%H-%M-%SZ')}"
     per_scenario_dir = run_dir / "per_scenario"
@@ -647,8 +761,18 @@ def _export_process_eval(result: dict[str, Any], base_dir: Path) -> dict[str, An
     return {"runDir": str(run_dir)}
 
 
+def _export_stability_eval(result: dict[str, Any], base_dir: Path) -> dict[str, Any]:
+    run_dir = base_dir / f"stability_{datetime.now(timezone.utc).strftime('%Y-%m-%dT%H-%M-%SZ')}"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    _write_json(run_dir / "summary.json", _summary_only(result))
+    _write_jsonl(run_dir / "stability_trace.jsonl", list(result.get("items", [])))
+    evidence = result.get("evidence", {}) if isinstance(result.get("evidence"), dict) else {}
+    _write_json(run_dir / "final_evidence.json", evidence)
+    return {"runDir": str(run_dir)}
+
+
 def _summary_only(result: dict[str, Any]) -> dict[str, Any]:
-    return {
+    summary = {
         "ok": result.get("ok"),
         "suite": result.get("suite"),
         "baseline": result.get("baseline"),
@@ -657,6 +781,10 @@ def _summary_only(result: dict[str, Any]) -> dict[str, Any]:
         "metrics": result.get("metrics"),
         "ablation_comparison": result.get("ablation_comparison"),
     }
+    for key in ("hours", "ticksCompleted", "checks", "evidence"):
+        if key in result:
+            summary[key] = result.get(key)
+    return summary
 
 
 def _baseline_items(result: dict[str, Any], baseline: str) -> list[dict[str, Any]]:

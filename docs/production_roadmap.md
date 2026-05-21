@@ -259,7 +259,7 @@ Phase 2 启动时 **直接退役** Phase 1 的 `LifeActionExecutor`，不并行�
 | EvalFramework | scripts/run_agent_eval.py + L1 scenario suite (5-8 个) | `scripts/run_agent_eval.py`, `backend/app/eval/` |
 | ResearchFraming | Motivational Delegation + Process Fidelity Eval 研究文档 | `docs/research_framing_motivational_delegation.md` |
 | DomainAdapter | GoalSpec / Observation / Intervention / EvalTrace 抽象接口 | `backend/app/domain/base.py`、`docs/cross_domain_adapter.md` |
-| ProcessFidelityEval | 过程保真指标 + hard delegation baseline + ablation protocol + Counterfactual Replay + memory ablation | `backend/app/eval/process_fidelity.py`、`docs/process_fidelity_eval_spec.md` |
+| ProcessFidelityEval | 过程保真指标 + hard delegation baseline + ablation protocol + Counterfactual Replay + memory ablation + 24h stability | `backend/app/eval/process_fidelity.py`、`docs/process_fidelity_eval_spec.md` |
 | 观察者模式 | Godot 内最小可用：切换 + NPC 信息面板 | `clients/godot/scripts/ui/observer_panel.gd` |
 
 ### 4.4 NPC 数量调整：4 核心 + 2 stub
@@ -277,6 +277,7 @@ Phase 2 收口标准：
 - L1 scenario suite 全部通过
 - 至少 1 次 ablation 实验数据（关闭 subjective_memory 或 heuristic_library，对比关键指标）
 - 规则版 NPC 决策周期可稳定运行 24 游戏小时不崩溃
+- `npm.cmd run eval:stability` 输出 `stability_tick_success_rate=1.0` 且 `tool_failure_rate=0.0`
 - Debug Trace 可完整解释任意一次决策
 
 **2026-05-20 研究向硬验收**：

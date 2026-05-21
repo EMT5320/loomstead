@@ -60,6 +60,7 @@ Q3. 与已有 generative agents / social simulation 相比，我们评估的新�
 ├── goal_progress_trace.jsonl
 ├── counterfactual_replay.jsonl
 ├── memory_ablation_trace.jsonl
+├── stability_trace.jsonl
 ├── ablation_comparison.json
 └── human_rating_samples.jsonl
 ```
