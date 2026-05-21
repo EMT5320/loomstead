@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: context-governance
-last_verified: 2026-05-19
+last_verified: 2026-05-20
 startup_load: first-read
 source_of_truth: true
 scope: new-session entrypoint, boundaries, commands, and next steps
@@ -9,15 +9,17 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 
 # Agent Valley 新对话入口
 
-> 更新时间：2026-05-19（项目重定位 + 文档治理）
+> 更新时间：2026-05-20（研究 framing 增补：narrative-primary / Motivational Delegation / Process Fidelity Eval）
 > 用途：下一轮新对话、无人值守开发、并行子代理任务的第一入口。
 
 ## 1. 当前入口
 
 - 先读本文，再按任务线读取源文档。
-- 长期方向以 `docs/project_vision.md` 为准（已重写为"可解释多 Agent 叙事运行时"定位）。
+- 长期方向以 `docs/project_vision.md` 为准（2026-05-19 重定位 + 2026-05-20 研究 framing 增补）。
+- **研究 framing 源**：`docs/research_framing_motivational_delegation.md`（narrative-primary / Motivational Delegation / Process Fidelity Eval / baseline matrix）。
 - **NPC agent loop 核心圣经**：`docs/agent_loop_architecture.md`（三层工具、动机系统、双轨记忆、启发式学习、仲裁、Eval）。
 - **世界实体 schema**：`docs/world_entity_model.md`（FarmPlot / Item / Inventory / Shop / Building / Time / Weather + 工具空间）。
+- **Process Fidelity Eval 规格**：`docs/process_fidelity_eval_spec.md`、**跨域 adapter 接口**：`docs/cross_domain_adapter.md`。
 - 多层 Agent 系统设计：`docs/agentic_game_design.md`（Director / Skill / Memory / Model 分工）。
 - 生产化阶段路线：`docs/production_roadmap.md`（Phase 1 收口中，Phase 2 骨架建立期待启动）。
 - 当前事实以 `docs/current_status.md` 为准。
@@ -25,9 +27,9 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - 视觉和资产细节见 `docs/art_direction.md`、`docs/asset_generation_prompts.md`、`assets/manifests/asset_manifest.json`。
 - 历史草案、已归档文档统一放在 `docs/archive/`，**不得作为当前事实源**。
 
-## 2. 一句话定位（2026-05-19 重定位后）
+## 2. 一句话定位（2026-05-19 重定位 + 2026-05-20 研究 framing 增补）
 
-`Agent Valley` 是一个**可解释的多 Agent 叙事运行时**：通过 Director / Event Skill、主观记忆、关系演化、启发式学习与 Debug Trace，让少量深度 NPC（4 核心 + 2 stub）在可玩的 Godot 生活模拟切片中产生可追踪成长。差异化主轴：**少而深 + 可解释 + 可评估**。
+`Agent Valley` 是一个 **narrative-primary 的可解释多 Agent 叙事运行时与研究环境**：通过 Director / Event Skill、主观记忆、关系演化、启发式学习与 Debug Trace，研究 Director 如何以 Motivational Delegation 间接驱动少量深度 NPC（4 核心 + 2 stub）朝过程约束目标演化，并用 Process Fidelity Eval 验证"过程是否可信"。差异化主轴：**少而深 + 可解释 + 可评估**。
 
 ## 3. 当前已验证事实
 
@@ -95,6 +97,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - `AssetRegistry` 已支持 `happy` / `troubled` 表情键兜底，缺图时回退 `neutral`。
 - 表情差分、行动反馈图标和生活行动 UI 小组件已有 3 批 `prompt_ready` backlog，导出清单位于 `docs/asset_batches/prompt_ready_export.md`，尚未生成或接入 Godot registry。
 - `AGENTS.md`、`CLAUDE.md`、`docs/README.md`、`docs/agent_context.md`、`docs/goal_board.md`、`docs/current_status.md`、`docs/open_questions.md` 是当前治理入口。
+- 2026-05-20 新增三份研究 framing 决策源文档已落地并通过 `npm.cmd run context:check`：`docs/research_framing_motivational_delegation.md`、`docs/process_fidelity_eval_spec.md`、`docs/cross_domain_adapter.md`；`scripts/build_agent_context.py` 与 `.claude/rules/backend.md` 的历史死链（指向 `vertical_slice_spec.md` / `initial_asset_generation_plan.md`）已修复。
 
 ## 4. 当前边界
 

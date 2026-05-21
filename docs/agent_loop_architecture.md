@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: backend-director
-last_verified: 2026-05-19
+last_verified: 2026-05-20
 startup_load: on-demand
 source_of_truth: true
 scope: NPC agent loop, motivation engine, capability registry, subjective memory, heuristic learning, arbitration, evaluation framework
@@ -1075,6 +1075,12 @@ python scripts/run_agent_eval.py --suite default --ablate heuristic_library
 python scripts/run_agent_eval.py --suite default --ablate director_layer
 ```
 
+#### Hard Delegation baseline（2026-05-20 增补）
+
+Director 将目标反推为显式 todo，并把 todo 直接委派给 NPC 执行。它代表传统 task delegation / parent-worker agent 模式，是 Phase 2 必须加入的强 baseline。Full 系统如果只比 direct state setter 强，不足以证明 Motivational Delegation 的价值；必须证明在 process fidelity、agent autonomy、side effect、relationship memory causal use 等指标上优于 Hard Delegation。
+
+完整 baseline matrix（Direct State Setter / Static Todo Planner / Hard Delegation / Director w/o Subjective Memory / Full Motivational Delegation）与运行约定详见 [`process_fidelity_eval_spec.md`](./process_fidelity_eval_spec.md) §3、§5。
+
 ### 10.3 Scenario Suite 分层
 
 | 层 | 数量 | 描述 | 例子 |
@@ -1103,9 +1109,22 @@ class EvalMetrics:
     causal_trace_depth_avg: float       # 玩家行为引发的因果链平均跳数
     subjective_divergence: float        # 同一事件在不同 NPC 视角的措辞/情绪/重要性差异度
     heuristic_uptake_rate: float        # 提取的 heuristic 在后续决策中的引用频率
+
+    # 2026-05-20 研究向增补：Process Fidelity 与 Motivational Delegation。
+    # 完整公式与说明见 process_fidelity_eval_spec.md §4。
+    process_fidelity_score: float            # 过程保真综合得分
+    shortcut_violation_rate: float           # 硬改状态 / 跳过中间过程的比例
+    forced_action_rate: float                # Director 显式指定 NPC 动作的比例
+    agent_initiated_action_ratio: float      # ArbitrationLayer 自主选择的动作比例
+    intervention_overreach_rate: float       # Director 越权干预（直改关系 / 对话结果）的比例
+    relationship_memory_causal_use_rate: float  # 关系记忆在决策中是否真有因果作用
+    memory_ablation_delta: float             # Full vs No-Memory 在关键指标上的差值
+    side_effect_score: float                 # 预期外关系 / 记忆溢出的侧效应评分
 ```
 
 `subjective_divergence` 计算方式：对同一 event_id，取所有观察者的 SubjectiveMemoryEntry，计算 (importance, emotional_charge, tag_set) 的 pairwise 距离平均值。
+
+`process_fidelity_score` 、 `shortcut_violation_rate` 、 `relationship_memory_causal_use_rate` 等 8 个 Process Fidelity 指标仅在本文作为 EvalMetrics schema 声明，具体计算公式、ablation 协议、GoalSpec schema 与 Phase 2 补充验收条件详见 [`process_fidelity_eval_spec.md`](./process_fidelity_eval_spec.md)。
 
 `causal_trace_depth_avg` 计算方式：对玩家每次 player.action_*，沿着观察记忆 → NPC 后续行动 → 第三方观察 这条链反向追溯，统计平均跳数。
 

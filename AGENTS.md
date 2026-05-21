@@ -8,6 +8,7 @@
 - 当前方向（2026-05-19 重定位后）：**可解释的多 Agent 叙事运行时**——通过 Director / Event Skill、主观记忆、关系演化、启发式学习与 Debug Trace，让少量深度 NPC（4 核心 + 2 stub）在可玩的 Godot 生活模拟切片中产生可追踪成长。差异化主轴：**少而深 + 可解释 + 可评估**。
 - 技术骨架：Godot 4.x 客户端 + Python Agent Server + Web Debug / 研究控制台。
 - 当前阶段：Phase 1（活着的世界）收口中，Phase 2（骨架建立期）待启动。
+- 2026-05-20 研究 framing 增补：narrative-primary / task-secondary，研究主卖点为 Motivational Delegation + Process Fidelity Eval；Phase 2 骨架增加 ResearchFraming / DomainAdapter / ProcessFidelityEval 三项（详见 `docs/research_framing_motivational_delegation.md`）。
 
 ## 2. 新会话启动协议
 
@@ -29,12 +30,15 @@
 
 ### 决策源
 
-- `docs/project_vision.md`：产品愿景、长期方向和成功标准（2026-05-19 重定位）。
+- `docs/project_vision.md`：产品愿景、长期方向和成功标准（2026-05-19 重定位 / 2026-05-20 研究 framing 增补）。
+- `docs/research_framing_motivational_delegation.md`：研究定位与核心反论点，定义 narrative-primary / task-secondary、Motivational Delegation、Process Fidelity Eval、baseline matrix。
 - `docs/agent_loop_architecture.md`：**NPC agent loop 核心圣经**——三层工具、动机系统、双轨记忆、启发式学习、仲裁、Eval。
 - `docs/world_entity_model.md`：世界实体 schema + 工具空间。
 - `docs/agentic_game_design.md`：多层 Agent 系统设计（Director / Skill / Memory / Model 分工）。
 - `docs/gameplay_system_architecture.md`：游戏本体架构、地图主循环、Godot / 后端边界。
 - `docs/production_roadmap.md`：生产化阶段路线（Phase 1 收口 + Phase 2 详细方案）。
+- `docs/process_fidelity_eval_spec.md`：研究向 Eval 指标、hard delegation baseline、ablation protocol、dataset 输出规格。
+- `docs/cross_domain_adapter.md`：跨域 adapter 接口，保证小镇 primary、为 task-secondary 验证保留路径。
 - `docs/open_questions.md`：已确认决策、剩余问题和实现中验证点。
 
 ### 按任务线读取
@@ -42,7 +46,8 @@
 - 后端 / Director / Event Skill / Agent Loop：`docs/agent_loop_architecture.md`、`docs/world_entity_model.md`、`docs/agentic_game_design.md`、`backend/`、`scripts/check.py`。
 - Godot 客户端：`docs/production_roadmap.md`、`docs/gameplay_system_architecture.md`、`docs/game_client_environment.md`、`clients/godot/README.md`、`clients/godot/`。
 - 内容 / NPC 深度卡：`docs/game_content_storyline.md`、`docs/npc_deep_card_spec.md`、`backend/app/content/`。
-- LLM / Debug / Eval：`docs/model_profile_template_guide.md`、`config/`、`backend/app/providers/`、`docs/agent_loop_architecture.md` §10、Debug API 相关代码。
+- LLM / Debug / Eval：`docs/model_profile_template_guide.md`、`config/`、`backend/app/providers/`、`docs/agent_loop_architecture.md` §10、`docs/process_fidelity_eval_spec.md`、Debug API 相关代码。
+- 研究 framing / 跨域 adapter：`docs/research_framing_motivational_delegation.md`、`docs/process_fidelity_eval_spec.md`、`docs/cross_domain_adapter.md`；实现阶段转为代码后进入 `backend/app/domain/`、`backend/app/eval/`。
 - 资产管线：`docs/art_direction.md`、`docs/asset_generation_prompts.md`、`docs/map_sprite_style_guide.md`、`assets/manifests/asset_manifest.json`。
 - 上下文治理：`AGENTS.md`、`CLAUDE.md`、`docs/agent_context.md`、`scripts/build_agent_context.py`。
 - 归档历史：`docs/archive/`（仅供溯源，不得作为当前事实源）。

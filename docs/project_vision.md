@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: vision
-last_verified: 2026-05-19
+last_verified: 2026-05-20
 startup_load: on-demand
 source_of_truth: true
 scope: long-term product vision, differentiation, and success criteria
@@ -11,10 +11,13 @@ scope: long-term product vision, differentiation, and success criteria
 
 > 本文是项目后续推进的核心依据。后续设计、实现、取舍和阶段验收都优先对齐这里定义的方向。
 > 2026-05-19 项目重定位：从"二次元田园 RPG"调整为"可解释的多 Agent 叙事运行时"。差异化主轴是"少而深 + 可解释 + 可评估"。
+> 2026-05-20 研究 framing 增补：narrative-primary / task-secondary，研究主卖点改为 Motivational Delegation + Process Fidelity Eval（详见 `research_framing_motivational_delegation.md`）。
 
 ## 一句话定位
 
-`Agent Valley` 是一个**可解释的多 Agent 叙事运行时**：通过 Director / Event Skill、主观记忆、关系演化、启发式学习与 Debug Trace，让少量深度 NPC（4 核心 + 2 stub）在可玩的 Godot 生活模拟切片中产生可追踪成长。
+`Agent Valley` 是一个 **narrative-primary 的可解释多 Agent 叙事运行时与研究环境**：通过 Director / Event Skill、主观记忆、关系演化、启发式学习与 Debug Trace，研究 Director 如何以 **Motivational Delegation** 的方式间接驱动少量深度 NPC 朝过程约束目标演化，并用 **Process Fidelity Eval** 验证"目标达成过程是否可信"。
+
+2026-05-20 研究 framing 更新：小镇不再被描述为"通用架构的引言"，而是 primary validation domain。Process Fidelity 需要人类能直觉判断过程是否合理的场景；恋爱、和解、节日、信任修复和谣言传播这类叙事目标天然暴露"直接硬改状态"和"可信过程演化"的区别。跨域任务环境保留为 secondary validation，用于证明 GoalSpec / Intervention / Trace / Eval 抽象具备迁移可能，但不反客为主。
 
 ## 差异化定位
 
@@ -129,7 +132,19 @@ NPC 从痛苦经验自动提取避坑规则：
 
 NPC 决策时同时面对：内部需求 + Director Beat 偏置 + Event Skill 局部约束 + 长期目标 + 启发式经验 + 主观记忆召回 + 信念模型（可选）。Arbitration Layer 结构化裁决，每次决策的 `contributing_sources` 写入 EventStore，玩家点击任意 NPC 行为可逆向追溯。
 
-### 5. Eval Framework（量化差异化论点）
+### 5. Motivational Delegation（动机委派）
+
+用户目标不会被 Director 直接执行，也不会被拆成硬性 todo-list 分配给 NPC。Director 只能通过 `motivation_bias`、`event_skill_load`、`opportunity_schedule`、`resource_shift`、`information_exposure`、`constraint_injection` 等间接干预改变 Agent 的行动分布。NPC 是否接受、如何行动、是否失败，由自身动机、记忆、关系和 ArbitrationLayer 决定。
+
+这是 Director / NPC 协作的根本范式：Director 不当 worker 调度器，而是"塑造世界条件让 Agent 自己想去做"。详见 [`research_framing_motivational_delegation.md`](./research_framing_motivational_delegation.md)。
+
+### 6. Process Fidelity Eval（过程保真评估）
+
+Eval 不只判断最终状态是否达成，还判断过程是否可信：是否绕过了中间过程、是否强制 Agent 行动、关键关系变化是否有记忆证据、Director 是否过度干预、Agent 行为是否与其长期记忆和关系一致。该体系用于回答"为什么不直接 task delegation"以及"关系记忆是否真的影响结果"两条核心反论点。
+
+Process Fidelity 在原 Eval Framework（下文 §7）之上新增 `shortcut_violation_rate`、`required_process_coverage`、`forced_action_rate`、`relationship_memory_causal_use_rate` 等指标，并要求引入 Hard Delegation baseline 与关系记忆 ablation。详见 [`process_fidelity_eval_spec.md`](./process_fidelity_eval_spec.md)。
+
+### 7. Eval Framework（量化差异化论点）
 
 `scripts/run_agent_eval.py` 跑分层 scenario suite（L1 单 NPC × 5-8 / L2 社交 × 5-8 / L3 涌现 × 3-5），输出指标：
 
@@ -140,7 +155,7 @@ NPC 决策时同时面对：内部需求 + Director Beat 偏置 + Event Skill �
 
 Ablation 实验（关闭 subjective_memory / heuristic_library / director_layer）证明每条核心能力的贡献。Eval 输出 + EventStore dump 作为可公开 dataset。
 
-### 6. AI 辅助美术资产管线
+### 8. AI 辅助美术资产管线
 
 游戏运行时使用本地静态资源，不依赖图片生成 API。Codex 生图能力用于开发期资产生产，覆盖 NPC 立绘、表情差分、地图小人、场景背景、UI 组件、事件 CG。美术风格仍为二次元轻幻想轻异世界田园风（保留为 demo scenario 视觉外壳）。
 

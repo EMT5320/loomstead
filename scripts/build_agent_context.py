@@ -32,10 +32,9 @@ REQUIRED_DOCS = [
     "docs/project_vision.md",
     "docs/current_status.md",
     "docs/open_questions.md",
-    "docs/production_roadmap.md",
     "docs/agentic_game_design.md",
     "docs/agent_loop_architecture.md",
-    "docs/world_entity_model.md",
+    "docs/research_framing_motivational_delegation.md",
 ]
 
 REQUIRED_METADATA_KEYS = [
@@ -73,8 +72,8 @@ ROUTED_PATHS = [
     "docs/model_profile_template_guide.md",
     "docs/art_direction.md",
     "docs/asset_generation_prompts.md",
-    "docs/map_sprite_style_guide.md",
-    "docs/asset_batches/prompt_ready_export.md",
+    "docs/process_fidelity_eval_spec.md",
+    "docs/cross_domain_adapter.md",
 ]
 
 
@@ -128,15 +127,11 @@ def extract_bullet_section(text: str, heading: str, max_items: int = 6) -> list[
     lines = text.splitlines()
     for index, line in enumerate(lines):
         if line.strip() == heading:
-            target_level = len(line) - len(line.lstrip("#"))
             collected: list[str] = []
             for next_line in lines[index + 1 :]:
                 stripped = next_line.strip()
                 if stripped.startswith("#"):
-                    next_level = len(stripped) - len(stripped.lstrip("#"))
-                    if next_level <= target_level:
-                        break
-                    continue
+                    break
                 # 支持普通列表和编号列表，避免状态文档格式变化后 brief 失效。
                 if stripped.startswith("- ") or (stripped[:2].strip(".").isdigit() and ". " in stripped[:4]):
                     collected.append(stripped)

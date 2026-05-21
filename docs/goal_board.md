@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: planning
-last_verified: 2026-05-19
+last_verified: 2026-05-20
 startup_load: after-agent-context
 source_of_truth: true
 scope: lane board, write boundaries, and handoff format
@@ -43,6 +43,7 @@ scope: lane board, write boundaries, and handoff format
 - 白天后端 agent 线已合并到 `main`：`a61a16c merge: integrate day backend agent line`。
 - 白天美术资产线已合并到 `main`：`6e77406 merge: integrate day art asset line`。
 - Godot 新 sprite `.import` 元数据已提交：`1de91f6 chore: import Godot map sprite metadata`。
+- 2026-05-20 研究 framing 增补已落地并通过 `npm.cmd run context:check`：新增 `docs/research_framing_motivational_delegation.md`、`docs/process_fidelity_eval_spec.md`、`docs/cross_domain_adapter.md`；`project_vision.md` / `production_roadmap.md` / `agent_loop_architecture.md` / `docs/README.md` / `AGENTS.md` / `docs/agent_context.md` / `docs/current_status.md` 已同步；`scripts/build_agent_context.py` 与 `.claude/rules/backend.md` 死链已修复。
 
 ## 3. 本轮收口状态
 
@@ -71,6 +72,7 @@ scope: lane board, write boundaries, and handoff format
 - 首发 6 名 NPC 深度卡已入库：`kai`、`bram`、`mira`、`tomas`、`orren`、`lena`。
 - NPC 内容工作流已落地：`.windsurf/workflows/author-npc-deep-card.md`。
 - 多助手共享入口已落地：`AGENTS.md` 与导入它的 `CLAUDE.md`。
+- 2026-05-20 研究 framing 增补已落地：Phase 2 骨架增加 ResearchFraming / DomainAdapter / ProcessFidelityEval 三项，收口标准新增 Hard Delegation baseline 与关系记忆 ablation 硬验收；phase2_research_addendum patch notes 已归档。
 
 ### 部分完成
 

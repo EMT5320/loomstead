@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: planning
-last_verified: 2026-05-19
+last_verified: 2026-05-20
 startup_load: on-demand
 source_of_truth: true
 scope: production roadmap, phase axis, phase 1 closeout, phase 2 skeleton design
@@ -228,6 +228,12 @@ WorldClock(前端) ──tick──►│
 
 骨架 = 完整 schema + 接口 + 至少一个端到端可跑通的实例。
 
+**2026-05-20 研究向增补**：Phase 2 保持原骨架计划不大改，但必须加入三项研究护栏：
+
+1. **研究文档**：明确 narrative-primary / task-secondary、Motivational Delegation、Process Fidelity Eval、核心反论点和 baseline matrix（已落地 `docs/research_framing_motivational_delegation.md`）。
+2. **跨域 adapter 接口**：抽象 GoalSpec / Intervention / Observation / EvalTrace，保证小镇是 primary domain，同时保留 task-secondary 可迁移路径（已落地 `docs/cross_domain_adapter.md`）。
+3. **Hard Delegation baseline**：在 Eval 中加入"直接任务委派 / todo-list"对照，严肃回答为什么不用传统 task delegation（详见 `docs/process_fidelity_eval_spec.md` §3.3）。
+
 ### 4.2 直接切换原则
 
 Phase 2 启动时 **直接退役** Phase 1 的 `LifeActionExecutor`，不并行运行。原因：
@@ -251,6 +257,9 @@ Phase 2 启动时 **直接退役** Phase 1 的 `LifeActionExecutor`，不并行�
 | HeuristicLibrary | 完整 schema + 规则提取 + LLM 提取（受预算约束） | `backend/app/memory/heuristic.py` |
 | WorldEntities | FarmPlot / Item / Inventory / Shop / Building / Time / Weather schema | `backend/app/world/entities/` |
 | EvalFramework | scripts/run_agent_eval.py + L1 scenario suite (5-8 个) | `scripts/run_agent_eval.py`, `backend/app/eval/` |
+| ResearchFraming | Motivational Delegation + Process Fidelity Eval 研究文档 | `docs/research_framing_motivational_delegation.md` |
+| DomainAdapter | GoalSpec / Observation / Intervention / EvalTrace 抽象接口 | `backend/app/domain/base.py`、`docs/cross_domain_adapter.md` |
+| ProcessFidelityEval | 过程保真指标 + hard delegation baseline + ablation protocol | `backend/app/eval/process_fidelity.py`、`docs/process_fidelity_eval_spec.md` |
 | 观察者模式 | Godot 内最小可用：切换 + NPC 信息面板 | `clients/godot/scripts/ui/observer_panel.gd` |
 
 ### 4.4 NPC 数量调整：4 核心 + 2 stub
@@ -270,7 +279,16 @@ Phase 2 收口标准：
 - 规则版 NPC 决策周期可稳定运行 24 游戏小时不崩溃
 - Debug Trace 可完整解释任意一次决策
 
-不达标不进入 Phase 3。详见 [`agent_loop_architecture.md`](./agent_loop_architecture.md) §10、§13.6。
+**2026-05-20 研究向硬验收**：
+
+- 至少 3 个 process-constrained GoalSpec。
+- 至少 1 个 Hard Delegation baseline 可运行。
+- 至少 1 个关系记忆 ablation 可运行：No Subjective Memory / No Relationship Edge / Shuffled Memory Owner 三选一。
+- Eval 输出 mean/std/n，不只输出 pass/fail。
+- 至少 1 张 `ablation_comparison.json` 能比较 Full vs Hard Delegation vs No Memory。
+- 任意关键目标状态变化必须能追溯到 `source_event_ids` 或 `trace_refs`。
+
+不达标不进入 Phase 3。详见 [`agent_loop_architecture.md`](./agent_loop_architecture.md) §10、§13.6，以及 [`process_fidelity_eval_spec.md`](./process_fidelity_eval_spec.md) §8。
 
 ### 4.6 Phase 2 开发线推荐
 
