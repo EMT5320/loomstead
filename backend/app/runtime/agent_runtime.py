@@ -254,7 +254,18 @@ class AgentRuntime:
         }
 
     def _phase2_decisions(self, npc_ids: list[str], delta_minutes: float = 20.0) -> list[dict[str, Any]]:
-        return [self.motivation_engine.evaluate_npc(self.world, npc_id, delta_minutes=delta_minutes) for npc_id in npc_ids]
+        return [
+            self.motivation_engine.evaluate_npc(
+                self.world,
+                npc_id,
+                delta_minutes=delta_minutes,
+                relationship_edges=[
+                    edge.to_dict()
+                    for edge in self.relationship_edge_store.list(agent_id=npc_id, limit=12)
+                ],
+            )
+            for npc_id in npc_ids
+        ]
 
     def _phase2_tool_runtime_snapshot(self, npc_ids: list[str]) -> dict[str, Any]:
         runtime_state = self.world.get("toolRuntime", {}) if isinstance(self.world.get("toolRuntime"), dict) else {}

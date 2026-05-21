@@ -130,6 +130,7 @@ DEFAULT_REQUIRED_PROCESS_IDS = (
     "subjective_memory_refs",
     "relationship_edge_trace",
     "causal_trace",
+    "future_behavior_reference",
 )
 
 

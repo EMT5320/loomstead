@@ -292,11 +292,35 @@ def _run_runtime_process_scenario(scenario: ProcessGoalSpec, *, baseline: str, r
         and str(event.get("sourceEventId") or "") in goal_event_ids
         and str(event.get("traceId") or "") in goal_trace_ids
     ]
+    relationship_edges_for_decision = (
+        []
+        if remove_relationship_edges
+        else [edge.to_dict() for edge in runtime.relationship_edge_store.list(agent_id=scenario.npc_id, limit=12)]
+    )
+    decision_with_relationship_memory = runtime.motivation_engine.evaluate_npc(
+        runtime.world,
+        scenario.npc_id,
+        delta_minutes=20.0,
+        relationship_edges=relationship_edges_for_decision,
+    )
+    decision_without_relationship_memory = runtime.motivation_engine.evaluate_npc(
+        runtime.world,
+        scenario.npc_id,
+        delta_minutes=20.0,
+        relationship_edges=[],
+    )
+    counterfactual_replay = _build_counterfactual_replay(
+        scenario=scenario,
+        decision_with_relationship_memory=decision_with_relationship_memory,
+        decision_without_relationship_memory=decision_without_relationship_memory,
+        relationship_source_ids=relationship_source_ids,
+    )
     process_checks = {
         "goal_relevant_tool_event": bool(goal_tool_events),
         "subjective_memory_refs": bool(goal_event_ids & memory_source_ids),
         "relationship_edge_trace": bool(goal_event_ids & relationship_source_ids),
         "causal_trace": bool(memory_trace_links),
+        "future_behavior_reference": bool(counterfactual_replay["effect"]),
     }
     goal_relevant_state_changes = max(1, len(relationship_items))
     state_changes_with_source = sum(1 for edge in relationship_items if edge.get("sourceEventIds"))
@@ -311,7 +335,7 @@ def _run_runtime_process_scenario(scenario: ProcessGoalSpec, *, baseline: str, r
         total_interventions=1,
         state_changes_with_source=state_changes_with_source,
         relationship_relevant_decisions=1,
-        decisions_with_relationship_memory=0,
+        decisions_with_relationship_memory=1 if counterfactual_replay["effect"] else 0,
     )
     return {
         "scenario": scenario.to_dict(),
@@ -324,6 +348,7 @@ def _run_runtime_process_scenario(scenario: ProcessGoalSpec, *, baseline: str, r
             "subjectiveMemoryRefs": sorted(goal_event_ids & memory_source_ids),
             "relationshipSourceIds": sorted(relationship_source_ids),
             "memoryTraceLinks": memory_trace_links,
+            "counterfactualReplay": counterfactual_replay,
             "traceSchemaVersion": snapshot.get("traceSchemaVersion"),
         },
     }
@@ -335,6 +360,7 @@ def _run_hard_delegation_process_scenario(scenario: ProcessGoalSpec) -> dict[str
         "subjective_memory_refs": False,
         "relationship_edge_trace": False,
         "causal_trace": False,
+        "future_behavior_reference": False,
     }
     metrics = build_process_metrics(
         process_checks=process_checks,
@@ -386,6 +412,59 @@ def _same_relationship_pair(edge: dict[str, Any], source_id: str, target_id: str
     return {str(edge.get("sourceAgentId") or ""), str(edge.get("targetAgentId") or "")} == {source_id, target_id}
 
 
+def _build_counterfactual_replay(
+    *,
+    scenario: ProcessGoalSpec,
+    decision_with_relationship_memory: dict[str, Any],
+    decision_without_relationship_memory: dict[str, Any],
+    relationship_source_ids: set[str],
+) -> dict[str, Any]:
+    with_decision = _decision_payload(decision_with_relationship_memory)
+    without_decision = _decision_payload(decision_without_relationship_memory)
+    selected_with = str(with_decision.get("selectedToolId") or "")
+    selected_without = str(without_decision.get("selectedToolId") or "")
+    relationship_refs = [ref for ref in with_decision.get("relationshipEdgeRefs", []) if isinstance(ref, dict)]
+    relevant_refs = [
+        ref
+        for ref in relationship_refs
+        if _relationship_ref_matches_pair(ref, scenario.npc_id, scenario.target_npc_id)
+        and _relationship_ref_uses_sources(ref, relationship_source_ids)
+    ]
+    effect = bool(relevant_refs) and bool(selected_with) and bool(selected_without) and selected_with != selected_without
+    return {
+        "selectedWithRelationshipMemory": selected_with or None,
+        "selectedWithoutRelationshipMemory": selected_without or None,
+        "effect": effect,
+        "relationshipEdgeRefs": relationship_refs,
+        "relevantRelationshipEdgeRefs": relevant_refs,
+        "candidateScoresWithRelationshipMemory": list(with_decision.get("candidateScores", [])),
+        "candidateScoresWithoutRelationshipMemory": list(without_decision.get("candidateScores", [])),
+        "reasonWithRelationshipMemory": with_decision.get("reason"),
+        "reasonWithoutRelationshipMemory": without_decision.get("reason"),
+    }
+
+
+def _decision_payload(decision: dict[str, Any]) -> dict[str, Any]:
+    payload = decision.get("decision") if isinstance(decision, dict) else None
+    return payload if isinstance(payload, dict) else {}
+
+
+def _relationship_ref_matches_pair(ref: dict[str, Any], source_id: str, target_id: str) -> bool:
+    ref_pair = {str(ref.get("sourceAgentId") or ""), str(ref.get("targetAgentId") or "")}
+    if ref_pair == {source_id, target_id}:
+        return True
+    edge_id = str(ref.get("edgeId") or "")
+    return source_id in edge_id.split("::") and target_id in edge_id.split("::")
+
+
+def _relationship_ref_uses_sources(ref: dict[str, Any], relationship_source_ids: set[str]) -> bool:
+    source_values = ref.get("sourceEventIds", [])
+    if not isinstance(source_values, list):
+        source_values = []
+    source_event_ids = {str(source_id) for source_id in source_values if str(source_id)}
+    return bool(source_event_ids & relationship_source_ids)
+
+
 def _shortcut_events(relationship_items: list[dict[str, Any]]) -> int:
     if not relationship_items:
         return 0
@@ -428,6 +507,7 @@ def _export_process_eval(result: dict[str, Any], base_dir: Path) -> dict[str, An
             _write_json(per_scenario_dir / f"{scenario_id}_{baseline}.json", item)
     _write_jsonl(run_dir / "intervention_trace.jsonl", _baseline_items(result, BASELINE_HARD_DELEGATION))
     _write_jsonl(run_dir / "goal_progress_trace.jsonl", _baseline_items(result, BASELINE_FULL))
+    _write_jsonl(run_dir / "counterfactual_replay.jsonl", _counterfactual_replay_items(result, BASELINE_FULL))
     return {"runDir": str(run_dir)}
 
 
@@ -445,6 +525,23 @@ def _summary_only(result: dict[str, Any]) -> dict[str, Any]:
 
 def _baseline_items(result: dict[str, Any], baseline: str) -> list[dict[str, Any]]:
     return list(result.get("baselines", {}).get(baseline, {}).get("items", []))
+
+
+def _counterfactual_replay_items(result: dict[str, Any], baseline: str) -> list[dict[str, Any]]:
+    items: list[dict[str, Any]] = []
+    for item in _baseline_items(result, baseline):
+        evidence = item.get("evidence", {}) if isinstance(item.get("evidence"), dict) else {}
+        replay = evidence.get("counterfactualReplay")
+        if isinstance(replay, dict):
+            scenario = item.get("scenario", {}) if isinstance(item.get("scenario"), dict) else {}
+            items.append(
+                {
+                    "scenarioId": scenario.get("scenarioId"),
+                    "baseline": item.get("baseline"),
+                    "counterfactualReplay": replay,
+                }
+            )
+    return items
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:

@@ -259,7 +259,7 @@ Phase 2 启动时 **直接退役** Phase 1 的 `LifeActionExecutor`，不并行�
 | EvalFramework | scripts/run_agent_eval.py + L1 scenario suite (5-8 个) | `scripts/run_agent_eval.py`, `backend/app/eval/` |
 | ResearchFraming | Motivational Delegation + Process Fidelity Eval 研究文档 | `docs/research_framing_motivational_delegation.md` |
 | DomainAdapter | GoalSpec / Observation / Intervention / EvalTrace 抽象接口 | `backend/app/domain/base.py`、`docs/cross_domain_adapter.md` |
-| ProcessFidelityEval | 过程保真指标 + hard delegation baseline + ablation protocol | `backend/app/eval/process_fidelity.py`、`docs/process_fidelity_eval_spec.md` |
+| ProcessFidelityEval | 过程保真指标 + hard delegation baseline + ablation protocol + Counterfactual Replay | `backend/app/eval/process_fidelity.py`、`docs/process_fidelity_eval_spec.md` |
 | 观察者模式 | Godot 内最小可用：切换 + NPC 信息面板 | `clients/godot/scripts/ui/observer_panel.gd` |
 
 ### 4.4 NPC 数量调整：4 核心 + 2 stub
@@ -286,6 +286,7 @@ Phase 2 收口标准：
 - 至少 1 个关系记忆 ablation 可运行：No Subjective Memory / No Relationship Edge / Shuffled Memory Owner 三选一。
 - Eval 输出 mean/std/n，不只输出 pass/fail。
 - 至少 1 张 `ablation_comparison.json` 能比较 Full vs Hard Delegation vs No Memory。
+- Counterfactual Replay 能证明至少一类关系记忆对 Arbitration winner 有因果影响。
 - 任意关键目标状态变化必须能追溯到 `source_event_ids` 或 `trace_refs`。
 
 不达标不进入 Phase 3。详见 [`agent_loop_architecture.md`](./agent_loop_architecture.md) §10、§13.6，以及 [`process_fidelity_eval_spec.md`](./process_fidelity_eval_spec.md) §8。

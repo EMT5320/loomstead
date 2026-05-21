@@ -13,10 +13,17 @@ class MotivationEngine:
         self.arbitration_layer = arbitration_layer or ArbitrationLayer()
         self.need_accumulator = need_accumulator or NeedAccumulator()
 
-    def evaluate_npc(self, world: dict[str, Any], npc_id: str, delta_minutes: float = 20.0) -> dict[str, Any]:
+    def evaluate_npc(
+        self,
+        world: dict[str, Any],
+        npc_id: str,
+        delta_minutes: float = 20.0,
+        relationship_edges: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
         agent = world.get("agents", {}).get(npc_id)
         if not isinstance(agent, dict):
             return {"npcId": npc_id, "decision": None, "reason": "unknown_npc"}
+        relationship_edges = relationship_edges or []
         needs = self.need_accumulator.score(world, agent, delta_minutes)
         primary_need = max(needs, key=lambda need: need.urgency)
         candidates = self.capability_registry.resolve(world, npc_id, primary_need.need_id)
@@ -27,6 +34,7 @@ class MotivationEngine:
                 urgency=primary_need.urgency,
                 candidates=tuple(candidates),
                 contributing_sources=primary_need.sources,
+                relationship_edges=tuple(relationship_edges),
             )
         )
         return {

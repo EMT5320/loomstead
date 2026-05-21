@@ -58,6 +58,7 @@ Q3. 与已有 generative agents / social simulation 相比，我们评估的新�
 ├── relationship_edges_dump.jsonl
 ├── intervention_trace.jsonl
 ├── goal_progress_trace.jsonl
+├── counterfactual_replay.jsonl
 ├── ablation_comparison.json
 └── human_rating_samples.jsonl
 ```
@@ -367,7 +368,7 @@ counterfactual_effect = selected_tool_original != selected_tool_without_memory
     "relationship_edge_delta",
     "subjective_memory_refs",
     "causal_trace",
-    "future_behavior_change"
+    "future_behavior_reference"
   ]
 }
 ```
