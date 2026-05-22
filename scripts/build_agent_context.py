@@ -27,7 +27,6 @@ INSTRUCTION_FILES = [
 # 这些文档构成新对话上下文的最小来源集合。
 REQUIRED_DOCS = [
     "docs/agent_context.md",
-    "docs/goal_board.md",
     "docs/README.md",
     "docs/project_vision.md",
     "docs/current_status.md",
@@ -222,7 +221,7 @@ def validate_context() -> tuple[list[str], list[str]]:
 
         if "@AGENTS.md" not in claude_text:
             errors.append("CLAUDE.md 需要导入 @AGENTS.md")
-        for required_reference in ["docs/agent_context.md", "docs/current_status.md", "docs/goal_board.md"]:
+        for required_reference in ["docs/agent_context.md", "docs/current_status.md"]:
             if required_reference not in agents_text:
                 errors.append(f"AGENTS.md 缺少入口引用 `{required_reference}`")
         for required_ignore in ["CLAUDE.local.md", ".claude/settings.local.json", "!.claude/rules/"]:
@@ -273,14 +272,13 @@ def build_doc_inventory() -> str:
 def build_brief() -> str:
     """基于现有文档生成轻量 brief 草稿。"""
     agent_context = read_text("docs/agent_context.md")
-    goal_board = read_text("docs/goal_board.md")
     vision = read_text("docs/project_vision.md")
     status = read_text("docs/current_status.md")
 
     one_liner = extract_section_after_heading(vision, "## 一句话定位", max_lines=1)
     phase_items = extract_bullet_section(status, "## 1. 当前阶段判断", max_items=6)
     next_steps = extract_bullet_section(agent_context, "## 6. 下一轮最短开发入口", max_items=6)
-    schedule = extract_bullet_section(goal_board, "## 8. 下一轮推荐排程", max_items=5)
+    collaboration_notes = extract_bullet_section(agent_context, "## 7. 协作参考", max_items=6)
 
     return "\n".join(
         [
@@ -300,14 +298,14 @@ def build_brief() -> str:
             "",
             "\n".join(next_steps) or "- 未能从 `docs/agent_context.md` 提取下一步。",
             "",
-            "## 推荐排程",
+            "## 协作参考",
             "",
-            "\n".join(schedule) or "- 未能从 `docs/goal_board.md` 提取推荐排程。",
+            "\n".join(collaboration_notes) or "- 未能从 `docs/agent_context.md` 提取协作参考。",
             "",
             "## 建议下一步",
             "",
             "- 可先读 `AGENTS.md` 和 `docs/agent_context.md`。",
-            "- 可按任务线读取 `docs/goal_board.md` 和对应源文档。",
+            "- 可按任务线读取对应源文档，当前事实以 `docs/current_status.md` 为准。",
             "- 调整上下文治理后，建议运行 `npm.cmd run context:check` 与 `git diff --check`。",
         ]
     )

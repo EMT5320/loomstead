@@ -394,7 +394,7 @@ Phase 2 只要求字段存在且结构合法，不要求每位 NPC 有实际数�
 - `python scripts/check_npc_codex.py` 或 `npm.cmd run content:check` 通过。
 - `npm.cmd run check` 通过（`scripts/check.py` 中追加 codex 校验）。
 - `npm.cmd run smoke` 通过，包含至少一个验证礼物分级反应的用例。
-- `docs/current_status.md` 与 `docs/goal_board.md` 更新本轮状态。
+- `docs/current_status.md` 更新本轮状态；涉及新对话入口或协作边界时同步 `docs/agent_context.md`。
 
 ## 10. 后续扩展
 

@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: project-status
-last_verified: 2026-05-21
+last_verified: 2026-05-22
 startup_load: after-agent-context
 source_of_truth: true
 scope: current implementation facts, verification state, and work constraints
@@ -9,7 +9,7 @@ scope: current implementation facts, verification state, and work constraints
 
 # 当前项目状态与开发前约束
 
-> 状态更新时间：2026-05-21（Phase 2 eval No Subjective Memory）
+> 状态更新时间：2026-05-22（LLM smoke 拆分 + goal board 归档）
 > 本文只记录当前仓库中已核对、命令已检或明确标注人工未验收的事实。长期方向见 `docs/project_vision.md`，研究 framing 见 `docs/research_framing_motivational_delegation.md`，NPC agent loop 设计见 `docs/agent_loop_architecture.md`，世界实体 schema 见 `docs/world_entity_model.md`，Process Fidelity Eval 规格见 `docs/process_fidelity_eval_spec.md`，跨域 adapter 接口见 `docs/cross_domain_adapter.md`，多层 Agent 系统设计见 `docs/agentic_game_design.md`。
 
 ## 1. 当前阶段判断
@@ -42,8 +42,8 @@ scope: current implementation facts, verification state, and work constraints
 | Content Codex / NPC 深度卡 | 已完成首批 + Phase 2 schema 占位 | `docs/npc_deep_card_spec.md` 已定义数据契约；`.windsurf/workflows/author-npc-deep-card.md` 已定义批量写作流程；`backend/app/content/data/npc/` 已入库 `kai`、`bram`、`mira`、`tomas`、`orren`、`lena` 6 份卡；`monologueSeeds` 已接入夜间反思上下文、compact evidence 和规则 fallback；`gossipHooks` 已进入校验、对话上下文 `gossipEvidence`、选择理由、传播草案、`candidateDebugSummary`、`gossip_propagation` 契约和 validator；6 张卡已新增 `lifeActionSeeds`、`dailyRumorBeats`、`relationshipBeatSeeds`，每卡当前为 `3/2/3` 条 Day 1 素材；已新增 `motivationProfile` / `capabilityPreferences` / `heuristicSeeds` 空占位字段；Runtime 会写入 `gossip.propagation_validated` 校验事件；`npm.cmd run content:check` 通过；smoke 覆盖 `deepCard`、对话 Prompt、送礼、关系阶段、monologue evidence、gossip evidence 与合法 / 非法传播样例 | 谣言传播仍只记录校验结果，不写入世界状态、关系或记忆扩散；Phase 2 ToolDefinition / MotivationEngine 已驱动 NPC 工具行动，但内容卡的实际动机权重和启发式种子仍未填充；后续批量 Event Skill 工作流未开始 |
 | Godot 客户端 | Phase 1 done，Phase 2 观察者面板已接入 debug 数据 | 代码已接入：地点背景层、NPC 选择、底部 VN 对话层、聊天提交、进行中事件区、`inspect`、choices、`attend_event`、VN 结果展示；地图角色层已渲染玩家与当前场景 NPC / event marker；WASD 独立连续移动、地图层直接点击当前场景空地落点、落点标记、单个最近交互目标高亮、MapMoveHint 和更大舞台移动范围已接入；已移除小人淡黄色矩形背景；已补 UI 点击穿透、按钮禁用键盘焦点、WASD 物理键兜底、玩家 / NPC 分离站位槽、玩家出生点上移、收紧交互半径、点击落点边界修正、动态地图 bounds、靠近目标滞回和 NPC 小人保持可点；地图上下文候选面板、`E`/`Space` 执行、`actionFeedback` VN 回执已接入；已新增 `ObserverPanel`，支持 `Tab` 显隐、点击 NPC 或 `E` talk 同步选中，显示 npcId / 名称 / location / anchor，并按选中 NPC 读取 `/api/debug.phase2?agentId=...` 展示 motivation / subjectiveMemory / relationshipEdges / heuristics 摘要；`check_godot_project.py`、Godot headless import、`client:env` 与 `client:run:check` 通过；2026-05-21 主人确认 Phase 1 可以收口 | 本地 WASD 与点击移动仍只做表现层；Phase 2 Godot 观察者模式仍需真实窗口体验验收、recentTraceEvents 展开视图和更自然的内容节奏打磨 |
 | 资产管线 | 部分完成 | manifest 当前有 55 条资产：21 条 `source_selected`、3 条 `style_anchor_candidate`、7 条 `pending_review`、24 条 `prompt_ready`；新增 backlog 覆盖 14 张 `happy/troubled` 表情差分、5 张行动反馈图标和 5 个生活行动 UI 小组件；`prompt_ready` 条目均引用 `docs/asset_generation_prompts.md` 锚点，并补齐 `promptBatchId`、`godotTargetPath`、`godotTargetSlot`；`docs/asset_batches/` 已生成批次计划、机器可读导出和人工筛选表；`scripts/export_prompt_ready_assets.py` 可重复导出；`AssetRegistry` 已支持表情回退；地图小人与交互 marker 已进入 Godot 场景显示链路 | `prompt_ready` 仍只是可生成 backlog，尚未生成、筛选或接入 Godot registry；地图小人是否晋级 `source_selected` 仍需主人明确筛选结论 |
-| LLM / Debug | 部分完成 | 代码已接入：OpenAI-compatible cloud provider、profile 解析、本地 overlay 示例、Debug 字段记录、规则 fallback、`model:check` 配置校验、Web LLM 配置卡片和热重载接口；2026-05-17 曾用本机 `config/models.json` 跑通真实 `CloudApiProvider` smoke；2026-05-21 本轮 `npm.cmd run check` 再次跑通真实 cloud smoke，dialogue / event_reaction / night_reflection 均为 `deepseek-v4-flash` 且 `fallbackReason=None`；smoke 覆盖 compact Debug payload、RAG-lite memory search、玩家影响链 | 提交态不包含真实 API key；`debug_analysis` profile 只在配置中存在；切换模型、key 或 profile 后需重新刷新真实延迟、成本和失败率 |
-| 文档治理 | 已完成本轮入口 | `AGENTS.md`、`CLAUDE.md`、`docs/README.md`、`agent_context`、`goal_board`、`current_status`、`open_questions` 已形成新对话入口、分层索引和状态看板 | 后续状态维护以已验证变化为主，避免复制源设计长文 |
+| LLM / Debug | 部分完成 | 代码已接入：OpenAI-compatible cloud provider、profile 解析、本地 overlay 示例、Debug 字段记录、规则 fallback、`model:check` 配置校验、Web LLM 配置卡片和热重载接口；2026-05-17 曾用本机 `config/models.json` 跑通真实 `CloudApiProvider` smoke；2026-05-21 本轮 `npm.cmd run check` 曾跑通真实 cloud smoke，dialogue / event_reaction / night_reflection 均为 `deepseek-v4-flash` 且 `fallbackReason=None`；2026-05-22 起常规 `check` / `smoke` 默认跳过真实 LLM，真实链路改由 `npm.cmd run llm:smoke` 显式验收；2026-05-22 本轮 `npm.cmd run llm:smoke` 通过，dialogue / event_reaction / night_reflection 均为 `deepseek-v4-flash` 且 `fallbackReason=None`，tokens 为 `3289 / 6331 / 18690`，latency 为 `4540 / 5670 / 7383ms`，cost 为 `0.00028242 / 0.00080283 / 0.00252478 USD`；smoke 覆盖 compact Debug payload、RAG-lite memory search、玩家影响链 | 提交态不包含真实 API key；`debug_analysis` profile 只在配置中存在；切换模型、key 或 profile 后需用 `npm.cmd run llm:smoke` 重新刷新真实延迟、成本和失败率 |
+| 文档治理 | 已完成本轮入口 | `AGENTS.md`、`CLAUDE.md`、`docs/README.md`、`agent_context`、`current_status`、`open_questions` 是当前新对话入口、分层索引和状态事实源；前期多线程并行看板 `docs/archive/goal_board.md` 已归档 | 后续状态维护以已验证变化为主，避免复制源设计长文 |
 
 ## 3. 当前已实现能力
 
@@ -158,7 +158,7 @@ scope: current implementation facts, verification state, and work constraints
 
 ### 持续维持
 
-16. **真实 LLM 证据刷新**：2026-05-21 本轮 `npm.cmd run check` 已重新跑通真实 cloud smoke；切换模型/key/profile 后仍需要重新验证。
+16. **真实 LLM 证据刷新**：2026-05-22 起真实 LLM smoke 已从常规 `check` / `smoke` 拆出；本轮 `npm.cmd run llm:smoke` 已通过并刷新 token、延迟、成本和 fallback 证据；修改 provider、prompt、模型配置或切换模型/key/profile 后，继续用 `npm.cmd run llm:smoke` 单独刷新真实证据。
 17. **资产补齐**：表情差分、UI 组件和行动反馈图标已进入三批 `prompt_ready` backlog 和导出清单，仍待生成、筛选、登记源图和接入；地图小人晋级状态需主人确认。
 18. **Debug Console 扩展**：后端已有 Debug / Memory 查询 API，Web 侧仍需展示 Director 队列、Skill 激活、fallback 和成本字段。Phase 2 后还要新增 Heuristic Library / Arbitration trace / 主观记忆对比视图。
 
@@ -229,6 +229,6 @@ Get-Content docs\archive\daytime_integration_handoff.md
 
 ### 持续维持
 
-8. LLM / Debug 线在切换模型、key 或 profile 后刷新真实 smoke。
+8. LLM / Debug 线在切换模型、key 或 profile 后用 `npm.cmd run llm:smoke` 刷新真实 smoke。
 9. 资产线按 `docs/asset_batches/prompt_ready_export.md` 推进表情差分、生活 UI 组件和行动反馈图标，**注意 Phase 2 后资产规划要按 `open_questions.md` 末尾的"资产路线的范围调整"重新评估**。
 10. Web Debug 追加 Director / Skill / fallback 视图，Phase 2 后新增 Heuristic Library / Arbitration trace / 主观记忆对比视图。

@@ -14,6 +14,10 @@ from urllib.request import Request, urlopen
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "backend"))
 
+# Windows PowerShell 通过 npm 运行 Python 时可能出现输出编码漂移，统一用 UTF-8 输出。
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 from app.director import DirectorBeat, WorldDigest  # noqa: E402
 from app.config.model_config import ModelConfigStore  # noqa: E402
 from app.main import create_handler, create_town_app  # noqa: E402
@@ -523,6 +527,13 @@ def assert_real_cloud_debug(debug: dict, feature: str) -> None:
         raise RuntimeError(f"{feature} LLM smoke tokens 应大于 0")
     if not debug.get("rawText"):
         raise RuntimeError(f"{feature} LLM smoke rawText 应非空")
+
+
+def enable_real_llm_smoke() -> bool:
+    """是否执行真实 LLM smoke；默认跳过，避免常规检查消耗真实模型额度。"""
+    if require_real_llm_smoke():
+        return True
+    return str(os.getenv("AGENT_TOWN_ENABLE_REAL_LLM_SMOKE") or "").lower() in {"1", "true", "yes"}
 
 
 def require_real_llm_smoke() -> bool:
@@ -1119,7 +1130,9 @@ print(
     },
 )
 
-if has_real_llm_config():
+if enable_real_llm_smoke():
+    if not has_real_llm_config():
+        raise RuntimeError("真实 LLM smoke 已启用，但未检测到 config/models.local.json 或 API key 环境变量。")
     llm_app = create_town_app(provider_mode="cloud")
     llm_talk = llm_app.player_action({"type": "talk", "targetId": "mira", "locationId": "plaza", "topic": "llm_smoke", "message": "能和我聊聊今晚的小镇吗？"})
     llm_dialogue_debug = assert_feature_debug(llm_app.get_public_state(), "dialogue")
@@ -1170,4 +1183,4 @@ if has_real_llm_config():
                 },
             )
 else:
-    print("[llm-smoke] skipped: 未检测到 config/models.local.json 或 API key 环境变量；请参考 docs/model_profile_template_guide.md 配置后重跑。")
+    print("[llm-smoke] skipped: 默认跳过真实 LLM smoke；需要验收云端链路时运行 npm.cmd run llm:smoke。")

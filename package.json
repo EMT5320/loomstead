@@ -8,6 +8,7 @@
                     "start":  "python scripts/start_server.py",
                     "check":  "python scripts/check.py",
                     "smoke":  "python scripts/smoke_test.py",
+                    "llm:smoke":  "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$env:AGENT_TOWN_REQUIRE_REAL_LLM_SMOKE='1'; & python scripts/smoke_test.py\"",
                     "eval:rule":  "python scripts/run_agent_eval.py",
                     "eval:process":  "python scripts/run_agent_eval.py --suite process",
                     "eval:process:full":  "python scripts/run_agent_eval.py --suite process --full",

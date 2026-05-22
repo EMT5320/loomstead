@@ -20,7 +20,6 @@ scope: 文档分层索引与渐进式读取路线
 1. [`../AGENTS.md`](../AGENTS.md)：所有开发助手共享的项目背景、任务线路由和常用验证入口。
 2. [`agent_context.md`](./agent_context.md)：下一轮对话第一入口，记录当前边界、命令和最近下一步。
 3. [`current_status.md`](./current_status.md)：当前实现事实、主要缺口、开发前硬性约束和人工验收清单。
-4. [`goal_board.md`](./goal_board.md)：开发线看板、协作参考、并行任务拆分和推荐排程。
 
 ## 3. 决策源文档
 
@@ -93,6 +92,7 @@ scope: 文档分层索引与渐进式读取路线
 - `core_map.md`（重定位前的全面开发计划草案）
 - `initial_asset_generation_plan.md`（早期资产生成计划）
 - `map_sprite_first_batch_review.md` / `map_sprite_second_batch_review.md`（单次资产复盘）
+- `goal_board.md`（前期多线程并行开发看板，2026-05-22 归档；当前事实已收敛到 `current_status.md` / `agent_context.md`）
 
 归档文档通常只作历史背景。如需复活某段结论，建议在新核心文档中显式吸收。
 
@@ -109,7 +109,6 @@ scope: 文档分层索引与渐进式读取路线
 | [`game_client_environment.md`](./game_client_environment.md) | active | godot-client | on-demand | true |
 | [`game_content_storyline.md`](./game_content_storyline.md) | active | content-codex | on-demand | true |
 | [`gameplay_system_architecture.md`](./gameplay_system_architecture.md) | active | godot-client | on-demand | true |
-| [`goal_board.md`](./goal_board.md) | active | planning | after-agent-context | true |
 | [`map_sprite_style_guide.md`](./map_sprite_style_guide.md) | active | asset-pipeline | on-demand | true |
 | [`model_profile_template_guide.md`](./model_profile_template_guide.md) | active | llm-debug | on-demand | true |
 | [`npc_deep_card_spec.md`](./npc_deep_card_spec.md) | active | content-codex | on-demand | true |
@@ -143,7 +142,7 @@ scope: 文档分层索引与渐进式读取路线
 
 - `agent_context.md` 保持短入口，不堆长篇设计。
 - `current_status.md` 主要记录当前已核对事实，未人工验收内容建议显式标注。
-- `goal_board.md` 记录当前开发线、验收证据和下一轮排程。
+- `current_status.md` 记录当前代码事实、验收证据、主要缺口和仍需人工验证的内容。
 - 长期愿景和阶段事实冲突时，先更新事实文档，再决定是否需要修订愿景或规格。
 - 归档区文档通常只作历史背景；如需复活结论，建议在新核心文档中显式吸收。
 - 调整上下文治理后，建议运行：

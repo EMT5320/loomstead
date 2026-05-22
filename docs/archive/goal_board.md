@@ -1,16 +1,16 @@
 ---
-status: active
+status: archive
 owner_lane: planning
-last_verified: 2026-05-21
-startup_load: after-agent-context
-source_of_truth: true
-scope: lane board, collaboration notes, and recommended schedule
+last_verified: 2026-05-22
+startup_load: never
+source_of_truth: false
+scope: archived lane board, collaboration notes, and recommended schedule snapshot
 ---
 
 # Loomstead 目标看板
 
 > 更新时间：2026-05-21（Phase 2 eval No Subjective Memory）
-> 用途：为无人值守开发、并行子代理和下一轮收口提供状态、协作参考和验证命令。
+> 归档时间：2026-05-22。本文曾用于前期多线程并行开发和阶段收口对齐，当前已不再作为事实源；仍有价值的阅读路线、协作信息和常用命令已收敛到 `AGENTS.md`、`docs/agent_context.md`、`docs/current_status.md` 与 `docs/README.md`。
 > 2026-05-19 项目重定位为"可解释多 Agent 叙事运行时"，差异化主轴改为"少而深 + 可解释 + 可评估"。Phase 2-6 已重排，详见 `docs/production_roadmap.md`。
 
 ## 1. 状态标记

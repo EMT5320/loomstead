@@ -1,7 +1,7 @@
 ---
-status: archived
+status: archive
 owner_lane: context-governance
-last_verified: 2026-05-20
+last_verified: 2026-05-22
 startup_load: never
 source_of_truth: false
 scope: 已归档历史文档说明
@@ -20,7 +20,8 @@ scope: 已归档历史文档说明
 | `architecture_blueprint.md` | `agentic_game_design.md` + `gameplay_system_architecture.md` + `agent_loop_architecture.md` | 早期架构蓝图，已被多层 Agent 系统设计与 NPC agent loop 设计覆盖 |
 | `implementation_plan.md` | `production_roadmap.md` | 早期实施计划，已被生产化路线和阶段重排取代 |
 | `vertical_slice_spec.md` | `production_roadmap.md` 阶段定义 + `world_entity_model.md` | 第一版垂直切片规格，范围已被新阶段轴重写 |
-| `daytime_integration_handoff.md` | `goal_board.md` + `current_status.md` | 单次白天交接快照，事实已合并到状态文档 |
+| `daytime_integration_handoff.md` | `current_status.md` + `agent_context.md` + `goal_board.md` 归档快照 | 单次白天交接快照，事实已合并到状态文档，协作线索随 goal board 归档 |
+| `goal_board.md` | `current_status.md` + `agent_context.md` | 前期多线程并行开发看板，当前事实、命令和协作参考已收敛到状态文档与新对话入口 |
 | `skill_strategy.md` | `agentic_game_design.md` | 未实施的 Skill 策略草案 |
 | `core_map.md` | `agent_loop_architecture.md` + `world_entity_model.md` + `production_roadmap.md` 阶段重排 | 重定位前的全面开发计划草案，结论已被三份新文档与方向文档吸收 |
 | `initial_asset_generation_plan.md` | `asset_batches/` 目录 + `art_direction.md` | 早期资产生成计划，已被批次目录与艺术方向覆盖 |

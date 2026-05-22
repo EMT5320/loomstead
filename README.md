@@ -60,10 +60,9 @@ Start here if you care about the research claim, evaluation setup, baselines, or
 Start here if you want to run, modify, or validate the project locally:
 
 1. [Current status](docs/current_status.md): implemented facts, verification state, gaps, and manual validation notes.
-2. [Goal board](docs/goal_board.md): active lanes, collaboration notes, validation commands, recommended schedule.
-3. [Documentation index](docs/README.md): source-of-truth map and task-line reading routes.
-4. [Godot client README](clients/godot/README.md): client entry point and Godot environment notes.
-5. [Model profile guide](docs/model_profile_template_guide.md): local model config, provider routing, and real LLM smoke workflow.
+2. [Documentation index](docs/README.md): source-of-truth map and task-line reading routes.
+3. [Godot client README](clients/godot/README.md): client entry point and Godot environment notes.
+4. [Model profile guide](docs/model_profile_template_guide.md): local model config, provider routing, and real LLM smoke workflow.
 
 ## Current stage
 

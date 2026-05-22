@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: context-governance
-last_verified: 2026-05-21
+last_verified: 2026-05-22
 startup_load: first-read
 source_of_truth: true
 scope: new-session entrypoint, boundaries, commands, and next steps
@@ -9,8 +9,8 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 
 # Loomstead 新对话入口
 
-> 更新时间：2026-05-21（Phase 2 eval No Subjective Memory）
-> 用途：下一轮新对话、无人值守开发、并行子代理任务的第一入口。
+> 更新时间：2026-05-22（LLM smoke 拆分 + goal board 归档）
+> 用途：下一轮新对话、研究阶段开发和必要子代理任务的第一入口。
 
 ## 1. 当前入口
 
@@ -22,8 +22,8 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - **Process Fidelity Eval 规格**：`docs/process_fidelity_eval_spec.md`、**跨域 adapter 接口**：`docs/cross_domain_adapter.md`。
 - 多层 Agent 系统设计：`docs/agentic_game_design.md`（Director / Skill / Memory / Model 分工）。
 - 生产化阶段路线：`docs/production_roadmap.md`（Phase 1 done，Phase 2 骨架建立期启动中）。
-- 当前事实以 `docs/current_status.md` 为准。
-- 并行写入范围以 `docs/goal_board.md` 为准。
+- 当前事实以 `docs/current_status.md` 为准；开发线源文档按任务读取。
+- 前期并行开发看板 `docs/archive/goal_board.md` 已归档，仅供历史溯源。
 - 视觉和资产细节见 `docs/art_direction.md`、`docs/asset_generation_prompts.md`、`assets/manifests/asset_manifest.json`。
 - 历史草案、已归档文档统一放在 `docs/archive/`，通常不作为当前事实源。
 
@@ -66,7 +66,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - 已有按 NPC / feature 选择 profile 的配置路径：`config/models.example.json` 为提交模板，`config/models.json` 和 `config/models.local.json` 为本机忽略配置；当前 `model:check` 显示提交态 rule fallback 正常。
 - Web 观察台已有 LLM 配置卡片，可查看 profile、路由、key 状态，支持热重载与一次对话 smoke。
 - Debug 记录已包含 `providerMode`、`profileName`、`apiKeyConfigured`、`messages`、`rawText`、`parsed`、`executed`、`usage`、`latency`、`fallbackReason`。
-- 2026-05-17 曾用本机 `config/models.json` 跑通真实 `CloudApiProvider` smoke；2026-05-21 本轮 `npm.cmd run check` 再次跑通真实 cloud smoke，dialogue / event_reaction / night_reflection 均为 `deepseek-v4-flash` 且 `fallbackReason=None`。
+- 2026-05-17 曾用本机 `config/models.json` 跑通真实 `CloudApiProvider` smoke；2026-05-21 `npm.cmd run check` 曾跑通真实 cloud smoke；2026-05-22 起常规 `check` / `smoke` 默认跳过真实 LLM，真实链路改由 `npm.cmd run llm:smoke` 显式验收；2026-05-22 本轮 `npm.cmd run llm:smoke` 已通过，dialogue / event_reaction / night_reflection 均为 `deepseek-v4-flash` 且 `fallbackReason=None`。
 
 ### Godot 客户端
 
@@ -85,7 +85,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - 已同步到 Godot 的资产包括 3 张地点背景、星灯祭事件 CG、玩家 + 6 个首发 NPC 的 `neutral` 立绘、7 张地图小人和 3 张交互标记。
 - `AssetRegistry` 已支持 `happy` / `troubled` 表情键兜底，缺图时回退 `neutral`。
 - 表情差分、行动反馈图标和生活行动 UI 小组件已有 3 批 `prompt_ready` backlog，导出清单位于 `docs/asset_batches/prompt_ready_export.md`，尚未生成或接入 Godot registry。
-- `AGENTS.md`、`CLAUDE.md`、`docs/README.md`、`docs/agent_context.md`、`docs/goal_board.md`、`docs/current_status.md`、`docs/open_questions.md` 是当前治理入口。
+- `AGENTS.md`、`CLAUDE.md`、`docs/README.md`、`docs/agent_context.md`、`docs/current_status.md`、`docs/open_questions.md` 是当前治理入口；`docs/archive/goal_board.md` 只作历史看板。
 - 2026-05-20 新增三份研究 framing 决策源文档已落地并通过 `npm.cmd run context:check`：`docs/research_framing_motivational_delegation.md`、`docs/process_fidelity_eval_spec.md`、`docs/cross_domain_adapter.md`；`scripts/build_agent_context.py` 与 `.claude/rules/backend.md` 的历史死链（指向 `vertical_slice_spec.md` / `initial_asset_generation_plan.md`）已修复。
 
 ## 4. 当前边界
@@ -94,7 +94,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - LLM 当前只生成文本、结构化建议或工具意图；世界状态变更路径经过 Runtime 规则和校验。
 - 密钥只放 `config/models.local.json` 或环境变量，不写入仓库。
 - 资产入库路径包含来源、提示词引用、用途、状态、授权备注和 Godot 引用。
-- 未在当前轮次复验的表情差分、资产晋级和新增玩法循环当前记录为待验证项；真实云端 LLM 本轮已通过普通 `npm.cmd run check` 刷新。
+- 未在当前轮次复验的表情差分、资产晋级和新增玩法循环当前记录为待验证项；真实云端 LLM smoke 已从常规 `check` / `smoke` 拆出为 `npm.cmd run llm:smoke`。
 - `frontend/` 继续作为迁移期 Debug 观察台；正式 Web Debug 后续再收敛到 `web-admin/`。
 - 重定位后核心方向：NPC 决策可解释（contributing_sources 写入 EventStore）；广度铺开不稀释主观记忆/启发式学习/Eval 三条核心能力。
 - Phase 2 启动后旧 `LifeActionExecutor` 退役，**不并行运行**（详见 `agent_loop_architecture.md` §13.2）。
@@ -102,32 +102,22 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 ## 5. 常用命令
 
 ```powershell
-npm.cmd run context:check
-npm.cmd run context:brief
-npm.cmd run check
-npm.cmd run content:check
-npm.cmd run smoke
-npm.cmd run asset:check
-npm.cmd run client:run:check
-npm.cmd run client:env
-npm.cmd run start
-npm.cmd run client:run
-git status --short
-git diff --check
+npm.cmd run context:check; npm.cmd run context:brief
+npm.cmd run check; npm.cmd run smoke; npm.cmd run llm:smoke
+npm.cmd run content:check; npm.cmd run asset:check
+npm.cmd run client:env; npm.cmd run client:run:check
+npm.cmd run start; npm.cmd run client:run
+git status --short; git diff --check
 ```
 
 说明：
 
-- `npm.cmd run context:check` 校验 `AGENTS.md` / `CLAUDE.md`、核心文档元信息、任务线路由路径和明显状态冲突。
-- `npm.cmd run context:brief` 生成下一轮新对话 brief。
-- `npm.cmd run check` 覆盖 Python 编译、前端 JS、后端 smoke、资产 manifest、Godot 项目结构。
-- `npm.cmd run content:check` 校验 6 份 NPC 深度卡、关系阶段、送礼反应、独白种子和资产引用。
-- `npm.cmd run smoke` 重点验证后端 Runtime、Director v0、Event Skill、Debug 字段和 LLM smoke 跳过/执行/fallback 状态；强制真实云端通过时设置 `AGENT_TOWN_REQUIRE_REAL_LLM_SMOKE=1`。
-- `npm.cmd run asset:check` 校验资产路径、prompt 引用、PNG 尺寸和 Godot 引用。
-- `check_godot_project.py`、Godot headless import、`npm.cmd run client:env` 和 `npm.cmd run client:run:check` 已通过；当前默认主场景为 `world_main.tscn`，legacy UI 可用 `client:run:legacy` 回看。
-- `npm.cmd run client:run:check` 只检查 Godot 运行入口，不打开真实游戏窗口。
-- `npm.cmd run client:run` 会打开真实 Godot 游戏窗口，当前默认进入 `world_main.tscn`。
-- `npm.cmd run client:run:legacy` 会打开旧 `main.tscn`，用于回看 P0 UI 路径。
+- `context:check` 校验入口元信息、任务线路由和明显状态冲突；`context:brief` 生成下一轮 brief。
+- `check` 覆盖 Python 编译、前端 JS、后端 smoke、规则 Eval、资产 manifest、NPC 内容、目标分布和 Godot 项目结构；默认不访问真实 LLM。
+- `smoke` 验证后端 Runtime、Director v0、Event Skill、Debug 字段和规则 fallback；默认跳过真实 LLM。
+- `llm:smoke` 显式验收真实 CloudApiProvider 链路，刷新 dialogue / event_reaction / night_reflection 的 token、延迟、成本和 fallback 证据。
+- `content:check` / `asset:check` 分别校验 NPC 深度卡与资产 manifest；`client:env` / `client:run:check` 校验 Godot 环境和运行入口。
+- `client:run` 会打开真实 Godot 游戏窗口，当前默认进入 `world_main.tscn`；旧 P0 UI 可用 `client:run:legacy` 回看。
 
 ## 6. 下一轮最短开发入口
 
@@ -150,11 +140,17 @@ git diff --check
 每轮新对话启动建议运行：
 
 ```powershell
-npm.cmd run context:check
-npm.cmd run check
-npm.cmd run smoke
+npm.cmd run context:check; npm.cmd run check; npm.cmd run smoke
 npm.cmd run eval:process; npm.cmd run eval:stability
-npm.cmd run asset:check
-npm.cmd run client:env
-npm.cmd run client:run:check
+npm.cmd run asset:check; npm.cmd run client:env; npm.cmd run client:run:check
 ```
+
+真实模型链路不属于离线基线；修改 provider、prompt、模型配置或需要刷新真实 token / latency / cost 证据时，再单独运行 `npm.cmd run llm:smoke`。
+
+## 7. 协作参考
+
+- 任务拆分优先按当前开发线选择源文档：后端 Agent Loop / Eval / Godot 观察者 / Content schema / 资产管线 / 文档治理。
+- 后端骨架线关注 `backend/app/tools/`、`backend/app/runtime/`、`backend/app/memory/`、`backend/app/world/entities/`，近期目标是可见性、关系召回、启发式衰减 / 冲突和 trace span 串联。
+- Eval 线关注 `scripts/run_agent_eval.py`、`backend/app/eval/`、`backend/app/domain/`，近期目标是跨域 GoalSpec 和更严格 trace dataset 归档。
+- Godot 观察者线关注 `clients/godot/`，近期目标是 `recentTraceEvents` 展开、空态 / 错误态文案和真实窗口验收。
+- 多子代理并行减少后，默认不维护大看板；若临时并行，避免多个 worker 同时修改 `docs/current_status.md`、`docs/agent_context.md` 等治理入口。

@@ -301,7 +301,7 @@ Phase 2 收口标准：
 | Godot 观察者线 | `clients/godot/scripts/ui/observer_panel.gd`、`clients/godot/scripts/observer_mode/` | 后端骨架线 API 先到位 |
 | 内容 schema 线 | NPC 深度卡新增 motivationProfile / capabilityPreferences / heuristicSeeds 占位 | 无（schema-only） |
 | 资产线 | 仅维持，不阻塞 Phase 2 | 独立 |
-| 文档治理 | 持续更新 current_status / goal_board | 持续 |
+| 文档治理 | 持续更新 current_status / agent_context；goal_board 仅归档溯源 | 持续 |
 
 ## 5. Phase 3-6 概述（待激活时细化）
 
@@ -354,9 +354,9 @@ Phase 2 收口标准：
 | `docs/archive/vertical_slice_spec.md` | 已归档；切片范围被新阶段定义和 `world_entity_model.md` 覆盖 |
 | `docs/archive/implementation_plan.md` | 已归档；本文档取代其执行依据角色 |
 | `docs/archive/core_map.md` | 已归档；结论吸收到 `agent_loop_architecture.md` + `world_entity_model.md` + 本文档 Phase 2 设计 |
-| `docs/current_status.md` | 持续更新：Phase 1 收口事实、Phase 2 启动准备 |
-| `docs/goal_board.md` | 持续更新：Phase 1 收口 → Phase 2 骨架开发线 |
-| `docs/agent_context.md` | 已更新指向新核心文档 |
+| `docs/current_status.md` | 持续更新：当前实现事实、验收状态和 Phase 2 骨架缺口 |
+| `docs/agent_context.md` | 持续更新：新对话入口、常用命令和协作参考 |
+| `docs/archive/goal_board.md` | 已归档；前期多线程并行开发看板，当前事实已收敛到 `current_status.md` / `agent_context.md` |
 
 ## 6. 验收命令
 
@@ -390,7 +390,7 @@ curl.exe -N http://localhost:8787/api/events
 
 ### Phase 2 启动条件
 
-1. Phase 1 已收口；`current_status.md` / `goal_board.md` 已同步。
+1. Phase 1 已收口；`current_status.md` 已同步，前期 `goal_board.md` 已归档为历史看板。
 2. `docs/agent_loop_architecture.md` 已落地（已完成）。
 3. `docs/world_entity_model.md` 已落地（已完成）。
 4. NPC 深度卡 schema 已增补 motivationProfile / capabilityPreferences / heuristicSeeds 三个字段（schema only，数据 Phase 3 填）。

@@ -14,7 +14,7 @@
 
 1. 推荐先读 `docs/agent_context.md`，快速确认当前入口、边界、命令和最近下一步。
 2. 再按任务线加载对应文档，避免一次性读取全部历史资料。
-3. 涉及实现或状态更新时，可核对 `docs/current_status.md` 与 `docs/goal_board.md`，区分已验证事实、部分完成和人工未验收内容。
+3. 涉及实现或状态更新时，核对 `docs/current_status.md`，区分已验证事实、部分完成和人工未验收内容。
 4. 长期方向通常参考 `docs/project_vision.md`；当前实现事实通常参考 `docs/current_status.md`。
 5. 历史草案、旧 handoff 和早期观察台描述建议只作背景，当前事实以 active 文档为准。
 6. 读取 `docs/*.md` 时可先看 frontmatter：`active` 表示当前参考，`snapshot` 表示阶段证据，`source_of_truth=false` 表示不作为当前事实源。
@@ -25,7 +25,6 @@
 
 - `docs/agent_context.md`：新对话第一入口，保持短、准、可执行。
 - `docs/current_status.md`：当前代码事实、缺口、验收命令和人工验收状态。
-- `docs/goal_board.md`：开发线看板、并行协作参考和推荐排程。
 - `docs/README.md`：文档索引和分层读取路线。
 
 ### 决策源
@@ -69,13 +68,14 @@ npm.cmd run context:check
 npm.cmd run check
 npm.cmd run context:brief
 npm.cmd run smoke
+npm.cmd run llm:smoke
 npm.cmd run asset:check
 npm.cmd run client:env
 npm.cmd run client:run:check
 git diff --check
 ```
 
-按任务线选择最小必要命令。调整上下文治理文件时，建议运行 `npm.cmd run context:check` 和 `git diff --check`。
+按任务线选择最小必要命令。`npm.cmd run check` 与 `npm.cmd run smoke` 默认不访问真实 LLM；需要验收真实模型链路、刷新 token / latency / cost 证据或切换 key/profile 后，单独运行 `npm.cmd run llm:smoke`。调整上下文治理文件时，建议运行 `npm.cmd run context:check` 和 `git diff --check`。
 
 ## 6. 协作信息参考
 
