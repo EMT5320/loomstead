@@ -5,6 +5,7 @@ from typing import Any
 
 from app.memory.memory_store import remember
 from app.runtime.trace_schema import build_trace_envelope, with_trace_payload, world_time_payload
+from app.tools.contracts import ToolContractValidator, ToolContractViolation
 from app.tools.registry import ToolRegistry
 from app.world.seed_data import DAY1_LOCATION_IDS, DAY1_NPC_IDS
 from app.world.world_state import adjust_relation, clamp, sync_farm_interactables
@@ -46,8 +47,9 @@ TOOL_SUMMARIES = {
 class ToolExecutor:
     """Phase 2 工具执行器：按 ToolDefinition 推进持续动作、位移和权威副作用。"""
 
-    def __init__(self, tool_registry: ToolRegistry | None = None) -> None:
+    def __init__(self, tool_registry: ToolRegistry | None = None, contract_validator: ToolContractValidator | None = None) -> None:
         self.tool_registry = tool_registry or ToolRegistry()
+        self.contract_validator = contract_validator or ToolContractValidator()
 
     def tick(self, *, world: dict[str, Any], decisions: list[dict[str, Any]], delta_seconds: float) -> dict[str, Any]:
         if delta_seconds <= 0:
@@ -149,8 +151,39 @@ class ToolExecutor:
 
         snapshot = self._transaction_snapshot(world, agent)
         try:
-            self._validate_tool_completion(world, completion)
+            self.contract_validator.validate_completion(world=world, completion=completion, tool=tool)
             effect_summary = self._apply_tool_effect(world, agent, completion)
+        except ToolContractViolation as exc:
+            self._rollback_transaction(world, agent, snapshot)
+            failure_payload = with_trace_payload(
+                {
+                    "npcId": npc_id,
+                    "npcName": agent.get("name", npc_id),
+                    "toolId": tool_id,
+                    "reason": exc.code,
+                    "violationDetails": dict(exc.details),
+                    "targetNpcId": self._target_npc_id(completion),
+                    "targetAnchorId": completion.get("targetAnchorId"),
+                    "targetLocationId": completion.get("targetLocationId"),
+                    "input": deepcopy(completion.get("input") or {}),
+                    "observerVisibility": tool.observer_visibility,
+                    "sourceEventIds": self._source_ids(source_event_id),
+                    "traceRefs": list(completion.get("contributingSources") or []),
+                },
+                build_trace_envelope(
+                    event_type="tool.execution_failed",
+                    summary=f"{tool_id} 执行失败：{exc.code}",
+                    world_time=world_time,
+                    trace_id=trace_id,
+                    source_event_id=source_event_id,
+                    agent_id=npc_id,
+                    target_ids=self._target_ids_from_completion(completion),
+                ),
+            )
+            return event_store.append(
+                "tool.execution_failed",
+                failure_payload,
+            )
         except Exception as exc:  # noqa: BLE001 - 事务边界需要把未知失败转成事件。
             self._rollback_transaction(world, agent, snapshot)
             failure_payload = with_trace_payload(
@@ -211,21 +244,6 @@ class ToolExecutor:
             "tool.execution_completed",
             success_payload,
         )
-
-    def _validate_tool_completion(self, world: dict[str, Any], completion: dict[str, Any]) -> None:
-        """执行权威副作用前做轻量校验，让失败路径能进入稳定 trace。"""
-        tool_id = str(completion.get("toolId") or "")
-        tool_input = completion.get("input") if isinstance(completion.get("input"), dict) else {}
-        if tool_id in {"social.chat_with", "social.give_gift"}:
-            target_id = str(tool_input.get("targetNpcId") or "")
-            if not target_id or target_id not in world.get("agents", {}):
-                raise ValueError("target_unavailable")
-        if tool_id == "farm.water_crop":
-            plot_id = str(tool_input.get("farmPlotId") or "")
-            if plot_id and plot_id not in world.get("farmPlots", {}):
-                raise ValueError("farm_plot_unavailable")
-        if tool_id == "strategic.spread_rumor" and tool_input.get("forbiddenStateMutation"):
-            raise ValueError("forbidden_state_fields")
 
     def _reset_state_if_needed(self, *, state: dict[str, Any], selected: dict[str, Any], current_anchor_id: str, target_anchor_id: str, target_location_id: str) -> None:
         tool_id = str(selected.get("toolId") or "")
@@ -502,7 +520,7 @@ class ToolExecutor:
         if tool_id in {"social.chat_with", "social.give_gift"}:
             return {"targetNpcId": self._default_social_target(world, npc_id)}
         if tool_id == "strategic.spread_rumor":
-            return {"hookId": "phase2_rule_rumor"}
+            return {"hookId": self._default_gossip_hook_id(world, npc_id) or "phase2_rule_rumor"}
         if tool_id == "life.move_to":
             return {"anchorId": self._target_anchor_for_tool(world, npc_id, tool_id, decision)}
         return {}
@@ -543,6 +561,16 @@ class ToolExecutor:
 
     def _first_farm_plot_id(self, world: dict[str, Any]) -> str | None:
         return next(iter(world.get("farmPlots", {}).keys()), None)
+
+    def _default_gossip_hook_id(self, world: dict[str, Any], npc_id: str) -> str | None:
+        agent = world.get("agents", {}).get(npc_id)
+        hooks = agent.get("deepCard", {}).get("gossipHooks", []) if isinstance(agent, dict) and isinstance(agent.get("deepCard"), dict) else []
+        if not isinstance(hooks, list):
+            return None
+        for hook in hooks:
+            if isinstance(hook, dict) and hook.get("id"):
+                return str(hook["id"])
+        return None
 
     def _presence_index(self, world: dict[str, Any]) -> dict[str, dict[str, Any]]:
         index: dict[str, dict[str, Any]] = {}

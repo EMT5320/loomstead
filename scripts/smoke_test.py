@@ -634,6 +634,83 @@ def assert_phase2_failure_and_interrupt_trace() -> dict:
     if failure_details.get("reason") != "target_unavailable" or failure_details.get("toolId") != "social.chat_with":
         raise RuntimeError("tool.execution_failed trace details 应展开 toolId 和 reason")
 
+    schema_failed_event = failure_runtime.tool_executor.apply_completion(
+        world=failure_runtime.world,
+        event_store=failure_runtime.event_store,
+        source_event_id=str(decision_event["id"]),
+        completion={
+            "npcId": "kai",
+            "toolId": "strategic.spread_rumor",
+            "actionId": "strategic.spread_rumor",
+            "summary": "smoke 注入缺少 hookId 的传闻动作。",
+            "targetAnchorId": "plaza_fountain",
+            "targetLocationId": "plaza",
+            "input": {},
+            "contributingSources": [
+                {
+                    "type": "motivation_decision_trace",
+                    "eventId": decision_event["id"],
+                    "traceId": "trace_smoke_schema_decision",
+                }
+            ],
+        },
+    )
+    schema_payload = schema_failed_event.get("payload", {})
+    if schema_payload.get("reason") != "missing_required_input:hookId":
+        raise RuntimeError(f"Tool input schema 应拒绝缺少 hookId 的 spread_rumor，实际为 {schema_payload.get('reason')}")
+    if not isinstance(schema_payload.get("violationDetails"), dict) or schema_payload["violationDetails"].get("field") != "hookId":
+        raise RuntimeError("tool.execution_failed 应记录 input schema violationDetails.field")
+
+    non_object_failed_event = failure_runtime.tool_executor.apply_completion(
+        world=failure_runtime.world,
+        event_store=failure_runtime.event_store,
+        source_event_id=str(decision_event["id"]),
+        completion={
+            "npcId": "mira",
+            "toolId": "shop.open_shop",
+            "actionId": "shop.open_shop",
+            "summary": "smoke 注入非 object 输入的开店动作。",
+            "targetAnchorId": "market_stall",
+            "targetLocationId": "market",
+            "input": ["invalid"],
+            "contributingSources": [
+                {
+                    "type": "motivation_decision_trace",
+                    "eventId": decision_event["id"],
+                    "traceId": "trace_smoke_non_object_input",
+                }
+            ],
+        },
+    )
+    non_object_payload = non_object_failed_event.get("payload", {})
+    if non_object_payload.get("reason") != "input_not_object":
+        raise RuntimeError(f"Tool input schema 应拒绝非 object 输入，实际为 {non_object_payload.get('reason')}")
+
+    precondition_failed_event = failure_runtime.tool_executor.apply_completion(
+        world=failure_runtime.world,
+        event_store=failure_runtime.event_store,
+        source_event_id=str(decision_event["id"]),
+        completion={
+            "npcId": "bram",
+            "toolId": "farm.water_crop",
+            "actionId": "farm.water_crop",
+            "summary": "smoke 注入不存在田块的浇水动作。",
+            "targetAnchorId": "farm_field",
+            "targetLocationId": "farm",
+            "input": {"farmPlotId": "missing_plot"},
+            "contributingSources": [
+                {
+                    "type": "motivation_decision_trace",
+                    "eventId": decision_event["id"],
+                    "traceId": "trace_smoke_precondition_decision",
+                }
+            ],
+        },
+    )
+    precondition_payload = precondition_failed_event.get("payload", {})
+    if precondition_payload.get("reason") != "farm_plot_unavailable":
+        raise RuntimeError(f"Tool precondition 应拒绝不存在的 farmPlotId，实际为 {precondition_payload.get('reason')}")
+
     interrupt_app = create_town_app(provider_mode="rule")
     interrupt_runtime = interrupt_app.runtime
     interrupt_runtime.get_game_state()
@@ -689,6 +766,9 @@ def assert_phase2_failure_and_interrupt_trace() -> dict:
         raise RuntimeError("tool.execution_interrupted trace details 应展开 replacementToolId")
     return {
         "failedReason": failed_payload.get("reason"),
+        "schemaReason": schema_payload.get("reason"),
+        "nonObjectReason": non_object_payload.get("reason"),
+        "preconditionReason": precondition_payload.get("reason"),
         "interruptedTool": interrupted_payload.get("interruptedToolId"),
         "replacementTool": interrupted_payload.get("replacementToolId"),
     }

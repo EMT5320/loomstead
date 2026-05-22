@@ -30,7 +30,7 @@ scope: current implementation facts, verification state, and work constraints
 ### 当前阶段位置
 
 - **Phase 1（活着的世界）**：done。2026-05-21 主人确认 Phase 1 可以收口，默认 `world_main` 作为已验收完成基线进入冻结维护。
-- **Phase 2（骨架建立期）**：首轮骨架已落地，进入 trace / eval 收紧期。文档前置工作已完成，NPC 深度卡 schema 已增补 `motivationProfile` / `capabilityPreferences` / `heuristicSeeds` 占位字段；后端 ToolDefinition / CapabilityRegistry / MotivationEngine / NeedAccumulator / ArbitrationLayer / ToolExecutor / ResultObserver / SubjectiveMemoryStore / RelationshipEdgeStore / HeuristicLibrary / DomainAdapter shared Protocol / WorldEntity farm_plot+time skeleton / Eval L1 + 规则级 Process Fidelity + Counterfactual Replay + subjective / relationship memory ablation + 24h stability 的最小骨架已落地，并接入 Debug snapshot、`/api/world/tick`、`motivation.decision_made`、`tool.execution_failed`、`tool.execution_interrupted`、`memory.result_observed`、`phase2.trace.v1` 与 `npm.cmd run check`。SubjectiveMemoryStore 与 HeuristicLibrary 召回均已进入 ArbitrationLayer 候选评分和 decision trace。Godot 观察者面板已开始读取 `/api/debug.phase2`。旧 `LifeActionExecutor` 不再服务 tick 主路径。
+- **Phase 2（骨架建立期）**：首轮骨架已落地，进入 trace / eval 收紧期。文档前置工作已完成，NPC 深度卡 schema 已增补 `motivationProfile` / `capabilityPreferences` / `heuristicSeeds` 占位字段；后端 ToolDefinition / ToolContractValidator / CapabilityRegistry / MotivationEngine / NeedAccumulator / ArbitrationLayer / ToolExecutor / ResultObserver / SubjectiveMemoryStore / RelationshipEdgeStore / HeuristicLibrary / DomainAdapter shared Protocol / WorldEntity farm_plot+time skeleton / Eval L1 + 规则级 Process Fidelity + Counterfactual Replay + subjective / relationship memory ablation + 24h stability 的最小骨架已落地，并接入 Debug snapshot、`/api/world/tick`、`motivation.decision_made`、`tool.execution_failed`、`tool.execution_interrupted`、`memory.result_observed`、`phase2.trace.v1` 与 `npm.cmd run check`。SubjectiveMemoryStore 与 HeuristicLibrary 召回均已进入 ArbitrationLayer 候选评分和 decision trace。Godot 观察者面板已开始读取 `/api/debug.phase2`。旧 `LifeActionExecutor` 不再服务 tick 主路径。
 
 ## 2. 本轮核对结果
 
@@ -57,7 +57,7 @@ scope: current implementation facts, verification state, and work constraints
 - 星灯祭供应短缺事件已有查看、选择、关系变化、即时记忆、事件反应、夜间反思和结算记录。
 - `/api/player/action` 的根节点、`result` 和 `state` 均带有 Godot 可直接展示的 `memoryEvidence`、`relationshipEvidence`、`playerProfile`、`currentObjective`、`availableInteractions`；锚点移动和场景行动会返回统一 `actionFeedback`。
 - `GET /api/world/state` 的 `npcSchedules` 与 `lifeActionPlan` 已切到 `motivation_plan.v1`，由 MotivationEngine / ToolExecutor 基于当前需求和工具目标生成只读候选快照；字段外形继续兼容 Godot 现有 WorldPulsePanel。
-- `POST /api/world/tick` 已切到 `MotivationEngine -> ToolExecutor`，按游戏时间推进 NPC 工具行动，返回 `clock`、EventStore 包装后的 `events` 和 `agents` diff；移动事件已透出 `npcId/fromAnchorId/toAnchorId` 供 Godot 扁平化消费；每轮决策先写入 `motivation.decision_made`，工具完成会写入 `tool.execution_completed` 或 `tool.execution_failed`，高优先级需求打断当前行动时会写入 `tool.execution_interrupted`；工具结果携带 `motivation_decision_trace`、可用的 `subjective_memory_refs` 与 `heuristic_refs`，随后通过 ResultObserver 写入 `memory.result_observed`；这些 Phase 2 事件已携带 `phase2.trace.v1` trace envelope。
+- `POST /api/world/tick` 已切到 `MotivationEngine -> ToolExecutor`，按游戏时间推进 NPC 工具行动，返回 `clock`、EventStore 包装后的 `events` 和 `agents` diff；移动事件已透出 `npcId/fromAnchorId/toAnchorId` 供 Godot 扁平化消费；每轮决策先写入 `motivation.decision_made`，工具完成会写入 `tool.execution_completed` 或 `tool.execution_failed`，高优先级需求打断当前行动时会写入 `tool.execution_interrupted`；`ToolContractValidator` 会在权威副作用前校验输入 schema 与世界前置条件，失败 reason 已稳定覆盖 `input_not_object`、`missing_required_input:<field>`、`farm_plot_unavailable`、`target_unavailable` 等；工具结果携带 `motivation_decision_trace`、可用的 `subjective_memory_refs` 与 `heuristic_refs`，随后通过 ResultObserver 写入 `memory.result_observed`；这些 Phase 2 事件已携带 `phase2.trace.v1` trace envelope。
 - `ResultObserver + BiasFilter` 已把工具完成、失败和中断事件分发为主观记忆，并同步一条短记忆到旧 memory list，保证现有 RAG-lite 可见；`RelationshipEdgeStore` 已记录最小关系边和 `source_event_ids` / `trace_refs`；`HeuristicLibrary` 已能从成功工具、社交成功、工具失败或工具中断事件抽取规则启发式，记录 `effectiveConfidence`、`createdTick`、`updatedTick`，并进入后续仲裁；`GET /api/debug.phase2` 已输出 `recentTraceEvents.details`，可展开 decision、tool 和 memory observation 的轻量解释字段。
 - 2026-05-17 已修正 Day 1 生活行动目标分布；2026-05-21 `scripts/check_life_action_targets.py` 已改为校验 `motivation_plan.v1` 在 morning / afternoon / evening 的工具目标不超出当前客户端切片且不超过锚点容量。
 
@@ -145,7 +145,7 @@ scope: current implementation facts, verification state, and work constraints
 
 ### Phase 2 当前实施缺口（pending）
 
-6. **三层工具分层 + ToolDefinition 注册表**：最小 schema 与 10 个首批工具已落地（life / farm / shop / cook / craft / social / strategic），ToolExecutor 已具备首版持续动作、移动、事务快照、失败回滚、规则副作用、完成事件 payload、轻量输入校验和高优先级中断 trace；完整工具输入 schema 校验、更多失败模式和预算路由仍待扩展。
+6. **三层工具分层 + ToolDefinition 注册表**：最小 schema 与 10 个首批工具已落地（life / farm / shop / cook / craft / social / strategic），ToolExecutor 已具备首版持续动作、移动、事务快照、失败回滚、规则副作用、完成事件 payload、ToolContractValidator 输入 schema / 世界前置条件校验和高优先级中断 trace；更完整 JSON Schema 子集、更多失败模式和预算路由仍待扩展。
 7. **MotivationEngine（替换 LifeActionExecutor）**：最小决策骨架已落地，需求计算已抽到 `NeedAccumulator`，可按 status / 空占位 motivationProfile 计算 primaryNeed、经 CapabilityRegistry 取候选工具并由 ArbitrationLayer 产出 selectedToolId 与 contributingSources；`/api/world/tick` 已切到 MotivationEngine -> ToolExecutor 主路径，旧 LifeActionExecutor 不并行运行。
 8. **CapabilityRegistry**：`need_relevance / preconditions / npc_profile / event_scope` 四层动态过滤已落地，`capability_resolution.v1` 会记录每层 input / allowed / rejected count、工具级过滤理由、allowedToolIds 和 rejectedTools，并进入 MotivationEngine snapshot 与 `motivation.decision_made.details.capabilityFilters`；后续可继续扩更多前置条件和预算路由。
 9. **双轨主观记忆**：SubjectiveMemoryStore 最小 record/list/recall/debug_snapshot 骨架已落地，`ResultObserver + BiasFilter` 已接入运行时工具完成、失败和中断事件分发并写入统一 trace；`memory.result_observed` 已可追溯到 `tool.execution_completed` / `tool.execution_failed` / `tool.execution_interrupted`；运行时会按 NPC 召回 `tool_result` 主观记忆并传入 ArbitrationLayer，候选评分已输出 `subjectiveMemoryBonus` / `subjectiveMemoryRefCount`，`motivation.decision_made.details` 已展开 `subjectiveMemoryRecall` / `subjectiveMemoryRefs`；完整遗忘、归档、复杂旁观者可见性和 LLM 增强仍待扩展。
@@ -217,7 +217,7 @@ Get-Content docs\archive\daytime_integration_handoff.md
 
 ### 立即（Phase 2 收紧）
 
-1. 后端骨架线继续从当前 `motivation.decision_made -> tool.execution_completed / failed / interrupted -> memory.result_observed` trace 主路径推进到更完整工具输入 schema、预算路由、多 NPC 旁观者可见性和更严格 Debug 展开，不再做旧 LifeActionExecutor shadow-run。
+1. 后端骨架线继续从当前 `motivation.decision_made -> tool.execution_completed / failed / interrupted -> memory.result_observed` trace 主路径推进到预算路由、多 NPC 旁观者可见性、更完整 JSON Schema 子集和更严格 Debug 展开，不再做旧 LifeActionExecutor shadow-run。
 2. Eval 线继续扩展 `backend/app/eval/`，在当前 L1 + Process Fidelity + Counterfactual Replay + memory ablation + 24h stability 输出基础上补跨域 GoalSpec、更长期稳定性和更严格 trace dataset 归档。
 3. Godot 观察者线已读取后端 phase2 debug 的 motivation / subjectiveMemory / relationshipEdges / heuristics；下一步补 recentTraceEvents 展开、空态文案和真实窗口手感验收。
 
