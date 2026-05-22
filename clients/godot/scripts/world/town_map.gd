@@ -598,7 +598,7 @@ func _summarize_phase2_motivation(section) -> String:
 	var need_id := str(primary_need.get("needId", "unknown")) if primary_need is Dictionary else "unknown"
 	var urgency := float(primary_need.get("urgency", 0.0)) if primary_need is Dictionary else 0.0
 	var decision = focus_dict.get("decision", {})
-	var tool_id := str(decision.get("toolId", "")) if decision is Dictionary else ""
+	var tool_id := str(decision.get("selectedToolId", decision.get("toolId", ""))) if decision is Dictionary else ""
 	if tool_id == "":
 		tool_id = str(decision.get("reason", "pending")) if decision is Dictionary else "pending"
 	return "need=%s(%.2f) / decision=%s" % [need_id, urgency, tool_id]
@@ -653,7 +653,7 @@ func _summarize_phase2_heuristics(section) -> String:
 	return "%d 条，top=%s (%.2f)" % [
 		items.size(),
 		str(top_dict.get("triggerPattern", top_dict.get("heuristicId", "unknown"))),
-		float(top_dict.get("confidence", 0.0)),
+		float(top_dict.get("effectiveConfidence", top_dict.get("confidence", 0.0))),
 	]
 
 

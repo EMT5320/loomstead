@@ -1175,7 +1175,7 @@ NPC 深度卡新增三个字段（在 `npc_deep_card_spec.md` 中正式定义，
       "affiliation":  {"weight": 1.2, "decay_rate": 0.03, "threshold_trigger": 0.5, "threshold_critical": 0.85},
       "recognition":  {"weight": 1.0, "decay_rate": 0.02, "threshold_trigger": 0.5, "threshold_critical": 0.8}
     },
-    "personality_modifiers": {
+    "personalityModifiers": {
       "extroversion": 0.8,
       "risk_appetite": 0.6,
       "conscientiousness": 0.5

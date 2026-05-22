@@ -28,6 +28,7 @@ required_files = [
     GODOT_ROOT / "scripts" / "world" / "town_map.gd",
     GODOT_ROOT / "scripts" / "ui" / "hud.gd",
     GODOT_ROOT / "scripts" / "ui" / "vn_panel.gd",
+    GODOT_ROOT / "scripts" / "ui" / "observer_panel.gd",
 ]
 
 for file_path in required_files:
@@ -48,6 +49,7 @@ player_controller = read(GODOT_ROOT / "scripts" / "world" / "player_controller.g
 town_map = read(GODOT_ROOT / "scripts" / "world" / "town_map.gd")
 hud = read(GODOT_ROOT / "scripts" / "ui" / "hud.gd")
 vn_panel = read(GODOT_ROOT / "scripts" / "ui" / "vn_panel.gd")
+observer_panel = read(GODOT_ROOT / "scripts" / "ui" / "observer_panel.gd")
 
 checks = {
     "project main scene": 'run/main_scene="res://scenes/world_main.tscn"' in project,
@@ -89,12 +91,17 @@ checks = {
     "town map event anchor mapping": "EVENT_ANCHORS" in town_map and "DEFAULT_EVENT_ANCHORS" in town_map and "get_interaction_marker(\"event\")" in town_map,
     "town map player loop": "PlayerControllerScript" in town_map and "_spawn_player" in town_map and "_update_nearest_npc_hint" in town_map,
     "town map backend talk": "_submit_talk" in town_map and "post_player_action" in town_map and "world_map_greeting" in town_map,
+    "town map observer selected tool": "selectedToolId" in town_map,
+    "town map observer effective heuristic": "effectiveConfidence" in town_map,
     "town map vn panel": "VnPanelScript" in town_map and "show_dialogue" in town_map and "show_busy" in town_map,
+    "town map observer panel": "ObserverPanelScript" in town_map and "get_phase2_debug" in town_map and "_build_phase2_observer_summary" in town_map,
     "town map camera follow": "Camera2D" in town_map and "make_current" in town_map,
     "town map npc wiring": "_ensure_npc_controller" in town_map and "_on_npc_motion_event" in town_map,
     "town map backend ids": "farm_house_door" in town_map and "tavern_stage" in town_map and "DEMO_SPAWN_ANCHORS" in town_map and "npc_kai" not in town_map,
     "hud class": "class_name WorldHud" in hud,
     "hud clock speed controls": "_on_pause_pressed" in hud and "_on_speed_pressed" in hud and "_on_tick_clock_updated" in hud,
+    "observer panel class": "class_name ObserverPanel" in observer_panel,
+    "observer panel phase2 sections": "subjectiveMemory" in observer_panel and "relationshipEdges" in observer_panel and "heuristics" in observer_panel,
     "asset registry class": "class_name AssetRegistry" in asset_registry,
     "asset registry backgrounds": "farm_day_anime.png" in asset_registry and "tavern_evening_anime.png" in asset_registry,
     "asset registry portraits": "npc_orren_neutral.png" in asset_registry and "player_farmer_neutral.png" in asset_registry,

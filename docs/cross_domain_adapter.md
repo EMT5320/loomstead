@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: research-runtime
-last_verified: 2026-05-21
+last_verified: 2026-05-22
 startup_load: on-demand
 source_of_truth: true
 scope: cross-domain adapter interface, narrative primary boundary, optional task domain portability
@@ -18,6 +18,8 @@ scope: cross-domain adapter interface, narrative primary boundary, optional task
 3. 核心 Runtime 不依赖具体场景名词，例如 crop、festival、tavern。
 4. 任何新 domain 都必须支持 EventStore、AgentState、Memory、Relationship / Dependency Graph、ToolExecutor、EvalTrace。
 5. Phase 2 只实现接口和 narrative adapter；coding adapter 只做 skeleton。
+
+当前实现状态（2026-05-22）：`backend/app/domain/base.py` 已落地 shared dataclasses、`DomainAdapter` Protocol 与 `DEFAULT_TOWN_DOMAIN` metadata；narrative adapter、coding adapter skeleton 和跨域 dry-run scenario 仍是 Phase 2 后续缺口。
 
 ## 2. Core Interface
 
@@ -176,7 +178,7 @@ Forbidden shortcuts:
 - 复刻 Claude Code / Codex / OpenClaw 的产品能力。
 - 在 Phase 2 完成 coding domain 全实现。
 
-Phase 2 的 adapter 验收只要求：
+Phase 2 的 adapter 完整收口验收要求：
 
 ```text
 1. NarrativeAdapter 可运行至少 3 个 GoalSpec。

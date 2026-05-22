@@ -30,7 +30,6 @@ class NeedAccumulator:
     def score(self, world: dict[str, Any], agent: dict[str, Any], delta_minutes: float) -> list[NeedScore]:
         status = agent.get("status", {}) if isinstance(agent.get("status"), dict) else {}
         profile = agent.get("deepCard", {}).get("motivationProfile", {}) if isinstance(agent.get("deepCard"), dict) else {}
-        weights = profile.get("weights", {}) if isinstance(profile, dict) and isinstance(profile.get("weights"), dict) else {}
         base_values = {
             "energy": 1.0 - min(100.0, float(status.get("energy", 70))) / 100.0,
             "money_anxiety": 1.0 - min(100.0, float(status.get("money", 50))) / 100.0,
@@ -42,7 +41,7 @@ class NeedAccumulator:
         scores: list[NeedScore] = []
         for need_id in DEFAULT_NEEDS:
             current = max(0.0, min(1.0, base_values.get(need_id, 0.0) + interval_bias))
-            weight = float(weights.get(need_id, 1.0)) if isinstance(weights, dict) else 1.0
+            weight = self._need_weight(profile, need_id)
             bias = director_bias.get(need_id, 0.0)
             urgency = current * weight + bias
             sources = (
@@ -64,6 +63,25 @@ class NeedAccumulator:
             scores = sorted(self.score(world, agent, delta_minutes), key=lambda item: item.urgency, reverse=True)
             items.append({"npcId": npc_id, "npcName": agent.get("name", npc_id), "needs": [score.to_dict() for score in scores]})
         return {"version": "need_accumulator.v0", "items": items}
+
+    def _need_weight(self, profile: Any, need_id: str) -> float:
+        """读取深度卡 motivationProfile.needs.<need>.weight；兼容早期 weights 占位。"""
+        if not isinstance(profile, dict):
+            return 1.0
+        needs = profile.get("needs", {}) if isinstance(profile.get("needs"), dict) else {}
+        need_config = needs.get(need_id)
+        if isinstance(need_config, dict) and need_config.get("weight") is not None:
+            return self._safe_weight(need_config.get("weight"))
+        legacy_weights = profile.get("weights", {}) if isinstance(profile.get("weights"), dict) else {}
+        if legacy_weights.get(need_id) is not None:
+            return self._safe_weight(legacy_weights.get(need_id))
+        return 1.0
+
+    def _safe_weight(self, value: Any) -> float:
+        try:
+            return max(0.0, float(value))
+        except (TypeError, ValueError):
+            return 1.0
 
     def _director_bias(self, world: dict[str, Any], npc_id: str) -> dict[str, float]:
         active_focus = world.get("activeFocus") if isinstance(world.get("activeFocus"), dict) else {}

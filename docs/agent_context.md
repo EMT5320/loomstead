@@ -9,7 +9,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 
 # Loomstead 新对话入口
 
-> 更新时间：2026-05-22（LLM smoke 拆分 + Phase 2 heuristic arbitration）
+> 更新时间：2026-05-22（Phase 2 contract fixes + rule-level Eval boundary）
 > 用途：下一轮新对话、研究阶段开发和必要子代理任务的第一入口。
 
 ## 1. 当前入口
@@ -124,14 +124,14 @@ git status --short; git diff --check
 ### 当前状态
 
 - Phase 1（活着的世界）done：2026-05-21 主人确认可以收口，`world_main.tscn` 进入完成基线。
-- Phase 2（骨架建立期）启动中：NPC 深度卡 schema 占位已补，后端 Tool / NeedAccumulator / Motivation / ToolExecutor / ResultObserver / SubjectiveMemory / RelationshipEdge / HeuristicLibrary / `phase2.trace.v1` / Eval L1 + Process Fidelity + Counterfactual Replay + memory ablation + 24h stability suite 已接入 tick 与 Debug；`motivation.decision_made` 已把 need / 4 层 capability filters / 主观记忆召回 / heuristic recall / candidate scores / selected tool 接入 trace，工具完成会携带 decision trace ref、主观记忆 refs 和 heuristic refs；Hard Delegation baseline、No Subjective Memory、No Relationship Edge、Shuffled Memory Owner、Evidence-Link Removal 和 Godot 观察者 debug 摘要面板已落地。
+- Phase 2（骨架建立期）启动中：NPC 深度卡 schema 占位已补，后端 Tool / NeedAccumulator / Motivation / ToolExecutor / ResultObserver / SubjectiveMemory / RelationshipEdge / HeuristicLibrary / `phase2.trace.v1` / DomainAdapter shared Protocol / Eval L1 + 规则级 Process Fidelity + Counterfactual Replay + memory ablation + 24h stability suite 已接入 tick 与 Debug；`motivation.decision_made` 已把 need / 4 层 capability filters / 主观记忆召回 / heuristic recall / candidate scores / selected tool 接入 trace，工具完成会携带 decision trace ref、主观记忆 refs 和 heuristic refs；Hard Delegation baseline、No Subjective Memory、No Relationship Edge、Shuffled Memory Owner、Evidence-Link Removal 和 Godot 观察者 debug 摘要面板已落地，但当前 process suite 仍是规则级 / 后验 ablation 骨架。
 - 项目方向：narrative-primary 的可解释多 Agent 叙事运行时，差异化主轴为"少而深 + 可解释 + 可评估"。
 
 ### Phase 2 第一入口
 
 1. 完整总骨架以 `docs/production_roadmap.md` §4.3 的 15 项为准；`docs/agent_loop_architecture.md` §13.3 是 Agent Loop 内部 11 项。
 2. 后端第六刀已过：`HeuristicLibrary` 会从成功工具和失败工具抽取经验，输出 `effectiveConfidence` / tick 衰减字段；ArbitrationLayer 已把 active heuristic 作为 `heuristicBonus` / `heuristicRefCount` 注入候选评分，并在冲突时以 `highest_effective_delta_wins` 裁决；`motivation.decision_made.details` 展开 `heuristicRecall` 与 `heuristicRefs`。下一刀补失败 / 中断路径 trace。
-3. Eval 第四刀已过：`scripts/run_agent_eval.py --suite process` 已输出 3 个 GoalSpec、10 项指标、Full / Hard / No Subjective Memory / No Relationship Edge / Shuffled Owner / Evidence-Link Removal 六组对照、Counterfactual Replay 和本地导出；Counterfactual Replay 已区分 `relationshipEffect`、`subjectiveMemoryEffect` 与 `heuristicEffect`；Full 关系因果使用为 `1.0`，No Subjective Memory 覆盖降至 `0.8` 且关系因果仍为 `1.0`，owner/source 等对照关系因果为 `0.0`。`--suite stability` 已通过 24 游戏小时：`ticksCompleted=24`、`failedToolCount=0`、`active_agent_count=6`、`heuristic_count=28`、`heuristic_decision_ref_rate=0.847222`。下一刀补跨域 GoalSpec。
+3. Eval 第四刀已过：`scripts/run_agent_eval.py --suite process` 已输出 3 个 GoalSpec、10 项指标、Full / Hard / No Subjective Memory / No Relationship Edge / Shuffled Owner / Evidence-Link Removal 六组对照、Counterfactual Replay 和本地导出；Counterfactual Replay 已区分 `relationshipEffect`、`subjectiveMemoryEffect` 与 `heuristicEffect`；Full 关系因果使用为 `1.0`，No Subjective Memory 覆盖降至 `0.8` 且关系因果仍为 `1.0`，owner/source 等对照关系因果为 `0.0`。注意：Hard Delegation 仍是合成 baseline，No Subjective Memory 仍是后验 ablation，Counterfactual Replay 因果判据仍需收紧。`--suite stability` 已通过 24 游戏小时：`ticksCompleted=24`、`failedToolCount=0`、`active_agent_count=6`、`heuristic_count=28`、`heuristic_decision_ref_rate=0.847222`。下一刀补跨域 GoalSpec。
 4. Godot 第二刀已过：Tab 观察者面板已读取后端 phase2 debug 摘要；下一刀补 recentTraceEvents 展开和真实窗口体验验收。
 5. `LifeActionExecutor` 旧线定位为回归修复；Phase 2 计划不并行运行旧规则和 MotivationEngine。
 

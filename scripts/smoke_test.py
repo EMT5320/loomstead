@@ -25,6 +25,7 @@ from app.providers.context_builder import (  # noqa: E402
     build_player_dialogue_context,
     validate_gossip_propagation_payload,
 )
+from app.runtime.need_accumulator import NeedAccumulator  # noqa: E402
 from app.skills import STARLIGHT_FESTIVAL_SHORTAGE_SKILL_ID  # noqa: E402
 
 REQUIRED_DEBUG_FIELDS = {
@@ -462,6 +463,25 @@ def assert_compact_debug_turns(payload: dict, label: str) -> None:
         if missing:
             raise RuntimeError(f"{label}.items[{index}] 缺少字段：{missing}")
         assert_compact_debug_payload(item["debug"], f"{label}.items[{index}]")
+
+
+def assert_motivation_profile_weight_contract() -> None:
+    """确认 Runtime 读取 NPC 深度卡 motivationProfile.needs.<need>.weight。"""
+    agent = {
+        "id": "contract_npc",
+        "status": {"energy": 50, "money": 50, "social": 50},
+        "todayGoals": [],
+        "deepCard": {
+            "motivationProfile": {
+                "needs": {"energy": {"weight": 2.0}},
+                "personalityModifiers": {},
+            }
+        },
+    }
+    scores = NeedAccumulator().score({"activeFocus": {}, "agents": {"contract_npc": agent}}, agent, delta_minutes=0.0)
+    energy = next((score for score in scores if score.need_id == "energy"), None)
+    if energy is None or round(energy.weight, 4) != 2.0 or round(energy.urgency, 4) != 1.0:
+        raise RuntimeError("NeedAccumulator 应读取 motivationProfile.needs.energy.weight")
 
 
 def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
@@ -1196,6 +1216,7 @@ if not memory_search["items"]:
     raise RuntimeError("RAG-lite 检索应能召回 night_reflection 记忆")
 http_debug_summary = assert_http_debug_endpoints(app)
 fallback_summary = assert_provider_fallback_debug()
+assert_motivation_profile_weight_contract()
 
 tick_before_step = app.get_public_state()["clock"]["tick"]
 step = app.step_simulation({"actorId": "smoke-test"})

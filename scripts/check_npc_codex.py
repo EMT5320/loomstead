@@ -238,6 +238,7 @@ def _check_day1_seed_readiness(cards: dict) -> None:
 
 def _check_phase2_schema_placeholders(cards: dict) -> None:
     """确认 Phase 2 动机/工具偏好/启发式字段已经进入每张深度卡。"""
+    known_need_ids = {"hunger", "energy", "sleep_pressure", "money_anxiety", "affiliation", "recognition", "goal_progress"}
     for npc_id, card in cards.items():
         motivation_profile = getattr(card, "motivation_profile", None)
         capability_preferences = getattr(card, "capability_preferences", None)
@@ -246,6 +247,14 @@ def _check_phase2_schema_placeholders(cards: dict) -> None:
             raise SystemExit(f"[npc-codex-check] {npc_id} 缺少 motivationProfile，占位字段必须存在")
         if not isinstance(getattr(motivation_profile, "needs", None), dict):
             raise SystemExit(f"[npc-codex-check] {npc_id}.motivationProfile.needs 必须是对象")
+        for need_id, config in getattr(motivation_profile, "needs", {}).items():
+            if need_id not in known_need_ids:
+                raise SystemExit(f"[npc-codex-check] {npc_id}.motivationProfile.needs 包含未知需求：{need_id}")
+            if not isinstance(config, dict):
+                raise SystemExit(f"[npc-codex-check] {npc_id}.motivationProfile.needs.{need_id} 必须是对象")
+            weight = config.get("weight")
+            if weight is not None and (not isinstance(weight, (int, float)) or float(weight) < 0):
+                raise SystemExit(f"[npc-codex-check] {npc_id}.motivationProfile.needs.{need_id}.weight 必须是非负数字")
         if not isinstance(getattr(motivation_profile, "personality_modifiers", None), dict):
             raise SystemExit(f"[npc-codex-check] {npc_id}.motivationProfile.personalityModifiers 必须是对象")
         if not isinstance(capability_preferences, dict):

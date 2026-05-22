@@ -19,7 +19,7 @@ PROCESS_METRIC_IDS = (
 
 
 def metric_summary(metric_id: str, values: list[float], *, baseline: str, scenario_id: str = "aggregate") -> dict[str, Any]:
-    """?? Phase 2 Eval ??? mean/std/n ?????"""
+    """输出 Phase 2 Eval 要求的 mean/std/n 摘要。"""
     n = len(values)
     mean = sum(values) / n if n else 0.0
     variance = sum((value - mean) ** 2 for value in values) / n if n else 0.0
@@ -34,7 +34,7 @@ def metric_summary(metric_id: str, values: list[float], *, baseline: str, scenar
 
 
 def process_metric_summaries(items: list[dict[str, Any]], *, baseline: str) -> list[dict[str, Any]]:
-    """???? Process Fidelity ????? mean/std/n?"""
+    """汇总 Process Fidelity 每项指标的 mean/std/n。"""
     metrics: list[dict[str, Any]] = []
     for metric_id in PROCESS_METRIC_IDS:
         values = [float(item.get("metrics", {}).get(metric_id, 0.0)) for item in items]
@@ -57,7 +57,7 @@ def build_process_metrics(
     decisions_with_relationship_memory: int,
     goal_success_override: bool | None = None,
 ) -> dict[str, float]:
-    """????????? Process Fidelity ???"""
+    """根据规则级过程证据计算 Process Fidelity 指标。"""
     required_total = max(1, len(required_process_ids))
     required_satisfied = sum(1 for process_id in required_process_ids if process_checks.get(process_id, False))
     action_total = max(1, goal_relevant_actions)
