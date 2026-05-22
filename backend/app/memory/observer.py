@@ -9,6 +9,9 @@ from app.memory.subjective_memory import SubjectiveMemoryRecord, SubjectiveMemor
 from app.runtime.trace_schema import build_trace_envelope, with_trace_payload, world_time_payload
 
 
+SPATIAL_HEARING_RADIUS = 0.34
+
+
 class BiasFilter:
     """首版主观滤镜：按观察者关系、工具类型和执行状态生成情绪色彩。"""
 
@@ -114,34 +117,42 @@ class ResultObserver:
         return list(self._observer_scope(world, event)["observerIds"])
 
     def _observer_scope(self, world: dict[str, Any], event: dict[str, Any]) -> dict[str, Any]:
-        """按工具可见性解析本次结果应分发给哪些 NPC。"""
+        """按工具可见性和空间证据解析本次结果应分发给哪些 NPC。"""
         payload = event.get("payload", {}) if isinstance(event.get("payload"), dict) else {}
         agents = world.get("agents", {}) if isinstance(world.get("agents"), dict) else {}
         actor_id = self._clean_id(payload.get("npcId") or payload.get("agentId"))
         visibility = self._normalize_visibility(payload.get("observerVisibility"))
         participant_ids = self._participant_ids(payload, actor_id)
         location_id = self._location_id(world, payload, actor_id)
+        event_anchor_id = self._event_anchor_id(world, payload, actor_id)
         location_observer_ids = self._location_observer_ids(world, location_id)
+        spatial_evidence = self._spatial_evidence(
+            world,
+            visibility=visibility,
+            actor_id=actor_id,
+            participant_ids=participant_ids,
+            location_id=location_id,
+            event_anchor_id=event_anchor_id,
+            location_observer_ids=location_observer_ids,
+        )
 
-        observers: set[str] = set()
-        if actor_id:
-            observers.add(actor_id)
-        if visibility == "participants_only":
-            observers.update(participant_ids)
-        elif visibility == "all_in_location":
-            observers.update(participant_ids)
-            observers.update(location_observer_ids)
-
-        observer_ids = sorted(observer_id for observer_id in observers if observer_id in agents)
-        valid_location_ids = {observer_id for observer_id in location_observer_ids if observer_id in agents}
-        excluded_observer_ids = sorted(valid_location_ids - set(observer_ids))
+        candidate_ids = {str(item.get("observerId") or "") for item in spatial_evidence if isinstance(item, dict)}
+        observer_ids = sorted(str(item.get("observerId")) for item in spatial_evidence if isinstance(item, dict) and item.get("visible") and str(item.get("observerId") or "") in agents)
+        excluded_observer_ids = sorted(observer_id for observer_id in candidate_ids if observer_id in agents and observer_id not in set(observer_ids))
         return {
             "version": "observer_scope.v1",
             "visibility": visibility,
             "actorId": actor_id or None,
             "participantIds": [participant_id for participant_id in participant_ids if participant_id in agents],
             "locationId": location_id or None,
+            "eventAnchorId": event_anchor_id or None,
             "locationObserverIds": [observer_id for observer_id in location_observer_ids if observer_id in agents],
+            "spatialModel": {
+                "version": "observer_spatial_model.v1",
+                "distanceUnit": "normalized_anchor_screen",
+                "hearingRadius": SPATIAL_HEARING_RADIUS,
+            },
+            "spatialEvidence": spatial_evidence,
             "observerIds": observer_ids,
             "excludedObserverIds": excluded_observer_ids,
         }
@@ -180,6 +191,125 @@ class ResultObserver:
             return location_id
         actor = world.get("agents", {}).get(actor_id) if actor_id else None
         return self._clean_id(actor.get("locationId")) if isinstance(actor, dict) else ""
+
+    def _event_anchor_id(self, world: dict[str, Any], payload: dict[str, Any], actor_id: str) -> str:
+        for key in ("targetAnchorId", "anchorId"):
+            anchor_id = self._clean_id(payload.get(key))
+            if anchor_id:
+                return anchor_id
+        tool_input = payload.get("input") if isinstance(payload.get("input"), dict) else {}
+        input_anchor_id = self._clean_id(tool_input.get("targetAnchorId") or tool_input.get("anchorId"))
+        if input_anchor_id:
+            return input_anchor_id
+        actor = world.get("agents", {}).get(actor_id) if actor_id else None
+        return self._clean_id(actor.get("anchorId")) if isinstance(actor, dict) else ""
+
+    def _spatial_evidence(
+        self,
+        world: dict[str, Any],
+        *,
+        visibility: str,
+        actor_id: str,
+        participant_ids: list[str],
+        location_id: str,
+        event_anchor_id: str,
+        location_observer_ids: list[str],
+    ) -> list[dict[str, Any]]:
+        agents = world.get("agents", {}) if isinstance(world.get("agents"), dict) else {}
+        candidates: list[str] = []
+        self._append_id(candidates, actor_id)
+        for participant_id in participant_ids:
+            self._append_id(candidates, participant_id)
+        for observer_id in location_observer_ids:
+            self._append_id(candidates, observer_id)
+
+        evidence = []
+        for observer_id in candidates:
+            if observer_id not in agents:
+                continue
+            observer_location_id = self._agent_location_id(world, observer_id)
+            observer_anchor_id = self._agent_anchor_id(world, observer_id)
+            same_location = bool(location_id and observer_location_id == location_id)
+            distance = self._observer_distance(world, observer_anchor_id, event_anchor_id) if same_location else None
+            is_actor = observer_id == actor_id
+            is_participant = observer_id in participant_ids
+            visible, reason = self._visibility_decision(
+                visibility=visibility,
+                is_actor=is_actor,
+                is_participant=is_participant,
+                same_location=same_location,
+                distance=distance,
+            )
+            evidence.append(
+                {
+                    "observerId": observer_id,
+                    "observerLocationId": observer_location_id or None,
+                    "observerAnchorId": observer_anchor_id or None,
+                    "sameLocation": same_location,
+                    "distanceToEvent": distance,
+                    "distanceBand": self._distance_band(distance),
+                    "isActor": is_actor,
+                    "isParticipant": is_participant,
+                    "visible": visible,
+                    "reason": reason,
+                }
+            )
+        return evidence
+
+    def _visibility_decision(self, *, visibility: str, is_actor: bool, is_participant: bool, same_location: bool, distance: float | None) -> tuple[bool, str]:
+        if is_actor:
+            return True, "actor_self_observation"
+        if visibility == "private":
+            return False, "visibility_scope_private"
+        if is_participant:
+            return True, "explicit_participant"
+        if visibility == "participants_only":
+            return False, "visibility_scope_participants_only"
+        if visibility == "all_in_location" and same_location and distance is not None and distance <= SPATIAL_HEARING_RADIUS:
+            return True, "nearby_same_location"
+        if visibility == "all_in_location" and same_location:
+            return False, "distance_too_far"
+        return False, "different_location"
+
+    def _agent_location_id(self, world: dict[str, Any], agent_id: str) -> str:
+        for presence in world.get("npcPresence", []):
+            if isinstance(presence, dict) and self._clean_id(presence.get("agentId")) == agent_id:
+                return self._clean_id(presence.get("locationId"))
+        agent = world.get("agents", {}).get(agent_id)
+        return self._clean_id(agent.get("locationId")) if isinstance(agent, dict) else ""
+
+    def _agent_anchor_id(self, world: dict[str, Any], agent_id: str) -> str:
+        for presence in world.get("npcPresence", []):
+            if isinstance(presence, dict) and self._clean_id(presence.get("agentId")) == agent_id:
+                return self._clean_id(presence.get("anchorId"))
+        agent = world.get("agents", {}).get(agent_id)
+        return self._clean_id(agent.get("anchorId")) if isinstance(agent, dict) else ""
+
+    def _observer_distance(self, world: dict[str, Any], observer_anchor_id: str, event_anchor_id: str) -> float | None:
+        observer_position = self._anchor_position(world, observer_anchor_id)
+        event_position = self._anchor_position(world, event_anchor_id)
+        if observer_position is None or event_position is None:
+            return None
+        return round(((observer_position["x"] - event_position["x"]) ** 2 + (observer_position["y"] - event_position["y"]) ** 2) ** 0.5, 4)
+
+    def _anchor_position(self, world: dict[str, Any], anchor_id: str) -> dict[str, float] | None:
+        anchor = world.get("anchors", {}).get(anchor_id)
+        position = anchor.get("screenPosition") if isinstance(anchor, dict) and isinstance(anchor.get("screenPosition"), dict) else None
+        if not isinstance(position, dict):
+            return None
+        try:
+            return {"x": float(position.get("x", 0.0)), "y": float(position.get("y", 0.0))}
+        except (TypeError, ValueError):
+            return None
+
+    def _distance_band(self, distance: float | None) -> str:
+        if distance is None:
+            return "unknown"
+        if distance <= 0.12:
+            return "near"
+        if distance <= SPATIAL_HEARING_RADIUS:
+            return "audible"
+        return "distant"
 
     def _location_observer_ids(self, world: dict[str, Any], location_id: str) -> list[str]:
         if not location_id:

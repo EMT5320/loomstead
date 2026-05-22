@@ -225,10 +225,47 @@ def _compact_observer_scope(value: Any) -> dict[str, Any]:
         "actorId": value.get("actorId"),
         "participantIds": _compact_list(value.get("participantIds"), 8),
         "locationId": value.get("locationId"),
+        "eventAnchorId": value.get("eventAnchorId"),
         "locationObserverIds": _compact_list(value.get("locationObserverIds"), 10),
+        "spatialModel": _compact_spatial_model(value.get("spatialModel")),
+        "spatialEvidence": _compact_spatial_evidence(value.get("spatialEvidence"), 10),
         "observerIds": _compact_list(value.get("observerIds"), 10),
         "excludedObserverIds": _compact_list(value.get("excludedObserverIds"), 10),
     }
+
+
+def _compact_spatial_model(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {}
+    return {
+        "version": value.get("version"),
+        "distanceUnit": value.get("distanceUnit"),
+        "hearingRadius": value.get("hearingRadius"),
+    }
+
+
+def _compact_spatial_evidence(value: Any, limit: int) -> list[dict[str, Any]]:
+    if not isinstance(value, list):
+        return []
+    compacted: list[dict[str, Any]] = []
+    for item in value[:limit]:
+        if not isinstance(item, dict):
+            continue
+        compacted.append(
+            {
+                "observerId": item.get("observerId"),
+                "observerLocationId": item.get("observerLocationId"),
+                "observerAnchorId": item.get("observerAnchorId"),
+                "sameLocation": item.get("sameLocation"),
+                "distanceToEvent": item.get("distanceToEvent"),
+                "distanceBand": item.get("distanceBand"),
+                "isActor": item.get("isActor"),
+                "isParticipant": item.get("isParticipant"),
+                "visible": item.get("visible"),
+                "reason": item.get("reason"),
+            }
+        )
+    return compacted
 
 
 def _compact_cost_breakdown(value: Any) -> dict[str, Any]:

@@ -626,8 +626,12 @@ def assert_phase2_observer_visibility_scope() -> dict:
                 presence["anchorId"] = anchor_id
 
     for npc_id in list(world.get("agents", {}).keys()):
-        if npc_id in {"kai", "mira", "bram"}:
+        if npc_id in {"kai", "mira"}:
             place_npc(str(npc_id), "plaza", "plaza_fountain")
+        elif npc_id == "bram":
+            place_npc(str(npc_id), "plaza", "market_stall")
+        elif npc_id == "tomas":
+            place_npc(str(npc_id), "plaza", "plaza_gate")
         else:
             place_npc(str(npc_id), "tavern", "tavern_stage")
 
@@ -661,6 +665,12 @@ def assert_phase2_observer_visibility_scope() -> dict:
             raise RuntimeError(f"{label} 应输出 observer_scope.v1")
         if sorted(scope.get("observerIds", [])) != expected:
             raise RuntimeError(f"{label} observerScope.observerIds 应与 observers 一致")
+        spatial_model = scope.get("spatialModel")
+        if not isinstance(spatial_model, dict) or spatial_model.get("version") != "observer_spatial_model.v1":
+            raise RuntimeError(f"{label} 应输出 observer_spatial_model.v1")
+        spatial_evidence = scope.get("spatialEvidence")
+        if not isinstance(spatial_evidence, list) or not spatial_evidence:
+            raise RuntimeError(f"{label} 应输出 spatialEvidence")
         return scope
 
     private_event = store_tool_event(
@@ -698,9 +708,14 @@ def assert_phase2_observer_visibility_scope() -> dict:
         },
     )
     location_observation = _record_tool_result_observation(runtime, location_event)
-    location_scope = assert_observation("all_in_location", location_observation, ["kai", "mira", "bram"], "all_in_location")
-    if sorted(location_scope.get("locationObserverIds", [])) != ["bram", "kai", "mira"]:
+    location_scope = assert_observation("all_in_location", location_observation, ["bram", "kai", "mira"], "all_in_location")
+    if sorted(location_scope.get("locationObserverIds", [])) != ["bram", "kai", "mira", "tomas"]:
         raise RuntimeError("all_in_location 应枚举同地点 NPC 旁观者")
+    location_evidence = {item.get("observerId"): item for item in location_scope.get("spatialEvidence", []) if isinstance(item, dict)}
+    if location_evidence.get("bram", {}).get("reason") != "nearby_same_location":
+        raise RuntimeError("all_in_location 应把近距离同地点 NPC 计入旁观者")
+    if location_evidence.get("tomas", {}).get("reason") != "distance_too_far" or "tomas" not in location_scope.get("excludedObserverIds", []):
+        raise RuntimeError("all_in_location 应按距离排除同地点远处 NPC")
 
     debug = observer_app.debug_phase2({"eventType": "memory.result_observed", "limit": "20"})
     participant_trace = next(
@@ -719,11 +734,15 @@ def assert_phase2_observer_visibility_scope() -> dict:
     trace_scope = participant_details.get("observerScope")
     if not isinstance(trace_scope, dict) or "bram" not in trace_scope.get("excludedObserverIds", []):
         raise RuntimeError("memory.result_observed trace details 应展开 observerScope.excludedObserverIds")
+    trace_evidence = {item.get("observerId"): item for item in trace_scope.get("spatialEvidence", []) if isinstance(item, dict)}
+    if trace_evidence.get("bram", {}).get("reason") != "visibility_scope_participants_only":
+        raise RuntimeError("memory.result_observed trace details 应展开 spatialEvidence.reason")
 
     return {
         "private": len(private_observation["payload"]["observers"]),
         "participants": len(participant_observation["payload"]["observers"]),
         "location": len(location_observation["payload"]["observers"]),
+        "distanceExcluded": "tomas" in location_scope.get("excludedObserverIds", []),
     }
 
 
