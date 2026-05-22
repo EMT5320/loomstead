@@ -978,6 +978,7 @@ class AgentRuntime:
                 parsed=parsed,
                 fallback_reason=fallback_reason,
                 executed=executed["payload"],
+                agent_id=agent["id"],
             )
             agent.setdefault("decisionHistory", []).append(debug)
             agent["decisionHistory"] = agent["decisionHistory"][-10:]
@@ -1616,6 +1617,7 @@ class AgentRuntime:
             "memoryEvidence",
             "memoryEvidenceUsed",
             "gossipPropagationValidation",
+            "providerUsageRecord",
         )
         compact = {key: self._compact_debug_value(debug[key]) for key in compact_keys if key in debug}
 
@@ -2162,6 +2164,7 @@ class AgentRuntime:
             parsed=parsed,
             fallback_reason=fallback_reason,
             executed={"speech": speech},
+            agent_id=target["id"],
             extra={
                 "turnId": dialogue_event["id"],
                 "actorId": target["id"],
@@ -2949,6 +2952,7 @@ class AgentRuntime:
             parsed=parsed,
             fallback_reason=fallback_reason,
             executed={"dialogue": payloads},
+            agent_id="system",
             extra={
                 "eventId": event.get("id"),
                 "skillId": skill.skill_id,
@@ -3011,6 +3015,7 @@ class AgentRuntime:
             parsed=parsed,
             fallback_reason=fallback_reason,
             executed={"reflections": payloads},
+            agent_id="system",
             extra={
                 "eventId": event.get("id"),
                 "skillId": skill.skill_id,
@@ -3284,6 +3289,7 @@ class AgentRuntime:
         parsed: dict[str, Any],
         fallback_reason: str | None,
         executed: dict[str, Any] | None = None,
+        agent_id: str | None = None,
         extra: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """构建三类 LLM 验证共用的 Debug 记录，字段保持扁平可查。"""
@@ -3307,6 +3313,16 @@ class AgentRuntime:
         }
         if extra:
             debug.update(extra)
+        debug["providerUsageRecord"] = self.decision_budget.record_provider_usage(
+            self.world,
+            npc_id=agent_id or str(debug.get("actorId") or "system"),
+            feature=feature,
+            provider=str(result.get("provider") or ""),
+            provider_mode=str(debug.get("providerMode") or ""),
+            usage=usage,
+            profile_name=str(debug.get("profileName") or ""),
+            fallback_reason=fallback_reason,
+        )
         return debug
 
     def _effective_provider_mode(self, profile: dict[str, Any]) -> str:

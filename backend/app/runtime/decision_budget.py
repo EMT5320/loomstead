@@ -44,6 +44,16 @@ DEFAULT_TOOL_COSTS = {
     },
 }
 
+DEFAULT_PROVIDER_FEATURE_CHANNELS = {
+    "agent_decision": "social_strategic_layer",
+    "dialogue": "dialogue_with_player",
+    "event_reaction": "event_reaction",
+    "night_reflection": "night_reflection",
+    "gossip_propagation": "social_strategic_layer",
+    "heuristic_extraction": "heuristic_extraction",
+    "vocational_action": "vocational_local_llm",
+}
+
 
 @dataclass(frozen=True)
 class DecisionBudgetSnapshot:
@@ -94,10 +104,12 @@ class DecisionBudgetStore:
         daily_limits: dict[str, int] | None = None,
         feature_limits: dict[str, int] | None = None,
         tool_costs: dict[str, dict[str, Any]] | None = None,
+        provider_feature_channels: dict[str, str] | None = None,
     ) -> None:
         self.daily_limits = dict(daily_limits or DEFAULT_DAILY_DECISION_LIMITS)
         self.feature_limits = dict(feature_limits or DEFAULT_DAILY_FEATURE_LIMITS)
         self.tool_costs = {key: dict(value) for key, value in (tool_costs or DEFAULT_TOOL_COSTS).items()}
+        self.provider_feature_channels = dict(provider_feature_channels or DEFAULT_PROVIDER_FEATURE_CHANNELS)
 
     def snapshot_for_tool(self, world: dict[str, Any], npc_id: str, tool: ToolDefinition) -> dict[str, Any]:
         policy = self.cost_policy_for_tool(tool)
@@ -203,6 +215,49 @@ class DecisionBudgetStore:
         agent_budget.setdefault("featureConsumed", {})[feature] = limit
         return self.debug_snapshot(world, npc_ids=[npc_id])
 
+    def record_provider_usage(
+        self,
+        world: dict[str, Any],
+        *,
+        npc_id: str | None,
+        feature: str,
+        provider: str | None,
+        provider_mode: str | None,
+        usage: dict[str, Any] | None,
+        profile_name: str | None = None,
+        fallback_reason: str | None = None,
+    ) -> dict[str, Any]:
+        """把真实 Provider usage 回填到预算调试账本，供成本审计和后续 LLM 预算校准使用。"""
+        record = self._provider_usage_record(
+            world,
+            npc_id=npc_id or "system",
+            feature=feature,
+            provider=provider,
+            provider_mode=provider_mode,
+            usage=usage or {},
+            profile_name=profile_name,
+            fallback_reason=fallback_reason,
+        )
+        root = self._root(world)
+        self._append_provider_usage(
+            root,
+            record,
+            totals_key="providerUsageTotals",
+            by_feature_key="providerUsageByFeature",
+            recent_key="recentProviderUsage",
+            recent_limit=60,
+        )
+        agent_budget = self._agent_budget(world, str(record["npcId"]))
+        self._append_provider_usage(
+            agent_budget,
+            record,
+            totals_key="providerUsageTotals",
+            by_feature_key="providerUsageByFeature",
+            recent_key="recentProviderUsage",
+            recent_limit=40,
+        )
+        return record
+
     def debug_snapshot(self, world: dict[str, Any], npc_ids: list[str] | None = None) -> dict[str, Any]:
         root = self._root(world)
         agents = root.get("agents", {}) if isinstance(root.get("agents"), dict) else {}
@@ -227,6 +282,11 @@ class DecisionBudgetStore:
                         for feature, limit in budget.get("featureLimits", {}).items()
                     },
                     "recentUsage": [dict(item) for item in budget.get("recentUsage", [])[-8:] if isinstance(item, dict)],
+                    "providerActuals": {
+                        "totals": self._provider_totals_copy(budget.get("providerUsageTotals")),
+                        "byFeature": self._provider_by_feature_copy(budget.get("providerUsageByFeature")),
+                        "recent": [dict(item) for item in budget.get("recentProviderUsage", [])[-8:] if isinstance(item, dict)],
+                    },
                 }
             )
         return {
@@ -236,8 +296,14 @@ class DecisionBudgetStore:
                 "channels": dict(self.daily_limits),
                 "features": dict(self.feature_limits),
                 "toolCosts": {tool_id: dict(policy) for tool_id, policy in self.tool_costs.items()},
+                "providerFeatureChannels": dict(self.provider_feature_channels),
             },
             "day": root.get("day"),
+            "providerActuals": {
+                "totals": self._provider_totals_copy(root.get("providerUsageTotals")),
+                "byFeature": self._provider_by_feature_copy(root.get("providerUsageByFeature")),
+                "recent": [dict(item) for item in root.get("recentProviderUsage", [])[-12:] if isinstance(item, dict)],
+            },
             "items": items,
         }
 
@@ -297,6 +363,9 @@ class DecisionBudgetStore:
                 "featureLimits": dict(self.feature_limits),
                 "featureConsumed": {},
                 "recentUsage": [],
+                "providerUsageTotals": self._empty_provider_totals(),
+                "providerUsageByFeature": {},
+                "recentProviderUsage": [],
             },
         )
         if not isinstance(budget, dict):
@@ -306,6 +375,9 @@ class DecisionBudgetStore:
                 "featureLimits": dict(self.feature_limits),
                 "featureConsumed": {},
                 "recentUsage": [],
+                "providerUsageTotals": self._empty_provider_totals(),
+                "providerUsageByFeature": {},
+                "recentProviderUsage": [],
             }
             agents[npc_id] = budget
         budget.setdefault("limits", dict(self.daily_limits))
@@ -313,6 +385,9 @@ class DecisionBudgetStore:
         budget.setdefault("featureLimits", dict(self.feature_limits))
         budget.setdefault("featureConsumed", {})
         budget.setdefault("recentUsage", [])
+        budget.setdefault("providerUsageTotals", self._empty_provider_totals())
+        budget.setdefault("providerUsageByFeature", {})
+        budget.setdefault("recentProviderUsage", [])
         return budget
 
     def _cost_breakdown(self, tool: ToolDefinition, policy: dict[str, Any]) -> dict[str, Any]:
@@ -344,3 +419,150 @@ class DecisionBudgetStore:
         )
         if len(usage) > 40:
             del usage[:-40]
+
+    def _provider_usage_record(
+        self,
+        world: dict[str, Any],
+        *,
+        npc_id: str,
+        feature: str,
+        provider: str | None,
+        provider_mode: str | None,
+        usage: dict[str, Any],
+        profile_name: str | None,
+        fallback_reason: str | None,
+    ) -> dict[str, Any]:
+        clock = world.get("clock", {}) if isinstance(world.get("clock"), dict) else {}
+        normalized_feature = str(feature or "unknown")
+        return {
+            "version": "provider_usage_actual.v1",
+            "tick": int(clock.get("tick", 0) or 0),
+            "day": int(clock.get("day", 1) or 1),
+            "npcId": str(npc_id or "system"),
+            "feature": normalized_feature,
+            "channel": self.provider_feature_channels.get(normalized_feature, normalized_feature),
+            "provider": str(provider or "unknown"),
+            "providerMode": str(provider_mode or ""),
+            "profileName": profile_name or usage.get("profileName"),
+            "model": usage.get("model"),
+            "tokens": self._usage_int(usage, "tokens"),
+            "promptTokens": self._usage_int(usage, "promptTokens"),
+            "completionTokens": self._usage_int(usage, "completionTokens"),
+            "cacheHitPromptTokens": self._usage_int(usage, "cacheHitPromptTokens"),
+            "cacheMissPromptTokens": self._usage_int(usage, "cacheMissPromptTokens"),
+            "cost": self._usage_float(usage, "cost"),
+            "costInput": self._usage_float(usage, "costInput"),
+            "costOutput": self._usage_float(usage, "costOutput"),
+            "costEstimated": bool(usage.get("costEstimated")),
+            "currency": usage.get("currency"),
+            "latencyMs": self._usage_int(usage, "latencyMs"),
+            "fallbackReason": fallback_reason,
+        }
+
+    def _append_provider_usage(
+        self,
+        container: dict[str, Any],
+        record: dict[str, Any],
+        *,
+        totals_key: str,
+        by_feature_key: str,
+        recent_key: str,
+        recent_limit: int,
+    ) -> None:
+        totals = container.setdefault(totals_key, self._empty_provider_totals())
+        if not isinstance(totals, dict):
+            totals = self._empty_provider_totals()
+            container[totals_key] = totals
+        self._merge_provider_totals(totals, record)
+
+        by_feature = container.setdefault(by_feature_key, {})
+        if not isinstance(by_feature, dict):
+            by_feature = {}
+            container[by_feature_key] = by_feature
+        feature = str(record.get("feature") or "unknown")
+        feature_totals = by_feature.setdefault(feature, self._empty_provider_totals())
+        if not isinstance(feature_totals, dict):
+            feature_totals = self._empty_provider_totals()
+            by_feature[feature] = feature_totals
+        self._merge_provider_totals(feature_totals, record)
+
+        recent = container.setdefault(recent_key, [])
+        if not isinstance(recent, list):
+            recent = []
+            container[recent_key] = recent
+        recent.append(dict(record))
+        if len(recent) > recent_limit:
+            del recent[:-recent_limit]
+
+    def _merge_provider_totals(self, totals: dict[str, Any], record: dict[str, Any]) -> None:
+        totals["calls"] = int(totals.get("calls") or 0) + 1
+        if record.get("providerMode") == "cloud":
+            totals["cloudModeCalls"] = int(totals.get("cloudModeCalls") or 0) + 1
+        if record.get("provider") == "CloudApiProvider":
+            totals["cloudCalls"] = int(totals.get("cloudCalls") or 0) + 1
+        else:
+            totals["ruleCalls"] = int(totals.get("ruleCalls") or 0) + 1
+        if record.get("fallbackReason"):
+            totals["fallbackCalls"] = int(totals.get("fallbackCalls") or 0) + 1
+        for key in ("tokens", "promptTokens", "completionTokens", "cacheHitPromptTokens", "cacheMissPromptTokens", "latencyTotalMs"):
+            source_key = "latencyMs" if key == "latencyTotalMs" else key
+            totals[key] = int(totals.get(key) or 0) + int(record.get(source_key) or 0)
+        for key in ("cost", "costInput", "costOutput"):
+            totals[key] = round(float(totals.get(key) or 0.0) + float(record.get(key) or 0.0), 8)
+        totals["currency"] = self._merged_currency(totals.get("currency"), record.get("currency"))
+        calls = max(1, int(totals.get("calls") or 1))
+        totals["latencyAvgMs"] = round(float(totals.get("latencyTotalMs") or 0) / calls, 2)
+        totals["costEstimatedCalls"] = int(totals.get("costEstimatedCalls") or 0) + (1 if record.get("costEstimated") else 0)
+
+    def _empty_provider_totals(self) -> dict[str, Any]:
+        return {
+            "calls": 0,
+            "cloudModeCalls": 0,
+            "cloudCalls": 0,
+            "ruleCalls": 0,
+            "fallbackCalls": 0,
+            "tokens": 0,
+            "promptTokens": 0,
+            "completionTokens": 0,
+            "cacheHitPromptTokens": 0,
+            "cacheMissPromptTokens": 0,
+            "cost": 0.0,
+            "costInput": 0.0,
+            "costOutput": 0.0,
+            "currency": None,
+            "latencyTotalMs": 0,
+            "latencyAvgMs": 0.0,
+            "costEstimatedCalls": 0,
+        }
+
+    def _provider_totals_copy(self, value: Any) -> dict[str, Any]:
+        totals = self._empty_provider_totals()
+        if isinstance(value, dict):
+            totals.update(value)
+        return totals
+
+    def _provider_by_feature_copy(self, value: Any) -> dict[str, dict[str, Any]]:
+        if not isinstance(value, dict):
+            return {}
+        return {str(feature): self._provider_totals_copy(totals) for feature, totals in value.items() if isinstance(totals, dict)}
+
+    def _merged_currency(self, current: Any, incoming: Any) -> str | None:
+        current_text = str(current or "")
+        incoming_text = str(incoming or "")
+        if not current_text:
+            return incoming_text or None
+        if not incoming_text or incoming_text == current_text:
+            return current_text
+        return "mixed"
+
+    def _usage_int(self, usage: dict[str, Any], key: str) -> int:
+        try:
+            return int(usage.get(key, 0) or 0)
+        except (TypeError, ValueError):
+            return 0
+
+    def _usage_float(self, usage: dict[str, Any], key: str) -> float:
+        try:
+            return round(float(usage.get(key, 0.0) or 0.0), 8)
+        except (TypeError, ValueError):
+            return 0.0

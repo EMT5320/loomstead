@@ -41,6 +41,7 @@ REQUIRED_DEBUG_FIELDS = {
     "usage",
     "latency",
     "fallbackReason",
+    "providerUsageRecord",
 }
 
 REQUIRED_LLM_USAGE_FIELDS = {
@@ -178,6 +179,9 @@ def assert_feature_debug(state: dict, feature: str) -> dict:
         raise RuntimeError(f"{feature} Debug parsed 应为对象")
     if not isinstance(debug["usage"], dict):
         raise RuntimeError(f"{feature} Debug usage 应为对象")
+    provider_usage = debug.get("providerUsageRecord")
+    if not isinstance(provider_usage, dict) or provider_usage.get("feature") != feature:
+        raise RuntimeError(f"{feature} Debug 应回填 providerUsageRecord")
     return debug
 
 
@@ -519,6 +523,33 @@ def assert_phase2_decision_budget_routing() -> dict:
     debug_item = debug_budget["items"][0]
     if debug_item.get("featureRemaining", {}).get("dialogue") != 0 or not debug_item.get("recentUsage"):
         raise RuntimeError("decisionBudget debug_snapshot 应输出 featureRemaining 和 recentUsage")
+    provider_usage_record = isolated_budget.record_provider_usage(
+        isolated_world,
+        npc_id=npc_id,
+        feature="dialogue",
+        provider="CloudApiProvider",
+        provider_mode="cloud",
+        profile_name="dialogue_story",
+        usage={
+            "tokens": 321,
+            "promptTokens": 250,
+            "completionTokens": 71,
+            "cost": 0.000123,
+            "costInput": 0.00008,
+            "costOutput": 0.000043,
+            "costEstimated": True,
+            "currency": "USD",
+            "latencyMs": 456,
+            "model": "smoke-model",
+        },
+    )
+    if provider_usage_record.get("version") != "provider_usage_actual.v1":
+        raise RuntimeError("record_provider_usage 应输出 provider_usage_actual.v1")
+    debug_budget = isolated_budget.debug_snapshot(isolated_world, npc_ids=[npc_id])
+    provider_actuals = debug_budget["items"][0].get("providerActuals", {})
+    provider_totals = provider_actuals.get("totals", {})
+    if provider_totals.get("tokens") != 321 or provider_actuals.get("byFeature", {}).get("dialogue", {}).get("cost") != 0.000123:
+        raise RuntimeError("decisionBudget debug_snapshot 应聚合真实 provider tokens 和 cost")
 
     agent = world["agents"][npc_id]
     agent["status"].update({"energy": 100, "money": 100, "social": 0})
@@ -571,6 +602,7 @@ def assert_phase2_decision_budget_routing() -> dict:
         "route": planned["decisionBudget"].get("route"),
         "featureFallback": feature_fallback.get("reason"),
         "toolCost": first_snapshot.get("cost"),
+        "providerTokens": provider_totals.get("tokens"),
         "event": fallback_event.get("type"),
         "remaining": remaining,
     }
@@ -1149,6 +1181,11 @@ def assert_real_cloud_debug(debug: dict, feature: str) -> None:
         raise RuntimeError(f"{feature} LLM smoke latencyMs 应大于 0")
     if int(usage.get("tokens") or 0) <= 0:
         raise RuntimeError(f"{feature} LLM smoke tokens 应大于 0")
+    provider_usage = debug.get("providerUsageRecord")
+    if not isinstance(provider_usage, dict):
+        raise RuntimeError(f"{feature} LLM smoke 应回填 providerUsageRecord")
+    if int(provider_usage.get("tokens") or 0) <= 0 or provider_usage.get("provider") != "CloudApiProvider":
+        raise RuntimeError(f"{feature} LLM smoke providerUsageRecord 应记录真实 CloudApiProvider tokens")
     if not debug.get("rawText"):
         raise RuntimeError(f"{feature} LLM smoke rawText 应非空")
 
