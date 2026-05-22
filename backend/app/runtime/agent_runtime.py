@@ -315,7 +315,7 @@ class AgentRuntime:
         limit = self._int_filter(filters, "limit", 20)
         agent_id_filter = self._str_filter(filters, "agentId") or self._str_filter(filters, "agent_id")
         event_type_filter = self._str_filter(filters, "eventType") or self._str_filter(filters, "event_type")
-        trace_types = {"tool.execution_completed", "tool.execution_failed", "memory.result_observed"}
+        trace_types = {"tool.execution_completed", "tool.execution_failed", "tool.execution_interrupted", "memory.result_observed"}
         items: list[dict[str, Any]] = []
         for event in self.event_store.list():
             event_type = str(event.get("type") or "")
@@ -1009,6 +1009,16 @@ class AgentRuntime:
             tick_events.append(stored)
             if event_type == "npc.action_completed":
                 completion_event_ids[(str(payload.get("npcId") or ""), str(payload.get("toolId") or payload.get("actionId") or ""))] = str(stored.get("id") or "")
+            if event_type == "tool.execution_interrupted":
+                observation = self.result_observer.distribute(
+                    world=self.world,
+                    event=stored,
+                    subjective_memory=self.subjective_memory_store,
+                    relationship_edges=self.relationship_edge_store,
+                    heuristic_library=self.heuristic_library,
+                )
+                # 中断也会形成主观记忆和启发式，避免失败路径只停留在原始事件层。
+                tick_events.append(self.event_store.append("memory.result_observed", observation))
 
         for completion in execution.get("completedActions", []):
             source_event_id = completion_event_ids.get((str(completion.get("npcId") or ""), str(completion.get("toolId") or completion.get("actionId") or "")))

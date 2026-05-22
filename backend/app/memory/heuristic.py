@@ -67,6 +67,15 @@ class HeuristicLibrary:
                 source_event_id=source_event_id,
                 world_tick=world_tick,
             )
+        if event_type == "tool.execution_interrupted":
+            return self.add(
+                agent_id=npc_id,
+                trigger_pattern=f"avoid_interrupted_tool:{tool_id}",
+                adjustment={"toolId": tool_id, "weightDelta": -0.08},
+                confidence=0.5,
+                source_event_id=source_event_id,
+                world_tick=world_tick,
+            )
         if tool_id.startswith("social.") and event_type == "tool.execution_completed":
             self.add(
                 agent_id=npc_id,

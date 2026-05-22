@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: godot-client
-last_verified: 2026-05-21
+last_verified: 2026-05-22
 startup_load: on-demand
 source_of_truth: true
 scope: gameplay loop, map interactions, motivation-driven npc actions, godot/backend boundaries
@@ -9,7 +9,7 @@ scope: gameplay loop, map interactions, motivation-driven npc actions, godot/bac
 
 # 游戏本体架构定调：可解释多 Agent 叙事运行时的可玩切片
 
-> 状态更新时间：2026-05-19
+> 状态更新时间：2026-05-22
 > 本文用于约束 `Loomstead` 的游戏本体路线，定义 Godot 切片如何承载 [`agent_loop_architecture.md`](./agent_loop_architecture.md) 定义的 NPC agent loop。后续客户端、后端玩法系统、资产、Debug 与无人值守 goal 都应先对齐本文。
 > 边界：本文聚焦"游戏切片如何呈现 agent 系统"。NPC 决策机制详见 `agent_loop_architecture.md`，世界实体 schema 详见 `world_entity_model.md`。
 
@@ -26,7 +26,7 @@ scope: gameplay loop, map interactions, motivation-driven npc actions, godot/bac
 - 种田、背包、送礼、关系、事件、记忆和夜间反思形成闭环。
 - Debug / 研究控制台服务解释和作品集展示，主游戏界面服务沉浸体验。
 
-本轮特别确认：**首版不采用固定排班式 NPC 日程作为核心玩法**。NPC 的出现地点和行动节奏应由“软日程权重 + 世界约束 + 导演层节奏 + NPC 主观判断”共同生成。设计师提供生活规律、场景机会和事件压力，LLM NPC 在边界内保留尽可能多的自主性。
+本轮特别确认：**首版不采用固定排班式 NPC 日程作为核心玩法**。NPC 的出现地点和行动节奏应由“NeedAccumulator / MotivationEngine / 世界约束 / 导演层节奏 / NPC 主观判断”共同生成。设计师提供生活规律、场景机会和事件压力，LLM NPC 在边界内保留尽可能多的自主性。
 
 2026-05-18 进一步确认：项目方向不是“传统田园 RPG + LLM 对话”，而是 **LLM Agent 社会本身的可游玩化**。小镇自运转不能只依赖后端事件文本，必须落成玩家可见的生活机器：地图生活对象、行动表现模板、NPC 今日意图、行动碰撞、玩家介入入口和离屏结果痕迹共同构成体验；后端事件负责事实和权威状态，Godot 必须把事实演成画面里的生活片段。
 
@@ -291,7 +291,7 @@ NPC 行动由以下输入共同决定：
 - 角色卡和说话风格。
 - 长期目标。
 - 当前状态：体力、情绪、压力、关系。
-- 软日程权重。
+- 需求权重与 MotivationEngine 当前候选。
 - 当前地点可用交互。
 - 近期记忆和长期记忆。
 - 与玩家和其他 NPC 的关系。
@@ -611,7 +611,7 @@ NPC 后续行动也应走结构化工具：
 ### M3：导演层驱动的 NPC Presence
 
 - 后端输出 `npcPresence`。
-- 软日程权重、Director Beat、Event Skill、关系牵引共同影响 NPC 出现。
+- NeedAccumulator、Director Beat、Event Skill、关系牵引共同影响 NPC 出现。
 - Godot 按 `npcPresence` 渲染当前场景 NPC。
 - Debug 显示每个 NPC 出现的 `source` 和 `intent`。
 
@@ -639,5 +639,5 @@ NPC 后续行动也应走结构化工具：
 后续所有客户端和玩法系统 goal 可以复用这段约束：
 
 ```text
-Loomstead 的游戏本体已经定调为涌现式田园生活模拟 RPG。后续实现要把玩家主要交互迁移到地图、移动、靠近提示和 VN 演出层；NPC 位置与行动由软日程权重、世界约束、Director Beat、Event Skill 和 NPC 自主判断共同生成；不要把 NPC 写死成固定排班，也不要继续把主体验扩写成背景图加 UI 按钮列表。后端保持权威状态，Godot 只展示状态并提交合法动作。
+Loomstead 的游戏本体已经定调为涌现式田园生活模拟 RPG。后续实现要把玩家主要交互迁移到地图、移动、靠近提示和 VN 演出层；NPC 位置与行动由 NeedAccumulator、MotivationEngine、世界约束、Director Beat、Event Skill 和 NPC 自主判断共同生成；不要把 NPC 写死成固定排班，也不要继续把主体验扩写成背景图加 UI 按钮列表。后端保持权威状态，Godot 只展示状态并提交合法动作。
 ```

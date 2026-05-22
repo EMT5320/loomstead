@@ -1,7 +1,7 @@
 # Loomstead
 
 ![Status: research preview](https://img.shields.io/badge/status-research_preview-6f42c1)
-![Phase: 1 to 2](https://img.shields.io/badge/phase-1_%E2%86%92_2-0366d6)
+![Phase: 2 skeleton](https://img.shields.io/badge/phase-2_skeleton-0366d6)
 ![Primary domain: narrative town slice](https://img.shields.io/badge/primary_domain-narrative_town_slice-22863a)
 
 > An explainable multi-agent narrative runtime for motivational delegation and process fidelity evaluation.
@@ -31,7 +31,7 @@ The value is in the path: motivation shifts, shared events, misunderstanding rep
 ## Project identity
 
 - **Research status**: research preview.
-- **Current phase**: Phase 1 is closed; Phase 2 skeleton work is starting.
+- **Current phase**: Phase 1 is closed; Phase 2 runtime skeleton has partially landed and is now in trace / eval tightening.
 - **Primary domain**: narrative town slice.
 - **Secondary domain**: task / coding adapters for portability checks, not the main product direction.
 - **Differentiation**: few-but-deep NPCs, explainable traces, process fidelity evaluation.
@@ -80,20 +80,18 @@ Phase 1 is now frozen for regression fixes only. New agent-system work moves to 
 
 ### Phase 2: runtime skeleton
 
-Starting now. Planned skeleton work includes:
+First skeleton pass is already in place. Current implemented pieces include:
 
 - ToolDefinition registry and three-layer tool model.
-- MotivationEngine replacing the old `LifeActionExecutor`.
-- CapabilityRegistry for dynamic tool filtering.
-- SubjectiveMemoryStore and RelationshipEdgeStore.
-- HeuristicLibrary and failure-driven learning.
-- ArbitrationLayer with `contributing_sources` trace.
-- World entity schemas for farm plots, items, inventory, shops, buildings, time, and weather.
-- EvalFramework with baselines, No Subjective Memory / relationship-edge ablations, Counterfactual Replay, and dataset exports.
-- 24-hour rule-runtime stability eval for tick, trace, memory, relationship, and multi-agent participation.
-- Observer mode in Godot.
+- MotivationEngine / NeedAccumulator / CapabilityRegistry / ArbitrationLayer as the active tick decision path.
+- ToolExecutor with sustained movement/action state, transaction rollback, first failure trace, and interruption trace.
+- SubjectiveMemoryStore, RelationshipEdgeStore, ResultObserver, and HeuristicLibrary feeding later decisions.
+- `phase2.trace.v1` across decision, tool result, interruption, and memory-observation events.
+- World entity skeleton for farm plots and time snapshots.
+- Rule-level Process Fidelity Eval, counterfactual replay, memory / relationship ablations, and 24-hour stability eval.
+- Godot ObserverPanel reading `/api/debug.phase2` summaries for the selected NPC.
 
-Phase 2 is planned to retire the old `LifeActionExecutor` directly rather than running it in parallel with MotivationEngine.
+The old `LifeActionExecutor` is frozen for regression fixes. Phase 2 does not run a shadow path beside MotivationEngine. Current eval results remain rule-level / posterior ablation guardrails, so they should be described as scaffolding evidence rather than final research proof.
 
 ## Runtime shape
 

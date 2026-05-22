@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: decisions
-last_verified: 2026-05-21
+last_verified: 2026-05-22
 startup_load: on-demand
 source_of_truth: true
 scope: confirmed decisions, unresolved questions, and validation points
@@ -9,9 +9,9 @@ scope: confirmed decisions, unresolved questions, and validation points
 
 # 决策记录与剩余问题
 
-本文记录主人已经拍板的边界，以及后续仍需要在实现中验证的问题。当前信息已经足够启动 Phase 2 骨架建立期。
+本文记录主人已经拍板的边界，以及后续仍需要在实现中验证的问题。Phase 2 已进入骨架收紧期，后续更新只记录仍有决策价值的开放项。
 
-> 2026-05-21 更新：同步研究输出范围，从早期非研究定位改为研究原型 / benchmark / demo / dataset 优先。
+> 2026-05-22 更新：Phase 2 首轮骨架已落地，失败 / 中断 trace 进入代码与 smoke；本文保留剩余决策与实现期验证点。
 
 ## 2026-05-19 项目重定位决策（最高优先级）
 
@@ -37,7 +37,7 @@ scope: confirmed decisions, unresolved questions, and validation points
 
 - 旧规模：6 NPC（5 女 1 男）。
 - 新规模：**4 核心 NPC + 2 stub NPC**（核心 NPC 完整接入 motivationProfile / capabilityPreferences / heuristicSeeds，stub 使用默认权重）。
-- 4 核心建议：kai / mira / bram / lena；2 stub：tomas / orren。最终名单可在 Phase 2 启动前再调整。
+- 4 核心建议：kai / mira / bram / lena；2 stub：tomas / orren。当前 Phase 2 骨架按该名单推进，后续可在内容期微调。
 
 ### 决策周期与 LLM 预算
 
@@ -82,8 +82,8 @@ scope: confirmed decisions, unresolved questions, and validation points
 ### 工具中断 + 失败记忆
 
 - 工具声明 `interruptible` 和 `interrupt_priority_threshold`。
-- 中断和失败必须写入观察者主观记忆，带情绪强度。
-- 高情绪强度的失败/中断记忆**必须**进入 reflector 的 heuristic 候选池。
+- 中断和失败必须写入观察者主观记忆，带情绪强度；首版已覆盖 `tool.execution_failed` 与 `tool.execution_interrupted`。
+- 高情绪强度的失败/中断记忆**必须**进入 reflector 的 heuristic 候选池；首版规则启发式为 `avoid_failed_tool:<tool_id>` / `avoid_interrupted_tool:<tool_id>`。
 - 失败也是社会信号（"我去借东西被拒了"），通过 ResultObserver 写入相关 NPC 主观记忆。
 
 ### Eval Framework（第五条核心能力）
@@ -98,8 +98,8 @@ scope: confirmed decisions, unresolved questions, and validation points
 ### 观察者模式（Phase 2 核心能力）
 
 - 玩家 + 观察者双模式，从 Phase 5 提升为 Phase 2 必须支持的核心能力。
-- 玩家在游戏内随时切换（默认 Tab 键）。
-- 观察者模式下玩家可点击任意 NPC 查看 motivation / 激活 heuristic / 主观记忆 / 关系图边 / Arbitration trace。
+- 玩家在游戏内随时切换（默认 Tab 键）；当前 Godot `ObserverPanel` 已接入 `/api/debug.phase2` 摘要。
+- 观察者模式下玩家可点击任意 NPC 查看 motivation / 激活 heuristic / 主观记忆 / 关系图边 / Arbitration trace；后续仍需补 recentTraceEvents 展开和真实窗口体验验收。
 - 观察者模式可"干预"：投放物品、注入临时 Director Beat 等，编码为 `directorBeat(beatType="player_intervention")`。
 
 ### NPC 与玩家共享接口

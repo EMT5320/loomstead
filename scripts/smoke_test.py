@@ -557,6 +557,143 @@ def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
     assert_compact_debug_turns(payload["debugTurns"], f"{label}.debugTurns")
 
 
+def _record_tool_result_observation(runtime, event: dict) -> dict:
+    """把工具结果分发为主观记忆、关系边和启发式，并写回 EventStore。"""
+    observation = runtime.result_observer.distribute(
+        world=runtime.world,
+        event=event,
+        subjective_memory=runtime.subjective_memory_store,
+        relationship_edges=runtime.relationship_edge_store,
+        heuristic_library=runtime.heuristic_library,
+    )
+    return runtime.event_store.append("memory.result_observed", observation)
+
+
+def _store_raw_tool_event(runtime, raw_event: dict) -> dict:
+    """把 ToolExecutor 原始事件落入 EventStore，复用运行时 tick 的存储形态。"""
+    event_type = str(raw_event.get("type") or "")
+    if not event_type:
+        raise RuntimeError("ToolExecutor 原始事件缺少 type")
+    return runtime.event_store.append(event_type, {key: value for key, value in raw_event.items() if key != "type"})
+
+
+def assert_phase2_failure_and_interrupt_trace() -> dict:
+    """确认 Phase 2 失败与中断路径会进入 trace、主观记忆和启发式链路。"""
+    failure_app = create_town_app(provider_mode="rule")
+    failure_runtime = failure_app.runtime
+    failure_runtime.get_game_state()
+    decision_event = failure_runtime.event_store.append(
+        "motivation.decision_made",
+        {
+            "npcId": "kai",
+            "selectedToolId": "social.chat_with",
+            "traceSchemaVersion": "phase2.trace.v1",
+            "eventType": "motivation.decision_made",
+            "traceId": "trace_smoke_failure_decision",
+        },
+    )
+    failed_event = failure_runtime.tool_executor.apply_completion(
+        world=failure_runtime.world,
+        event_store=failure_runtime.event_store,
+        source_event_id=str(decision_event["id"]),
+        completion={
+            "npcId": "kai",
+            "toolId": "social.chat_with",
+            "actionId": "social.chat_with",
+            "summary": "smoke 注入目标不可用的社交动作。",
+            "targetAnchorId": "plaza_fountain",
+            "targetLocationId": "plaza",
+            "input": {"targetNpcId": "missing_npc"},
+            "contributingSources": [
+                {
+                    "type": "motivation_decision_trace",
+                    "eventId": decision_event["id"],
+                    "traceId": "trace_smoke_failure_decision",
+                }
+            ],
+        },
+    )
+    if failed_event.get("type") != "tool.execution_failed":
+        raise RuntimeError("Phase 2 失败 smoke 应产生 tool.execution_failed")
+    failed_payload = failed_event.get("payload", {})
+    if failed_payload.get("reason") != "target_unavailable":
+        raise RuntimeError(f"Phase 2 失败 reason 应为 target_unavailable，实际为 {failed_payload.get('reason')}")
+    if failed_payload.get("traceSchemaVersion") != "phase2.trace.v1":
+        raise RuntimeError("tool.execution_failed 应携带 phase2.trace.v1")
+    if str(decision_event["id"]) not in failed_payload.get("sourceEventIds", []):
+        raise RuntimeError("tool.execution_failed 应追溯 sourceEventIds")
+    failed_observation = _record_tool_result_observation(failure_runtime, failed_event)
+    failed_heuristic = failed_observation.get("payload", {}).get("heuristic", {})
+    if failed_heuristic.get("triggerPattern") != "avoid_failed_tool:social.chat_with":
+        raise RuntimeError("tool.execution_failed 应沉淀 avoid_failed_tool 启发式")
+    failure_debug = failure_app.debug_phase2({"eventType": "tool.execution_failed", "agentId": "kai", "limit": "10"})
+    failure_trace = next((item for item in failure_debug.get("recentTraceEvents", []) if item.get("eventType") == "tool.execution_failed"), None)
+    if not isinstance(failure_trace, dict):
+        raise RuntimeError("/api/debug.phase2 应返回 tool.execution_failed trace")
+    failure_details = failure_trace.get("details", {})
+    if failure_details.get("reason") != "target_unavailable" or failure_details.get("toolId") != "social.chat_with":
+        raise RuntimeError("tool.execution_failed trace details 应展开 toolId 和 reason")
+
+    interrupt_app = create_town_app(provider_mode="rule")
+    interrupt_runtime = interrupt_app.runtime
+    interrupt_runtime.get_game_state()
+    first_decision = {
+        "npcId": "kai",
+        "primaryNeed": {"needId": "money", "urgency": 0.4},
+        "decision": {
+            "selectedToolId": "shop.open_shop",
+            "contributingSources": [
+                {"type": "motivation_decision_trace", "eventId": "evt_smoke_interrupt_1", "traceId": "trace_smoke_interrupt_1"}
+            ],
+        },
+    }
+    second_decision = {
+        "npcId": "kai",
+        "primaryNeed": {"needId": "affiliation", "urgency": 0.95},
+        "decision": {
+            "selectedToolId": "strategic.spread_rumor",
+            "contributingSources": [
+                {"type": "motivation_decision_trace", "eventId": "evt_smoke_interrupt_2", "traceId": "trace_smoke_interrupt_2"}
+            ],
+        },
+    }
+    interrupt_runtime.tool_executor.tick(world=interrupt_runtime.world, decisions=[first_decision], delta_seconds=1.0)
+    interruption = interrupt_runtime.tool_executor.tick(
+        world=interrupt_runtime.world,
+        decisions=[second_decision],
+        delta_seconds=1.0,
+    )
+    interrupted_raw = next((event for event in interruption.get("events", []) if event.get("type") == "tool.execution_interrupted"), None)
+    if not isinstance(interrupted_raw, dict):
+        raise RuntimeError("高优先级需求应中断正在执行的 shop.open_shop")
+    interrupted_event = _store_raw_tool_event(interrupt_runtime, interrupted_raw)
+    interrupted_payload = interrupted_event.get("payload", {})
+    if interrupted_payload.get("traceSchemaVersion") != "phase2.trace.v1":
+        raise RuntimeError("tool.execution_interrupted 应携带 phase2.trace.v1")
+    if interrupted_payload.get("replacementToolId") != "strategic.spread_rumor":
+        raise RuntimeError("tool.execution_interrupted 应记录 replacementToolId")
+    if float(interrupted_payload.get("interruptUrgency") or 0.0) < 0.9:
+        raise RuntimeError("tool.execution_interrupted 应记录高优先级 urgency")
+    interrupted_observation = _record_tool_result_observation(interrupt_runtime, interrupted_event)
+    interrupted_heuristic = interrupted_observation.get("payload", {}).get("heuristic", {})
+    if interrupted_heuristic.get("triggerPattern") != "avoid_interrupted_tool:shop.open_shop":
+        raise RuntimeError("tool.execution_interrupted 应沉淀 avoid_interrupted_tool 启发式")
+    interrupt_debug = interrupt_app.debug_phase2({"eventType": "tool.execution_interrupted", "agentId": "kai", "limit": "10"})
+    interrupt_trace = next((item for item in interrupt_debug.get("recentTraceEvents", []) if item.get("eventType") == "tool.execution_interrupted"), None)
+    if not isinstance(interrupt_trace, dict):
+        raise RuntimeError("/api/debug.phase2 应返回 tool.execution_interrupted trace")
+    interrupt_details = interrupt_trace.get("details", {})
+    if interrupt_details.get("interruptedToolId") != "shop.open_shop":
+        raise RuntimeError("tool.execution_interrupted trace details 应展开 interruptedToolId")
+    if interrupt_details.get("replacementToolId") != "strategic.spread_rumor":
+        raise RuntimeError("tool.execution_interrupted trace details 应展开 replacementToolId")
+    return {
+        "failedReason": failed_payload.get("reason"),
+        "interruptedTool": interrupted_payload.get("interruptedToolId"),
+        "replacementTool": interrupted_payload.get("replacementToolId"),
+    }
+
+
 def has_real_llm_config() -> bool:
     """检测是否存在可用于真实 LLM smoke 的本地配置入口。"""
     if (PROJECT_ROOT / "config" / "models.local.json").exists() or any(
@@ -1217,6 +1354,7 @@ if not memory_search["items"]:
 http_debug_summary = assert_http_debug_endpoints(app)
 fallback_summary = assert_provider_fallback_debug()
 assert_motivation_profile_weight_contract()
+phase2_failure_interrupt_summary = assert_phase2_failure_and_interrupt_trace()
 
 tick_before_step = app.get_public_state()["clock"]["tick"]
 step = app.step_simulation({"actorId": "smoke-test"})
@@ -1242,6 +1380,7 @@ print(
         "memoryHits": http_debug_summary["memoryHits"],
         "influenceEvents": http_debug_summary["influenceEvents"],
         "fallbackItems": fallback_summary["fallbackItems"],
+        "phase2FailureInterrupt": phase2_failure_interrupt_summary,
     },
 )
 

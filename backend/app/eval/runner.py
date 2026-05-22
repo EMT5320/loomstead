@@ -37,7 +37,13 @@ RELATIONSHIP_ABLATION_SHUFFLED_OWNER = "shuffled_memory_owner"
 RELATIONSHIP_ABLATION_EVIDENCE_LINK_REMOVAL = "evidence_link_removal"
 BASELINE_STABILITY_24H = "rule_24h_stability"
 DEFAULT_STABILITY_HOURS = 24
-STABILITY_TRACE_TYPES = {"motivation.decision_made", "tool.execution_completed", "tool.execution_failed", "memory.result_observed"}
+STABILITY_TRACE_TYPES = {
+    "motivation.decision_made",
+    "tool.execution_completed",
+    "tool.execution_failed",
+    "tool.execution_interrupted",
+    "memory.result_observed",
+}
 
 
 def run_rule_scenarios(scenarios: tuple[EvalScenario, ...] = DEFAULT_L1_SCENARIOS) -> dict[str, Any]:
@@ -119,6 +125,7 @@ def run_stability_scenarios(
     trace_schema_ok_count = 0
     completed_tool_count = 0
     failed_tool_count = 0
+    interrupted_tool_count = 0
     memory_observation_count = 0
     motivation_decision_count = 0
     heuristic_decision_count = 0
@@ -148,6 +155,8 @@ def run_stability_scenarios(
                     completed_tool_count += 1
                 elif event_type == "tool.execution_failed":
                     failed_tool_count += 1
+                elif event_type == "tool.execution_interrupted":
+                    interrupted_tool_count += 1
                 elif event_type == "memory.result_observed":
                     memory_observation_count += 1
             tick_items.append(
@@ -168,15 +177,16 @@ def run_stability_scenarios(
     subjective_memory_count = len(runtime.subjective_memory_store.list(limit=10000))
     relationship_edge_count = len(runtime.relationship_edge_store.list(limit=10000))
     heuristic_count = len(runtime.heuristic_library.list(limit=10000))
+    tool_result_count = completed_tool_count + failed_tool_count + interrupted_tool_count
     trace_schema_coverage = _safe_ratio(trace_schema_ok_count, trace_event_count)
-    memory_observation_ratio = _safe_ratio(memory_observation_count, completed_tool_count)
+    memory_observation_ratio = _safe_ratio(memory_observation_count, tool_result_count)
     heuristic_decision_ratio = _safe_ratio(heuristic_decision_count, motivation_decision_count)
     checks = {
         "tick_successful": sum(tick_success_values) == float(hours),
         "clock_reached_expected_tick": int(runtime.world.get("clock", {}).get("tick", 0)) >= hours,
         "no_tool_failures": failed_tool_count == 0,
         "trace_schema_complete": trace_event_count > 0 and trace_schema_coverage >= 1.0,
-        "memory_observations_follow_tools": completed_tool_count > 0 and memory_observation_count >= completed_tool_count,
+        "memory_observations_follow_tools": tool_result_count > 0 and memory_observation_count >= tool_result_count,
         "relationship_edges_created": relationship_edge_count > 0,
         "heuristics_created": heuristic_count > 0,
         "heuristics_influence_decisions": heuristic_decision_count > 0,
@@ -185,8 +195,9 @@ def run_stability_scenarios(
     metrics = [
         metric_summary("stability_tick_success_rate", tick_success_values, baseline=BASELINE_STABILITY_24H),
         metric_summary("trace_schema_coverage", [trace_schema_coverage], baseline=BASELINE_STABILITY_24H),
-        metric_summary("memory_observation_per_completed_tool", [memory_observation_ratio], baseline=BASELINE_STABILITY_24H),
-        metric_summary("tool_failure_rate", [_safe_ratio(failed_tool_count, max(1, completed_tool_count + failed_tool_count))], baseline=BASELINE_STABILITY_24H),
+        metric_summary("memory_observation_per_tool_result", [memory_observation_ratio], baseline=BASELINE_STABILITY_24H),
+        metric_summary("tool_failure_rate", [_safe_ratio(failed_tool_count, tool_result_count)], baseline=BASELINE_STABILITY_24H),
+        metric_summary("tool_interruption_rate", [_safe_ratio(interrupted_tool_count, tool_result_count)], baseline=BASELINE_STABILITY_24H),
         metric_summary("active_agent_count", [float(len(active_agent_ids))], baseline=BASELINE_STABILITY_24H),
         metric_summary("relationship_edge_count", [float(relationship_edge_count)], baseline=BASELINE_STABILITY_24H),
         metric_summary("heuristic_count", [float(heuristic_count)], baseline=BASELINE_STABILITY_24H),
@@ -206,6 +217,7 @@ def run_stability_scenarios(
             "eventTypeCounts": dict(sorted(event_type_counts.items())),
             "completedToolCount": completed_tool_count,
             "failedToolCount": failed_tool_count,
+            "interruptedToolCount": interrupted_tool_count,
             "memoryObservationCount": memory_observation_count,
             "subjectiveMemoryCount": subjective_memory_count,
             "relationshipEdgeCount": relationship_edge_count,

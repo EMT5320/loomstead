@@ -63,14 +63,21 @@ class ToolExecutor:
             npc_id = str(selected.get("npcId") or "")
             agent = world.get("agents", {}).get(npc_id)
             presence = presence_index.get(npc_id)
-            target_anchor_id = str(selected.get("targetAnchorId") or "")
-            target_location_id = str(selected.get("targetLocationId") or "")
-            if not npc_id or not isinstance(agent, dict) or not isinstance(presence, dict) or not target_anchor_id or not target_location_id:
-                continue
-            if target_anchor_id not in world.get("anchors", {}):
+            if not npc_id or not isinstance(agent, dict) or not isinstance(presence, dict):
                 continue
 
             state = runtime_state.setdefault(npc_id, {})
+            selected = self._resolve_interrupt_or_selection(
+                world=world,
+                npc_id=npc_id,
+                state=state,
+                selected=selected,
+                events=events,
+            )
+            target_anchor_id = str(selected.get("targetAnchorId") or "")
+            target_location_id = str(selected.get("targetLocationId") or "")
+            if not target_anchor_id or not target_location_id or target_anchor_id not in world.get("anchors", {}):
+                continue
             self._reset_state_if_needed(
                 state=state,
                 selected=selected,
@@ -142,6 +149,7 @@ class ToolExecutor:
 
         snapshot = self._transaction_snapshot(world, agent)
         try:
+            self._validate_tool_completion(world, completion)
             effect_summary = self._apply_tool_effect(world, agent, completion)
         except Exception as exc:  # noqa: BLE001 - 事务边界需要把未知失败转成事件。
             self._rollback_transaction(world, agent, snapshot)
@@ -204,6 +212,21 @@ class ToolExecutor:
             success_payload,
         )
 
+    def _validate_tool_completion(self, world: dict[str, Any], completion: dict[str, Any]) -> None:
+        """执行权威副作用前做轻量校验，让失败路径能进入稳定 trace。"""
+        tool_id = str(completion.get("toolId") or "")
+        tool_input = completion.get("input") if isinstance(completion.get("input"), dict) else {}
+        if tool_id in {"social.chat_with", "social.give_gift"}:
+            target_id = str(tool_input.get("targetNpcId") or "")
+            if not target_id or target_id not in world.get("agents", {}):
+                raise ValueError("target_unavailable")
+        if tool_id == "farm.water_crop":
+            plot_id = str(tool_input.get("farmPlotId") or "")
+            if plot_id and plot_id not in world.get("farmPlots", {}):
+                raise ValueError("farm_plot_unavailable")
+        if tool_id == "strategic.spread_rumor" and tool_input.get("forbiddenStateMutation"):
+            raise ValueError("forbidden_state_fields")
+
     def _reset_state_if_needed(self, *, state: dict[str, Any], selected: dict[str, Any], current_anchor_id: str, target_anchor_id: str, target_location_id: str) -> None:
         tool_id = str(selected.get("toolId") or "")
         changed = state.get("toolId") != tool_id or state.get("targetAnchorId") != target_anchor_id or state.get("targetLocationId") != target_location_id
@@ -225,9 +248,104 @@ class ToolExecutor:
                 "actionDurationSeconds": float(selected.get("durationSeconds") or DEFAULT_TOOL_DURATION_SECONDS),
                 "actionTickAccumulator": 0.0,
                 "input": deepcopy(selected.get("input") or {}),
+                "observerVisibility": selected.get("observerVisibility"),
+                "primaryNeed": deepcopy(selected.get("primaryNeed") or {}),
                 "contributingSources": deepcopy(selected.get("contributingSources") or []),
             }
         )
+
+    def _resolve_interrupt_or_selection(self, *, world: dict[str, Any], npc_id: str, state: dict[str, Any], selected: dict[str, Any], events: list[dict[str, Any]]) -> dict[str, Any]:
+        """在工具切换前显式记录中断；不满足阈值时继续执行当前动作。"""
+        if not self._state_has_active_action(state) or not self._selection_changed(state, selected):
+            return selected
+        if self._can_interrupt_active_state(state, selected):
+            events.append(self._build_interrupted_event(world=world, npc_id=npc_id, state=state, selected=selected))
+            return selected
+        return self._selected_from_state(npc_id=npc_id, state=state, fallback=selected)
+
+    def _state_has_active_action(self, state: dict[str, Any]) -> bool:
+        return bool(
+            state.get("moveStarted")
+            or state.get("actionStarted")
+            or float(state.get("moveProgress") or 0.0) > 0.0
+            or float(state.get("actionElapsedSeconds") or 0.0) > 0.0
+        )
+
+    def _selection_changed(self, state: dict[str, Any], selected: dict[str, Any]) -> bool:
+        return (
+            str(state.get("toolId") or "") != str(selected.get("toolId") or "")
+            or str(state.get("targetAnchorId") or "") != str(selected.get("targetAnchorId") or "")
+            or str(state.get("targetLocationId") or "") != str(selected.get("targetLocationId") or "")
+        )
+
+    def _can_interrupt_active_state(self, state: dict[str, Any], selected: dict[str, Any]) -> bool:
+        tool = self.tool_registry.get(str(state.get("toolId") or ""))
+        if tool is None or not tool.interruptible:
+            return False
+        urgency = self._selected_urgency(selected)
+        return urgency >= float(tool.interrupt_priority_threshold)
+
+    def _selected_urgency(self, selected: dict[str, Any]) -> float:
+        primary_need = selected.get("primaryNeed") if isinstance(selected.get("primaryNeed"), dict) else {}
+        try:
+            return float(primary_need.get("urgency") or 0.0)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def _selected_from_state(self, *, npc_id: str, state: dict[str, Any], fallback: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "npcId": npc_id,
+            "toolId": str(state.get("toolId") or fallback.get("toolId") or ""),
+            "actionId": str(state.get("actionId") or state.get("toolId") or fallback.get("actionId") or ""),
+            "summary": str(state.get("summary") or fallback.get("summary") or ""),
+            "targetAnchorId": str(state.get("targetAnchorId") or fallback.get("targetAnchorId") or ""),
+            "targetLocationId": str(state.get("targetLocationId") or fallback.get("targetLocationId") or ""),
+            "input": deepcopy(state.get("input") or fallback.get("input") or {}),
+            "durationSeconds": float(state.get("actionDurationSeconds") or fallback.get("durationSeconds") or DEFAULT_TOOL_DURATION_SECONDS),
+            "observerVisibility": state.get("observerVisibility") or fallback.get("observerVisibility"),
+            "primaryNeed": deepcopy(state.get("primaryNeed") or fallback.get("primaryNeed") or {}),
+            "contributingSources": deepcopy(state.get("contributingSources") or fallback.get("contributingSources") or []),
+        }
+
+    def _build_interrupted_event(self, *, world: dict[str, Any], npc_id: str, state: dict[str, Any], selected: dict[str, Any]) -> dict[str, Any]:
+        old_tool_id = str(state.get("toolId") or "")
+        new_tool_id = str(selected.get("toolId") or "")
+        tool = self.tool_registry.get(old_tool_id)
+        source_event_id = self._decision_source_event_id(selected.get("contributingSources"))
+        payload = {
+            "npcId": npc_id,
+            "toolId": old_tool_id,
+            "interruptedToolId": old_tool_id,
+            "replacementToolId": new_tool_id,
+            "reason": "higher_priority_need",
+            "interruptUrgency": round(self._selected_urgency(selected), 4),
+            "interruptPriorityThreshold": float(tool.interrupt_priority_threshold) if tool else None,
+            "elapsedSeconds": round(float(state.get("actionElapsedSeconds") or 0.0), 2),
+            "moveProgress": round(float(state.get("moveProgress") or 0.0), 3),
+            "targetAnchorId": str(state.get("targetAnchorId") or ""),
+            "targetLocationId": str(state.get("targetLocationId") or ""),
+            "replacementTargetAnchorId": str(selected.get("targetAnchorId") or ""),
+            "replacementTargetLocationId": str(selected.get("targetLocationId") or ""),
+            "observerVisibility": state.get("observerVisibility") or selected.get("observerVisibility"),
+            "sourceEventIds": self._source_ids(source_event_id),
+            "traceRefs": [
+                *[dict(item) for item in state.get("contributingSources", []) if isinstance(item, dict)],
+                *[dict(item) for item in selected.get("contributingSources", []) if isinstance(item, dict)],
+            ][-10:],
+        }
+        traced = with_trace_payload(
+            payload,
+            build_trace_envelope(
+                event_type="tool.execution_interrupted",
+                summary=f"{npc_id} 中断 {old_tool_id}，转向 {new_tool_id}。",
+                world_time=world_time_payload(world),
+                trace_id=self._decision_trace_id(selected.get("contributingSources")) or source_event_id,
+                source_event_id=source_event_id,
+                agent_id=npc_id,
+                target_ids=self._target_ids_from_completion(selected),
+            ),
+        )
+        return {"type": "tool.execution_interrupted", **traced}
 
     def _advance_move(self, *, world: dict[str, Any], presence: dict[str, Any], agent: dict[str, Any], selected: dict[str, Any], state: dict[str, Any], delta_seconds: float, events: list[dict[str, Any]]) -> None:
         source_anchor_id = str(presence.get("anchorId") or "")
@@ -492,6 +610,26 @@ class ToolExecutor:
 
     def _source_ids(self, source_event_id: str | None) -> list[str]:
         return [source_event_id] if source_event_id else []
+
+    def _decision_source_event_id(self, refs: Any) -> str | None:
+        if not isinstance(refs, list):
+            return None
+        for ref in reversed(refs):
+            if isinstance(ref, dict) and ref.get("type") == "motivation_decision_trace":
+                event_id = str(ref.get("eventId") or "").strip()
+                if event_id:
+                    return event_id
+        return None
+
+    def _decision_trace_id(self, refs: Any) -> str | None:
+        if not isinstance(refs, list):
+            return None
+        for ref in reversed(refs):
+            if isinstance(ref, dict) and ref.get("type") == "motivation_decision_trace":
+                trace_id = str(ref.get("traceId") or "").strip()
+                if trace_id:
+                    return trace_id
+        return None
 
     def _target_ids_from_completion(self, completion: dict[str, Any]) -> list[str]:
         target_ids: list[str] = []

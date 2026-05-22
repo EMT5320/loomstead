@@ -34,6 +34,8 @@ class BiasFilter:
     def _valence(self, *, observer_id: str, actor_id: str, tool_id: str, event_type: str) -> float:
         if event_type == "tool.execution_failed":
             return -0.55
+        if event_type == "tool.execution_interrupted":
+            return -0.35
         if observer_id == actor_id:
             return 0.25
         if tool_id.startswith("social."):
@@ -46,9 +48,12 @@ class BiasFilter:
         observer_name = world.get("agents", {}).get(observer_id, {}).get("name", observer_id)
         actor_name = world.get("agents", {}).get(actor_id, {}).get("name", actor_id)
         tone = "留下了积极印象" if valence > 0.2 else ("让我有些警惕" if valence < -0.1 else "成为一条可回想的线索")
+        if tool_id and summary == "higher_priority_need":
+            summary = "被更紧迫的需求打断"
+        verb = "中断了" if tool_id and summary == "被更紧迫的需求打断" else "完成了"
         if observer_id == actor_id:
-            return f"{observer_name} 记得自己完成了 {tool_id}：{summary}。这件事{tone}。"
-        return f"{observer_name} 注意到 {actor_name} 完成了 {tool_id}：{summary}。这件事{tone}。"
+            return f"{observer_name} 记得自己{verb} {tool_id}：{summary}。这件事{tone}。"
+        return f"{observer_name} 注意到 {actor_name} {verb} {tool_id}：{summary}。这件事{tone}。"
 
 
 class ResultObserver:

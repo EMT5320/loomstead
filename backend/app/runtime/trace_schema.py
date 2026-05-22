@@ -111,14 +111,20 @@ def _trace_event_details(event_type: str, payload: dict[str, Any]) -> dict[str, 
             "heuristicRefs": _compact_list(payload.get("heuristicRefs"), 4),
             "contributingSources": _compact_list(payload.get("contributingSources"), 6),
         }
-    if event_type in {"tool.execution_completed", "tool.execution_failed"}:
+    if event_type in {"tool.execution_completed", "tool.execution_failed", "tool.execution_interrupted"}:
         return {
             "npcId": payload.get("npcId"),
             "toolId": payload.get("toolId"),
+            "interruptedToolId": payload.get("interruptedToolId"),
+            "replacementToolId": payload.get("replacementToolId"),
             "targetNpcId": payload.get("targetNpcId"),
             "targetAnchorId": payload.get("targetAnchorId"),
             "targetLocationId": payload.get("targetLocationId"),
+            "replacementTargetAnchorId": payload.get("replacementTargetAnchorId"),
+            "replacementTargetLocationId": payload.get("replacementTargetLocationId"),
             "reason": payload.get("reason"),
+            "interruptUrgency": payload.get("interruptUrgency"),
+            "interruptPriorityThreshold": payload.get("interruptPriorityThreshold"),
             "worldEffectCount": len(payload.get("worldEffects", [])) if isinstance(payload.get("worldEffects"), list) else 0,
             "sourceEventIds": _compact_list(payload.get("sourceEventIds"), 4),
             "traceRefs": _compact_list(payload.get("traceRefs"), 6),
