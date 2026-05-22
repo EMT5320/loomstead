@@ -175,7 +175,7 @@ class AgentRuntime:
             "traceSchemaVersion": TRACE_SCHEMA_VERSION,
             "tools": self.capability_registry.tool_registry.to_debug_payload(),
             "needAccumulator": self.motivation_engine.need_accumulator.debug_snapshot(self.world, npc_ids=npc_ids, delta_minutes=20.0),
-            "motivation": self.motivation_engine.debug_snapshot(self.world, npc_ids=npc_ids, limit=6),
+            "motivation": {"version": "motivation_engine.v0", "items": self._phase2_decisions(npc_ids[:6])},
             "toolRuntime": self._phase2_tool_runtime_snapshot(npc_ids),
             "subjectiveMemory": self.subjective_memory_store.debug_snapshot(agent_id=npc_id, limit=20),
             "relationshipEdges": self.relationship_edge_store.debug_snapshot(agent_id=npc_id, limit=30),
@@ -254,17 +254,30 @@ class AgentRuntime:
         }
 
     def _phase2_decisions(self, npc_ids: list[str], delta_minutes: float = 20.0) -> list[dict[str, Any]]:
-        return [
-            self.motivation_engine.evaluate_npc(
-                self.world,
-                npc_id,
-                delta_minutes=delta_minutes,
-                relationship_edges=[
-                    edge.to_dict()
-                    for edge in self.relationship_edge_store.list(agent_id=npc_id, limit=12)
-                ],
+        decisions: list[dict[str, Any]] = []
+        for npc_id in npc_ids:
+            decisions.append(
+                self.motivation_engine.evaluate_npc(
+                    self.world,
+                    npc_id,
+                    delta_minutes=delta_minutes,
+                    relationship_edges=[
+                        edge.to_dict()
+                        for edge in self.relationship_edge_store.list(agent_id=npc_id, limit=12)
+                    ],
+                    subjective_memory_records=self._phase2_subjective_memory_recall(npc_id),
+                )
             )
-            for npc_id in npc_ids
+        return decisions
+
+    def _phase2_subjective_memory_recall(self, npc_id: str, limit: int = 8) -> list[dict[str, Any]]:
+        return [
+            record.to_dict()
+            for record in self.subjective_memory_store.recall(
+                agent_id=npc_id,
+                query="tool_result",
+                limit=limit,
+            )
         ]
 
     def _phase2_tool_runtime_snapshot(self, npc_ids: list[str]) -> dict[str, Any]:
@@ -1071,6 +1084,7 @@ class AgentRuntime:
         need_id = str(primary_need.get("needId") or decision_payload.get("needId") or "unknown_need")
         capabilities = decision.get("capabilities", []) if isinstance(decision.get("capabilities"), list) else []
         capability_filters = decision.get("capabilityFilters", {}) if isinstance(decision.get("capabilityFilters"), dict) else {}
+        subjective_memory_recall = decision.get("subjectiveMemoryRecall", {}) if isinstance(decision.get("subjectiveMemoryRecall"), dict) else {}
         return {
             "npcId": decision.get("npcId"),
             "npcName": decision.get("npcName"),
@@ -1079,9 +1093,11 @@ class AgentRuntime:
             "capabilityCount": len(capabilities),
             "capabilities": [self._phase2_capability_ref(item) for item in capabilities[:12] if isinstance(item, dict)],
             "capabilityFilters": self._phase2_capability_filter_ref(capability_filters),
+            "subjectiveMemoryRecall": self._phase2_subjective_memory_recall_ref(subjective_memory_recall),
             "selectedToolId": selected_tool_id,
             "candidateScores": [dict(item) for item in decision_payload.get("candidateScores", []) if isinstance(item, dict)],
             "relationshipEdgeRefs": [dict(item) for item in decision_payload.get("relationshipEdgeRefs", []) if isinstance(item, dict)],
+            "subjectiveMemoryRefs": [dict(item) for item in decision_payload.get("subjectiveMemoryRefs", []) if isinstance(item, dict)],
             "contributingSources": [dict(item) for item in decision_payload.get("contributingSources", []) if isinstance(item, dict)],
             "decisionReason": decision_payload.get("reason"),
             "summary": f"{npc_name} 因 {need_id} 选择 {selected_tool_id or 'no_tool'}。",
@@ -1116,6 +1132,15 @@ class AgentRuntime:
                 for item in capability_filters.get("rejectedTools", [])[:12]
                 if isinstance(item, dict)
             ] if isinstance(capability_filters.get("rejectedTools"), list) else [],
+        }
+
+    def _phase2_subjective_memory_recall_ref(self, recall: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "version": recall.get("version"),
+            "query": recall.get("query"),
+            "count": recall.get("count"),
+            "recordIds": list(recall.get("recordIds", []))[:8] if isinstance(recall.get("recordIds"), list) else [],
+            "sourceEventIds": list(recall.get("sourceEventIds", []))[:8] if isinstance(recall.get("sourceEventIds"), list) else [],
         }
 
     def _phase2_decision_target_ids(self, decision: dict[str, Any]) -> list[str]:

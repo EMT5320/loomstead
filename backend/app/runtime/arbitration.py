@@ -14,6 +14,7 @@ class ArbitrationInput:
     candidates: tuple[ToolDefinition, ...]
     contributing_sources: tuple[dict[str, Any], ...]
     relationship_edges: tuple[dict[str, Any], ...] = ()
+    subjective_memories: tuple[dict[str, Any], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -27,6 +28,7 @@ class ArbitrationDecision:
     contributing_sources: tuple[dict[str, Any], ...]
     candidate_scores: tuple[dict[str, Any], ...] = ()
     relationship_edge_refs: tuple[dict[str, Any], ...] = ()
+    subjective_memory_refs: tuple[dict[str, Any], ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -39,6 +41,7 @@ class ArbitrationDecision:
             "contributingSources": [dict(item) for item in self.contributing_sources],
             "candidateScores": [dict(item) for item in self.candidate_scores],
             "relationshipEdgeRefs": [dict(item) for item in self.relationship_edge_refs],
+            "subjectiveMemoryRefs": [dict(item) for item in self.subjective_memory_refs],
         }
 
 
@@ -48,6 +51,7 @@ class ArbitrationLayer:
         scored = self._score_candidates(
             candidates,
             arbitration_input.relationship_edges,
+            arbitration_input.subjective_memories,
             arbitration_input.npc_id,
         )
         selected_score = scored[0] if scored else None
@@ -57,6 +61,7 @@ class ArbitrationLayer:
             if selected and str(selected.tool_id).startswith("social.")
             else []
         )
+        subjective_memory_refs = selected_score.get("subjectiveMemoryRefs", []) if selected_score else []
         contributing_sources = arbitration_input.contributing_sources
         if relationship_refs:
             contributing_sources = (
@@ -67,20 +72,34 @@ class ArbitrationLayer:
                     "edgeIds": [ref["edgeId"] for ref in relationship_refs],
                 },
             )
+        if subjective_memory_refs:
+            contributing_sources = (
+                *contributing_sources,
+                {
+                    "type": "subjective_memory_refs",
+                    "count": len(subjective_memory_refs),
+                    "recordIds": [ref["recordId"] for ref in subjective_memory_refs],
+                    "sourceEventIds": [ref["sourceEventId"] for ref in subjective_memory_refs if ref.get("sourceEventId")],
+                },
+            )
+        reason = "highest_rule_tier_fit" if selected else "no_capability_available"
+        if relationship_refs and subjective_memory_refs:
+            reason = "relationship_and_subjective_memory_weighted_fit"
+        elif subjective_memory_refs:
+            reason = "subjective_memory_weighted_fit"
+        elif relationship_refs:
+            reason = "relationship_memory_weighted_fit"
         return ArbitrationDecision(
             npc_id=arbitration_input.npc_id,
             need_id=arbitration_input.need_id,
             selected_tool_id=selected.tool_id if selected else None,
             urgency=arbitration_input.urgency,
             candidate_tool_ids=tuple(tool.tool_id for tool in candidates),
-            reason=(
-                "relationship_memory_weighted_fit"
-                if relationship_refs
-                else ("highest_rule_tier_fit" if selected else "no_capability_available")
-            ),
+            reason=reason,
             contributing_sources=contributing_sources,
             candidate_scores=tuple(self._score_to_debug(item) for item in scored),
             relationship_edge_refs=tuple(relationship_refs),
+            subjective_memory_refs=tuple(subjective_memory_refs),
         )
 
     def _select_tool(self, candidates: list[ToolDefinition]) -> ToolDefinition | None:
@@ -93,9 +112,10 @@ class ArbitrationLayer:
         self,
         candidates: list[ToolDefinition],
         relationship_edges: tuple[dict[str, Any], ...],
+        subjective_memories: tuple[dict[str, Any], ...],
         npc_id: str,
     ) -> list[dict[str, Any]]:
-        """对候选工具打分；关系边只影响社交工具内部排序，避免越权改需求。"""
+        """对候选工具打分；记忆证据只影响同一需求候选内部排序，避免越权改需求。"""
         tier_rank = {"physiological": 0, "vocational": 1, "social_strategic": 2}
         relationship_strength = self._relationship_strength(relationship_edges, npc_id)
         scored: list[dict[str, Any]] = []
@@ -107,7 +127,9 @@ class ArbitrationLayer:
                 relationship_bonus = 0.12 * relationship_strength
             elif relationship_strength > 0.0 and tool.tool_id == "social.give_gift":
                 relationship_bonus = 0.03 * relationship_strength
-            score = tier_score + duration_score + relationship_bonus
+            subjective_memory_refs = self._subjective_memory_refs(subjective_memories, tool.tool_id, npc_id)
+            subjective_memory_bonus = self._subjective_memory_bonus(subjective_memory_refs)
+            score = tier_score + duration_score + relationship_bonus + subjective_memory_bonus
             scored.append(
                 {
                     "tool": tool,
@@ -115,6 +137,8 @@ class ArbitrationLayer:
                     "tierScore": tier_score,
                     "durationScore": duration_score,
                     "relationshipBonus": relationship_bonus,
+                    "subjectiveMemoryBonus": subjective_memory_bonus,
+                    "subjectiveMemoryRefs": subjective_memory_refs,
                 }
             )
         return sorted(
@@ -165,6 +189,50 @@ class ArbitrationLayer:
         """避免错把其他 NPC 的记忆边计入当前 NPC 的仲裁。"""
         return npc_id in {str(edge.get("sourceAgentId") or ""), str(edge.get("targetAgentId") or "")}
 
+    def _subjective_memory_refs(self, subjective_memories: tuple[dict[str, Any], ...], tool_id: str, npc_id: str) -> list[dict[str, Any]]:
+        refs: list[dict[str, Any]] = []
+        for memory in subjective_memories:
+            if str(memory.get("agentId") or "") != npc_id:
+                continue
+            relevance = self._memory_tool_relevance(memory, tool_id)
+            if relevance <= 0.0:
+                continue
+            refs.append(
+                {
+                    "recordId": memory.get("recordId"),
+                    "sourceEventId": memory.get("sourceEventId"),
+                    "emotionalValence": memory.get("emotionalValence", 0.0),
+                    "confidence": memory.get("confidence", 1.0),
+                    "relevance": round(relevance, 4),
+                    "tags": [str(tag) for tag in memory.get("tags", [])[:4] if str(tag)] if isinstance(memory.get("tags"), list) else [],
+                }
+            )
+        refs.sort(key=lambda ref: (float(ref.get("relevance") or 0.0), float(ref.get("confidence") or 0.0), str(ref.get("recordId") or "")), reverse=True)
+        return refs[:4]
+
+    def _memory_tool_relevance(self, memory: dict[str, Any], tool_id: str) -> float:
+        tags = [str(tag).lower() for tag in memory.get("tags", []) if str(tag)] if isinstance(memory.get("tags"), list) else []
+        text = str(memory.get("text") or "").lower()
+        normalized_tool = tool_id.lower()
+        namespace = f"{normalized_tool.split('.', 1)[0]}." if "." in normalized_tool else ""
+        if normalized_tool in tags or normalized_tool in text:
+            return 1.0
+        if namespace and any(tag.startswith(namespace) for tag in tags):
+            return 0.35
+        return 0.0
+
+    def _subjective_memory_bonus(self, refs: list[dict[str, Any]]) -> float:
+        total = 0.0
+        for ref in refs:
+            valence = float(ref.get("emotionalValence") or 0.0)
+            confidence = max(0.0, min(1.0, float(ref.get("confidence") or 0.0)))
+            relevance = max(0.0, min(1.0, float(ref.get("relevance") or 0.0)))
+            if valence < -0.1:
+                total -= 0.05 * abs(valence) * confidence * relevance
+            else:
+                total += 0.08 * (1.0 + max(0.0, valence)) * confidence * relevance
+        return max(-0.1, min(0.12, total))
+
     def _score_to_debug(self, item: dict[str, Any]) -> dict[str, Any]:
         tool = item["tool"]
         return {
@@ -173,4 +241,6 @@ class ArbitrationLayer:
             "tierScore": round(float(item["tierScore"]), 6),
             "durationScore": round(float(item["durationScore"]), 6),
             "relationshipBonus": round(float(item["relationshipBonus"]), 6),
+            "subjectiveMemoryBonus": round(float(item["subjectiveMemoryBonus"]), 6),
+            "subjectiveMemoryRefCount": len(item.get("subjectiveMemoryRefs", [])),
         }

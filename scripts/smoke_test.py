@@ -474,6 +474,8 @@ def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
     phase2 = payload.get("phase2")
     if not isinstance(phase2, dict):
         raise RuntimeError(f"{label}.phase2 应返回 Phase 2 调试快照")
+    if phase2.get("traceSchemaVersion") != "phase2.trace.v1":
+        raise RuntimeError(f"{label}.phase2.traceSchemaVersion 应为 phase2.trace.v1")
     tools = phase2.get("tools")
     if not isinstance(tools, dict) or int(tools.get("count") or 0) < 8:
         raise RuntimeError(f"{label}.phase2.tools 应返回至少 8 个 ToolDefinition")
@@ -483,6 +485,13 @@ def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
     first_decision = motivation["items"][0].get("decision", {})
     if not first_decision.get("contributingSources"):
         raise RuntimeError(f"{label}.phase2.motivation.decision 应包含 contributingSources")
+    if not isinstance(first_decision.get("subjectiveMemoryRefs"), list):
+        raise RuntimeError(f"{label}.phase2.motivation.decision 应包含 subjectiveMemoryRefs 数组")
+    recall_debug = motivation["items"][0].get("subjectiveMemoryRecall")
+    if not isinstance(recall_debug, dict) or recall_debug.get("version") != "subjective_memory_recall.v1":
+        raise RuntimeError(f"{label}.phase2.motivation 应包含 subjective_memory_recall.v1")
+    if not all("subjectiveMemoryBonus" in item and "subjectiveMemoryRefCount" in item for item in first_decision.get("candidateScores", []) if isinstance(item, dict)):
+        raise RuntimeError(f"{label}.phase2.motivation.candidateScores 应包含主观记忆评分字段")
     capability_filters = motivation["items"][0].get("capabilityFilters")
     if not isinstance(capability_filters, dict) or capability_filters.get("version") != "capability_resolution.v1":
         raise RuntimeError(f"{label}.phase2.motivation 应包含 capability_resolution.v1")
@@ -498,6 +507,9 @@ def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
     tool_runtime = phase2.get("toolRuntime")
     if not isinstance(tool_runtime, dict) or tool_runtime.get("version") != "tool_runtime.v1" or not tool_runtime.get("items"):
         raise RuntimeError(f"{label}.phase2.toolRuntime 应返回 ToolExecutor 运行态")
+    subjective_memory = phase2.get("subjectiveMemory")
+    if not isinstance(subjective_memory, dict) or subjective_memory.get("version") != "subjective_memory_store.v0":
+        raise RuntimeError(f"{label}.phase2.subjectiveMemory 应返回 subjective_memory_store.v0")
     trace_events = phase2.get("recentTraceEvents")
     if not isinstance(trace_events, list) or not trace_events:
         raise RuntimeError(f"{label}.phase2.recentTraceEvents 应返回 Phase 2 trace")
@@ -507,6 +519,8 @@ def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
     decision_details = decision_trace.get("details")
     if not isinstance(decision_details, dict) or not decision_details.get("selectedToolId") or not isinstance(decision_details.get("candidateScores"), list):
         raise RuntimeError(f"{label}.phase2.recentTraceEvents.decision.details 应包含 selectedToolId 和 candidateScores")
+    if not isinstance(decision_details.get("subjectiveMemoryRefs"), list) or not isinstance(decision_details.get("subjectiveMemoryRecall"), dict):
+        raise RuntimeError(f"{label}.phase2.recentTraceEvents.decision.details 应包含主观记忆召回字段")
     detail_filters = decision_details.get("capabilityFilters")
     if not isinstance(detail_filters, dict) or {str(layer.get("layer")) for layer in detail_filters.get("layers", []) if isinstance(layer, dict)} != required_layers:
         raise RuntimeError(f"{label}.phase2.recentTraceEvents.decision.details 应包含四层 capabilityFilters")
@@ -671,6 +685,19 @@ def assert_http_debug_endpoints(api_app) -> dict:
     observed_events = [event for event in world_tick_completed.get("events", []) if event.get("type") == "memory.result_observed"]
     if not any(event.get("payload", {}).get("sourceEventId") in completion_event_ids and event.get("payload", {}).get("memories") for event in observed_events):
         raise RuntimeError("memory.result_observed 应追溯到 tool.execution_completed 并写入主观记忆")
+    subjective_memory_after = phase2_after_completion.get("subjectiveMemory", {})
+    if not isinstance(subjective_memory_after, dict) or int(subjective_memory_after.get("count") or 0) <= 0:
+        raise RuntimeError("/api/debug.phase2 应在工具完成后返回主观记忆")
+    motivation_after = phase2_after_completion.get("motivation", {})
+    motivation_items = motivation_after.get("items", []) if isinstance(motivation_after, dict) else []
+    if not any(int(item.get("subjectiveMemoryRecall", {}).get("count") or 0) > 0 for item in motivation_items if isinstance(item, dict)):
+        raise RuntimeError("/api/debug.phase2.motivation 应召回已写入的主观记忆")
+    if not any(
+        any(int(score.get("subjectiveMemoryRefCount") or 0) > 0 for score in item.get("decision", {}).get("candidateScores", []) if isinstance(score, dict))
+        for item in motivation_items
+        if isinstance(item, dict)
+    ):
+        raise RuntimeError("/api/debug.phase2.motivation 应把主观记忆证据用于候选评分")
     completed_debug_trace = next((item for item in phase2_after_completion.get("recentTraceEvents", []) if item.get("eventType") == "tool.execution_completed"), None)
     if not isinstance(completed_debug_trace, dict) or not completed_debug_trace.get("details", {}).get("traceRefs"):
         raise RuntimeError("/api/debug.phase2 应展开 tool.execution_completed.traceRefs")

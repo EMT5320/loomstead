@@ -19,11 +19,13 @@ class MotivationEngine:
         npc_id: str,
         delta_minutes: float = 20.0,
         relationship_edges: list[dict[str, Any]] | None = None,
+        subjective_memory_records: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         agent = world.get("agents", {}).get(npc_id)
         if not isinstance(agent, dict):
             return {"npcId": npc_id, "decision": None, "reason": "unknown_npc"}
         relationship_edges = relationship_edges or []
+        subjective_memory_records = [dict(item) for item in subjective_memory_records or [] if isinstance(item, dict)]
         needs = self.need_accumulator.score(world, agent, delta_minutes)
         primary_need = max(needs, key=lambda need: need.urgency)
         capability_resolution = self.capability_registry.resolve_with_debug(world, npc_id, primary_need.need_id)
@@ -36,6 +38,7 @@ class MotivationEngine:
                 candidates=tuple(candidates),
                 contributing_sources=primary_need.sources,
                 relationship_edges=tuple(relationship_edges),
+                subjective_memories=tuple(subjective_memory_records),
             )
         )
         return {
@@ -46,6 +49,7 @@ class MotivationEngine:
             "needs": [need.to_dict() for need in sorted(needs, key=lambda item: item.urgency, reverse=True)],
             "capabilities": [tool.to_dict() for tool in candidates],
             "capabilityFilters": capability_resolution.to_debug_dict(),
+            "subjectiveMemoryRecall": self._subjective_memory_recall_debug(subjective_memory_records),
             "decision": decision.to_dict(),
         }
 
@@ -53,3 +57,12 @@ class MotivationEngine:
         candidate_ids = npc_ids or list(world.get("agents", {}).keys())[:limit]
         items = [self.evaluate_npc(world, npc_id) for npc_id in candidate_ids[:limit]]
         return {"version": "motivation_engine.v0", "items": items}
+
+    def _subjective_memory_recall_debug(self, records: list[dict[str, Any]]) -> dict[str, Any]:
+        return {
+            "version": "subjective_memory_recall.v1",
+            "query": "tool_result",
+            "count": len(records),
+            "recordIds": [str(item.get("recordId") or "") for item in records[:8] if str(item.get("recordId") or "")],
+            "sourceEventIds": [str(item.get("sourceEventId") or "") for item in records[:8] if str(item.get("sourceEventId") or "")],
+        }

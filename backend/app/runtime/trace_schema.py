@@ -103,8 +103,10 @@ def _trace_event_details(event_type: str, payload: dict[str, Any]) -> dict[str, 
             "decisionReason": payload.get("decisionReason"),
             "capabilityCount": payload.get("capabilityCount"),
             "capabilityFilters": _compact_capability_filters(payload.get("capabilityFilters")),
+            "subjectiveMemoryRecall": _compact_subjective_memory_recall(payload.get("subjectiveMemoryRecall")),
             "candidateScores": _compact_list(payload.get("candidateScores"), 5),
             "relationshipEdgeRefs": _compact_list(payload.get("relationshipEdgeRefs"), 4),
+            "subjectiveMemoryRefs": _compact_list(payload.get("subjectiveMemoryRefs"), 4),
             "contributingSources": _compact_list(payload.get("contributingSources"), 6),
         }
     if event_type in {"tool.execution_completed", "tool.execution_failed"}:
@@ -158,6 +160,18 @@ def _compact_capability_filters(value: Any) -> dict[str, Any]:
             for layer in layers[:4]
             if isinstance(layer, dict)
         ],
+    }
+
+
+def _compact_subjective_memory_recall(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {}
+    return {
+        "version": value.get("version"),
+        "query": value.get("query"),
+        "count": value.get("count"),
+        "recordIds": _compact_list(value.get("recordIds"), 6),
+        "sourceEventIds": _compact_list(value.get("sourceEventIds"), 6),
     }
 
 

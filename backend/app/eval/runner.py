@@ -446,6 +446,7 @@ def _run_runtime_process_scenario(
     goal_event_ids = {str(event.get("eventId") or "") for event in goal_tool_events}
     goal_trace_ids = {str(event.get("traceId") or "") for event in goal_tool_events}
     memory_source_ids = {str(item.get("sourceEventId") or "") for item in subjective_items}
+    subjective_memories_for_decision = [item for item in subjective_items if str(item.get("agentId") or "") == scenario.npc_id]
     relationship_source_ids = {
         str(source_id)
         for edge in relationship_items
@@ -464,18 +465,21 @@ def _run_runtime_process_scenario(
         scenario.npc_id,
         delta_minutes=20.0,
         relationship_edges=relationship_edges_for_decision,
+        subjective_memory_records=subjective_memories_for_decision,
     )
     decision_without_relationship_memory = runtime.motivation_engine.evaluate_npc(
         runtime.world,
         scenario.npc_id,
         delta_minutes=20.0,
         relationship_edges=[],
+        subjective_memory_records=[],
     )
     counterfactual_replay = _build_counterfactual_replay(
         scenario=scenario,
         decision_with_relationship_memory=decision_with_relationship_memory,
         decision_without_relationship_memory=decision_without_relationship_memory,
         relationship_source_ids=relationship_source_ids,
+        subjective_memory_source_ids=memory_source_ids,
     )
     process_checks = {
         "goal_relevant_tool_event": bool(goal_tool_events),
@@ -497,7 +501,7 @@ def _run_runtime_process_scenario(
         total_interventions=1,
         state_changes_with_source=state_changes_with_source,
         relationship_relevant_decisions=1,
-        decisions_with_relationship_memory=1 if counterfactual_replay["effect"] else 0,
+        decisions_with_relationship_memory=1 if counterfactual_replay["relationshipEffect"] else 0,
     )
     return {
         "scenario": scenario.to_dict(),
@@ -695,6 +699,7 @@ def _build_counterfactual_replay(
     decision_with_relationship_memory: dict[str, Any],
     decision_without_relationship_memory: dict[str, Any],
     relationship_source_ids: set[str],
+    subjective_memory_source_ids: set[str],
 ) -> dict[str, Any]:
     with_decision = _decision_payload(decision_with_relationship_memory)
     without_decision = _decision_payload(decision_without_relationship_memory)
@@ -707,13 +712,29 @@ def _build_counterfactual_replay(
         if _relationship_ref_matches_pair(ref, scenario.npc_id, scenario.target_npc_id)
         and _relationship_ref_uses_sources(ref, relationship_source_ids)
     ]
-    effect = bool(relevant_refs) and bool(selected_with) and bool(selected_without) and selected_with != selected_without
+    subjective_memory_refs = [ref for ref in with_decision.get("subjectiveMemoryRefs", []) if isinstance(ref, dict)]
+    relevant_subjective_memory_refs = [
+        ref
+        for ref in subjective_memory_refs
+        if _subjective_memory_ref_uses_sources(ref, subjective_memory_source_ids)
+    ]
+    score_effect = _candidate_scores_changed(
+        list(with_decision.get("candidateScores", [])),
+        list(without_decision.get("candidateScores", [])),
+    )
+    decision_effect = bool(selected_with) and bool(selected_without) and (selected_with != selected_without or score_effect)
+    relationship_effect = bool(relevant_refs) and decision_effect
+    subjective_memory_effect = bool(relevant_subjective_memory_refs) and decision_effect
     return {
         "selectedWithRelationshipMemory": selected_with or None,
         "selectedWithoutRelationshipMemory": selected_without or None,
-        "effect": effect,
+        "effect": relationship_effect or subjective_memory_effect,
+        "relationshipEffect": relationship_effect,
+        "subjectiveMemoryEffect": subjective_memory_effect,
         "relationshipEdgeRefs": relationship_refs,
         "relevantRelationshipEdgeRefs": relevant_refs,
+        "subjectiveMemoryRefs": subjective_memory_refs,
+        "relevantSubjectiveMemoryRefs": relevant_subjective_memory_refs,
         "candidateScoresWithRelationshipMemory": list(with_decision.get("candidateScores", [])),
         "candidateScoresWithoutRelationshipMemory": list(without_decision.get("candidateScores", [])),
         "reasonWithRelationshipMemory": with_decision.get("reason"),
@@ -740,6 +761,29 @@ def _relationship_ref_uses_sources(ref: dict[str, Any], relationship_source_ids:
         source_values = []
     source_event_ids = {str(source_id) for source_id in source_values if str(source_id)}
     return bool(source_event_ids & relationship_source_ids)
+
+
+def _subjective_memory_ref_uses_sources(ref: dict[str, Any], subjective_memory_source_ids: set[str]) -> bool:
+    source_event_id = str(ref.get("sourceEventId") or "")
+    return bool(source_event_id and source_event_id in subjective_memory_source_ids)
+
+
+def _candidate_scores_changed(with_scores: list[Any], without_scores: list[Any]) -> bool:
+    without_by_tool = {
+        str(item.get("toolId") or ""): item
+        for item in without_scores
+        if isinstance(item, dict)
+    }
+    for item in with_scores:
+        if not isinstance(item, dict):
+            continue
+        tool_id = str(item.get("toolId") or "")
+        other = without_by_tool.get(tool_id, {})
+        if round(float(item.get("score") or 0.0), 6) != round(float(other.get("score") or 0.0), 6):
+            return True
+        if round(float(item.get("subjectiveMemoryBonus") or 0.0), 6) != round(float(other.get("subjectiveMemoryBonus") or 0.0), 6):
+            return True
+    return False
 
 
 def _shortcut_events(relationship_items: list[dict[str, Any]]) -> int:
