@@ -19,6 +19,7 @@ class ArbitrationInput:
     relationship_edges: tuple[dict[str, Any], ...] = ()
     subjective_memories: tuple[dict[str, Any], ...] = ()
     heuristics: tuple[dict[str, Any], ...] = ()
+    decision_budgets: tuple[dict[str, Any], ...] = ()
     world_tick: int = 0
 
 
@@ -60,6 +61,7 @@ class ArbitrationLayer:
             arbitration_input.relationship_edges,
             arbitration_input.subjective_memories,
             arbitration_input.heuristics,
+            arbitration_input.decision_budgets,
             arbitration_input.npc_id,
             arbitration_input.need_id,
             arbitration_input.world_tick,
@@ -140,6 +142,7 @@ class ArbitrationLayer:
         relationship_edges: tuple[dict[str, Any], ...],
         subjective_memories: tuple[dict[str, Any], ...],
         heuristics: tuple[dict[str, Any], ...],
+        decision_budgets: tuple[dict[str, Any], ...],
         npc_id: str,
         need_id: str,
         world_tick: int,
@@ -147,6 +150,11 @@ class ArbitrationLayer:
         """对候选工具打分；记忆证据只影响同一需求候选内部排序，避免越权改需求。"""
         tier_rank = {"physiological": 0, "vocational": 1, "social_strategic": 2}
         relationship_strength = self._relationship_strength(relationship_edges, npc_id)
+        decision_budget_by_tool = {
+            str(item.get("toolId") or ""): dict(item)
+            for item in decision_budgets
+            if isinstance(item, dict) and item.get("toolId")
+        }
         scored: list[dict[str, Any]] = []
         for tool in candidates:
             tier_score = 1.0 - float(tier_rank.get(tool.tier, 99)) * 0.1
@@ -160,6 +168,7 @@ class ArbitrationLayer:
             subjective_memory_bonus = self._subjective_memory_bonus(subjective_memory_refs)
             heuristic_refs = self._heuristic_refs(heuristics, tool.tool_id, need_id, npc_id, world_tick)
             heuristic_bonus = self._heuristic_bonus(heuristic_refs)
+            decision_budget = decision_budget_by_tool.get(tool.tool_id, {})
             score = tier_score + duration_score + relationship_bonus + subjective_memory_bonus + heuristic_bonus
             scored.append(
                 {
@@ -172,6 +181,7 @@ class ArbitrationLayer:
                     "subjectiveMemoryRefs": subjective_memory_refs,
                     "heuristicBonus": heuristic_bonus,
                     "heuristicRefs": heuristic_refs,
+                    "decisionBudget": decision_budget,
                 }
             )
         return sorted(
@@ -364,4 +374,7 @@ class ArbitrationLayer:
             "heuristicBonus": round(float(item["heuristicBonus"]), 6),
             "heuristicRefCount": len(item.get("heuristicRefs", [])),
             "heuristicConflictCount": sum(1 for ref in item.get("heuristicRefs", []) if isinstance(ref, dict) and ref.get("conflictResolution") != "none"),
+            "decisionBudgetRoute": item.get("decisionBudget", {}).get("route"),
+            "decisionBudgetChannel": item.get("decisionBudget", {}).get("channel"),
+            "decisionBudgetRemaining": item.get("decisionBudget", {}).get("remaining"),
         }

@@ -43,6 +43,7 @@ class MotivationEngine:
                 relationship_edges=tuple(relationship_edges),
                 subjective_memories=tuple(subjective_memory_records),
                 heuristics=tuple(heuristics),
+                decision_budgets=capability_resolution.decision_budgets,
                 world_tick=world_tick,
             )
         )

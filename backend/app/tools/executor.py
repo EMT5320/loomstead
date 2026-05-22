@@ -4,6 +4,7 @@ from copy import deepcopy
 from typing import Any
 
 from app.memory.memory_store import remember
+from app.runtime.decision_budget import DecisionBudgetStore
 from app.runtime.trace_schema import build_trace_envelope, with_trace_payload, world_time_payload
 from app.tools.contracts import ToolContractValidator, ToolContractViolation
 from app.tools.registry import ToolRegistry
@@ -47,9 +48,15 @@ TOOL_SUMMARIES = {
 class ToolExecutor:
     """Phase 2 工具执行器：按 ToolDefinition 推进持续动作、位移和权威副作用。"""
 
-    def __init__(self, tool_registry: ToolRegistry | None = None, contract_validator: ToolContractValidator | None = None) -> None:
+    def __init__(
+        self,
+        tool_registry: ToolRegistry | None = None,
+        contract_validator: ToolContractValidator | None = None,
+        decision_budget: DecisionBudgetStore | None = None,
+    ) -> None:
         self.tool_registry = tool_registry or ToolRegistry()
         self.contract_validator = contract_validator or ToolContractValidator()
+        self.decision_budget = decision_budget or DecisionBudgetStore()
 
     def tick(self, *, world: dict[str, Any], decisions: list[dict[str, Any]], delta_seconds: float) -> dict[str, Any]:
         if delta_seconds <= 0:
@@ -91,7 +98,7 @@ class ToolExecutor:
             if state.get("phase") == "moving":
                 self._advance_move(world=world, presence=presence, agent=agent, selected=selected, state=state, delta_seconds=delta_seconds, events=events)
             if state.get("phase") == "performing":
-                self._advance_action(selected=selected, state=state, delta_seconds=delta_seconds, events=events, completed_actions=completed_actions)
+                self._advance_action(world=world, selected=selected, state=state, delta_seconds=delta_seconds, events=events, completed_actions=completed_actions)
             after = self._agent_snapshot(agent, presence, state)
             if after != before:
                 agent_diffs.append(after)
@@ -108,6 +115,7 @@ class ToolExecutor:
         target_anchor = world.get("anchors", {}).get(target_anchor_id, {})
         target_location_id = str(target_anchor.get("locationId") or "") if isinstance(target_anchor, dict) else ""
         tool_input = self._default_tool_input(world, npc_id, selected_tool_id, decision)
+        decision_budget = self.decision_budget.snapshot_for_tool(world, npc_id, tool)
         return {
             "npcId": npc_id,
             "toolId": selected_tool_id,
@@ -118,6 +126,7 @@ class ToolExecutor:
             "input": tool_input,
             "durationSeconds": float(tool.duration_seconds or DEFAULT_TOOL_DURATION_SECONDS),
             "observerVisibility": tool.observer_visibility,
+            "decisionBudget": decision_budget,
             "primaryNeed": decision.get("primaryNeed", {}),
             "contributingSources": list(decision.get("decision", {}).get("contributingSources") or []),
         }
@@ -267,6 +276,8 @@ class ToolExecutor:
                 "actionTickAccumulator": 0.0,
                 "input": deepcopy(selected.get("input") or {}),
                 "observerVisibility": selected.get("observerVisibility"),
+                "decisionBudget": deepcopy(selected.get("decisionBudget") or {}),
+                "decisionBudgetConsumed": False,
                 "primaryNeed": deepcopy(selected.get("primaryNeed") or {}),
                 "contributingSources": deepcopy(selected.get("contributingSources") or []),
             }
@@ -321,6 +332,7 @@ class ToolExecutor:
             "input": deepcopy(state.get("input") or fallback.get("input") or {}),
             "durationSeconds": float(state.get("actionDurationSeconds") or fallback.get("durationSeconds") or DEFAULT_TOOL_DURATION_SECONDS),
             "observerVisibility": state.get("observerVisibility") or fallback.get("observerVisibility"),
+            "decisionBudget": deepcopy(state.get("decisionBudget") or fallback.get("decisionBudget") or {}),
             "primaryNeed": deepcopy(state.get("primaryNeed") or fallback.get("primaryNeed") or {}),
             "contributingSources": deepcopy(state.get("contributingSources") or fallback.get("contributingSources") or []),
         }
@@ -420,11 +432,14 @@ class ToolExecutor:
         state["phase"] = "performing"
         events.append({"type": "npc.arrived", "npcId": str(selected.get("npcId") or ""), "actionId": str(state.get("actionId") or ""), "toolId": str(state.get("toolId") or ""), "anchorId": target_anchor_id, "locationId": target_location_id})
 
-    def _advance_action(self, *, selected: dict[str, Any], state: dict[str, Any], delta_seconds: float, events: list[dict[str, Any]], completed_actions: list[dict[str, Any]]) -> None:
+    def _advance_action(self, *, world: dict[str, Any], selected: dict[str, Any], state: dict[str, Any], delta_seconds: float, events: list[dict[str, Any]], completed_actions: list[dict[str, Any]]) -> None:
         npc_id = str(selected.get("npcId") or "")
         tool_id = str(state.get("toolId") or selected.get("toolId") or "")
         duration = float(state.get("actionDurationSeconds") or DEFAULT_TOOL_DURATION_SECONDS)
         if not state.get("actionStarted"):
+            budget_event = self._decision_budget_event(world=world, npc_id=npc_id, tool_id=tool_id, state=state)
+            if budget_event:
+                events.append(budget_event)
             state["actionStarted"] = True
             events.append(
                 {
@@ -435,6 +450,7 @@ class ToolExecutor:
                     "durationSeconds": duration,
                     "summary": str(state.get("summary") or ""),
                     "source": "motivation_engine",
+                    "decisionBudget": deepcopy(state.get("decisionBudget") or {}),
                     "contributingSources": deepcopy(state.get("contributingSources") or []),
                 }
             )
@@ -456,12 +472,37 @@ class ToolExecutor:
                 "targetAnchorId": str(state.get("targetAnchorId") or ""),
                 "targetLocationId": str(state.get("targetLocationId") or ""),
                 "input": deepcopy(state.get("input") or {}),
+                "decisionBudget": deepcopy(state.get("decisionBudget") or {}),
                 "contributingSources": deepcopy(state.get("contributingSources") or []),
             }
         )
         state["actionStarted"] = False
         state["actionElapsedSeconds"] = 0.0
         state["actionTickAccumulator"] = 0.0
+
+    def _decision_budget_event(self, *, world: dict[str, Any], npc_id: str, tool_id: str, state: dict[str, Any]) -> dict[str, Any] | None:
+        if state.get("decisionBudgetConsumed"):
+            return None
+        state["decisionBudgetConsumed"] = True
+        tool = self.tool_registry.get(tool_id)
+        if tool is None:
+            return None
+        budget = self.decision_budget.consume_for_tool(world, npc_id, tool)
+        if not budget:
+            return None
+        state["decisionBudget"] = deepcopy(budget)
+        return {
+            "type": str(budget.get("eventType") or "budget.decision_consumed"),
+            "npcId": npc_id,
+            "toolId": tool_id,
+            "channel": budget.get("channel"),
+            "route": budget.get("route"),
+            "reason": budget.get("reason"),
+            "cost": budget.get("cost"),
+            "remaining": budget.get("remaining"),
+            "remainingBefore": budget.get("remainingBefore"),
+            "source": "motivation_engine",
+        }
 
     def _apply_tool_effect(self, world: dict[str, Any], agent: dict[str, Any], completion: dict[str, Any]) -> str:
         tool_id = str(completion.get("toolId") or "")
@@ -615,6 +656,7 @@ class ToolExecutor:
             "toolDecision": {
                 "toolId": str(state.get("toolId") or ""),
                 "source": "motivation_engine",
+                "decisionBudget": deepcopy(state.get("decisionBudget") or {}),
             },
         }
 

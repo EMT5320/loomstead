@@ -36,6 +36,7 @@ from app.providers.rule_based_provider import RuleBasedProvider
 from app.runtime.action_executor import execute_action, maybe_population_event
 from app.runtime.action_parser import parse_provider_output
 from app.runtime.capability_registry import CapabilityRegistry
+from app.runtime.decision_budget import DecisionBudgetStore
 from app.runtime.motivation_engine import MotivationEngine
 from app.runtime.trace_schema import TRACE_SCHEMA_VERSION, build_trace_envelope, trace_event_snapshot, with_trace_payload, world_time_payload
 from app.skills import (
@@ -90,9 +91,10 @@ class AgentRuntime:
         self.model_config = ModelConfigStore(model_config_path)
         self.rule_provider = RuleBasedProvider()
         self.cloud_provider = CloudApiProvider()
-        self.capability_registry = CapabilityRegistry()
+        self.decision_budget = DecisionBudgetStore()
+        self.capability_registry = CapabilityRegistry(decision_budget=self.decision_budget)
         self.motivation_engine = MotivationEngine(self.capability_registry)
-        self.tool_executor = ToolExecutor(self.capability_registry.tool_registry)
+        self.tool_executor = ToolExecutor(self.capability_registry.tool_registry, decision_budget=self.decision_budget)
         self.subjective_memory_store = SubjectiveMemoryStore()
         self.relationship_edge_store = RelationshipEdgeStore()
         self.heuristic_library = HeuristicLibrary()
@@ -176,6 +178,7 @@ class AgentRuntime:
             "traceSchemaVersion": TRACE_SCHEMA_VERSION,
             "tools": self.capability_registry.tool_registry.to_debug_payload(),
             "needAccumulator": self.motivation_engine.need_accumulator.debug_snapshot(self.world, npc_ids=npc_ids, delta_minutes=20.0),
+            "decisionBudget": self.decision_budget.debug_snapshot(self.world, npc_ids=npc_ids),
             "motivation": {"version": "motivation_engine.v0", "items": self._phase2_decisions(npc_ids[:6])},
             "toolRuntime": self._phase2_tool_runtime_snapshot(npc_ids),
             "subjectiveMemory": self.subjective_memory_store.debug_snapshot(agent_id=npc_id, limit=20),
@@ -306,6 +309,7 @@ class AgentRuntime:
                     "moveProgress": round(float(state.get("moveProgress", 0.0)), 3),
                     "elapsedSeconds": round(float(state.get("actionElapsedSeconds", 0.0)), 2),
                     "durationSeconds": round(float(state.get("actionDurationSeconds", 0.0)), 2),
+                    "decisionBudget": dict(state.get("decisionBudget") or {}) if isinstance(state.get("decisionBudget"), dict) else {},
                     "contributingSources": list(state.get("contributingSources") or []),
                 }
             )
@@ -315,7 +319,14 @@ class AgentRuntime:
         limit = self._int_filter(filters, "limit", 20)
         agent_id_filter = self._str_filter(filters, "agentId") or self._str_filter(filters, "agent_id")
         event_type_filter = self._str_filter(filters, "eventType") or self._str_filter(filters, "event_type")
-        trace_types = {"tool.execution_completed", "tool.execution_failed", "tool.execution_interrupted", "memory.result_observed"}
+        trace_types = {
+            "tool.execution_completed",
+            "tool.execution_failed",
+            "tool.execution_interrupted",
+            "memory.result_observed",
+            "budget.decision_consumed",
+            "budget.decision_fallback",
+        }
         items: list[dict[str, Any]] = []
         for event in self.event_store.list():
             event_type = str(event.get("type") or "")

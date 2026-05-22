@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from app.runtime.decision_budget import DecisionBudgetStore
 from app.tools import Precondition, ToolDefinition, ToolRegistry
 
 NEED_TO_TOOL_PREFIXES = {
@@ -24,6 +25,8 @@ class CapabilityContext:
     anchor_id: str | None
     inventory: tuple[dict[str, Any], ...]
     relationship_ids: tuple[str, ...]
+    day: int
+    phase: str
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -33,6 +36,8 @@ class CapabilityContext:
             "anchorId": self.anchor_id,
             "inventoryCount": len(self.inventory),
             "relationshipIds": list(self.relationship_ids),
+            "day": self.day,
+            "phase": self.phase,
         }
 
 
@@ -42,6 +47,7 @@ class CapabilityResolution:
     allowed_tools: tuple[ToolDefinition, ...]
     filter_trace: tuple[dict[str, Any], ...]
     rejected_tools: tuple[dict[str, Any], ...]
+    decision_budgets: tuple[dict[str, Any], ...] = ()
 
     def to_debug_dict(self) -> dict[str, Any]:
         return {
@@ -50,12 +56,14 @@ class CapabilityResolution:
             "layers": [dict(layer) for layer in self.filter_trace],
             "allowedToolIds": [tool.tool_id for tool in self.allowed_tools],
             "rejectedTools": [dict(item) for item in self.rejected_tools],
+            "decisionBudgets": [dict(item) for item in self.decision_budgets],
         }
 
 
 class CapabilityRegistry:
-    def __init__(self, tool_registry: ToolRegistry | None = None) -> None:
+    def __init__(self, tool_registry: ToolRegistry | None = None, decision_budget: DecisionBudgetStore | None = None) -> None:
         self.tool_registry = tool_registry or ToolRegistry()
+        self.decision_budget = decision_budget or DecisionBudgetStore()
 
     def resolve(self, world: dict[str, Any], npc_id: str, need_id: str) -> list[ToolDefinition]:
         return list(self.resolve_with_debug(world, npc_id, need_id).allowed_tools)
@@ -87,6 +95,7 @@ class CapabilityRegistry:
             ("preconditions", self._precondition_decision),
             ("npc_profile", self._npc_profile_decision),
             ("event_scope", self._event_scope_decision),
+            ("decision_budget", self._decision_budget_decision),
         ):
             next_active: list[ToolDefinition] = []
             decisions: list[dict[str, Any]] = []
@@ -115,6 +124,10 @@ class CapabilityRegistry:
             allowed_tools=tuple(active_tools),
             filter_trace=tuple(layers),
             rejected_tools=tuple(rejected),
+            decision_budgets=tuple(
+                self.decision_budget.snapshot_for_tool(world, context.npc_id, tool)
+                for tool in active_tools
+            ),
         )
 
     def build_context(self, world: dict[str, Any], npc_id: str, need_id: str) -> CapabilityContext | None:
@@ -133,6 +146,8 @@ class CapabilityRegistry:
             anchor_id=str(agent.get("anchorId")) if agent.get("anchorId") else None,
             inventory=tuple(agent.get("inventory", []) if isinstance(agent.get("inventory"), list) else []),
             relationship_ids=tuple(sorted(set(relation_ids))),
+            day=int(world.get("clock", {}).get("day", 1)) if isinstance(world.get("clock"), dict) else 1,
+            phase=str(world.get("clock", {}).get("phase") or "morning") if isinstance(world.get("clock"), dict) else "morning",
         )
 
     def _need_relevance_decision(self, world: dict[str, Any], context: CapabilityContext, tool: ToolDefinition) -> tuple[bool, str, dict[str, Any]]:
@@ -178,6 +193,15 @@ class CapabilityRegistry:
             allowed = tool.tool_id in allowed_ids or any(tool.tool_id.startswith(prefix) for prefix in allowed_prefixes)
             return allowed, "allowed_by_event_scope" if allowed else "outside_event_scope", {"activeFocus": self._event_scope_debug(active_focus)}
         return True, "no_event_scope_constraint", {}
+
+    def _decision_budget_decision(self, world: dict[str, Any], context: CapabilityContext, tool: ToolDefinition) -> tuple[bool, str, dict[str, Any]]:
+        budget = self.decision_budget.snapshot_for_tool(world, context.npc_id, tool)
+        route = str(budget.get("route") or "rule")
+        if route == "rule_fallback":
+            return True, "llm_budget_exhausted_rule_fallback", budget
+        if route == "llm":
+            return True, "budget_available", budget
+        return True, "no_llm_budget_required", budget
 
     def _location_precondition_reason(self, world: dict[str, Any], context: CapabilityContext, tool: ToolDefinition) -> str | None:
         location_id = context.location_id

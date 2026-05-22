@@ -484,6 +484,65 @@ def assert_motivation_profile_weight_contract() -> None:
         raise RuntimeError("NeedAccumulator 应读取 motivationProfile.needs.energy.weight")
 
 
+def assert_phase2_decision_budget_routing() -> dict:
+    """确认 LLM eligible 工具会经过决策预算路由，并在耗尽时降级为规则路径。"""
+    budget_app = create_town_app(provider_mode="rule")
+    runtime = budget_app.runtime
+    runtime.get_game_state()
+    world = runtime.world
+    npc_id = "kai"
+    agent = world["agents"][npc_id]
+    agent["status"].update({"energy": 100, "money": 100, "social": 0})
+    agent["todayGoals"] = []
+    agent["locationId"] = "plaza"
+    agent["anchorId"] = "plaza_fountain"
+    for presence in world.get("npcPresence", []):
+        if presence.get("agentId") == npc_id:
+            presence["locationId"] = "plaza"
+            presence["anchorId"] = "plaza_fountain"
+    runtime.decision_budget.exhaust(world, npc_id, "social_strategic_layer")
+
+    decision = runtime.motivation_engine.evaluate_npc(world, npc_id, delta_minutes=0.0)
+    capability_filters = decision.get("capabilityFilters", {})
+    budget_layer = next((layer for layer in capability_filters.get("layers", []) if isinstance(layer, dict) and layer.get("layer") == "decision_budget"), None)
+    if not isinstance(budget_layer, dict):
+        raise RuntimeError("CapabilityRegistry 应输出 decision_budget 路由层")
+    fallback_decisions = [
+        item
+        for item in budget_layer.get("decisions", [])
+        if isinstance(item, dict) and item.get("metadata", {}).get("route") == "rule_fallback"
+    ]
+    if not fallback_decisions:
+        raise RuntimeError("预算耗尽时，LLM eligible 工具应标记 rule_fallback")
+    selected_score = next(
+        (
+            item
+            for item in decision.get("decision", {}).get("candidateScores", [])
+            if isinstance(item, dict) and item.get("toolId") == decision.get("decision", {}).get("selectedToolId")
+        ),
+        {},
+    )
+    if selected_score.get("decisionBudgetRoute") != "rule_fallback":
+        raise RuntimeError("Arbitration candidateScores 应展开选中工具的预算路由")
+
+    planned = runtime.tool_executor.plan_action(world, decision)
+    if planned.get("decisionBudget", {}).get("route") != "rule_fallback":
+        raise RuntimeError("ToolExecutor plan_action 应携带 decisionBudget.route")
+    execution = runtime.tool_executor.tick(world=world, decisions=[decision], delta_seconds=1.0)
+    fallback_event = next((event for event in execution.get("events", []) if event.get("type") == "budget.decision_fallback"), None)
+    if not isinstance(fallback_event, dict) or fallback_event.get("reason") != "llm_budget_exhausted_rule_fallback":
+        raise RuntimeError("工具开始执行时应写入 budget.decision_fallback 事件")
+    debug_budget = runtime.decision_budget.debug_snapshot(world, npc_ids=[npc_id])
+    remaining = debug_budget["items"][0]["remaining"].get("social_strategic_layer")
+    if remaining != 0:
+        raise RuntimeError("rule_fallback 不应继续消耗已耗尽预算")
+    return {
+        "route": planned["decisionBudget"].get("route"),
+        "event": fallback_event.get("type"),
+        "remaining": remaining,
+    }
+
+
 def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
     """确认 /api/debug 总览结构稳定，并复用压缩后的 Debug turn 契约。"""
     missing = sorted(REQUIRED_DEBUG_SNAPSHOT_FIELDS - set(payload))
@@ -499,6 +558,9 @@ def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
     tools = phase2.get("tools")
     if not isinstance(tools, dict) or int(tools.get("count") or 0) < 8:
         raise RuntimeError(f"{label}.phase2.tools 应返回至少 8 个 ToolDefinition")
+    decision_budget = phase2.get("decisionBudget")
+    if not isinstance(decision_budget, dict) or decision_budget.get("version") != "decision_budget.v1":
+        raise RuntimeError(f"{label}.phase2.decisionBudget 应返回 decision_budget.v1")
     motivation = phase2.get("motivation")
     if not isinstance(motivation, dict) or motivation.get("version") != "motivation_engine.v0" or not motivation.get("items"):
         raise RuntimeError(f"{label}.phase2.motivation 应返回 MotivationEngine 快照")
@@ -515,13 +577,13 @@ def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
     heuristic_recall = motivation["items"][0].get("heuristicRecall")
     if not isinstance(heuristic_recall, dict) or heuristic_recall.get("version") != "heuristic_recall.v1":
         raise RuntimeError(f"{label}.phase2.motivation 应包含 heuristic_recall.v1")
-    if not all("subjectiveMemoryBonus" in item and "subjectiveMemoryRefCount" in item and "heuristicBonus" in item and "heuristicRefCount" in item for item in first_decision.get("candidateScores", []) if isinstance(item, dict)):
-        raise RuntimeError(f"{label}.phase2.motivation.candidateScores 应包含主观记忆和启发式评分字段")
+    if not all("subjectiveMemoryBonus" in item and "subjectiveMemoryRefCount" in item and "heuristicBonus" in item and "heuristicRefCount" in item and "decisionBudgetRoute" in item for item in first_decision.get("candidateScores", []) if isinstance(item, dict)):
+        raise RuntimeError(f"{label}.phase2.motivation.candidateScores 应包含主观记忆、启发式和预算路由评分字段")
     capability_filters = motivation["items"][0].get("capabilityFilters")
     if not isinstance(capability_filters, dict) or capability_filters.get("version") != "capability_resolution.v1":
         raise RuntimeError(f"{label}.phase2.motivation 应包含 capability_resolution.v1")
     layer_names = {str(layer.get("layer")) for layer in capability_filters.get("layers", []) if isinstance(layer, dict)}
-    required_layers = {"need_relevance", "preconditions", "npc_profile", "event_scope"}
+    required_layers = {"need_relevance", "preconditions", "npc_profile", "event_scope", "decision_budget"}
     if not required_layers.issubset(layer_names):
         raise RuntimeError(f"{label}.phase2.motivation.capabilityFilters 缺少过滤层：{required_layers - layer_names}")
     if not capability_filters.get("allowedToolIds"):
@@ -553,7 +615,7 @@ def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
         raise RuntimeError(f"{label}.phase2.recentTraceEvents.decision.details 应包含启发式召回字段")
     detail_filters = decision_details.get("capabilityFilters")
     if not isinstance(detail_filters, dict) or {str(layer.get("layer")) for layer in detail_filters.get("layers", []) if isinstance(layer, dict)} != required_layers:
-        raise RuntimeError(f"{label}.phase2.recentTraceEvents.decision.details 应包含四层 capabilityFilters")
+        raise RuntimeError(f"{label}.phase2.recentTraceEvents.decision.details 应包含五层 capabilityFilters")
     assert_compact_debug_turns(payload["debugTurns"], f"{label}.debugTurns")
 
 
@@ -1434,6 +1496,7 @@ if not memory_search["items"]:
 http_debug_summary = assert_http_debug_endpoints(app)
 fallback_summary = assert_provider_fallback_debug()
 assert_motivation_profile_weight_contract()
+phase2_budget_summary = assert_phase2_decision_budget_routing()
 phase2_failure_interrupt_summary = assert_phase2_failure_and_interrupt_trace()
 
 tick_before_step = app.get_public_state()["clock"]["tick"]
@@ -1460,6 +1523,7 @@ print(
         "memoryHits": http_debug_summary["memoryHits"],
         "influenceEvents": http_debug_summary["influenceEvents"],
         "fallbackItems": fallback_summary["fallbackItems"],
+        "phase2Budget": phase2_budget_summary,
         "phase2FailureInterrupt": phase2_failure_interrupt_summary,
     },
 )

@@ -138,6 +138,17 @@ def _trace_event_details(event_type: str, payload: dict[str, Any]) -> dict[str, 
             "relationshipEdgeCount": len(payload.get("relationshipEdges", [])) if isinstance(payload.get("relationshipEdges"), list) else 0,
             "heuristicId": heuristic.get("heuristicId") if heuristic else None,
         }
+    if event_type in {"budget.decision_consumed", "budget.decision_fallback"}:
+        return {
+            "npcId": payload.get("npcId"),
+            "toolId": payload.get("toolId"),
+            "channel": payload.get("channel"),
+            "route": payload.get("route"),
+            "reason": payload.get("reason"),
+            "cost": payload.get("cost"),
+            "remaining": payload.get("remaining"),
+            "remainingBefore": payload.get("remainingBefore"),
+        }
     return {}
 
 
@@ -165,7 +176,7 @@ def _compact_capability_filters(value: Any) -> dict[str, Any]:
                 "rejectedCount": layer.get("rejectedCount"),
                 "sampleDecisions": _compact_list(layer.get("decisions"), 3),
             }
-            for layer in layers[:4]
+            for layer in layers[:6]
             if isinstance(layer, dict)
         ],
     }
