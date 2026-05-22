@@ -171,6 +171,7 @@ class AgentRuntime:
         filters = filters or {}
         npc_id = self._str_filter(filters, "agentId") or self._str_filter(filters, "agent_id")
         npc_ids = [npc_id] if npc_id else list(DAY1_NPC_IDS)
+        world_tick = int(self.world.get("clock", {}).get("tick", 0)) if isinstance(self.world.get("clock"), dict) else 0
         return {
             "traceSchemaVersion": TRACE_SCHEMA_VERSION,
             "tools": self.capability_registry.tool_registry.to_debug_payload(),
@@ -179,7 +180,7 @@ class AgentRuntime:
             "toolRuntime": self._phase2_tool_runtime_snapshot(npc_ids),
             "subjectiveMemory": self.subjective_memory_store.debug_snapshot(agent_id=npc_id, limit=20),
             "relationshipEdges": self.relationship_edge_store.debug_snapshot(agent_id=npc_id, limit=30),
-            "heuristics": self.heuristic_library.debug_snapshot(agent_id=npc_id, limit=20),
+            "heuristics": self.heuristic_library.debug_snapshot(agent_id=npc_id, limit=20, world_tick=world_tick),
             "recentTraceEvents": self._phase2_recent_trace_events(filters),
         }
 
@@ -266,6 +267,7 @@ class AgentRuntime:
                         for edge in self.relationship_edge_store.list(agent_id=npc_id, limit=12)
                     ],
                     subjective_memory_records=self._phase2_subjective_memory_recall(npc_id),
+                    heuristics=self._phase2_heuristic_recall(npc_id),
                 )
             )
         return decisions
@@ -278,6 +280,13 @@ class AgentRuntime:
                 query="tool_result",
                 limit=limit,
             )
+        ]
+
+    def _phase2_heuristic_recall(self, npc_id: str, limit: int = 8) -> list[dict[str, Any]]:
+        world_tick = int(self.world.get("clock", {}).get("tick", 0)) if isinstance(self.world.get("clock"), dict) else 0
+        return [
+            item.to_dict(world_tick=world_tick)
+            for item in self.heuristic_library.list(agent_id=npc_id, limit=limit)
         ]
 
     def _phase2_tool_runtime_snapshot(self, npc_ids: list[str]) -> dict[str, Any]:
@@ -1085,6 +1094,7 @@ class AgentRuntime:
         capabilities = decision.get("capabilities", []) if isinstance(decision.get("capabilities"), list) else []
         capability_filters = decision.get("capabilityFilters", {}) if isinstance(decision.get("capabilityFilters"), dict) else {}
         subjective_memory_recall = decision.get("subjectiveMemoryRecall", {}) if isinstance(decision.get("subjectiveMemoryRecall"), dict) else {}
+        heuristic_recall = decision.get("heuristicRecall", {}) if isinstance(decision.get("heuristicRecall"), dict) else {}
         return {
             "npcId": decision.get("npcId"),
             "npcName": decision.get("npcName"),
@@ -1094,10 +1104,12 @@ class AgentRuntime:
             "capabilities": [self._phase2_capability_ref(item) for item in capabilities[:12] if isinstance(item, dict)],
             "capabilityFilters": self._phase2_capability_filter_ref(capability_filters),
             "subjectiveMemoryRecall": self._phase2_subjective_memory_recall_ref(subjective_memory_recall),
+            "heuristicRecall": self._phase2_heuristic_recall_ref(heuristic_recall),
             "selectedToolId": selected_tool_id,
             "candidateScores": [dict(item) for item in decision_payload.get("candidateScores", []) if isinstance(item, dict)],
             "relationshipEdgeRefs": [dict(item) for item in decision_payload.get("relationshipEdgeRefs", []) if isinstance(item, dict)],
             "subjectiveMemoryRefs": [dict(item) for item in decision_payload.get("subjectiveMemoryRefs", []) if isinstance(item, dict)],
+            "heuristicRefs": [dict(item) for item in decision_payload.get("heuristicRefs", []) if isinstance(item, dict)],
             "contributingSources": [dict(item) for item in decision_payload.get("contributingSources", []) if isinstance(item, dict)],
             "decisionReason": decision_payload.get("reason"),
             "summary": f"{npc_name} 因 {need_id} 选择 {selected_tool_id or 'no_tool'}。",
@@ -1140,6 +1152,16 @@ class AgentRuntime:
             "query": recall.get("query"),
             "count": recall.get("count"),
             "recordIds": list(recall.get("recordIds", []))[:8] if isinstance(recall.get("recordIds"), list) else [],
+            "sourceEventIds": list(recall.get("sourceEventIds", []))[:8] if isinstance(recall.get("sourceEventIds"), list) else [],
+        }
+
+    def _phase2_heuristic_recall_ref(self, recall: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "version": recall.get("version"),
+            "worldTick": recall.get("worldTick"),
+            "count": recall.get("count"),
+            "activeCount": recall.get("activeCount"),
+            "heuristicIds": list(recall.get("heuristicIds", []))[:8] if isinstance(recall.get("heuristicIds"), list) else [],
             "sourceEventIds": list(recall.get("sourceEventIds", []))[:8] if isinstance(recall.get("sourceEventIds"), list) else [],
         }
 

@@ -5,6 +5,9 @@ from typing import Any
 
 from app.tools import ToolDefinition
 
+HEURISTIC_DECAY_PER_TICK = 0.01
+HEURISTIC_MIN_DECAY_FACTOR = 0.25
+
 
 @dataclass(frozen=True)
 class ArbitrationInput:
@@ -15,6 +18,8 @@ class ArbitrationInput:
     contributing_sources: tuple[dict[str, Any], ...]
     relationship_edges: tuple[dict[str, Any], ...] = ()
     subjective_memories: tuple[dict[str, Any], ...] = ()
+    heuristics: tuple[dict[str, Any], ...] = ()
+    world_tick: int = 0
 
 
 @dataclass(frozen=True)
@@ -29,6 +34,7 @@ class ArbitrationDecision:
     candidate_scores: tuple[dict[str, Any], ...] = ()
     relationship_edge_refs: tuple[dict[str, Any], ...] = ()
     subjective_memory_refs: tuple[dict[str, Any], ...] = ()
+    heuristic_refs: tuple[dict[str, Any], ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -42,6 +48,7 @@ class ArbitrationDecision:
             "candidateScores": [dict(item) for item in self.candidate_scores],
             "relationshipEdgeRefs": [dict(item) for item in self.relationship_edge_refs],
             "subjectiveMemoryRefs": [dict(item) for item in self.subjective_memory_refs],
+            "heuristicRefs": [dict(item) for item in self.heuristic_refs],
         }
 
 
@@ -52,7 +59,10 @@ class ArbitrationLayer:
             candidates,
             arbitration_input.relationship_edges,
             arbitration_input.subjective_memories,
+            arbitration_input.heuristics,
             arbitration_input.npc_id,
+            arbitration_input.need_id,
+            arbitration_input.world_tick,
         )
         selected_score = scored[0] if scored else None
         selected = selected_score["tool"] if selected_score else None
@@ -62,6 +72,7 @@ class ArbitrationLayer:
             else []
         )
         subjective_memory_refs = selected_score.get("subjectiveMemoryRefs", []) if selected_score else []
+        heuristic_refs = selected_score.get("heuristicRefs", []) if selected_score else []
         contributing_sources = arbitration_input.contributing_sources
         if relationship_refs:
             contributing_sources = (
@@ -82,9 +93,23 @@ class ArbitrationLayer:
                     "sourceEventIds": [ref["sourceEventId"] for ref in subjective_memory_refs if ref.get("sourceEventId")],
                 },
             )
+        if heuristic_refs:
+            contributing_sources = (
+                *contributing_sources,
+                {
+                    "type": "heuristic_refs",
+                    "count": len(heuristic_refs),
+                    "heuristicIds": [ref["heuristicId"] for ref in heuristic_refs],
+                    "sourceEventIds": [ref["sourceEventId"] for ref in heuristic_refs if ref.get("sourceEventId")],
+                },
+            )
         reason = "highest_rule_tier_fit" if selected else "no_capability_available"
-        if relationship_refs and subjective_memory_refs:
+        if heuristic_refs and (relationship_refs or subjective_memory_refs):
+            reason = "memory_and_heuristic_weighted_fit"
+        elif relationship_refs and subjective_memory_refs:
             reason = "relationship_and_subjective_memory_weighted_fit"
+        elif heuristic_refs:
+            reason = "heuristic_weighted_fit"
         elif subjective_memory_refs:
             reason = "subjective_memory_weighted_fit"
         elif relationship_refs:
@@ -100,6 +125,7 @@ class ArbitrationLayer:
             candidate_scores=tuple(self._score_to_debug(item) for item in scored),
             relationship_edge_refs=tuple(relationship_refs),
             subjective_memory_refs=tuple(subjective_memory_refs),
+            heuristic_refs=tuple(heuristic_refs),
         )
 
     def _select_tool(self, candidates: list[ToolDefinition]) -> ToolDefinition | None:
@@ -113,7 +139,10 @@ class ArbitrationLayer:
         candidates: list[ToolDefinition],
         relationship_edges: tuple[dict[str, Any], ...],
         subjective_memories: tuple[dict[str, Any], ...],
+        heuristics: tuple[dict[str, Any], ...],
         npc_id: str,
+        need_id: str,
+        world_tick: int,
     ) -> list[dict[str, Any]]:
         """对候选工具打分；记忆证据只影响同一需求候选内部排序，避免越权改需求。"""
         tier_rank = {"physiological": 0, "vocational": 1, "social_strategic": 2}
@@ -129,7 +158,9 @@ class ArbitrationLayer:
                 relationship_bonus = 0.03 * relationship_strength
             subjective_memory_refs = self._subjective_memory_refs(subjective_memories, tool.tool_id, npc_id)
             subjective_memory_bonus = self._subjective_memory_bonus(subjective_memory_refs)
-            score = tier_score + duration_score + relationship_bonus + subjective_memory_bonus
+            heuristic_refs = self._heuristic_refs(heuristics, tool.tool_id, need_id, npc_id, world_tick)
+            heuristic_bonus = self._heuristic_bonus(heuristic_refs)
+            score = tier_score + duration_score + relationship_bonus + subjective_memory_bonus + heuristic_bonus
             scored.append(
                 {
                     "tool": tool,
@@ -139,6 +170,8 @@ class ArbitrationLayer:
                     "relationshipBonus": relationship_bonus,
                     "subjectiveMemoryBonus": subjective_memory_bonus,
                     "subjectiveMemoryRefs": subjective_memory_refs,
+                    "heuristicBonus": heuristic_bonus,
+                    "heuristicRefs": heuristic_refs,
                 }
             )
         return sorted(
@@ -233,6 +266,91 @@ class ArbitrationLayer:
                 total += 0.08 * (1.0 + max(0.0, valence)) * confidence * relevance
         return max(-0.1, min(0.12, total))
 
+    def _heuristic_refs(self, heuristics: tuple[dict[str, Any], ...], tool_id: str, need_id: str, npc_id: str, world_tick: int) -> list[dict[str, Any]]:
+        refs: list[dict[str, Any]] = []
+        for heuristic in heuristics:
+            if str(heuristic.get("agentId") or "") != npc_id:
+                continue
+            if str(heuristic.get("status") or "active") != "active":
+                continue
+            adjustment = heuristic.get("adjustment") if isinstance(heuristic.get("adjustment"), dict) else {}
+            target_kind = ""
+            target_id = ""
+            relevance = 0.0
+            if str(adjustment.get("toolId") or "") == tool_id:
+                target_kind = "tool"
+                target_id = tool_id
+                relevance = 1.0
+            elif str(adjustment.get("needId") or "") == need_id:
+                target_kind = "need"
+                target_id = need_id
+                relevance = 1.0
+            if not target_kind:
+                continue
+            weight_delta = self._safe_float(adjustment.get("weightDelta"), 0.0)
+            if weight_delta == 0.0:
+                continue
+            effective_confidence = self._heuristic_effective_confidence(heuristic, world_tick)
+            applied_delta = weight_delta * effective_confidence * relevance
+            refs.append(
+                {
+                    "heuristicId": heuristic.get("heuristicId"),
+                    "triggerPattern": heuristic.get("triggerPattern"),
+                    "sourceEventId": heuristic.get("sourceEventId"),
+                    "targetKind": target_kind,
+                    "targetId": target_id,
+                    "weightDelta": round(weight_delta, 4),
+                    "confidence": heuristic.get("confidence", 0.0),
+                    "effectiveConfidence": round(effective_confidence, 4),
+                    "appliedDelta": round(applied_delta, 6),
+                    "conflictResolution": "none",
+                }
+            )
+        return self._resolve_heuristic_conflicts(refs)[:4]
+
+    def _resolve_heuristic_conflicts(self, refs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        grouped: dict[tuple[str, str], list[dict[str, Any]]] = {}
+        for ref in refs:
+            grouped.setdefault((str(ref.get("targetKind") or ""), str(ref.get("targetId") or "")), []).append(ref)
+        resolved: list[dict[str, Any]] = []
+        for group in grouped.values():
+            has_positive = any(float(ref.get("appliedDelta") or 0.0) > 0.0 for ref in group)
+            has_negative = any(float(ref.get("appliedDelta") or 0.0) < 0.0 for ref in group)
+            if has_positive and has_negative:
+                winner_ref = max(group, key=lambda ref: (abs(float(ref.get("appliedDelta") or 0.0)), float(ref.get("effectiveConfidence") or 0.0), str(ref.get("heuristicId") or "")))
+                winner = dict(winner_ref)
+                winner["conflictResolution"] = "highest_effective_delta_wins"
+                winner["conflictingHeuristicIds"] = [str(ref.get("heuristicId") or "") for ref in group if ref is not winner_ref]
+                resolved.append(winner)
+                continue
+            resolved.extend(dict(ref) for ref in group)
+        resolved.sort(key=lambda ref: (abs(float(ref.get("appliedDelta") or 0.0)), float(ref.get("effectiveConfidence") or 0.0), str(ref.get("heuristicId") or "")), reverse=True)
+        return resolved
+
+    def _heuristic_bonus(self, refs: list[dict[str, Any]]) -> float:
+        total = sum(float(ref.get("appliedDelta") or 0.0) for ref in refs)
+        return max(-0.12, min(0.12, total))
+
+    def _heuristic_effective_confidence(self, heuristic: dict[str, Any], world_tick: int) -> float:
+        if heuristic.get("effectiveConfidence") is not None:
+            return max(0.0, min(1.0, self._safe_float(heuristic.get("effectiveConfidence"), 0.0)))
+        confidence = max(0.0, min(1.0, self._safe_float(heuristic.get("confidence"), 0.0)))
+        updated_tick = heuristic.get("updatedTick")
+        if updated_tick is None:
+            return confidence
+        try:
+            age_ticks = max(0, int(world_tick) - int(updated_tick))
+        except (TypeError, ValueError):
+            return confidence
+        decay_factor = max(HEURISTIC_MIN_DECAY_FACTOR, 1.0 - float(age_ticks) * HEURISTIC_DECAY_PER_TICK)
+        return max(0.0, min(1.0, confidence * decay_factor))
+
+    def _safe_float(self, value: Any, fallback: float) -> float:
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return fallback
+
     def _score_to_debug(self, item: dict[str, Any]) -> dict[str, Any]:
         tool = item["tool"]
         return {
@@ -243,4 +361,7 @@ class ArbitrationLayer:
             "relationshipBonus": round(float(item["relationshipBonus"]), 6),
             "subjectiveMemoryBonus": round(float(item["subjectiveMemoryBonus"]), 6),
             "subjectiveMemoryRefCount": len(item.get("subjectiveMemoryRefs", [])),
+            "heuristicBonus": round(float(item["heuristicBonus"]), 6),
+            "heuristicRefCount": len(item.get("heuristicRefs", [])),
+            "heuristicConflictCount": sum(1 for ref in item.get("heuristicRefs", []) if isinstance(ref, dict) and ref.get("conflictResolution") != "none"),
         }

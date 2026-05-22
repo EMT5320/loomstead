@@ -20,12 +20,15 @@ class MotivationEngine:
         delta_minutes: float = 20.0,
         relationship_edges: list[dict[str, Any]] | None = None,
         subjective_memory_records: list[dict[str, Any]] | None = None,
+        heuristics: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         agent = world.get("agents", {}).get(npc_id)
         if not isinstance(agent, dict):
             return {"npcId": npc_id, "decision": None, "reason": "unknown_npc"}
         relationship_edges = relationship_edges or []
         subjective_memory_records = [dict(item) for item in subjective_memory_records or [] if isinstance(item, dict)]
+        heuristics = [dict(item) for item in heuristics or [] if isinstance(item, dict)]
+        world_tick = int(world.get("clock", {}).get("tick", 0)) if isinstance(world.get("clock"), dict) else 0
         needs = self.need_accumulator.score(world, agent, delta_minutes)
         primary_need = max(needs, key=lambda need: need.urgency)
         capability_resolution = self.capability_registry.resolve_with_debug(world, npc_id, primary_need.need_id)
@@ -39,6 +42,8 @@ class MotivationEngine:
                 contributing_sources=primary_need.sources,
                 relationship_edges=tuple(relationship_edges),
                 subjective_memories=tuple(subjective_memory_records),
+                heuristics=tuple(heuristics),
+                world_tick=world_tick,
             )
         )
         return {
@@ -50,6 +55,7 @@ class MotivationEngine:
             "capabilities": [tool.to_dict() for tool in candidates],
             "capabilityFilters": capability_resolution.to_debug_dict(),
             "subjectiveMemoryRecall": self._subjective_memory_recall_debug(subjective_memory_records),
+            "heuristicRecall": self._heuristic_recall_debug(heuristics, world_tick),
             "decision": decision.to_dict(),
         }
 
@@ -65,4 +71,15 @@ class MotivationEngine:
             "count": len(records),
             "recordIds": [str(item.get("recordId") or "") for item in records[:8] if str(item.get("recordId") or "")],
             "sourceEventIds": [str(item.get("sourceEventId") or "") for item in records[:8] if str(item.get("sourceEventId") or "")],
+        }
+
+    def _heuristic_recall_debug(self, heuristics: list[dict[str, Any]], world_tick: int) -> dict[str, Any]:
+        active_items = [item for item in heuristics if str(item.get("status") or "active") == "active"]
+        return {
+            "version": "heuristic_recall.v1",
+            "worldTick": world_tick,
+            "count": len(heuristics),
+            "activeCount": len(active_items),
+            "heuristicIds": [str(item.get("heuristicId") or "") for item in active_items[:8] if str(item.get("heuristicId") or "")],
+            "sourceEventIds": [str(item.get("sourceEventId") or "") for item in active_items[:8] if str(item.get("sourceEventId") or "")],
         }

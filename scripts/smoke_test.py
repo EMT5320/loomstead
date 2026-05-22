@@ -487,11 +487,16 @@ def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
         raise RuntimeError(f"{label}.phase2.motivation.decision 应包含 contributingSources")
     if not isinstance(first_decision.get("subjectiveMemoryRefs"), list):
         raise RuntimeError(f"{label}.phase2.motivation.decision 应包含 subjectiveMemoryRefs 数组")
+    if not isinstance(first_decision.get("heuristicRefs"), list):
+        raise RuntimeError(f"{label}.phase2.motivation.decision 应包含 heuristicRefs 数组")
     recall_debug = motivation["items"][0].get("subjectiveMemoryRecall")
     if not isinstance(recall_debug, dict) or recall_debug.get("version") != "subjective_memory_recall.v1":
         raise RuntimeError(f"{label}.phase2.motivation 应包含 subjective_memory_recall.v1")
-    if not all("subjectiveMemoryBonus" in item and "subjectiveMemoryRefCount" in item for item in first_decision.get("candidateScores", []) if isinstance(item, dict)):
-        raise RuntimeError(f"{label}.phase2.motivation.candidateScores 应包含主观记忆评分字段")
+    heuristic_recall = motivation["items"][0].get("heuristicRecall")
+    if not isinstance(heuristic_recall, dict) or heuristic_recall.get("version") != "heuristic_recall.v1":
+        raise RuntimeError(f"{label}.phase2.motivation 应包含 heuristic_recall.v1")
+    if not all("subjectiveMemoryBonus" in item and "subjectiveMemoryRefCount" in item and "heuristicBonus" in item and "heuristicRefCount" in item for item in first_decision.get("candidateScores", []) if isinstance(item, dict)):
+        raise RuntimeError(f"{label}.phase2.motivation.candidateScores 应包含主观记忆和启发式评分字段")
     capability_filters = motivation["items"][0].get("capabilityFilters")
     if not isinstance(capability_filters, dict) or capability_filters.get("version") != "capability_resolution.v1":
         raise RuntimeError(f"{label}.phase2.motivation 应包含 capability_resolution.v1")
@@ -510,6 +515,9 @@ def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
     subjective_memory = phase2.get("subjectiveMemory")
     if not isinstance(subjective_memory, dict) or subjective_memory.get("version") != "subjective_memory_store.v0":
         raise RuntimeError(f"{label}.phase2.subjectiveMemory 应返回 subjective_memory_store.v0")
+    heuristics = phase2.get("heuristics")
+    if not isinstance(heuristics, dict) or heuristics.get("version") != "heuristic_library.v0":
+        raise RuntimeError(f"{label}.phase2.heuristics 应返回 heuristic_library.v0")
     trace_events = phase2.get("recentTraceEvents")
     if not isinstance(trace_events, list) or not trace_events:
         raise RuntimeError(f"{label}.phase2.recentTraceEvents 应返回 Phase 2 trace")
@@ -521,6 +529,8 @@ def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
         raise RuntimeError(f"{label}.phase2.recentTraceEvents.decision.details 应包含 selectedToolId 和 candidateScores")
     if not isinstance(decision_details.get("subjectiveMemoryRefs"), list) or not isinstance(decision_details.get("subjectiveMemoryRecall"), dict):
         raise RuntimeError(f"{label}.phase2.recentTraceEvents.decision.details 应包含主观记忆召回字段")
+    if not isinstance(decision_details.get("heuristicRefs"), list) or not isinstance(decision_details.get("heuristicRecall"), dict):
+        raise RuntimeError(f"{label}.phase2.recentTraceEvents.decision.details 应包含启发式召回字段")
     detail_filters = decision_details.get("capabilityFilters")
     if not isinstance(detail_filters, dict) or {str(layer.get("layer")) for layer in detail_filters.get("layers", []) if isinstance(layer, dict)} != required_layers:
         raise RuntimeError(f"{label}.phase2.recentTraceEvents.decision.details 应包含四层 capabilityFilters")
@@ -698,6 +708,17 @@ def assert_http_debug_endpoints(api_app) -> dict:
         if isinstance(item, dict)
     ):
         raise RuntimeError("/api/debug.phase2.motivation 应把主观记忆证据用于候选评分")
+    heuristics_after = phase2_after_completion.get("heuristics", {})
+    if not isinstance(heuristics_after, dict) or int(heuristics_after.get("count") or 0) <= 0:
+        raise RuntimeError("/api/debug.phase2 应在工具完成后返回启发式记忆")
+    if not any(int(item.get("heuristicRecall", {}).get("activeCount") or 0) > 0 for item in motivation_items if isinstance(item, dict)):
+        raise RuntimeError("/api/debug.phase2.motivation 应召回启发式记忆")
+    if not any(
+        any(int(score.get("heuristicRefCount") or 0) > 0 for score in item.get("decision", {}).get("candidateScores", []) if isinstance(score, dict))
+        for item in motivation_items
+        if isinstance(item, dict)
+    ):
+        raise RuntimeError("/api/debug.phase2.motivation 应把启发式证据用于候选评分")
     completed_debug_trace = next((item for item in phase2_after_completion.get("recentTraceEvents", []) if item.get("eventType") == "tool.execution_completed"), None)
     if not isinstance(completed_debug_trace, dict) or not completed_debug_trace.get("details", {}).get("traceRefs"):
         raise RuntimeError("/api/debug.phase2 应展开 tool.execution_completed.traceRefs")

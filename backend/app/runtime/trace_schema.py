@@ -104,9 +104,11 @@ def _trace_event_details(event_type: str, payload: dict[str, Any]) -> dict[str, 
             "capabilityCount": payload.get("capabilityCount"),
             "capabilityFilters": _compact_capability_filters(payload.get("capabilityFilters")),
             "subjectiveMemoryRecall": _compact_subjective_memory_recall(payload.get("subjectiveMemoryRecall")),
+            "heuristicRecall": _compact_heuristic_recall(payload.get("heuristicRecall")),
             "candidateScores": _compact_list(payload.get("candidateScores"), 5),
             "relationshipEdgeRefs": _compact_list(payload.get("relationshipEdgeRefs"), 4),
             "subjectiveMemoryRefs": _compact_list(payload.get("subjectiveMemoryRefs"), 4),
+            "heuristicRefs": _compact_list(payload.get("heuristicRefs"), 4),
             "contributingSources": _compact_list(payload.get("contributingSources"), 6),
         }
     if event_type in {"tool.execution_completed", "tool.execution_failed"}:
@@ -171,6 +173,19 @@ def _compact_subjective_memory_recall(value: Any) -> dict[str, Any]:
         "query": value.get("query"),
         "count": value.get("count"),
         "recordIds": _compact_list(value.get("recordIds"), 6),
+        "sourceEventIds": _compact_list(value.get("sourceEventIds"), 6),
+    }
+
+
+def _compact_heuristic_recall(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {}
+    return {
+        "version": value.get("version"),
+        "worldTick": value.get("worldTick"),
+        "count": value.get("count"),
+        "activeCount": value.get("activeCount"),
+        "heuristicIds": _compact_list(value.get("heuristicIds"), 6),
         "sourceEventIds": _compact_list(value.get("sourceEventIds"), 6),
     }
 

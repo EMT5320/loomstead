@@ -120,6 +120,8 @@ def run_stability_scenarios(
     completed_tool_count = 0
     failed_tool_count = 0
     memory_observation_count = 0
+    motivation_decision_count = 0
+    heuristic_decision_count = 0
     active_agent_ids: set[str] = set()
 
     for hour_index in range(1, hours + 1):
@@ -138,6 +140,10 @@ def run_stability_scenarios(
                     trace_event_count += 1
                     if payload.get("traceSchemaVersion") == "phase2.trace.v1":
                         trace_schema_ok_count += 1
+                if event_type == "motivation.decision_made":
+                    motivation_decision_count += 1
+                    if payload.get("heuristicRefs"):
+                        heuristic_decision_count += 1
                 if event_type == "tool.execution_completed":
                     completed_tool_count += 1
                 elif event_type == "tool.execution_failed":
@@ -164,6 +170,7 @@ def run_stability_scenarios(
     heuristic_count = len(runtime.heuristic_library.list(limit=10000))
     trace_schema_coverage = _safe_ratio(trace_schema_ok_count, trace_event_count)
     memory_observation_ratio = _safe_ratio(memory_observation_count, completed_tool_count)
+    heuristic_decision_ratio = _safe_ratio(heuristic_decision_count, motivation_decision_count)
     checks = {
         "tick_successful": sum(tick_success_values) == float(hours),
         "clock_reached_expected_tick": int(runtime.world.get("clock", {}).get("tick", 0)) >= hours,
@@ -171,6 +178,8 @@ def run_stability_scenarios(
         "trace_schema_complete": trace_event_count > 0 and trace_schema_coverage >= 1.0,
         "memory_observations_follow_tools": completed_tool_count > 0 and memory_observation_count >= completed_tool_count,
         "relationship_edges_created": relationship_edge_count > 0,
+        "heuristics_created": heuristic_count > 0,
+        "heuristics_influence_decisions": heuristic_decision_count > 0,
         "multi_agent_participation": len(active_agent_ids) >= 4,
     }
     metrics = [
@@ -180,6 +189,8 @@ def run_stability_scenarios(
         metric_summary("tool_failure_rate", [_safe_ratio(failed_tool_count, max(1, completed_tool_count + failed_tool_count))], baseline=BASELINE_STABILITY_24H),
         metric_summary("active_agent_count", [float(len(active_agent_ids))], baseline=BASELINE_STABILITY_24H),
         metric_summary("relationship_edge_count", [float(relationship_edge_count)], baseline=BASELINE_STABILITY_24H),
+        metric_summary("heuristic_count", [float(heuristic_count)], baseline=BASELINE_STABILITY_24H),
+        metric_summary("heuristic_decision_ref_rate", [heuristic_decision_ratio], baseline=BASELINE_STABILITY_24H),
     ]
     result = {
         "ok": all(checks.values()),
@@ -199,6 +210,8 @@ def run_stability_scenarios(
             "subjectiveMemoryCount": subjective_memory_count,
             "relationshipEdgeCount": relationship_edge_count,
             "heuristicCount": heuristic_count,
+            "motivationDecisionCount": motivation_decision_count,
+            "heuristicDecisionCount": heuristic_decision_count,
             "activeAgentIds": sorted(active_agent_ids),
             "retainedEventStoreCount": len(runtime.event_store.list()),
         },
@@ -419,6 +432,7 @@ def _run_runtime_process_scenario(
     )
     subjective_items = ablated_subjective_memory["subjectiveItems"]
     relationship_items = _debug_items(snapshot.get("relationshipEdges", {}))
+    heuristic_items = _debug_items(snapshot.get("heuristics", {}))
     relationship_edges_for_decision = [
         edge.to_dict()
         for edge in runtime.relationship_edge_store.list(agent_id=scenario.npc_id, limit=12)
@@ -447,6 +461,8 @@ def _run_runtime_process_scenario(
     goal_trace_ids = {str(event.get("traceId") or "") for event in goal_tool_events}
     memory_source_ids = {str(item.get("sourceEventId") or "") for item in subjective_items}
     subjective_memories_for_decision = [item for item in subjective_items if str(item.get("agentId") or "") == scenario.npc_id]
+    heuristic_source_ids = {str(item.get("sourceEventId") or "") for item in heuristic_items}
+    heuristics_for_decision = [item for item in heuristic_items if str(item.get("agentId") or "") == scenario.npc_id]
     relationship_source_ids = {
         str(source_id)
         for edge in relationship_items
@@ -466,6 +482,7 @@ def _run_runtime_process_scenario(
         delta_minutes=20.0,
         relationship_edges=relationship_edges_for_decision,
         subjective_memory_records=subjective_memories_for_decision,
+        heuristics=heuristics_for_decision,
     )
     decision_without_relationship_memory = runtime.motivation_engine.evaluate_npc(
         runtime.world,
@@ -473,6 +490,7 @@ def _run_runtime_process_scenario(
         delta_minutes=20.0,
         relationship_edges=[],
         subjective_memory_records=[],
+        heuristics=[],
     )
     counterfactual_replay = _build_counterfactual_replay(
         scenario=scenario,
@@ -480,6 +498,7 @@ def _run_runtime_process_scenario(
         decision_without_relationship_memory=decision_without_relationship_memory,
         relationship_source_ids=relationship_source_ids,
         subjective_memory_source_ids=memory_source_ids,
+        heuristic_source_ids=heuristic_source_ids,
     )
     process_checks = {
         "goal_relevant_tool_event": bool(goal_tool_events),
@@ -513,6 +532,7 @@ def _run_runtime_process_scenario(
             "goalToolEvents": goal_tool_events,
             "subjectiveMemoryRefs": sorted(goal_event_ids & memory_source_ids),
             "relationshipSourceIds": sorted(relationship_source_ids),
+            "heuristicSourceIds": sorted(heuristic_source_ids),
             "memoryTraceLinks": memory_trace_links,
             "counterfactualReplay": counterfactual_replay,
             "subjectiveMemoryAblation": ablated_subjective_memory["evidence"],
@@ -700,6 +720,7 @@ def _build_counterfactual_replay(
     decision_without_relationship_memory: dict[str, Any],
     relationship_source_ids: set[str],
     subjective_memory_source_ids: set[str],
+    heuristic_source_ids: set[str],
 ) -> dict[str, Any]:
     with_decision = _decision_payload(decision_with_relationship_memory)
     without_decision = _decision_payload(decision_without_relationship_memory)
@@ -718,6 +739,12 @@ def _build_counterfactual_replay(
         for ref in subjective_memory_refs
         if _subjective_memory_ref_uses_sources(ref, subjective_memory_source_ids)
     ]
+    heuristic_refs = [ref for ref in with_decision.get("heuristicRefs", []) if isinstance(ref, dict)]
+    relevant_heuristic_refs = [
+        ref
+        for ref in heuristic_refs
+        if _heuristic_ref_uses_sources(ref, heuristic_source_ids)
+    ]
     score_effect = _candidate_scores_changed(
         list(with_decision.get("candidateScores", [])),
         list(without_decision.get("candidateScores", [])),
@@ -725,16 +752,20 @@ def _build_counterfactual_replay(
     decision_effect = bool(selected_with) and bool(selected_without) and (selected_with != selected_without or score_effect)
     relationship_effect = bool(relevant_refs) and decision_effect
     subjective_memory_effect = bool(relevant_subjective_memory_refs) and decision_effect
+    heuristic_effect = bool(relevant_heuristic_refs) and decision_effect
     return {
         "selectedWithRelationshipMemory": selected_with or None,
         "selectedWithoutRelationshipMemory": selected_without or None,
-        "effect": relationship_effect or subjective_memory_effect,
+        "effect": relationship_effect or subjective_memory_effect or heuristic_effect,
         "relationshipEffect": relationship_effect,
         "subjectiveMemoryEffect": subjective_memory_effect,
+        "heuristicEffect": heuristic_effect,
         "relationshipEdgeRefs": relationship_refs,
         "relevantRelationshipEdgeRefs": relevant_refs,
         "subjectiveMemoryRefs": subjective_memory_refs,
         "relevantSubjectiveMemoryRefs": relevant_subjective_memory_refs,
+        "heuristicRefs": heuristic_refs,
+        "relevantHeuristicRefs": relevant_heuristic_refs,
         "candidateScoresWithRelationshipMemory": list(with_decision.get("candidateScores", [])),
         "candidateScoresWithoutRelationshipMemory": list(without_decision.get("candidateScores", [])),
         "reasonWithRelationshipMemory": with_decision.get("reason"),
@@ -768,6 +799,11 @@ def _subjective_memory_ref_uses_sources(ref: dict[str, Any], subjective_memory_s
     return bool(source_event_id and source_event_id in subjective_memory_source_ids)
 
 
+def _heuristic_ref_uses_sources(ref: dict[str, Any], heuristic_source_ids: set[str]) -> bool:
+    source_event_id = str(ref.get("sourceEventId") or "")
+    return bool(source_event_id and source_event_id in heuristic_source_ids)
+
+
 def _candidate_scores_changed(with_scores: list[Any], without_scores: list[Any]) -> bool:
     without_by_tool = {
         str(item.get("toolId") or ""): item
@@ -782,6 +818,8 @@ def _candidate_scores_changed(with_scores: list[Any], without_scores: list[Any])
         if round(float(item.get("score") or 0.0), 6) != round(float(other.get("score") or 0.0), 6):
             return True
         if round(float(item.get("subjectiveMemoryBonus") or 0.0), 6) != round(float(other.get("subjectiveMemoryBonus") or 0.0), 6):
+            return True
+        if round(float(item.get("heuristicBonus") or 0.0), 6) != round(float(other.get("heuristicBonus") or 0.0), 6):
             return True
     return False
 
