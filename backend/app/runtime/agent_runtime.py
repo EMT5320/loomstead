@@ -1070,6 +1070,7 @@ class AgentRuntime:
         npc_name = str(decision.get("npcName") or decision.get("npcId") or "NPC")
         need_id = str(primary_need.get("needId") or decision_payload.get("needId") or "unknown_need")
         capabilities = decision.get("capabilities", []) if isinstance(decision.get("capabilities"), list) else []
+        capability_filters = decision.get("capabilityFilters", {}) if isinstance(decision.get("capabilityFilters"), dict) else {}
         return {
             "npcId": decision.get("npcId"),
             "npcName": decision.get("npcName"),
@@ -1077,6 +1078,7 @@ class AgentRuntime:
             "needs": [dict(item) for item in decision.get("needs", [])[:6] if isinstance(item, dict)],
             "capabilityCount": len(capabilities),
             "capabilities": [self._phase2_capability_ref(item) for item in capabilities[:12] if isinstance(item, dict)],
+            "capabilityFilters": self._phase2_capability_filter_ref(capability_filters),
             "selectedToolId": selected_tool_id,
             "candidateScores": [dict(item) for item in decision_payload.get("candidateScores", []) if isinstance(item, dict)],
             "relationshipEdgeRefs": [dict(item) for item in decision_payload.get("relationshipEdgeRefs", []) if isinstance(item, dict)],
@@ -1091,6 +1093,29 @@ class AgentRuntime:
             "tier": capability.get("tier"),
             "durationSeconds": capability.get("durationSeconds"),
             "observerVisibility": capability.get("observerVisibility"),
+        }
+
+    def _phase2_capability_filter_ref(self, capability_filters: dict[str, Any]) -> dict[str, Any]:
+        layers = capability_filters.get("layers", []) if isinstance(capability_filters.get("layers"), list) else []
+        return {
+            "version": capability_filters.get("version"),
+            "allowedToolIds": list(capability_filters.get("allowedToolIds", [])) if isinstance(capability_filters.get("allowedToolIds"), list) else [],
+            "layers": [
+                {
+                    "layer": layer.get("layer"),
+                    "inputCount": layer.get("inputCount"),
+                    "allowedCount": layer.get("allowedCount"),
+                    "rejectedCount": layer.get("rejectedCount"),
+                    "decisions": [dict(item) for item in layer.get("decisions", [])[:8] if isinstance(item, dict)],
+                }
+                for layer in layers
+                if isinstance(layer, dict)
+            ],
+            "rejectedTools": [
+                dict(item)
+                for item in capability_filters.get("rejectedTools", [])[:12]
+                if isinstance(item, dict)
+            ] if isinstance(capability_filters.get("rejectedTools"), list) else [],
         }
 
     def _phase2_decision_target_ids(self, decision: dict[str, Any]) -> list[str]:

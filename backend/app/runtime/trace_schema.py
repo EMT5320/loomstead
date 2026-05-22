@@ -102,6 +102,7 @@ def _trace_event_details(event_type: str, payload: dict[str, Any]) -> dict[str, 
             "selectedToolId": payload.get("selectedToolId"),
             "decisionReason": payload.get("decisionReason"),
             "capabilityCount": payload.get("capabilityCount"),
+            "capabilityFilters": _compact_capability_filters(payload.get("capabilityFilters")),
             "candidateScores": _compact_list(payload.get("candidateScores"), 5),
             "relationshipEdgeRefs": _compact_list(payload.get("relationshipEdgeRefs"), 4),
             "contributingSources": _compact_list(payload.get("contributingSources"), 6),
@@ -137,6 +138,27 @@ def _compact_list(value: Any, limit: int) -> list[Any]:
     for item in value[:limit]:
         compacted.append(deepcopy(item) if isinstance(item, (dict, list)) else item)
     return compacted
+
+
+def _compact_capability_filters(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {}
+    layers = value.get("layers") if isinstance(value.get("layers"), list) else []
+    return {
+        "version": value.get("version"),
+        "allowedToolIds": _compact_list(value.get("allowedToolIds"), 8),
+        "layers": [
+            {
+                "layer": layer.get("layer"),
+                "inputCount": layer.get("inputCount"),
+                "allowedCount": layer.get("allowedCount"),
+                "rejectedCount": layer.get("rejectedCount"),
+                "sampleDecisions": _compact_list(layer.get("decisions"), 3),
+            }
+            for layer in layers[:4]
+            if isinstance(layer, dict)
+        ],
+    }
 
 
 def _normalize_target_ids(target_ids: Any) -> list[str]:

@@ -483,6 +483,18 @@ def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
     first_decision = motivation["items"][0].get("decision", {})
     if not first_decision.get("contributingSources"):
         raise RuntimeError(f"{label}.phase2.motivation.decision 应包含 contributingSources")
+    capability_filters = motivation["items"][0].get("capabilityFilters")
+    if not isinstance(capability_filters, dict) or capability_filters.get("version") != "capability_resolution.v1":
+        raise RuntimeError(f"{label}.phase2.motivation 应包含 capability_resolution.v1")
+    layer_names = {str(layer.get("layer")) for layer in capability_filters.get("layers", []) if isinstance(layer, dict)}
+    required_layers = {"need_relevance", "preconditions", "npc_profile", "event_scope"}
+    if not required_layers.issubset(layer_names):
+        raise RuntimeError(f"{label}.phase2.motivation.capabilityFilters 缺少过滤层：{required_layers - layer_names}")
+    if not capability_filters.get("allowedToolIds"):
+        raise RuntimeError(f"{label}.phase2.motivation.capabilityFilters 应包含 allowedToolIds")
+    need_layer = next((layer for layer in capability_filters.get("layers", []) if isinstance(layer, dict) and layer.get("layer") == "need_relevance"), {})
+    if int(need_layer.get("rejectedCount") or 0) <= 0:
+        raise RuntimeError(f"{label}.phase2.motivation.capabilityFilters.need_relevance 应记录被过滤工具")
     tool_runtime = phase2.get("toolRuntime")
     if not isinstance(tool_runtime, dict) or tool_runtime.get("version") != "tool_runtime.v1" or not tool_runtime.get("items"):
         raise RuntimeError(f"{label}.phase2.toolRuntime 应返回 ToolExecutor 运行态")
@@ -495,6 +507,9 @@ def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
     decision_details = decision_trace.get("details")
     if not isinstance(decision_details, dict) or not decision_details.get("selectedToolId") or not isinstance(decision_details.get("candidateScores"), list):
         raise RuntimeError(f"{label}.phase2.recentTraceEvents.decision.details 应包含 selectedToolId 和 candidateScores")
+    detail_filters = decision_details.get("capabilityFilters")
+    if not isinstance(detail_filters, dict) or {str(layer.get("layer")) for layer in detail_filters.get("layers", []) if isinstance(layer, dict)} != required_layers:
+        raise RuntimeError(f"{label}.phase2.recentTraceEvents.decision.details 应包含四层 capabilityFilters")
     assert_compact_debug_turns(payload["debugTurns"], f"{label}.debugTurns")
 
 

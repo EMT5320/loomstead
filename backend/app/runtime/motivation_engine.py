@@ -26,7 +26,8 @@ class MotivationEngine:
         relationship_edges = relationship_edges or []
         needs = self.need_accumulator.score(world, agent, delta_minutes)
         primary_need = max(needs, key=lambda need: need.urgency)
-        candidates = self.capability_registry.resolve(world, npc_id, primary_need.need_id)
+        capability_resolution = self.capability_registry.resolve_with_debug(world, npc_id, primary_need.need_id)
+        candidates = list(capability_resolution.allowed_tools)
         decision = self.arbitration_layer.decide(
             ArbitrationInput(
                 npc_id=npc_id,
@@ -44,6 +45,7 @@ class MotivationEngine:
             "primaryNeed": primary_need.to_dict(),
             "needs": [need.to_dict() for need in sorted(needs, key=lambda item: item.urgency, reverse=True)],
             "capabilities": [tool.to_dict() for tool in candidates],
+            "capabilityFilters": capability_resolution.to_debug_dict(),
             "decision": decision.to_dict(),
         }
 
