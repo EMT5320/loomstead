@@ -10,6 +10,7 @@ from app.eval.process_fidelity import build_process_metrics, metric_summary, pro
 from app.eval.scenarios import DEFAULT_L1_SCENARIOS, DEFAULT_PROCESS_GOALS, EvalScenario, ProcessGoalSpec
 from app.runtime.agent_runtime import AgentRuntime
 from app.runtime.motivation_engine import MotivationEngine
+from app.runtime.schema_registry import require_schema_version
 from app.world.world_state import create_initial_world
 
 
@@ -145,7 +146,7 @@ def run_stability_scenarios(
                     active_agent_ids.add(npc_id)
                 if event_type in STABILITY_TRACE_TYPES:
                     trace_event_count += 1
-                    if payload.get("traceSchemaVersion") == "phase2.trace.v1":
+                    if payload.get("traceSchemaVersion") == require_schema_version("phase2_trace"):
                         trace_schema_ok_count += 1
                 if event_type == "motivation.decision_made":
                     motivation_decision_count += 1

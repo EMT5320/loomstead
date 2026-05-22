@@ -4,8 +4,9 @@ from copy import deepcopy
 from typing import Any
 from uuid import uuid4
 
+from app.runtime.schema_registry import require_schema_version
 
-TRACE_SCHEMA_VERSION = "phase2.trace.v1"
+TRACE_SCHEMA_VERSION = require_schema_version("phase2_trace")
 
 
 def world_time_payload(world: dict[str, Any]) -> dict[str, Any]:

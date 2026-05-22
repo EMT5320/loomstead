@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Literal
 
+from app.runtime.schema_registry import require_schema_version
+
 HeuristicStatus = Literal["active", "dormant"]
 HEURISTIC_DECAY_PER_TICK = 0.01
 HEURISTIC_MIN_DECAY_FACTOR = 0.25
@@ -122,7 +124,7 @@ class HeuristicLibrary:
     def debug_snapshot(self, agent_id: str | None = None, limit: int = 20, world_tick: int | None = None) -> dict[str, Any]:
         items = self.list(agent_id=agent_id, limit=limit)
         return {
-            "version": "heuristic_library.v0",
+            "version": require_schema_version("heuristic_library"),
             "agentId": agent_id,
             "worldTick": world_tick,
             "count": len(items),

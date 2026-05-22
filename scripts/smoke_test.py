@@ -27,6 +27,7 @@ from app.providers.context_builder import (  # noqa: E402
 )
 from app.runtime.decision_budget import DecisionBudgetStore  # noqa: E402
 from app.runtime.need_accumulator import NeedAccumulator  # noqa: E402
+from app.runtime.schema_registry import SCHEMA_REGISTRY_VERSION, schema_registry_snapshot, schema_version_map  # noqa: E402
 from app.skills import STARLIGHT_FESTIVAL_SHORTAGE_SKILL_ID  # noqa: E402
 from app.tools.contracts import ToolContractValidator, ToolContractViolation  # noqa: E402
 from app.tools.tool_schema import ToolDefinition  # noqa: E402
@@ -317,6 +318,7 @@ def assert_action_feedback_contract(result: dict, label: str, *, expected_result
 
 def assert_npc_schedule_contract(state: dict, label: str) -> None:
     """确认运行时日程快照可直接作为后续玩法候选输入。"""
+    versions = schema_version_map()
     schedules = state.get("npcSchedules")
     if not isinstance(schedules, list) or not schedules:
         raise RuntimeError(f"{label}.npcSchedules 应为非空数组")
@@ -343,8 +345,8 @@ def assert_npc_schedule_contract(state: dict, label: str) -> None:
     for field in ("version", "day", "phase", "generatedAtTick", "selectedActions", "locationBuckets", "policy"):
         if field not in plan:
             raise RuntimeError(f"{label}.lifeActionPlan 缺少字段：{field}")
-    if plan["version"] != "motivation_plan.v1":
-        raise RuntimeError(f"{label}.lifeActionPlan.version 期望 motivation_plan.v1，实际为 {plan['version']}")
+    if plan["version"] != versions["motivation_plan"]:
+        raise RuntimeError(f"{label}.lifeActionPlan.version 期望 {versions['motivation_plan']}，实际为 {plan['version']}")
     if not isinstance(plan.get("selectedActions"), list) or not plan["selectedActions"]:
         raise RuntimeError(f"{label}.lifeActionPlan.selectedActions 应为非空数组")
     plan_policy = plan.get("policy")
@@ -354,6 +356,7 @@ def assert_npc_schedule_contract(state: dict, label: str) -> None:
 
 def assert_game_state_contract(state: dict, label: str) -> None:
     """确认 /api/world/state 保持 Godot 可消费的稳定状态切片。"""
+    versions = schema_version_map()
     missing = sorted((REQUIRED_GAME_STATE_FIELDS | REQUIRED_CLIENT_CONTEXT_FIELDS) - set(state))
     if missing:
         raise RuntimeError(f"{label} 缺少状态字段：{missing}")
@@ -390,8 +393,8 @@ def assert_game_state_contract(state: dict, label: str) -> None:
         raise RuntimeError(f"{label}.player.inventory 应为数组")
     if not isinstance(state["slice"], dict) or not state["slice"].get("npcIds") or not state["slice"].get("locationIds"):
         raise RuntimeError(f"{label}.slice 应包含 npcIds 和 locationIds")
-    if state["slice"].get("scheduleSnapshotVersion") != "motivation_plan.v1":
-        raise RuntimeError(f"{label}.slice.scheduleSnapshotVersion 应为 motivation_plan.v1")
+    if state["slice"].get("scheduleSnapshotVersion") != versions["motivation_plan"]:
+        raise RuntimeError(f"{label}.slice.scheduleSnapshotVersion 应为 {versions['motivation_plan']}")
     if not isinstance(state["slice"].get("supportedLifeActionWindows"), list):
         raise RuntimeError(f"{label}.slice.supportedLifeActionWindows 应为数组")
     supported_sources = set(state["slice"].get("supportedNpcPresenceSources", []))
@@ -493,6 +496,7 @@ def assert_motivation_profile_weight_contract() -> None:
 
 def assert_phase2_decision_budget_routing() -> dict:
     """确认 LLM eligible 工具会经过 NPC / feature / tool 预算路由，并在耗尽时降级。"""
+    versions = schema_version_map()
     budget_app = create_town_app(provider_mode="rule")
     runtime = budget_app.runtime
     runtime.get_game_state()
@@ -543,8 +547,8 @@ def assert_phase2_decision_budget_routing() -> dict:
             "model": "smoke-model",
         },
     )
-    if provider_usage_record.get("version") != "provider_usage_actual.v1":
-        raise RuntimeError("record_provider_usage 应输出 provider_usage_actual.v1")
+    if provider_usage_record.get("version") != versions["provider_usage_actual"]:
+        raise RuntimeError(f"record_provider_usage 应输出 {versions['provider_usage_actual']}")
     debug_budget = isolated_budget.debug_snapshot(isolated_world, npc_ids=[npc_id])
     provider_actuals = debug_budget["items"][0].get("providerActuals", {})
     provider_totals = provider_actuals.get("totals", {})
@@ -610,6 +614,7 @@ def assert_phase2_decision_budget_routing() -> dict:
 
 def assert_phase2_observer_visibility_scope() -> dict:
     """确认 ResultObserver 会按 private、participants_only 和 all_in_location 分发主观记忆。"""
+    versions = schema_version_map()
     observer_app = create_town_app(provider_mode="rule")
     runtime = observer_app.runtime
     runtime.get_game_state()
@@ -641,7 +646,7 @@ def assert_phase2_observer_visibility_scope() -> dict:
             "summary": f"smoke {label}",
             "targetAnchorId": "plaza_fountain",
             "targetLocationId": "plaza",
-            "traceSchemaVersion": "phase2.trace.v1",
+            "traceSchemaVersion": versions["phase2_trace"],
             "traceId": f"trace_smoke_observer_{label}",
             **payload,
         }
@@ -661,13 +666,13 @@ def assert_phase2_observer_visibility_scope() -> dict:
         if memory_agents != expected:
             raise RuntimeError(f"{label} 主观记忆写入对象应为 {expected}，实际为 {memory_agents}")
         scope = payload.get("observerScope")
-        if not isinstance(scope, dict) or scope.get("version") != "observer_scope.v1":
-            raise RuntimeError(f"{label} 应输出 observer_scope.v1")
+        if not isinstance(scope, dict) or scope.get("version") != versions["observer_scope"]:
+            raise RuntimeError(f"{label} 应输出 {versions['observer_scope']}")
         if sorted(scope.get("observerIds", [])) != expected:
             raise RuntimeError(f"{label} observerScope.observerIds 应与 observers 一致")
         spatial_model = scope.get("spatialModel")
-        if not isinstance(spatial_model, dict) or spatial_model.get("version") != "observer_spatial_model.v1":
-            raise RuntimeError(f"{label} 应输出 observer_spatial_model.v1")
+        if not isinstance(spatial_model, dict) or spatial_model.get("version") != versions["observer_spatial_model"]:
+            raise RuntimeError(f"{label} 应输出 {versions['observer_spatial_model']}")
         spatial_evidence = scope.get("spatialEvidence")
         if not isinstance(spatial_evidence, list) or not spatial_evidence:
             raise RuntimeError(f"{label} 应输出 spatialEvidence")
@@ -793,8 +798,86 @@ def assert_tool_contract_json_schema_subset() -> dict:
     return observed
 
 
+def assert_phase2_schema_registry_contract(phase2: dict | None = None) -> dict:
+    """确认 Phase 2 schema registry 覆盖主路径版本，并和实时 Debug 输出一致。"""
+    versions = schema_version_map()
+    registry = schema_registry_snapshot()
+    required_schema_ids = {
+        "schema_registry",
+        "phase2_trace",
+        "capability_resolution",
+        "decision_budget",
+        "provider_usage_actual",
+        "observer_scope",
+        "observer_spatial_model",
+        "motivation_plan",
+        "legacy_life_action_plan",
+        "motivation_engine",
+        "need_accumulator",
+        "tool_runtime",
+        "subjective_memory_store",
+        "subjective_memory_recall",
+        "relationship_edge_store",
+        "heuristic_library",
+        "heuristic_recall",
+        "event_skill_outcome",
+    }
+    missing = sorted(required_schema_ids - set(versions))
+    if missing:
+        raise RuntimeError(f"schema registry 缺少主路径 schema id：{missing}")
+    if registry.get("registryVersion") != SCHEMA_REGISTRY_VERSION:
+        raise RuntimeError("schema registry 应输出 schema_registry.v1")
+    if registry.get("versions") != versions:
+        raise RuntimeError("schema registry versions 映射应与 schema_version_map 一致")
+    schemas = registry.get("schemas")
+    if not isinstance(schemas, list) or len(schemas) < len(required_schema_ids):
+        raise RuntimeError("schema registry 应输出可枚举 schemas 列表")
+    for schema in schemas:
+        if not isinstance(schema, dict):
+            raise RuntimeError("schema registry.schemas 只能包含对象")
+        for field in ("id", "version", "owner", "status", "producer", "debugSurface", "requiredFields"):
+            if field not in schema:
+                raise RuntimeError(f"schema registry 条目缺少字段：{field}")
+
+    if phase2 is not None:
+        live_registry = phase2.get("schemaRegistry")
+        if not isinstance(live_registry, dict):
+            raise RuntimeError("/api/debug.phase2 应暴露 schemaRegistry")
+        if live_registry.get("registryVersion") != SCHEMA_REGISTRY_VERSION:
+            raise RuntimeError("/api/debug.phase2.schemaRegistry 应输出 schema_registry.v1")
+        live_versions = live_registry.get("versions")
+        if live_versions != versions:
+            raise RuntimeError("/api/debug.phase2.schemaRegistry.versions 应与集中版本表一致")
+        if phase2.get("traceSchemaVersion") != versions["phase2_trace"]:
+            raise RuntimeError("/api/debug.phase2.traceSchemaVersion 应与 schema registry 一致")
+        checks = {
+            "decisionBudget": "decision_budget",
+            "needAccumulator": "need_accumulator",
+            "motivation": "motivation_engine",
+            "toolRuntime": "tool_runtime",
+            "subjectiveMemory": "subjective_memory_store",
+            "relationshipEdges": "relationship_edge_store",
+            "heuristics": "heuristic_library",
+        }
+        for debug_key, schema_id in checks.items():
+            value = phase2.get(debug_key)
+            if isinstance(value, dict) and value.get("version") != versions[schema_id]:
+                raise RuntimeError(f"/api/debug.phase2.{debug_key}.version 应与 schema registry 一致")
+        motivation_items = phase2.get("motivation", {}).get("items", []) if isinstance(phase2.get("motivation"), dict) else []
+        first_motivation = motivation_items[0] if motivation_items and isinstance(motivation_items[0], dict) else {}
+        if first_motivation:
+            if first_motivation.get("capabilityFilters", {}).get("version") != versions["capability_resolution"]:
+                raise RuntimeError("capabilityFilters.version 应与 schema registry 一致")
+            if first_motivation.get("subjectiveMemoryRecall", {}).get("version") != versions["subjective_memory_recall"]:
+                raise RuntimeError("subjectiveMemoryRecall.version 应与 schema registry 一致")
+            if first_motivation.get("heuristicRecall", {}).get("version") != versions["heuristic_recall"]:
+                raise RuntimeError("heuristicRecall.version 应与 schema registry 一致")
+    return {"registry": SCHEMA_REGISTRY_VERSION, "count": len(versions), "trace": versions["phase2_trace"]}
+
+
 def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
     """确认 /api/debug 总览结构稳定，并复用压缩后的 Debug turn 契约。"""
+    versions = schema_version_map()
     missing = sorted(REQUIRED_DEBUG_SNAPSHOT_FIELDS - set(payload))
     if missing:
         raise RuntimeError(f"{label} 缺少字段：{missing}")
@@ -803,16 +886,17 @@ def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
     phase2 = payload.get("phase2")
     if not isinstance(phase2, dict):
         raise RuntimeError(f"{label}.phase2 应返回 Phase 2 调试快照")
-    if phase2.get("traceSchemaVersion") != "phase2.trace.v1":
-        raise RuntimeError(f"{label}.phase2.traceSchemaVersion 应为 phase2.trace.v1")
+    assert_phase2_schema_registry_contract(phase2)
+    if phase2.get("traceSchemaVersion") != versions["phase2_trace"]:
+        raise RuntimeError(f"{label}.phase2.traceSchemaVersion 应为 {versions['phase2_trace']}")
     tools = phase2.get("tools")
     if not isinstance(tools, dict) or int(tools.get("count") or 0) < 8:
         raise RuntimeError(f"{label}.phase2.tools 应返回至少 8 个 ToolDefinition")
     decision_budget = phase2.get("decisionBudget")
-    if not isinstance(decision_budget, dict) or decision_budget.get("version") != "decision_budget.v1":
-        raise RuntimeError(f"{label}.phase2.decisionBudget 应返回 decision_budget.v1")
+    if not isinstance(decision_budget, dict) or decision_budget.get("version") != versions["decision_budget"]:
+        raise RuntimeError(f"{label}.phase2.decisionBudget 应返回 {versions['decision_budget']}")
     motivation = phase2.get("motivation")
-    if not isinstance(motivation, dict) or motivation.get("version") != "motivation_engine.v0" or not motivation.get("items"):
+    if not isinstance(motivation, dict) or motivation.get("version") != versions["motivation_engine"] or not motivation.get("items"):
         raise RuntimeError(f"{label}.phase2.motivation 应返回 MotivationEngine 快照")
     first_decision = motivation["items"][0].get("decision", {})
     if not first_decision.get("contributingSources"):
@@ -822,16 +906,16 @@ def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
     if not isinstance(first_decision.get("heuristicRefs"), list):
         raise RuntimeError(f"{label}.phase2.motivation.decision 应包含 heuristicRefs 数组")
     recall_debug = motivation["items"][0].get("subjectiveMemoryRecall")
-    if not isinstance(recall_debug, dict) or recall_debug.get("version") != "subjective_memory_recall.v1":
-        raise RuntimeError(f"{label}.phase2.motivation 应包含 subjective_memory_recall.v1")
+    if not isinstance(recall_debug, dict) or recall_debug.get("version") != versions["subjective_memory_recall"]:
+        raise RuntimeError(f"{label}.phase2.motivation 应包含 {versions['subjective_memory_recall']}")
     heuristic_recall = motivation["items"][0].get("heuristicRecall")
-    if not isinstance(heuristic_recall, dict) or heuristic_recall.get("version") != "heuristic_recall.v1":
-        raise RuntimeError(f"{label}.phase2.motivation 应包含 heuristic_recall.v1")
+    if not isinstance(heuristic_recall, dict) or heuristic_recall.get("version") != versions["heuristic_recall"]:
+        raise RuntimeError(f"{label}.phase2.motivation 应包含 {versions['heuristic_recall']}")
     if not all("subjectiveMemoryBonus" in item and "subjectiveMemoryRefCount" in item and "heuristicBonus" in item and "heuristicRefCount" in item and "decisionBudgetRoute" in item for item in first_decision.get("candidateScores", []) if isinstance(item, dict)):
         raise RuntimeError(f"{label}.phase2.motivation.candidateScores 应包含主观记忆、启发式和预算路由评分字段")
     capability_filters = motivation["items"][0].get("capabilityFilters")
-    if not isinstance(capability_filters, dict) or capability_filters.get("version") != "capability_resolution.v1":
-        raise RuntimeError(f"{label}.phase2.motivation 应包含 capability_resolution.v1")
+    if not isinstance(capability_filters, dict) or capability_filters.get("version") != versions["capability_resolution"]:
+        raise RuntimeError(f"{label}.phase2.motivation 应包含 {versions['capability_resolution']}")
     layer_names = {str(layer.get("layer")) for layer in capability_filters.get("layers", []) if isinstance(layer, dict)}
     required_layers = {"need_relevance", "preconditions", "npc_profile", "event_scope", "decision_budget"}
     if not required_layers.issubset(layer_names):
@@ -842,14 +926,14 @@ def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
     if int(need_layer.get("rejectedCount") or 0) <= 0:
         raise RuntimeError(f"{label}.phase2.motivation.capabilityFilters.need_relevance 应记录被过滤工具")
     tool_runtime = phase2.get("toolRuntime")
-    if not isinstance(tool_runtime, dict) or tool_runtime.get("version") != "tool_runtime.v1" or not tool_runtime.get("items"):
+    if not isinstance(tool_runtime, dict) or tool_runtime.get("version") != versions["tool_runtime"] or not tool_runtime.get("items"):
         raise RuntimeError(f"{label}.phase2.toolRuntime 应返回 ToolExecutor 运行态")
     subjective_memory = phase2.get("subjectiveMemory")
-    if not isinstance(subjective_memory, dict) or subjective_memory.get("version") != "subjective_memory_store.v0":
-        raise RuntimeError(f"{label}.phase2.subjectiveMemory 应返回 subjective_memory_store.v0")
+    if not isinstance(subjective_memory, dict) or subjective_memory.get("version") != versions["subjective_memory_store"]:
+        raise RuntimeError(f"{label}.phase2.subjectiveMemory 应返回 {versions['subjective_memory_store']}")
     heuristics = phase2.get("heuristics")
-    if not isinstance(heuristics, dict) or heuristics.get("version") != "heuristic_library.v0":
-        raise RuntimeError(f"{label}.phase2.heuristics 应返回 heuristic_library.v0")
+    if not isinstance(heuristics, dict) or heuristics.get("version") != versions["heuristic_library"]:
+        raise RuntimeError(f"{label}.phase2.heuristics 应返回 {versions['heuristic_library']}")
     trace_events = phase2.get("recentTraceEvents")
     if not isinstance(trace_events, list) or not trace_events:
         raise RuntimeError(f"{label}.phase2.recentTraceEvents 应返回 Phase 2 trace")
@@ -891,6 +975,7 @@ def _store_raw_tool_event(runtime, raw_event: dict) -> dict:
 
 def assert_phase2_failure_and_interrupt_trace() -> dict:
     """确认 Phase 2 失败与中断路径会进入 trace、主观记忆和启发式链路。"""
+    versions = schema_version_map()
     failure_app = create_town_app(provider_mode="rule")
     failure_runtime = failure_app.runtime
     failure_runtime.get_game_state()
@@ -899,7 +984,7 @@ def assert_phase2_failure_and_interrupt_trace() -> dict:
         {
             "npcId": "kai",
             "selectedToolId": "social.chat_with",
-            "traceSchemaVersion": "phase2.trace.v1",
+            "traceSchemaVersion": versions["phase2_trace"],
             "eventType": "motivation.decision_made",
             "traceId": "trace_smoke_failure_decision",
         },
@@ -930,8 +1015,8 @@ def assert_phase2_failure_and_interrupt_trace() -> dict:
     failed_payload = failed_event.get("payload", {})
     if failed_payload.get("reason") != "target_unavailable":
         raise RuntimeError(f"Phase 2 失败 reason 应为 target_unavailable，实际为 {failed_payload.get('reason')}")
-    if failed_payload.get("traceSchemaVersion") != "phase2.trace.v1":
-        raise RuntimeError("tool.execution_failed 应携带 phase2.trace.v1")
+    if failed_payload.get("traceSchemaVersion") != versions["phase2_trace"]:
+        raise RuntimeError(f"tool.execution_failed 应携带 {versions['phase2_trace']}")
     if str(decision_event["id"]) not in failed_payload.get("sourceEventIds", []):
         raise RuntimeError("tool.execution_failed 应追溯 sourceEventIds")
     failed_observation = _record_tool_result_observation(failure_runtime, failed_event)
@@ -1132,8 +1217,8 @@ def assert_phase2_failure_and_interrupt_trace() -> dict:
         raise RuntimeError("高优先级需求应中断正在执行的 shop.open_shop")
     interrupted_event = _store_raw_tool_event(interrupt_runtime, interrupted_raw)
     interrupted_payload = interrupted_event.get("payload", {})
-    if interrupted_payload.get("traceSchemaVersion") != "phase2.trace.v1":
-        raise RuntimeError("tool.execution_interrupted 应携带 phase2.trace.v1")
+    if interrupted_payload.get("traceSchemaVersion") != versions["phase2_trace"]:
+        raise RuntimeError(f"tool.execution_interrupted 应携带 {versions['phase2_trace']}")
     if interrupted_payload.get("replacementToolId") != "strategic.spread_rumor":
         raise RuntimeError("tool.execution_interrupted 应记录 replacementToolId")
     if float(interrupted_payload.get("interruptUrgency") or 0.0) < 0.9:
@@ -1437,6 +1522,7 @@ assert_gossip_propagation_contract(app)
 
 game_state = app.get_game_state()
 assert_game_state_contract(game_state, "/api/world/state")
+phase2_schema_summary = assert_phase2_schema_registry_contract(app.debug_phase2({}))
 if game_state["player"]["locationId"] != "farm":
     raise RuntimeError("玩家初始位置应为 farm")
 if game_state["player"]["anchorId"] != "farm_house_door":
@@ -1689,6 +1775,7 @@ if not inspect_asset_hints or not all(
 ):
     raise RuntimeError("事件查看结果应返回结构完整的 Skill assetHints")
 
+schema_versions = schema_version_map()
 event_result = app.player_action({"type": "attend_event", "eventId": "starlight_festival_shortage", "choice": "donate_crop"})
 assert_player_action_contract(event_result, "attend_event")
 if event_result["result"]["eventResult"]["choice"] != "donate_crop":
@@ -1697,7 +1784,7 @@ if event_result["result"]["eventResult"].get("skillId") != STARLIGHT_FESTIVAL_SH
     raise RuntimeError("星灯祭事件结算应返回 Skill ID")
 if not event_result["result"]["eventResult"].get("debugFields"):
     raise RuntimeError("星灯祭事件结算应返回 Skill Debug 字段")
-if event_result["result"]["eventResult"].get("recordVersion") != "event_skill_outcome.v1":
+if event_result["result"]["eventResult"].get("recordVersion") != schema_versions["event_skill_outcome"]:
     raise RuntimeError("星灯祭事件结算应返回通用 outcome recordVersion")
 if event_result["result"]["eventResult"].get("memoryTemplateCount", 0) <= 0:
     raise RuntimeError("星灯祭事件结算应返回 memoryTemplateCount")
@@ -1728,7 +1815,7 @@ resolved_event = next(
 if not resolved_event:
     raise RuntimeError("星灯祭事件后应返回 town.event_resolved 事件")
 resolved_outcome_record = resolved_event.get("payload", {}).get("outcomeRecord", {})
-if resolved_outcome_record.get("recordVersion") != "event_skill_outcome.v1":
+if resolved_outcome_record.get("recordVersion") != schema_versions["event_skill_outcome"]:
     raise RuntimeError("town.event_resolved 应附带通用 outcomeRecord")
 if resolved_outcome_record.get("choice") != "donate_crop":
     raise RuntimeError("town.event_resolved.outcomeRecord 应记录本次选项")
@@ -1739,7 +1826,7 @@ completed_starlight = next(
 if not completed_starlight:
     raise RuntimeError("事件结算后 completedEvents 应包含星灯祭事件")
 completed_outcome_record = completed_starlight.get("resolution", {}).get("outcomeRecord", {})
-if completed_outcome_record.get("recordVersion") != "event_skill_outcome.v1":
+if completed_outcome_record.get("recordVersion") != schema_versions["event_skill_outcome"]:
     raise RuntimeError("completedEvents.resolution 应附带通用 outcomeRecord")
 event_reaction_debug = assert_feature_debug(app.get_public_state(), "event_reaction")
 night_reflection_debug = assert_feature_debug(app.get_public_state(), "night_reflection")
@@ -1859,6 +1946,7 @@ print(
         "influenceEvents": http_debug_summary["influenceEvents"],
         "fallbackItems": fallback_summary["fallbackItems"],
         "schemaSubset": schema_subset_summary,
+        "phase2Schemas": phase2_schema_summary,
         "phase2Budget": phase2_budget_summary,
         "phase2Observers": phase2_observer_summary,
         "phase2FailureInterrupt": phase2_failure_interrupt_summary,

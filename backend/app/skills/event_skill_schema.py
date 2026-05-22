@@ -3,6 +3,8 @@
 from dataclasses import dataclass
 from typing import Literal
 
+from app.runtime.schema_registry import require_schema_version
+
 ConsequenceType = Literal[
     "supply",
     "help",
@@ -134,4 +136,4 @@ class EventSkillSchema:
     fallback_dialogue_templates: tuple[EventDialogueFallback, ...] = ()
     choice_outcomes: tuple[EventChoiceOutcome, ...] = ()
     debug_fields: tuple[EventSkillDebugField, ...] = ()
-    outcome_record_version: str = "event_skill_outcome.v1"
+    outcome_record_version: str = require_schema_version("event_skill_outcome")

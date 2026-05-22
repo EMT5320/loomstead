@@ -38,6 +38,7 @@ from app.runtime.action_parser import parse_provider_output
 from app.runtime.capability_registry import CapabilityRegistry
 from app.runtime.decision_budget import DecisionBudgetStore
 from app.runtime.motivation_engine import MotivationEngine
+from app.runtime.schema_registry import require_schema_version, schema_registry_snapshot
 from app.runtime.trace_schema import TRACE_SCHEMA_VERSION, build_trace_envelope, trace_event_snapshot, with_trace_payload, world_time_payload
 from app.skills import (
     STARLIGHT_FESTIVAL_SHORTAGE_SKILL_ID,
@@ -150,7 +151,7 @@ class AgentRuntime:
         npc_schedules, motivation_plan = self._phase2_motivation_plan_snapshot()
         state["npcSchedules"] = npc_schedules
         state["lifeActionPlan"] = motivation_plan
-        state.setdefault("slice", {})["scheduleSnapshotVersion"] = "motivation_plan.v1"
+        state.setdefault("slice", {})["scheduleSnapshotVersion"] = require_schema_version("motivation_plan")
         return state
 
     def get_debug_snapshot(self, filters: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -176,10 +177,11 @@ class AgentRuntime:
         world_tick = int(self.world.get("clock", {}).get("tick", 0)) if isinstance(self.world.get("clock"), dict) else 0
         return {
             "traceSchemaVersion": TRACE_SCHEMA_VERSION,
+            "schemaRegistry": schema_registry_snapshot(),
             "tools": self.capability_registry.tool_registry.to_debug_payload(),
             "needAccumulator": self.motivation_engine.need_accumulator.debug_snapshot(self.world, npc_ids=npc_ids, delta_minutes=20.0),
             "decisionBudget": self.decision_budget.debug_snapshot(self.world, npc_ids=npc_ids),
-            "motivation": {"version": "motivation_engine.v0", "items": self._phase2_decisions(npc_ids[:6])},
+            "motivation": {"version": require_schema_version("motivation_engine"), "items": self._phase2_decisions(npc_ids[:6])},
             "toolRuntime": self._phase2_tool_runtime_snapshot(npc_ids),
             "subjectiveMemory": self.subjective_memory_store.debug_snapshot(agent_id=npc_id, limit=20),
             "relationshipEdges": self.relationship_edge_store.debug_snapshot(agent_id=npc_id, limit=30),
@@ -246,7 +248,7 @@ class AgentRuntime:
             location_id = str(action.get("locationId") or "")
             location_buckets.setdefault(location_id, []).append(str(action.get("npcId") or ""))
         return schedules, {
-            "version": "motivation_plan.v1",
+            "version": require_schema_version("motivation_plan"),
             "day": int(clock.get("day", 1)),
             "phase": str(clock.get("phase") or "morning"),
             "generatedAtTick": int(clock.get("tick", 0)),
@@ -313,7 +315,7 @@ class AgentRuntime:
                     "contributingSources": list(state.get("contributingSources") or []),
                 }
             )
-        return {"version": "tool_runtime.v1", "items": items}
+        return {"version": require_schema_version("tool_runtime"), "items": items}
 
     def _phase2_recent_trace_events(self, filters: dict[str, Any]) -> list[dict[str, Any]]:
         limit = self._int_filter(filters, "limit", 20)

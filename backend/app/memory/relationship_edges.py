@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
+from app.runtime.schema_registry import require_schema_version
 from app.world.world_state import relation_key
 
 RelationshipEdgeType = Literal["affection", "trust", "conflict", "respect", "suspicion"]
@@ -120,4 +121,4 @@ class RelationshipEdgeStore:
 
     def debug_snapshot(self, agent_id: str | None = None, limit: int = 30) -> dict[str, Any]:
         items = self.list(agent_id=agent_id, limit=limit)
-        return {"version": "relationship_edge_store.v0", "agentId": agent_id, "count": len(items), "items": [edge.to_dict() for edge in items]}
+        return {"version": require_schema_version("relationship_edge_store"), "agentId": agent_id, "count": len(items), "items": [edge.to_dict() for edge in items]}

@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Literal
 
+from app.runtime.schema_registry import require_schema_version
+
 MemoryPerspective = Literal["objective", "subjective"]
 
 
@@ -58,7 +60,7 @@ class SubjectiveMemoryStore:
     def debug_snapshot(self, agent_id: str | None = None, limit: int = 20) -> dict[str, Any]:
         records = self.list(agent_id=agent_id, limit=limit)
         return {
-            "version": "subjective_memory_store.v0",
+            "version": require_schema_version("subjective_memory_store"),
             "agentId": agent_id,
             "count": len(records),
             "items": [record.to_dict() for record in records],

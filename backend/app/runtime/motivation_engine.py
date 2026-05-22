@@ -5,6 +5,7 @@ from typing import Any
 from app.runtime.arbitration import ArbitrationInput, ArbitrationLayer
 from app.runtime.capability_registry import CapabilityRegistry
 from app.runtime.need_accumulator import NeedAccumulator
+from app.runtime.schema_registry import require_schema_version
 
 
 class MotivationEngine:
@@ -63,11 +64,11 @@ class MotivationEngine:
     def debug_snapshot(self, world: dict[str, Any], npc_ids: list[str] | None = None, limit: int = 6) -> dict[str, Any]:
         candidate_ids = npc_ids or list(world.get("agents", {}).keys())[:limit]
         items = [self.evaluate_npc(world, npc_id) for npc_id in candidate_ids[:limit]]
-        return {"version": "motivation_engine.v0", "items": items}
+        return {"version": require_schema_version("motivation_engine"), "items": items}
 
     def _subjective_memory_recall_debug(self, records: list[dict[str, Any]]) -> dict[str, Any]:
         return {
-            "version": "subjective_memory_recall.v1",
+            "version": require_schema_version("subjective_memory_recall"),
             "query": "tool_result",
             "count": len(records),
             "recordIds": [str(item.get("recordId") or "") for item in records[:8] if str(item.get("recordId") or "")],
@@ -77,7 +78,7 @@ class MotivationEngine:
     def _heuristic_recall_debug(self, heuristics: list[dict[str, Any]], world_tick: int) -> dict[str, Any]:
         active_items = [item for item in heuristics if str(item.get("status") or "active") == "active"]
         return {
-            "version": "heuristic_recall.v1",
+            "version": require_schema_version("heuristic_recall"),
             "worldTick": world_tick,
             "count": len(heuristics),
             "activeCount": len(active_items),

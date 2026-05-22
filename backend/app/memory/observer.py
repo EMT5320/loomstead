@@ -6,6 +6,7 @@ from app.memory.heuristic import HeuristicLibrary
 from app.memory.memory_store import remember
 from app.memory.relationship_edges import RelationshipEdgeStore
 from app.memory.subjective_memory import SubjectiveMemoryRecord, SubjectiveMemoryStore
+from app.runtime.schema_registry import require_schema_version
 from app.runtime.trace_schema import build_trace_envelope, with_trace_payload, world_time_payload
 
 
@@ -140,7 +141,7 @@ class ResultObserver:
         observer_ids = sorted(str(item.get("observerId")) for item in spatial_evidence if isinstance(item, dict) and item.get("visible") and str(item.get("observerId") or "") in agents)
         excluded_observer_ids = sorted(observer_id for observer_id in candidate_ids if observer_id in agents and observer_id not in set(observer_ids))
         return {
-            "version": "observer_scope.v1",
+            "version": require_schema_version("observer_scope"),
             "visibility": visibility,
             "actorId": actor_id or None,
             "participantIds": [participant_id for participant_id in participant_ids if participant_id in agents],
@@ -148,7 +149,7 @@ class ResultObserver:
             "eventAnchorId": event_anchor_id or None,
             "locationObserverIds": [observer_id for observer_id in location_observer_ids if observer_id in agents],
             "spatialModel": {
-                "version": "observer_spatial_model.v1",
+                "version": require_schema_version("observer_spatial_model"),
                 "distanceUnit": "normalized_anchor_screen",
                 "hearingRadius": SPATIAL_HEARING_RADIUS,
             },

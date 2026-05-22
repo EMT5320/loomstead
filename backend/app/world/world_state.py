@@ -4,6 +4,7 @@ from copy import deepcopy
 from typing import Any
 
 from app.content.codex_loader import load_all_npc_deep_cards, to_runtime_dict
+from app.runtime.schema_registry import require_schema_version
 from app.simulation import build_life_action_plan_snapshot
 
 from .seed_data import (
@@ -418,7 +419,7 @@ def public_game_world(world: dict[str, Any], recent_events: list[dict[str, Any]]
             "locationIds": DAY1_LOCATION_IDS,
             "anchorIds": [anchor["id"] for anchor in anchors],
             "supportedNpcPresenceSources": list(NPC_PRESENCE_SOURCES),
-            "scheduleSnapshotVersion": "life_action_plan.v1",
+            "scheduleSnapshotVersion": require_schema_version("legacy_life_action_plan"),
             "supportedLifeActionWindows": list(PHASES),
         },
         "townStats": view["townStats"],

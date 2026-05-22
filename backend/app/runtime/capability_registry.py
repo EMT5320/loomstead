@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.runtime.decision_budget import DecisionBudgetStore
+from app.runtime.schema_registry import require_schema_version
 from app.tools import Precondition, ToolDefinition, ToolRegistry
 
 NEED_TO_TOOL_PREFIXES = {
@@ -51,7 +52,7 @@ class CapabilityResolution:
 
     def to_debug_dict(self) -> dict[str, Any]:
         return {
-            "version": "capability_resolution.v1",
+            "version": require_schema_version("capability_resolution"),
             "context": self.context.to_dict() if self.context else None,
             "layers": [dict(layer) for layer in self.filter_trace],
             "allowedToolIds": [tool.tool_id for tool in self.allowed_tools],

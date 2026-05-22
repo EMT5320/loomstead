@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from app.runtime.schema_registry import require_schema_version
+
 DEFAULT_NEEDS = ("energy", "money_anxiety", "affiliation", "recognition")
 
 
@@ -62,7 +64,7 @@ class NeedAccumulator:
                 continue
             scores = sorted(self.score(world, agent, delta_minutes), key=lambda item: item.urgency, reverse=True)
             items.append({"npcId": npc_id, "npcName": agent.get("name", npc_id), "needs": [score.to_dict() for score in scores]})
-        return {"version": "need_accumulator.v0", "items": items}
+        return {"version": require_schema_version("need_accumulator"), "items": items}
 
     def _need_weight(self, profile: Any, need_id: str) -> float:
         """读取深度卡 motivationProfile.needs.<need>.weight；兼容早期 weights 占位。"""

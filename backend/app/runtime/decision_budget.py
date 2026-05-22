@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from app.runtime.schema_registry import require_schema_version
+
 if TYPE_CHECKING:
     from app.tools.tool_schema import ToolDefinition
 
@@ -77,7 +79,7 @@ class DecisionBudgetSnapshot:
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "version": "decision_budget.v1",
+            "version": require_schema_version("decision_budget"),
             "toolId": self.tool_id,
             "channel": self.channel,
             "feature": self.feature,
@@ -290,7 +292,7 @@ class DecisionBudgetStore:
                 }
             )
         return {
-            "version": "decision_budget.v1",
+            "version": require_schema_version("decision_budget"),
             "policy": {
                 "unit": "decision_unit",
                 "channels": dict(self.daily_limits),
@@ -340,14 +342,15 @@ class DecisionBudgetStore:
 
     def _root(self, world: dict[str, Any]) -> dict[str, Any]:
         day = int(world.get("clock", {}).get("day", 1)) if isinstance(world.get("clock"), dict) else 1
-        root = world.setdefault("decisionBudgets", {"version": "decision_budget.v1", "day": day, "agents": {}})
+        version = require_schema_version("decision_budget")
+        root = world.setdefault("decisionBudgets", {"version": version, "day": day, "agents": {}})
         if not isinstance(root, dict):
-            root = {"version": "decision_budget.v1", "day": day, "agents": {}}
+            root = {"version": version, "day": day, "agents": {}}
             world["decisionBudgets"] = root
         if int(root.get("day", day)) != day:
             root.clear()
-            root.update({"version": "decision_budget.v1", "day": day, "agents": {}})
-        root.setdefault("version", "decision_budget.v1")
+            root.update({"version": version, "day": day, "agents": {}})
+        root.setdefault("version", version)
         root.setdefault("day", day)
         root.setdefault("agents", {})
         return root
@@ -435,7 +438,7 @@ class DecisionBudgetStore:
         clock = world.get("clock", {}) if isinstance(world.get("clock"), dict) else {}
         normalized_feature = str(feature or "unknown")
         return {
-            "version": "provider_usage_actual.v1",
+            "version": require_schema_version("provider_usage_actual"),
             "tick": int(clock.get("tick", 0) or 0),
             "day": int(clock.get("day", 1) or 1),
             "npcId": str(npc_id or "system"),

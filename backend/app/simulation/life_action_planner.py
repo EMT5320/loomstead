@@ -3,8 +3,9 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Any
 
+from app.runtime.schema_registry import require_schema_version
 
-LIFE_ACTION_PLAN_VERSION = "life_action_plan.v1"
+LIFE_ACTION_PLAN_VERSION = require_schema_version("legacy_life_action_plan")
 PHASE_WINDOWS = ("morning", "afternoon", "evening")
 
 

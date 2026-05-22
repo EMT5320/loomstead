@@ -347,7 +347,6 @@ STARLIGHT_FESTIVAL_SHORTAGE_SKILL = EventSkillSchema(
         ),
     ),
     debug_fields=_STARLIGHT_SKILL_DEBUG_FIELDS,
-    outcome_record_version="event_skill_outcome.v1",
 )
 
 _EVENT_SKILL_REGISTRY: dict[str, EventSkillSchema] = {
