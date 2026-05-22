@@ -9,7 +9,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 
 # Loomstead 新对话入口
 
-> 更新时间：2026-05-22（Phase 2 observer visibility scope）
+> 更新时间：2026-05-22（Phase 2 JSON Schema subset）
 > 用途：下一轮新对话、研究阶段开发和必要子代理任务的第一入口。
 
 ## 1. 当前入口
@@ -124,13 +124,13 @@ git status --short; git diff --check
 ### 当前状态
 
 - Phase 1（活着的世界）done：2026-05-21 主人确认可以收口，`world_main.tscn` 进入完成基线。
-- Phase 2（骨架建立期）首轮已落地：NPC 深度卡 schema 占位已补，后端 Tool / ToolContractValidator / DecisionBudgetStore / NeedAccumulator / Motivation / ToolExecutor / ResultObserver / SubjectiveMemory / RelationshipEdge / HeuristicLibrary / `phase2.trace.v1` / DomainAdapter shared Protocol / Eval L1 + 规则级 Process Fidelity + Counterfactual Replay + memory ablation + 24h stability suite 已接入 tick 与 Debug；`motivation.decision_made` 已把 need / 5 层 capability filters / 主观记忆召回 / heuristic recall / candidate scores / selected tool 接入 trace，工具完成 / 失败 / 中断会携带 decision trace ref、主观记忆 refs 和 heuristic refs；工具输入 schema / 世界前置条件失败会稳定落入 `tool.execution_failed.reason`；LLM eligible 工具会经 `decision_budget` 路由并在耗尽时生成 `budget.decision_fallback`；ResultObserver 已按 private / participants_only / all_in_location 解析多 NPC 旁观者并把 `observerScope` 写入 trace；Hard Delegation baseline、No Subjective Memory、No Relationship Edge、Shuffled Memory Owner、Evidence-Link Removal 和 Godot 观察者 debug 摘要面板已落地，但当前 process suite 仍是规则级 / 后验 ablation 骨架。
+- Phase 2（骨架建立期）首轮已落地：NPC 深度卡 schema 占位已补，后端 Tool / ToolContractValidator / DecisionBudgetStore / NeedAccumulator / Motivation / ToolExecutor / ResultObserver / SubjectiveMemory / RelationshipEdge / HeuristicLibrary / `phase2.trace.v1` / DomainAdapter shared Protocol / Eval L1 + 规则级 Process Fidelity + Counterfactual Replay + memory ablation + 24h stability suite 已接入 tick 与 Debug；`motivation.decision_made` 已把 need / 5 层 capability filters / 主观记忆召回 / heuristic recall / candidate scores / selected tool 接入 trace，工具完成 / 失败 / 中断会携带 decision trace ref、主观记忆 refs 和 heuristic refs；工具输入 schema / 世界前置条件失败会稳定落入 `tool.execution_failed.reason`；ToolContractValidator 已支持常用 JSON Schema 子集并覆盖 enum / additionalProperties / uniqueItems / numeric range 等稳定违规 code；LLM eligible 工具会经 `decision_budget` 路由并在耗尽时生成 `budget.decision_fallback`；ResultObserver 已按 private / participants_only / all_in_location 解析多 NPC 旁观者并把 `observerScope` 写入 trace；Hard Delegation baseline、No Subjective Memory、No Relationship Edge、Shuffled Memory Owner、Evidence-Link Removal 和 Godot 观察者 debug 摘要面板已落地，但当前 process suite 仍是规则级 / 后验 ablation 骨架。
 - 项目方向：narrative-primary 的可解释多 Agent 叙事运行时，差异化主轴为"少而深 + 可解释 + 可评估"。
 
 ### Phase 2 第一入口
 
 1. 完整总骨架以 `docs/production_roadmap.md` §4.3 的 15 项为准；`docs/agent_loop_architecture.md` §13.3 是 Agent Loop 内部 11 项。
-2. 后端第十刀已过：ResultObserver 已按 `observerVisibility` 解析 private / participants_only / all_in_location，多 NPC 旁观者范围会输出 `observer_scope.v1` 并进入 `memory.result_observed.details`；smoke 新增 `phase2Observers={private:1, participants:2, location:3}`。下一刀补更完整 JSON Schema 子集、更真实的 LLM 预算消费策略、更细的空间可见性模型和更严格 Debug 展开。
+2. 后端第十一刀已过：ToolContractValidator 已支持常用 JSON Schema 子集，10 个工具 schema 已改为严格 `additionalProperties=false`；smoke 新增 `schemaSubset`，并覆盖 `unexpected_input_field:extra`、`input_enum_mismatch:direction`、`input_array_duplicate_items:targetNpcIds`。下一刀补更真实的 LLM 预算消费策略、更细的空间可见性模型、schema 版本治理和更严格 Debug 展开。
 3. Eval 第四刀已过：`scripts/run_agent_eval.py --suite process` 已输出 3 个 GoalSpec、10 项指标、Full / Hard / No Subjective Memory / No Relationship Edge / Shuffled Owner / Evidence-Link Removal 六组对照、Counterfactual Replay 和本地导出；Counterfactual Replay 已区分 `relationshipEffect`、`subjectiveMemoryEffect` 与 `heuristicEffect`；Full 关系因果使用为 `1.0`，No Subjective Memory 覆盖降至 `0.8` 且关系因果仍为 `1.0`，owner/source 等对照关系因果为 `0.0`。注意：Hard Delegation 仍是合成 baseline，No Subjective Memory 仍是后验 ablation，Counterfactual Replay 因果判据仍需收紧。`--suite stability` 已通过 24 游戏小时：`ticksCompleted=24`、`failedToolCount=0`、`interruptedToolCount=3`、`budget.decision_consumed=5`、`memory_observation_per_tool_result=1.0`、`active_agent_count=6`、`heuristic_count=18`、`heuristic_decision_ref_rate=0.104167`。下一刀补跨域 GoalSpec。
 4. Godot 第二刀已过：Tab 观察者面板已读取后端 phase2 debug 摘要；下一刀补 recentTraceEvents 展开和真实窗口体验验收。
 5. `LifeActionExecutor` 旧线定位为回归修复；Phase 2 不并行运行旧规则和 MotivationEngine。
@@ -150,7 +150,7 @@ npm.cmd run asset:check; npm.cmd run client:env; npm.cmd run client:run:check
 ## 7. 协作参考
 
 - 任务拆分优先按当前开发线选择源文档：后端 Agent Loop / Eval / Godot 观察者 / Content schema / 资产管线 / 文档治理。
-- 后端骨架线关注 `backend/app/tools/`、`backend/app/runtime/`、`backend/app/memory/`、`backend/app/world/entities/`，近期目标是更完整 JSON Schema 子集、更真实的 LLM 预算消费策略、更细的空间可见性模型、跨域 GoalSpec 和更严格 trace dataset 归档。
+- 后端骨架线关注 `backend/app/tools/`、`backend/app/runtime/`、`backend/app/memory/`、`backend/app/world/entities/`，近期目标是更真实的 LLM 预算消费策略、更细的空间可见性模型、schema 版本治理、跨域 GoalSpec 和更严格 trace dataset 归档。
 - Eval 线关注 `scripts/run_agent_eval.py`、`backend/app/eval/`、`backend/app/domain/`，近期目标是跨域 GoalSpec 和更严格 trace dataset 归档。
 - Godot 观察者线关注 `clients/godot/`，近期目标是 `recentTraceEvents` 展开、空态 / 错误态文案和真实窗口验收。
 - 多子代理并行减少后，默认不维护大看板；若临时并行，避免多个 worker 同时修改 `docs/current_status.md`、`docs/agent_context.md` 等治理入口。

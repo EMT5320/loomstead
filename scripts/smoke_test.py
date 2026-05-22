@@ -27,6 +27,8 @@ from app.providers.context_builder import (  # noqa: E402
 )
 from app.runtime.need_accumulator import NeedAccumulator  # noqa: E402
 from app.skills import STARLIGHT_FESTIVAL_SHORTAGE_SKILL_ID  # noqa: E402
+from app.tools.contracts import ToolContractValidator, ToolContractViolation  # noqa: E402
+from app.tools.tool_schema import ToolDefinition  # noqa: E402
 
 REQUIRED_DEBUG_FIELDS = {
     "providerMode",
@@ -662,6 +664,53 @@ def assert_phase2_observer_visibility_scope() -> dict:
     }
 
 
+def assert_tool_contract_json_schema_subset() -> dict:
+    """确认工具输入契约支持常用 JSON Schema 子集，并输出稳定违规 code。"""
+    validator = ToolContractValidator()
+    tool = ToolDefinition(
+        tool_id="schema.subset",
+        tier="social_strategic",
+        input_schema={
+            "type": "object",
+            "required": ["mode", "count", "tags"],
+            "properties": {
+                "mode": {"type": "string", "enum": ["seed", "contain"]},
+                "count": {"type": "integer", "minimum": 1, "maximum": 3},
+                "tags": {"type": "array", "items": {"type": "string", "minLength": 2}, "minItems": 1, "uniqueItems": True},
+                "meta": {
+                    "type": "object",
+                    "required": ["public"],
+                    "properties": {"public": {"type": "boolean"}},
+                    "additionalProperties": False,
+                },
+            },
+            "additionalProperties": False,
+        },
+    )
+    validator.validate_input_schema(tool=tool, tool_input={"mode": "seed", "count": 2, "tags": ["aa"], "meta": {"public": True}})
+    cases = [
+        ("enum", {"mode": "broadcast", "count": 2, "tags": ["aa"]}, "input_enum_mismatch:mode", "enum"),
+        ("range", {"mode": "seed", "count": 0, "tags": ["aa"]}, "input_number_too_small:count", "minimum"),
+        ("duplicate", {"mode": "seed", "count": 2, "tags": ["aa", "aa"]}, "input_array_duplicate_items:tags", "uniqueItems"),
+        ("item", {"mode": "seed", "count": 2, "tags": ["a"]}, "input_string_too_short:tags[0]", "minLength"),
+        ("extra", {"mode": "seed", "count": 2, "tags": ["aa"], "extra": True}, "unexpected_input_field:extra", "additionalProperties"),
+        ("nested_extra", {"mode": "seed", "count": 2, "tags": ["aa"], "meta": {"public": True, "secret": "x"}}, "unexpected_input_field:meta.secret", "additionalProperties"),
+    ]
+    observed: dict[str, str] = {}
+    for label, payload, expected_code, expected_keyword in cases:
+        try:
+            validator.validate_input_schema(tool=tool, tool_input=payload)
+        except ToolContractViolation as exc:
+            observed[label] = exc.code
+            if exc.code != expected_code:
+                raise RuntimeError(f"JSON Schema 子集 {label} 应返回 {expected_code}，实际为 {exc.code}")
+            if exc.details.get("keyword") != expected_keyword:
+                raise RuntimeError(f"JSON Schema 子集 {label} 应记录 keyword={expected_keyword}")
+        else:
+            raise RuntimeError(f"JSON Schema 子集 {label} 应拒绝非法输入")
+    return observed
+
+
 def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
     """确认 /api/debug 总览结构稳定，并复用压缩后的 Debug turn 契约。"""
     missing = sorted(REQUIRED_DEBUG_SNAPSHOT_FIELDS - set(payload))
@@ -867,6 +916,81 @@ def assert_phase2_failure_and_interrupt_trace() -> dict:
     if non_object_payload.get("reason") != "input_not_object":
         raise RuntimeError(f"Tool input schema 应拒绝非 object 输入，实际为 {non_object_payload.get('reason')}")
 
+    extra_field_event = failure_runtime.tool_executor.apply_completion(
+        world=failure_runtime.world,
+        event_store=failure_runtime.event_store,
+        source_event_id=str(decision_event["id"]),
+        completion={
+            "npcId": "mira",
+            "toolId": "shop.open_shop",
+            "actionId": "shop.open_shop",
+            "summary": "smoke 注入未声明字段的开店动作。",
+            "targetAnchorId": "market_stall",
+            "targetLocationId": "plaza",
+            "input": {"extra": True},
+            "contributingSources": [
+                {
+                    "type": "motivation_decision_trace",
+                    "eventId": decision_event["id"],
+                    "traceId": "trace_smoke_extra_input_field",
+                }
+            ],
+        },
+    )
+    extra_field_payload = extra_field_event.get("payload", {})
+    if extra_field_payload.get("reason") != "unexpected_input_field:extra":
+        raise RuntimeError(f"Tool input schema 应拒绝未声明字段，实际为 {extra_field_payload.get('reason')}")
+
+    enum_failed_event = failure_runtime.tool_executor.apply_completion(
+        world=failure_runtime.world,
+        event_store=failure_runtime.event_store,
+        source_event_id=str(decision_event["id"]),
+        completion={
+            "npcId": "kai",
+            "toolId": "strategic.spread_rumor",
+            "actionId": "strategic.spread_rumor",
+            "summary": "smoke 注入非法传播方向。",
+            "targetAnchorId": "plaza_fountain",
+            "targetLocationId": "plaza",
+            "input": {"hookId": "unknown_hook", "direction": "broadcast"},
+            "contributingSources": [
+                {
+                    "type": "motivation_decision_trace",
+                    "eventId": decision_event["id"],
+                    "traceId": "trace_smoke_enum_input",
+                }
+            ],
+        },
+    )
+    enum_payload = enum_failed_event.get("payload", {})
+    if enum_payload.get("reason") != "input_enum_mismatch:direction":
+        raise RuntimeError(f"Tool input schema 应拒绝非法 enum，实际为 {enum_payload.get('reason')}")
+
+    duplicate_array_event = failure_runtime.tool_executor.apply_completion(
+        world=failure_runtime.world,
+        event_store=failure_runtime.event_store,
+        source_event_id=str(decision_event["id"]),
+        completion={
+            "npcId": "kai",
+            "toolId": "strategic.spread_rumor",
+            "actionId": "strategic.spread_rumor",
+            "summary": "smoke 注入重复目标数组。",
+            "targetAnchorId": "plaza_fountain",
+            "targetLocationId": "plaza",
+            "input": {"hookId": "unknown_hook", "targetNpcIds": ["mira", "mira"]},
+            "contributingSources": [
+                {
+                    "type": "motivation_decision_trace",
+                    "eventId": decision_event["id"],
+                    "traceId": "trace_smoke_duplicate_array",
+                }
+            ],
+        },
+    )
+    duplicate_array_payload = duplicate_array_event.get("payload", {})
+    if duplicate_array_payload.get("reason") != "input_array_duplicate_items:targetNpcIds":
+        raise RuntimeError(f"Tool input schema 应拒绝 uniqueItems 违规，实际为 {duplicate_array_payload.get('reason')}")
+
     precondition_failed_event = failure_runtime.tool_executor.apply_completion(
         world=failure_runtime.world,
         event_store=failure_runtime.event_store,
@@ -949,6 +1073,9 @@ def assert_phase2_failure_and_interrupt_trace() -> dict:
         "failedReason": failed_payload.get("reason"),
         "schemaReason": schema_payload.get("reason"),
         "nonObjectReason": non_object_payload.get("reason"),
+        "extraFieldReason": extra_field_payload.get("reason"),
+        "enumReason": enum_payload.get("reason"),
+        "duplicateArrayReason": duplicate_array_payload.get("reason"),
         "preconditionReason": precondition_payload.get("reason"),
         "interruptedTool": interrupted_payload.get("interruptedToolId"),
         "replacementTool": interrupted_payload.get("replacementToolId"),
@@ -1615,6 +1742,7 @@ if not memory_search["items"]:
 http_debug_summary = assert_http_debug_endpoints(app)
 fallback_summary = assert_provider_fallback_debug()
 assert_motivation_profile_weight_contract()
+schema_subset_summary = assert_tool_contract_json_schema_subset()
 phase2_budget_summary = assert_phase2_decision_budget_routing()
 phase2_observer_summary = assert_phase2_observer_visibility_scope()
 phase2_failure_interrupt_summary = assert_phase2_failure_and_interrupt_trace()
@@ -1643,6 +1771,7 @@ print(
         "memoryHits": http_debug_summary["memoryHits"],
         "influenceEvents": http_debug_summary["influenceEvents"],
         "fallbackItems": fallback_summary["fallbackItems"],
+        "schemaSubset": schema_subset_summary,
         "phase2Budget": phase2_budget_summary,
         "phase2Observers": phase2_observer_summary,
         "phase2FailureInterrupt": phase2_failure_interrupt_summary,

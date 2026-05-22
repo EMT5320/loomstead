@@ -2,11 +2,27 @@ from __future__ import annotations
 
 from app.tools.tool_schema import FailureMode, ToolDefinition, WorldEffect
 
+ID_SCHEMA = {"type": "string", "minLength": 1}
+GOSSIP_DIRECTION_SCHEMA = {"type": "string", "enum": ["seed", "amplify", "contain"]}
+
+
+def object_schema(properties: dict[str, object], required: tuple[str, ...] = ()) -> dict[str, object]:
+    """生成工具输入的严格 object schema，避免 LLM 夹带未声明字段。"""
+    schema: dict[str, object] = {
+        "type": "object",
+        "properties": properties,
+        "additionalProperties": False,
+    }
+    if required:
+        schema["required"] = list(required)
+    return schema
+
+
 DEFAULT_TOOLS: tuple[ToolDefinition, ...] = (
     ToolDefinition(
         tool_id="life.move_to",
         tier="physiological",
-        input_schema={"type": "object", "required": ["anchorId"], "properties": {"anchorId": {"type": "string"}}},
+        input_schema=object_schema({"anchorId": ID_SCHEMA}, required=("anchorId",)),
         duration_seconds=180.0,
         interruptible=True,
         interrupt_priority_threshold=0.9,
@@ -17,7 +33,7 @@ DEFAULT_TOOLS: tuple[ToolDefinition, ...] = (
     ToolDefinition(
         tool_id="life.rest",
         tier="physiological",
-        input_schema={"type": "object", "properties": {}},
+        input_schema=object_schema({}),
         duration_seconds=900.0,
         interruptible=True,
         interrupt_priority_threshold=0.95,
@@ -28,7 +44,7 @@ DEFAULT_TOOLS: tuple[ToolDefinition, ...] = (
     ToolDefinition(
         tool_id="life.eat_food",
         tier="physiological",
-        input_schema={"type": "object", "properties": {"itemId": {"type": "string"}}},
+        input_schema=object_schema({"itemId": ID_SCHEMA}),
         duration_seconds=240.0,
         interruptible=True,
         interrupt_priority_threshold=0.85,
@@ -39,7 +55,7 @@ DEFAULT_TOOLS: tuple[ToolDefinition, ...] = (
     ToolDefinition(
         tool_id="farm.water_crop",
         tier="vocational",
-        input_schema={"type": "object", "required": ["farmPlotId"], "properties": {"farmPlotId": {"type": "string"}}},
+        input_schema=object_schema({"farmPlotId": ID_SCHEMA}, required=("farmPlotId",)),
         duration_seconds=420.0,
         interruptible=True,
         world_effects=(WorldEffect(kind="farm", target="farmPlot.stage", delta={"stage": "watered"}),),
@@ -49,7 +65,7 @@ DEFAULT_TOOLS: tuple[ToolDefinition, ...] = (
     ToolDefinition(
         tool_id="shop.open_shop",
         tier="vocational",
-        input_schema={"type": "object", "properties": {}},
+        input_schema=object_schema({}),
         duration_seconds=1200.0,
         interruptible=True,
         world_effects=(WorldEffect(kind="town_stat", target="economy", delta={"economy": 1}),),
@@ -59,7 +75,7 @@ DEFAULT_TOOLS: tuple[ToolDefinition, ...] = (
     ToolDefinition(
         tool_id="cook.prepare_meal",
         tier="vocational",
-        input_schema={"type": "object", "properties": {"recipeId": {"type": "string"}}},
+        input_schema=object_schema({"recipeId": ID_SCHEMA}),
         duration_seconds=540.0,
         interruptible=True,
         world_effects=(WorldEffect(kind="town_stat", target="harmony", delta={"harmony": 1}),),
@@ -69,7 +85,7 @@ DEFAULT_TOOLS: tuple[ToolDefinition, ...] = (
     ToolDefinition(
         tool_id="craft.repair_stall",
         tier="vocational",
-        input_schema={"type": "object", "properties": {"anchorId": {"type": "string"}}},
+        input_schema=object_schema({"anchorId": ID_SCHEMA}),
         duration_seconds=600.0,
         interruptible=True,
         world_effects=(WorldEffect(kind="town_stat", target="harmony", delta={"harmony": 1}),),
@@ -79,7 +95,7 @@ DEFAULT_TOOLS: tuple[ToolDefinition, ...] = (
     ToolDefinition(
         tool_id="social.chat_with",
         tier="social_strategic",
-        input_schema={"type": "object", "required": ["targetNpcId"], "properties": {"targetNpcId": {"type": "string"}}},
+        input_schema=object_schema({"targetNpcId": ID_SCHEMA}, required=("targetNpcId",)),
         duration_seconds=360.0,
         interruptible=True,
         world_effects=(WorldEffect(kind="relation", target="npc_pair", delta={"affection": 2, "trust": 1}),),
@@ -91,7 +107,7 @@ DEFAULT_TOOLS: tuple[ToolDefinition, ...] = (
     ToolDefinition(
         tool_id="social.give_gift",
         tier="social_strategic",
-        input_schema={"type": "object", "required": ["targetNpcId"], "properties": {"targetNpcId": {"type": "string"}, "itemId": {"type": "string"}}},
+        input_schema=object_schema({"targetNpcId": ID_SCHEMA, "itemId": ID_SCHEMA}, required=("targetNpcId",)),
         duration_seconds=300.0,
         interruptible=True,
         world_effects=(WorldEffect(kind="relation", target="npc_pair", delta={"affection": 3, "trust": 1}),),
@@ -103,7 +119,15 @@ DEFAULT_TOOLS: tuple[ToolDefinition, ...] = (
     ToolDefinition(
         tool_id="strategic.spread_rumor",
         tier="social_strategic",
-        input_schema={"type": "object", "required": ["hookId"], "properties": {"hookId": {"type": "string"}}},
+        input_schema=object_schema(
+            {
+                "hookId": ID_SCHEMA,
+                "direction": GOSSIP_DIRECTION_SCHEMA,
+                "targetNpcIds": {"type": "array", "items": ID_SCHEMA, "minItems": 1, "uniqueItems": True},
+                "forbiddenStateMutation": {"type": "boolean"},
+            },
+            required=("hookId",),
+        ),
         duration_seconds=600.0,
         interruptible=True,
         interrupt_priority_threshold=0.7,
