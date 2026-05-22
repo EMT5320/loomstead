@@ -496,11 +496,17 @@ class ToolExecutor:
             "npcId": npc_id,
             "toolId": tool_id,
             "channel": budget.get("channel"),
+            "feature": budget.get("feature"),
             "route": budget.get("route"),
             "reason": budget.get("reason"),
             "cost": budget.get("cost"),
+            "unit": budget.get("unit"),
+            "costBreakdown": deepcopy(budget.get("costBreakdown") or {}),
+            "consumedDelta": budget.get("consumedDelta"),
             "remaining": budget.get("remaining"),
             "remainingBefore": budget.get("remainingBefore"),
+            "featureRemaining": budget.get("featureRemaining"),
+            "featureRemainingBefore": budget.get("featureRemainingBefore"),
             "source": "motivation_engine",
         }
 

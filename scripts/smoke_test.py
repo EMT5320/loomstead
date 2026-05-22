@@ -25,6 +25,7 @@ from app.providers.context_builder import (  # noqa: E402
     build_player_dialogue_context,
     validate_gossip_propagation_payload,
 )
+from app.runtime.decision_budget import DecisionBudgetStore  # noqa: E402
 from app.runtime.need_accumulator import NeedAccumulator  # noqa: E402
 from app.skills import STARLIGHT_FESTIVAL_SHORTAGE_SKILL_ID  # noqa: E402
 from app.tools.contracts import ToolContractValidator, ToolContractViolation  # noqa: E402
@@ -487,12 +488,38 @@ def assert_motivation_profile_weight_contract() -> None:
 
 
 def assert_phase2_decision_budget_routing() -> dict:
-    """确认 LLM eligible 工具会经过决策预算路由，并在耗尽时降级为规则路径。"""
+    """确认 LLM eligible 工具会经过 NPC / feature / tool 预算路由，并在耗尽时降级。"""
     budget_app = create_town_app(provider_mode="rule")
     runtime = budget_app.runtime
     runtime.get_game_state()
     world = runtime.world
     npc_id = "kai"
+    chat_tool = runtime.tool_executor.tool_registry.get("social.chat_with")
+    if chat_tool is None:
+        raise RuntimeError("ToolRegistry 应包含 social.chat_with")
+    isolated_app = create_town_app(provider_mode="rule")
+    isolated_app.runtime.get_game_state()
+    isolated_world = isolated_app.runtime.world
+    isolated_budget = DecisionBudgetStore(
+        daily_limits={"social_strategic_layer": 4, "vocational_local_llm": 6, "heuristic_extraction": 2},
+        feature_limits={"dialogue": 2, "gift_exchange": 4, "gossip_propagation": 3, "vocational_action": 6, "heuristic_extraction": 2},
+    )
+    first_snapshot = isolated_budget.snapshot_for_tool(isolated_world, npc_id, chat_tool)
+    if first_snapshot.get("route") != "llm" or first_snapshot.get("feature") != "dialogue" or int(first_snapshot.get("cost") or 0) != 2:
+        raise RuntimeError("DecisionBudgetStore 应按工具输出 feature=dialogue 且 cost=2 的 llm 路由")
+    consumed_snapshot = isolated_budget.consume_for_tool(isolated_world, npc_id, chat_tool)
+    if not isinstance(consumed_snapshot, dict) or consumed_snapshot.get("eventType") != "budget.decision_consumed":
+        raise RuntimeError("DecisionBudgetStore 可用预算应产生 budget.decision_consumed")
+    if consumed_snapshot.get("featureRemaining") != 0 or consumed_snapshot.get("consumedDelta") != 2:
+        raise RuntimeError("DecisionBudgetStore 应同步扣减 featureRemaining 和 consumedDelta")
+    feature_fallback = isolated_budget.snapshot_for_tool(isolated_world, npc_id, chat_tool)
+    if feature_fallback.get("route") != "rule_fallback" or feature_fallback.get("reason") != "llm_feature_budget_exhausted_rule_fallback":
+        raise RuntimeError("feature 预算耗尽时应产生 rule_fallback")
+    debug_budget = isolated_budget.debug_snapshot(isolated_world, npc_ids=[npc_id])
+    debug_item = debug_budget["items"][0]
+    if debug_item.get("featureRemaining", {}).get("dialogue") != 0 or not debug_item.get("recentUsage"):
+        raise RuntimeError("decisionBudget debug_snapshot 应输出 featureRemaining 和 recentUsage")
+
     agent = world["agents"][npc_id]
     agent["status"].update({"energy": 100, "money": 100, "social": 0})
     agent["todayGoals"] = []
@@ -534,12 +561,16 @@ def assert_phase2_decision_budget_routing() -> dict:
     fallback_event = next((event for event in execution.get("events", []) if event.get("type") == "budget.decision_fallback"), None)
     if not isinstance(fallback_event, dict) or fallback_event.get("reason") != "llm_budget_exhausted_rule_fallback":
         raise RuntimeError("工具开始执行时应写入 budget.decision_fallback 事件")
+    if not fallback_event.get("feature") or not isinstance(fallback_event.get("costBreakdown"), dict):
+        raise RuntimeError("预算事件应携带 feature 和 costBreakdown")
     debug_budget = runtime.decision_budget.debug_snapshot(world, npc_ids=[npc_id])
     remaining = debug_budget["items"][0]["remaining"].get("social_strategic_layer")
     if remaining != 0:
         raise RuntimeError("rule_fallback 不应继续消耗已耗尽预算")
     return {
         "route": planned["decisionBudget"].get("route"),
+        "featureFallback": feature_fallback.get("reason"),
+        "toolCost": first_snapshot.get("cost"),
         "event": fallback_event.get("type"),
         "remaining": remaining,
     }

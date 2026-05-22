@@ -146,11 +146,17 @@ def _trace_event_details(event_type: str, payload: dict[str, Any]) -> dict[str, 
             "npcId": payload.get("npcId"),
             "toolId": payload.get("toolId"),
             "channel": payload.get("channel"),
+            "feature": payload.get("feature"),
             "route": payload.get("route"),
             "reason": payload.get("reason"),
             "cost": payload.get("cost"),
+            "unit": payload.get("unit"),
+            "consumedDelta": payload.get("consumedDelta"),
             "remaining": payload.get("remaining"),
             "remainingBefore": payload.get("remainingBefore"),
+            "featureRemaining": payload.get("featureRemaining"),
+            "featureRemainingBefore": payload.get("featureRemainingBefore"),
+            "costBreakdown": _compact_cost_breakdown(payload.get("costBreakdown")),
         }
     return {}
 
@@ -222,6 +228,19 @@ def _compact_observer_scope(value: Any) -> dict[str, Any]:
         "locationObserverIds": _compact_list(value.get("locationObserverIds"), 10),
         "observerIds": _compact_list(value.get("observerIds"), 10),
         "excludedObserverIds": _compact_list(value.get("excludedObserverIds"), 10),
+    }
+
+
+def _compact_cost_breakdown(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {}
+    return {
+        "unit": value.get("unit"),
+        "baseCost": value.get("baseCost"),
+        "estimatedPromptTokens": value.get("estimatedPromptTokens"),
+        "estimatedCompletionTokens": value.get("estimatedCompletionTokens"),
+        "estimatedTotalTokens": value.get("estimatedTotalTokens"),
+        "llmEligible": value.get("llmEligible"),
     }
 
 
