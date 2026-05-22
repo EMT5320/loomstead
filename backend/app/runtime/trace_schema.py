@@ -133,6 +133,9 @@ def _trace_event_details(event_type: str, payload: dict[str, Any]) -> dict[str, 
         heuristic = payload.get("heuristic") if isinstance(payload.get("heuristic"), dict) else None
         return {
             "sourceEventId": payload.get("sourceEventId"),
+            "observerVisibility": payload.get("observerVisibility"),
+            "observerCount": payload.get("observerCount"),
+            "observerScope": _compact_observer_scope(payload.get("observerScope")),
             "observers": _compact_list(payload.get("observers"), 8),
             "memoryCount": len(payload.get("memories", [])) if isinstance(payload.get("memories"), list) else 0,
             "relationshipEdgeCount": len(payload.get("relationshipEdges", [])) if isinstance(payload.get("relationshipEdges"), list) else 0,
@@ -204,6 +207,21 @@ def _compact_heuristic_recall(value: Any) -> dict[str, Any]:
         "activeCount": value.get("activeCount"),
         "heuristicIds": _compact_list(value.get("heuristicIds"), 6),
         "sourceEventIds": _compact_list(value.get("sourceEventIds"), 6),
+    }
+
+
+def _compact_observer_scope(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {}
+    return {
+        "version": value.get("version"),
+        "visibility": value.get("visibility"),
+        "actorId": value.get("actorId"),
+        "participantIds": _compact_list(value.get("participantIds"), 8),
+        "locationId": value.get("locationId"),
+        "locationObserverIds": _compact_list(value.get("locationObserverIds"), 10),
+        "observerIds": _compact_list(value.get("observerIds"), 10),
+        "excludedObserverIds": _compact_list(value.get("excludedObserverIds"), 10),
     }
 
 

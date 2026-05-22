@@ -543,6 +543,125 @@ def assert_phase2_decision_budget_routing() -> dict:
     }
 
 
+def assert_phase2_observer_visibility_scope() -> dict:
+    """确认 ResultObserver 会按 private、participants_only 和 all_in_location 分发主观记忆。"""
+    observer_app = create_town_app(provider_mode="rule")
+    runtime = observer_app.runtime
+    runtime.get_game_state()
+    world = runtime.world
+
+    def place_npc(npc_id: str, location_id: str, anchor_id: str) -> None:
+        agent = world["agents"].get(npc_id)
+        if isinstance(agent, dict):
+            agent["locationId"] = location_id
+            agent["anchorId"] = anchor_id
+        for presence in world.get("npcPresence", []):
+            if isinstance(presence, dict) and presence.get("agentId") == npc_id:
+                presence["locationId"] = location_id
+                presence["anchorId"] = anchor_id
+
+    for npc_id in list(world.get("agents", {}).keys()):
+        if npc_id in {"kai", "mira", "bram"}:
+            place_npc(str(npc_id), "plaza", "plaza_fountain")
+        else:
+            place_npc(str(npc_id), "tavern", "tavern_stage")
+
+    def store_tool_event(label: str, payload: dict) -> dict:
+        event_payload = {
+            "npcId": "kai",
+            "summary": f"smoke {label}",
+            "targetAnchorId": "plaza_fountain",
+            "targetLocationId": "plaza",
+            "traceSchemaVersion": "phase2.trace.v1",
+            "traceId": f"trace_smoke_observer_{label}",
+            **payload,
+        }
+        return runtime.event_store.append("tool.execution_completed", event_payload)
+
+    def assert_observation(label: str, observation: dict, expected_observers: list[str], expected_visibility: str) -> dict:
+        payload = observation.get("payload", {})
+        expected = sorted(expected_observers)
+        actual = sorted(str(item) for item in payload.get("observers", []))
+        if actual != expected:
+            raise RuntimeError(f"{label} 观察者分发应为 {expected}，实际为 {actual}")
+        if payload.get("observerVisibility") != expected_visibility:
+            raise RuntimeError(f"{label} observerVisibility 应为 {expected_visibility}")
+        if int(payload.get("observerCount") or 0) != len(expected):
+            raise RuntimeError(f"{label} observerCount 应为 {len(expected)}")
+        memory_agents = sorted(str(item.get("agentId") or "") for item in payload.get("memories", []) if isinstance(item, dict))
+        if memory_agents != expected:
+            raise RuntimeError(f"{label} 主观记忆写入对象应为 {expected}，实际为 {memory_agents}")
+        scope = payload.get("observerScope")
+        if not isinstance(scope, dict) or scope.get("version") != "observer_scope.v1":
+            raise RuntimeError(f"{label} 应输出 observer_scope.v1")
+        if sorted(scope.get("observerIds", [])) != expected:
+            raise RuntimeError(f"{label} observerScope.observerIds 应与 observers 一致")
+        return scope
+
+    private_event = store_tool_event(
+        "private",
+        {
+            "toolId": "life.rest",
+            "observerVisibility": "private",
+            "input": {"targetNpcId": "mira"},
+        },
+    )
+    private_observation = _record_tool_result_observation(runtime, private_event)
+    private_scope = assert_observation("private", private_observation, ["kai"], "private")
+    if "mira" not in private_scope.get("excludedObserverIds", []):
+        raise RuntimeError("private 可见性应排除同场明确 targetNpcId")
+
+    participant_event = store_tool_event(
+        "participants",
+        {
+            "toolId": "social.chat_with",
+            "observerVisibility": "participants_only",
+            "input": {"targetNpcId": "mira"},
+        },
+    )
+    participant_observation = _record_tool_result_observation(runtime, participant_event)
+    participant_scope = assert_observation("participants_only", participant_observation, ["kai", "mira"], "participants_only")
+    if "bram" not in participant_scope.get("excludedObserverIds", []):
+        raise RuntimeError("participants_only 应排除同地点但未参与的旁观者")
+
+    location_event = store_tool_event(
+        "location",
+        {
+            "toolId": "shop.open_shop",
+            "observerVisibility": "all_in_location",
+            "input": {},
+        },
+    )
+    location_observation = _record_tool_result_observation(runtime, location_event)
+    location_scope = assert_observation("all_in_location", location_observation, ["kai", "mira", "bram"], "all_in_location")
+    if sorted(location_scope.get("locationObserverIds", [])) != ["bram", "kai", "mira"]:
+        raise RuntimeError("all_in_location 应枚举同地点 NPC 旁观者")
+
+    debug = observer_app.debug_phase2({"eventType": "memory.result_observed", "limit": "20"})
+    participant_trace = next(
+        (
+            item
+            for item in debug.get("recentTraceEvents", [])
+            if item.get("sourceEventId") == participant_event.get("id")
+        ),
+        None,
+    )
+    if not isinstance(participant_trace, dict):
+        raise RuntimeError("/api/debug.phase2 应返回 participants_only 的 memory.result_observed trace")
+    participant_details = participant_trace.get("details", {})
+    if participant_details.get("observerVisibility") != "participants_only" or int(participant_details.get("observerCount") or 0) != 2:
+        raise RuntimeError("memory.result_observed trace details 应展开 observerVisibility 和 observerCount")
+    trace_scope = participant_details.get("observerScope")
+    if not isinstance(trace_scope, dict) or "bram" not in trace_scope.get("excludedObserverIds", []):
+        raise RuntimeError("memory.result_observed trace details 应展开 observerScope.excludedObserverIds")
+
+    return {
+        "private": len(private_observation["payload"]["observers"]),
+        "participants": len(participant_observation["payload"]["observers"]),
+        "location": len(location_observation["payload"]["observers"]),
+    }
+
+
 def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
     """确认 /api/debug 总览结构稳定，并复用压缩后的 Debug turn 契约。"""
     missing = sorted(REQUIRED_DEBUG_SNAPSHOT_FIELDS - set(payload))
@@ -1497,6 +1616,7 @@ http_debug_summary = assert_http_debug_endpoints(app)
 fallback_summary = assert_provider_fallback_debug()
 assert_motivation_profile_weight_contract()
 phase2_budget_summary = assert_phase2_decision_budget_routing()
+phase2_observer_summary = assert_phase2_observer_visibility_scope()
 phase2_failure_interrupt_summary = assert_phase2_failure_and_interrupt_trace()
 
 tick_before_step = app.get_public_state()["clock"]["tick"]
@@ -1524,6 +1644,7 @@ print(
         "influenceEvents": http_debug_summary["influenceEvents"],
         "fallbackItems": fallback_summary["fallbackItems"],
         "phase2Budget": phase2_budget_summary,
+        "phase2Observers": phase2_observer_summary,
         "phase2FailureInterrupt": phase2_failure_interrupt_summary,
     },
 )
