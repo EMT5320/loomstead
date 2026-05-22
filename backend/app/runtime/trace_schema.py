@@ -87,7 +87,56 @@ def trace_event_snapshot(event: dict[str, Any]) -> dict[str, Any]:
         "createdAt": event.get("createdAt"),
         "traceSchemaVersion": TRACE_SCHEMA_VERSION,
         **envelope,
+        "details": _trace_event_details(event_type, payload),
     }
+
+
+def _trace_event_details(event_type: str, payload: dict[str, Any]) -> dict[str, Any]:
+    """为观察者面板提供轻量可展开字段，避免返回完整事件 payload。"""
+    if event_type == "motivation.decision_made":
+        primary_need = payload.get("primaryNeed") if isinstance(payload.get("primaryNeed"), dict) else {}
+        return {
+            "npcId": payload.get("npcId"),
+            "needId": primary_need.get("needId"),
+            "urgency": primary_need.get("urgency"),
+            "selectedToolId": payload.get("selectedToolId"),
+            "decisionReason": payload.get("decisionReason"),
+            "capabilityCount": payload.get("capabilityCount"),
+            "candidateScores": _compact_list(payload.get("candidateScores"), 5),
+            "relationshipEdgeRefs": _compact_list(payload.get("relationshipEdgeRefs"), 4),
+            "contributingSources": _compact_list(payload.get("contributingSources"), 6),
+        }
+    if event_type in {"tool.execution_completed", "tool.execution_failed"}:
+        return {
+            "npcId": payload.get("npcId"),
+            "toolId": payload.get("toolId"),
+            "targetNpcId": payload.get("targetNpcId"),
+            "targetAnchorId": payload.get("targetAnchorId"),
+            "targetLocationId": payload.get("targetLocationId"),
+            "reason": payload.get("reason"),
+            "worldEffectCount": len(payload.get("worldEffects", [])) if isinstance(payload.get("worldEffects"), list) else 0,
+            "sourceEventIds": _compact_list(payload.get("sourceEventIds"), 4),
+            "traceRefs": _compact_list(payload.get("traceRefs"), 6),
+        }
+    if event_type == "memory.result_observed":
+        heuristic = payload.get("heuristic") if isinstance(payload.get("heuristic"), dict) else None
+        return {
+            "sourceEventId": payload.get("sourceEventId"),
+            "observers": _compact_list(payload.get("observers"), 8),
+            "memoryCount": len(payload.get("memories", [])) if isinstance(payload.get("memories"), list) else 0,
+            "relationshipEdgeCount": len(payload.get("relationshipEdges", [])) if isinstance(payload.get("relationshipEdges"), list) else 0,
+            "heuristicId": heuristic.get("heuristicId") if heuristic else None,
+        }
+    return {}
+
+
+def _compact_list(value: Any, limit: int) -> list[Any]:
+    if not isinstance(value, list):
+        return []
+    compacted = []
+    for item in value[:limit]:
+        compacted.append(deepcopy(item) if isinstance(item, (dict, list)) else item)
+    return compacted
 
 
 def _normalize_target_ids(target_ids: Any) -> list[str]:

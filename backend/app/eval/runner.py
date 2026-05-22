@@ -37,7 +37,7 @@ RELATIONSHIP_ABLATION_SHUFFLED_OWNER = "shuffled_memory_owner"
 RELATIONSHIP_ABLATION_EVIDENCE_LINK_REMOVAL = "evidence_link_removal"
 BASELINE_STABILITY_24H = "rule_24h_stability"
 DEFAULT_STABILITY_HOURS = 24
-STABILITY_TRACE_TYPES = {"tool.execution_completed", "tool.execution_failed", "memory.result_observed"}
+STABILITY_TRACE_TYPES = {"motivation.decision_made", "tool.execution_completed", "tool.execution_failed", "memory.result_observed"}
 
 
 def run_rule_scenarios(scenarios: tuple[EvalScenario, ...] = DEFAULT_L1_SCENARIOS) -> dict[str, Any]:

@@ -9,7 +9,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 
 # Loomstead 新对话入口
 
-> 更新时间：2026-05-22（LLM smoke 拆分 + goal board 归档）
+> 更新时间：2026-05-22（LLM smoke 拆分 + Phase 2 decision trace）
 > 用途：下一轮新对话、研究阶段开发和必要子代理任务的第一入口。
 
 ## 1. 当前入口
@@ -46,7 +46,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - 星灯祭结算会输出统一 `event_skill_outcome.v1`，API `eventResult`、`town.event_resolved.payload.outcomeRecord` 和 `completedEvents[].resolution.outcomeRecord` 共用该记录。
 - 服务端已透出 `playerAnchor`，并为 `move_to_anchor` 与 `scene_action` 返回统一 `actionFeedback`。
 - `/api/world/state` 已把 `npcSchedules` 与 `lifeActionPlan` 切到 `motivation_plan.v1` 只读快照，由 MotivationEngine / ToolExecutor 生成下一步候选，继续保持 Godot 可消费的旧字段外形。
-- `POST /api/world/tick` 已切到 Phase 2 `MotivationEngine -> ToolExecutor` 最小闭环，返回 `clock`、`events` 与 `agents` diff；tick 事件继续覆盖 `npc.move_started`、`npc.move_progress`、`npc.arrived` 和 `npc.action_*`，工具结果和观察结果已携带 `phase2.trace.v1`。
+- `POST /api/world/tick` 已切到 Phase 2 `MotivationEngine -> ToolExecutor` 最小闭环，返回 `clock`、`events` 与 `agents` diff；tick 事件覆盖 `motivation.decision_made`、`npc.*`、`tool.execution_completed` 和 `memory.result_observed`，工具结果会携带 `motivation_decision_trace` 引用，观察结果可追溯到工具完成事件。
 
 ### Content Codex / NPC 深度卡
 
@@ -124,13 +124,13 @@ git status --short; git diff --check
 ### 当前状态
 
 - Phase 1（活着的世界）done：2026-05-21 主人确认可以收口，`world_main.tscn` 进入完成基线。
-- Phase 2（骨架建立期）启动中：NPC 深度卡 schema 占位已补，后端 Tool / NeedAccumulator / Motivation / ToolExecutor / ResultObserver / SubjectiveMemory / RelationshipEdge / HeuristicLibrary / `phase2.trace.v1` / Eval L1 + Process Fidelity + Counterfactual Replay + memory ablation + 24h stability suite 已接入 tick 与 Debug；Hard Delegation baseline、No Subjective Memory、No Relationship Edge、Shuffled Memory Owner、Evidence-Link Removal 和 Godot 观察者 debug 摘要面板已落地。
+- Phase 2（骨架建立期）启动中：NPC 深度卡 schema 占位已补，后端 Tool / NeedAccumulator / Motivation / ToolExecutor / ResultObserver / SubjectiveMemory / RelationshipEdge / HeuristicLibrary / `phase2.trace.v1` / Eval L1 + Process Fidelity + Counterfactual Replay + memory ablation + 24h stability suite 已接入 tick 与 Debug；`motivation.decision_made` 已把 need / candidate scores / selected tool 接入 trace，工具完成会携带 decision trace ref；Hard Delegation baseline、No Subjective Memory、No Relationship Edge、Shuffled Memory Owner、Evidence-Link Removal 和 Godot 观察者 debug 摘要面板已落地。
 - 项目方向：narrative-primary 的可解释多 Agent 叙事运行时，差异化主轴为"少而深 + 可解释 + 可评估"。
 
 ### Phase 2 第一入口
 
 1. 完整总骨架以 `docs/production_roadmap.md` §4.3 的 15 项为准；`docs/agent_loop_architecture.md` §13.3 是 Agent Loop 内部 11 项。
-2. 后端第二刀已过：`NeedAccumulator`、`ResultObserver + BiasFilter`、`RelationshipEdgeStore`、`HeuristicLibrary` 与 `phase2.trace.v1` 最小链路已接入工具完成事件；下一刀补可见性、召回、衰减、冲突和 trace span 串联。
+2. 后端第三刀已过：`motivation.decision_made -> tool.execution_completed -> memory.result_observed` 已形成可追溯 trace 链；下一刀补 CapabilityRegistry 4 层过滤、主观记忆召回入仲裁、Heuristic 激活 / 衰减 / 冲突和失败 / 中断路径。
 3. Eval 第四刀已过：`scripts/run_agent_eval.py --suite process` 已输出 3 个 GoalSpec、10 项指标、Full / Hard / No Subjective Memory / No Relationship Edge / Shuffled Owner / Evidence-Link Removal 六组对照、Counterfactual Replay 和本地导出；Full 关系因果使用为 `1.0`，No Subjective Memory 覆盖降至 `0.8` 且关系因果仍为 `1.0`，owner/source 等对照关系因果为 `0.0`。`--suite stability` 已通过 24 游戏小时：`ticksCompleted=24`、`failedToolCount=0`、`active_agent_count=6`。下一刀补跨域 GoalSpec。
 4. Godot 第二刀已过：Tab 观察者面板已读取后端 phase2 debug 摘要；下一刀补 recentTraceEvents 展开和真实窗口体验验收。
 5. `LifeActionExecutor` 旧线定位为回归修复；Phase 2 计划不并行运行旧规则和 MotivationEngine。
@@ -150,7 +150,7 @@ npm.cmd run asset:check; npm.cmd run client:env; npm.cmd run client:run:check
 ## 7. 协作参考
 
 - 任务拆分优先按当前开发线选择源文档：后端 Agent Loop / Eval / Godot 观察者 / Content schema / 资产管线 / 文档治理。
-- 后端骨架线关注 `backend/app/tools/`、`backend/app/runtime/`、`backend/app/memory/`、`backend/app/world/entities/`，近期目标是可见性、关系召回、启发式衰减 / 冲突和 trace span 串联。
+- 后端骨架线关注 `backend/app/tools/`、`backend/app/runtime/`、`backend/app/memory/`、`backend/app/world/entities/`，近期目标是 CapabilityRegistry 4 层过滤、主观记忆召回入仲裁、启发式激活 / 衰减 / 冲突和失败 / 中断路径。
 - Eval 线关注 `scripts/run_agent_eval.py`、`backend/app/eval/`、`backend/app/domain/`，近期目标是跨域 GoalSpec 和更严格 trace dataset 归档。
 - Godot 观察者线关注 `clients/godot/`，近期目标是 `recentTraceEvents` 展开、空态 / 错误态文案和真实窗口验收。
 - 多子代理并行减少后，默认不维护大看板；若临时并行，避免多个 worker 同时修改 `docs/current_status.md`、`docs/agent_context.md` 等治理入口。

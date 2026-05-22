@@ -486,6 +486,15 @@ def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
     tool_runtime = phase2.get("toolRuntime")
     if not isinstance(tool_runtime, dict) or tool_runtime.get("version") != "tool_runtime.v1" or not tool_runtime.get("items"):
         raise RuntimeError(f"{label}.phase2.toolRuntime 应返回 ToolExecutor 运行态")
+    trace_events = phase2.get("recentTraceEvents")
+    if not isinstance(trace_events, list) or not trace_events:
+        raise RuntimeError(f"{label}.phase2.recentTraceEvents 应返回 Phase 2 trace")
+    decision_trace = next((item for item in trace_events if item.get("eventType") == "motivation.decision_made"), None)
+    if not isinstance(decision_trace, dict):
+        raise RuntimeError(f"{label}.phase2.recentTraceEvents 应包含 motivation.decision_made")
+    decision_details = decision_trace.get("details")
+    if not isinstance(decision_details, dict) or not decision_details.get("selectedToolId") or not isinstance(decision_details.get("candidateScores"), list):
+        raise RuntimeError(f"{label}.phase2.recentTraceEvents.decision.details 应包含 selectedToolId 和 candidateScores")
     assert_compact_debug_turns(payload["debugTurns"], f"{label}.debugTurns")
 
 
@@ -599,6 +608,8 @@ def assert_http_debug_endpoints(api_app) -> dict:
         world_tick = post("/api/world/tick", {"deltaSeconds": 5.0, "speed": 1.0})
         http_action = post("/api/player/action", {"type": "talk", "targetId": "mira", "locationId": "plaza", "topic": "http_contract", "message": "请确认后端动作契约。"})
         debug = fetch("/api/debug", {"skillId": STARLIGHT_FESTIVAL_SHORTAGE_SKILL_ID, "limit": "20"})
+        world_tick_completed = post("/api/world/tick", {"deltaSeconds": 3600.0, "speed": 1.0})
+        phase2_after_completion = fetch("/api/debug.phase2", {"limit": "40"})
         skill = fetch("/api/debug/skill", {"skillId": STARLIGHT_FESTIVAL_SHORTAGE_SKILL_ID})
         memory = fetch("/api/memory/search", {"query": "玩家", "tags": "night_reflection", "limit": "5"})
         influence = fetch("/api/debug/influence", {"skillId": STARLIGHT_FESTIVAL_SHORTAGE_SKILL_ID, "agentId": "kai", "query": "星灯祭", "limit": "30"})
@@ -622,6 +633,8 @@ def assert_http_debug_endpoints(api_app) -> dict:
         raise RuntimeError("HTTP /api/world/tick.events 应为数组")
     if not isinstance(world_tick["agents"], list):
         raise RuntimeError("HTTP /api/world/tick.agents 应为数组")
+    if not any(event.get("type") == "motivation.decision_made" for event in world_tick["events"]):
+        raise RuntimeError("HTTP /api/world/tick.events 应包含 motivation.decision_made trace")
     if not any(str(event.get("type", "")).startswith("npc.") for event in world_tick["events"]):
         raise RuntimeError("HTTP /api/world/tick.events 应至少包含一个 npc.* 事件")
     move_payloads = [
@@ -631,6 +644,24 @@ def assert_http_debug_endpoints(api_app) -> dict:
     ]
     if not any(payload.get("npcId") and payload.get("fromAnchorId") and payload.get("toAnchorId") for payload in move_payloads):
         raise RuntimeError("HTTP /api/world/tick 的移动事件应透出 npcId/fromAnchorId/toAnchorId")
+    completed_events = [event for event in world_tick_completed.get("events", []) if event.get("type") == "tool.execution_completed"]
+    if not completed_events:
+        raise RuntimeError("长 tick 应产生 tool.execution_completed")
+    if not any(
+        any(isinstance(ref, dict) and ref.get("type") == "motivation_decision_trace" for ref in event.get("payload", {}).get("traceRefs", []))
+        for event in completed_events
+    ):
+        raise RuntimeError("tool.execution_completed 应携带 motivation_decision_trace 引用")
+    completion_event_ids = {str(event.get("id") or "") for event in completed_events}
+    observed_events = [event for event in world_tick_completed.get("events", []) if event.get("type") == "memory.result_observed"]
+    if not any(event.get("payload", {}).get("sourceEventId") in completion_event_ids and event.get("payload", {}).get("memories") for event in observed_events):
+        raise RuntimeError("memory.result_observed 应追溯到 tool.execution_completed 并写入主观记忆")
+    completed_debug_trace = next((item for item in phase2_after_completion.get("recentTraceEvents", []) if item.get("eventType") == "tool.execution_completed"), None)
+    if not isinstance(completed_debug_trace, dict) or not completed_debug_trace.get("details", {}).get("traceRefs"):
+        raise RuntimeError("/api/debug.phase2 应展开 tool.execution_completed.traceRefs")
+    memory_debug_trace = next((item for item in phase2_after_completion.get("recentTraceEvents", []) if item.get("eventType") == "memory.result_observed"), None)
+    if not isinstance(memory_debug_trace, dict) or int(memory_debug_trace.get("details", {}).get("memoryCount") or 0) <= 0:
+        raise RuntimeError("/api/debug.phase2 应展开 memory.result_observed.memoryCount")
     assert_player_action_contract(http_action, "HTTP /api/player/action")
     assert_debug_snapshot_contract(debug, "/api/debug")
     if "attend_event" not in skill.get("actions", {}):

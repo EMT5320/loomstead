@@ -37,7 +37,7 @@ from app.runtime.action_executor import execute_action, maybe_population_event
 from app.runtime.action_parser import parse_provider_output
 from app.runtime.capability_registry import CapabilityRegistry
 from app.runtime.motivation_engine import MotivationEngine
-from app.runtime.trace_schema import TRACE_SCHEMA_VERSION, trace_event_snapshot
+from app.runtime.trace_schema import TRACE_SCHEMA_VERSION, build_trace_envelope, trace_event_snapshot, with_trace_payload, world_time_payload
 from app.skills import (
     STARLIGHT_FESTIVAL_SHORTAGE_SKILL_ID,
     EventChoiceOutcome,
@@ -967,14 +967,17 @@ class AgentRuntime:
             self.world["npcPresence"] = build_npc_presence(self.world)
             sync_agents_from_presence(self.world, self.world["npcPresence"])
 
-        decisions = self._phase2_decisions(list(DAY1_NPC_IDS), delta_minutes=20.0)
+        tick_events: list[dict[str, Any]] = []
+        decisions = self._record_phase2_decision_events(
+            self._phase2_decisions(list(DAY1_NPC_IDS), delta_minutes=20.0),
+            tick_events=tick_events,
+        )
         execution = self.tool_executor.tick(
             world=self.world,
             decisions=decisions,
             delta_seconds=game_seconds,
         )
 
-        tick_events: list[dict[str, Any]] = []
         completion_event_ids: dict[tuple[str, str], str] = {}
         for payload in execution.get("events", []):
             event_type = str(payload.get("type") or "")
@@ -1017,6 +1020,90 @@ class AgentRuntime:
             "events": [self._debug_safe_event(event) for event in tick_events],
             "agents": execution.get("agents", []),
         }
+
+    def _record_phase2_decision_events(self, decisions: list[dict[str, Any]], *, tick_events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """把 MotivationEngine 决策写入 EventStore，并把 trace ref 传给后续 ToolExecutor。"""
+        enriched_decisions: list[dict[str, Any]] = []
+        for decision in decisions:
+            if not isinstance(decision, dict) or not isinstance(decision.get("decision"), dict):
+                enriched_decisions.append(decision)
+                continue
+            payload = self._phase2_decision_trace_payload(decision)
+            event = self.event_store.append(
+                "motivation.decision_made",
+                with_trace_payload(
+                    payload,
+                    build_trace_envelope(
+                        event_type="motivation.decision_made",
+                        summary=str(payload.get("summary") or "NPC 决策已生成"),
+                        world_time=world_time_payload(self.world),
+                        agent_id=str(decision.get("npcId") or ""),
+                        target_ids=self._phase2_decision_target_ids(decision),
+                    ),
+                ),
+            )
+            tick_events.append(event)
+            enriched = dict(decision)
+            decision_payload = dict(decision.get("decision") or {})
+            trace_payload = event.get("payload", {}) if isinstance(event.get("payload"), dict) else {}
+            trace_ref = {
+                "type": "motivation_decision_trace",
+                "eventId": event.get("id"),
+                "traceId": trace_payload.get("traceId"),
+                "spanId": trace_payload.get("spanId"),
+                "selectedToolId": decision_payload.get("selectedToolId"),
+            }
+            decision_payload["contributingSources"] = [
+                *[dict(item) for item in decision_payload.get("contributingSources", []) if isinstance(item, dict)],
+                trace_ref,
+            ]
+            decision_payload["decisionTraceRef"] = trace_ref
+            enriched["decision"] = decision_payload
+            enriched["decisionTraceEventId"] = event.get("id")
+            enriched_decisions.append(enriched)
+        return enriched_decisions
+
+    def _phase2_decision_trace_payload(self, decision: dict[str, Any]) -> dict[str, Any]:
+        decision_payload = decision.get("decision", {}) if isinstance(decision.get("decision"), dict) else {}
+        primary_need = decision.get("primaryNeed", {}) if isinstance(decision.get("primaryNeed"), dict) else {}
+        selected_tool_id = str(decision_payload.get("selectedToolId") or "")
+        npc_name = str(decision.get("npcName") or decision.get("npcId") or "NPC")
+        need_id = str(primary_need.get("needId") or decision_payload.get("needId") or "unknown_need")
+        capabilities = decision.get("capabilities", []) if isinstance(decision.get("capabilities"), list) else []
+        return {
+            "npcId": decision.get("npcId"),
+            "npcName": decision.get("npcName"),
+            "primaryNeed": dict(primary_need),
+            "needs": [dict(item) for item in decision.get("needs", [])[:6] if isinstance(item, dict)],
+            "capabilityCount": len(capabilities),
+            "capabilities": [self._phase2_capability_ref(item) for item in capabilities[:12] if isinstance(item, dict)],
+            "selectedToolId": selected_tool_id,
+            "candidateScores": [dict(item) for item in decision_payload.get("candidateScores", []) if isinstance(item, dict)],
+            "relationshipEdgeRefs": [dict(item) for item in decision_payload.get("relationshipEdgeRefs", []) if isinstance(item, dict)],
+            "contributingSources": [dict(item) for item in decision_payload.get("contributingSources", []) if isinstance(item, dict)],
+            "decisionReason": decision_payload.get("reason"),
+            "summary": f"{npc_name} 因 {need_id} 选择 {selected_tool_id or 'no_tool'}。",
+        }
+
+    def _phase2_capability_ref(self, capability: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "toolId": capability.get("toolId"),
+            "tier": capability.get("tier"),
+            "durationSeconds": capability.get("durationSeconds"),
+            "observerVisibility": capability.get("observerVisibility"),
+        }
+
+    def _phase2_decision_target_ids(self, decision: dict[str, Any]) -> list[str]:
+        decision_payload = decision.get("decision", {}) if isinstance(decision.get("decision"), dict) else {}
+        target_ids: list[str] = []
+        for edge in decision_payload.get("relationshipEdgeRefs", []):
+            if not isinstance(edge, dict):
+                continue
+            for key in ("sourceAgentId", "targetAgentId"):
+                value = str(edge.get(key) or "")
+                if value and value != str(decision.get("npcId") or "") and value not in target_ids:
+                    target_ids.append(value)
+        return target_ids
 
     def _advance_clock_by_game_seconds(self, delta_seconds: float) -> None:
         """只基于游戏时间推进时钟，避免任何墙钟依赖。"""
