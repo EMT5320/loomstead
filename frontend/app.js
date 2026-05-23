@@ -2,6 +2,8 @@
 
 state.modelConfig = null;
 state.modelAction = null;
+state.debugSnapshot = null;
+state.debugError = null;
 
 const $ = (id) => document.getElementById(id);
 
@@ -14,6 +16,13 @@ async function api(path, options = {}) {
 async function load() {
   state.data = await api('/api/state');
   state.modelConfig = state.data.modelConfig;
+  try {
+    state.debugSnapshot = await api('/api/debug?limit=12');
+    state.debugError = null;
+  } catch (error) {
+    state.debugSnapshot = null;
+    state.debugError = error.message;
+  }
   render();
 }
 
@@ -25,6 +34,7 @@ function render() {
   renderMap(data);
   renderAgents(data);
   renderEvents(data);
+  renderDebugOverview(data);
   renderDebug(data);
   renderModelConfig(data);
 }
@@ -71,6 +81,97 @@ function renderDebug(data) {
   $('debug').textContent = latest ? JSON.stringify(latest, null, 2) : '等待第一轮决策...';
 }
 
+function renderDebugOverview(data) {
+  const debug = state.debugSnapshot;
+  if (!debug) {
+    $('debugOverview').innerHTML = `<p class="muted">Debug API 暂不可用：${escapeHtml(state.debugError || '等待下一轮刷新')}</p>`;
+    return;
+  }
+  const decisionBudget = debug.phase2?.decisionBudget || {};
+  const providerActuals = decisionBudget.providerActuals || {};
+  const debugTurns = debug.debugTurns?.items || [];
+  const fallbacks = debug.providerFallbacks?.items || [];
+  const director = debug.director || {};
+  const skills = debug.skills || {};
+  $('debugOverview').innerHTML = `
+    <div class="debug-grid">
+      ${renderProviderTotals(providerActuals.totals || {}, debugTurns)}
+      ${renderDirectorSkillSummary(director, skills)}
+    </div>
+    <details open><summary>Provider cost by feature</summary>${renderProviderByFeature(providerActuals.byFeature || {})}</details>
+    <details open><summary>Recent provider calls</summary>${renderRecentProviderCalls(providerActuals.recent || [], debugTurns)}</details>
+    <details><summary>Fallbacks</summary>${renderFallbacks(fallbacks)}</details>
+  `;
+}
+
+function renderProviderTotals(totals, debugTurns) {
+  const fallbackCount = Number(totals.fallbackCalls || 0);
+  const cloudCalls = Number(totals.cloudCalls || 0);
+  const latest = latestProviderCall(totals, debugTurns);
+  return `<section class="debug-card">
+    <b>Provider / Cost</b>
+    <div class="metric-row"><span>calls</span><strong>${formatNumber(totals.calls || debugTurns.length)}</strong></div>
+    <div class="metric-row"><span>cloud / rule</span><strong>${formatNumber(cloudCalls)} / ${formatNumber(totals.ruleCalls || 0)}</strong></div>
+    <div class="metric-row"><span>tokens</span><strong>${formatNumber(totals.tokens || latest.tokens || 0)}</strong></div>
+    <div class="metric-row"><span>cost</span><strong>${formatCost(totals.cost || latest.cost, totals.currency || latest.currency)}</strong></div>
+    <div class="metric-row"><span>avg latency</span><strong>${formatLatency(totals.latencyAvgMs || latest.latencyMs)}</strong></div>
+    <div class="metric-row"><span>fallback</span><strong class="${fallbackCount ? 'warn' : 'ok'}">${fallbackCount ? `${fallbackCount} 次` : '无'}</strong></div>
+  </section>`;
+}
+
+function renderDirectorSkillSummary(director, skills) {
+  const directorState = director.state || {};
+  const queue = director.queue || {};
+  const skillItems = skills.items || [];
+  const activeSkills = skillItems.filter((item) => ['activated', 'active', 'available'].includes(String(item.status || ''))).length;
+  const lifecycleCount = skillItems.reduce((sum, item) => sum + ((item.lifecycle || []).length), 0);
+  return `<section class="debug-card">
+    <b>Director / Skill</b>
+    <div class="metric-row"><span>active focus</span><strong>${escapeHtml(formatActiveFocus(directorState.activeFocus))}</strong></div>
+    <div class="metric-row"><span>pending beats</span><strong>${formatNumber(queue.pendingCount || 0)}</strong></div>
+    <div class="metric-row"><span>activated skills</span><strong>${formatNumber((directorState.activatedEventSkills || []).length)}</strong></div>
+    <div class="metric-row"><span>skill status</span><strong>${formatNumber(activeSkills)} / ${formatNumber(skillItems.length)}</strong></div>
+    <div class="metric-row"><span>lifecycle events</span><strong>${formatNumber(lifecycleCount)}</strong></div>
+  </section>`;
+}
+
+function renderProviderByFeature(byFeature) {
+  const rows = Object.entries(byFeature);
+  if (!rows.length) return '<p class="muted">暂无真实 provider usage；触发对话 Smoke 或真实 LLM smoke 后会显示。</p>';
+  return `<div class="debug-table">${rows.map(([feature, totals]) => `
+    <div class="debug-row">
+      <b>${escapeHtml(feature)}</b>
+      <span>${formatNumber(totals.calls || 0)} calls</span>
+      <span>${formatNumber(totals.tokens || 0)} tokens</span>
+      <span>${formatLatency(totals.latencyAvgMs)}</span>
+      <span>${formatCost(totals.cost, totals.currency)}</span>
+    </div>`).join('')}</div>`;
+}
+
+function renderRecentProviderCalls(recent, debugTurns) {
+  const records = recent.length ? recent : debugTurns.map((turn) => ({ ...turn.debug?.providerUsageRecord, feature: turn.feature, profileName: turn.profileName, fallbackReason: turn.fallbackReason })).filter((item) => item.feature);
+  if (!records.length) return '<p class="muted">暂无 provider 调用记录。</p>';
+  return `<div class="debug-table">${records.slice(-8).reverse().map((item) => `
+    <div class="debug-row">
+      <b>${escapeHtml(item.feature || '-')}</b>
+      <span>${escapeHtml(item.profileName || item.model || '-')}</span>
+      <span>${formatNumber(item.tokens || 0)} tokens</span>
+      <span>${formatLatency(item.latencyMs)}</span>
+      <span>${formatCost(item.cost, item.currency)}</span>
+      <span class="${item.fallbackReason ? 'warn' : 'ok'}">${escapeHtml(item.fallbackReason || 'no fallback')}</span>
+    </div>`).join('')}</div>`;
+}
+
+function renderFallbacks(fallbacks) {
+  if (!fallbacks.length) return '<p class="ok">暂无 fallback 记录。</p>';
+  return `<div class="debug-table">${fallbacks.slice(-8).reverse().map((item) => `
+    <div class="debug-row fallback-row">
+      <b>${escapeHtml(item.feature || item.eventType || '-')}</b>
+      <span>${escapeHtml(item.profileName || '-')} → ${escapeHtml(item.fallbackProfile || 'rule')}</span>
+      <span class="warn">${escapeHtml(item.reason || 'unknown')}</span>
+    </div>`).join('')}</div>`;
+}
+
 function renderModelConfig(data) {
   const config = state.modelConfig || data.modelConfig;
   if (!config) return;
@@ -113,6 +214,42 @@ function renderValidationMessages(validation) {
   return `<ul class="model-warnings">${messages.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
 }
 
+function latestProviderCall(totals, debugTurns) {
+  const latest = [...debugTurns].reverse().map((turn) => turn.debug?.providerUsageRecord || turn.debug?.usage || turn.usage || {}).find((item) => item && Object.keys(item).length);
+  return {
+    tokens: latest?.tokens || totals.tokens || 0,
+    cost: latest?.cost || totals.cost || 0,
+    currency: latest?.currency || totals.currency,
+    latencyMs: latest?.latencyMs || totals.latencyAvgMs || 0,
+  };
+}
+
+function formatActiveFocus(focus) {
+  if (!focus) return 'none';
+  if (typeof focus === 'string') return focus;
+  if (typeof focus === 'object') {
+    const type = focus.type || 'focus';
+    const id = focus.skillId || focus.eventId || focus.beatId || '';
+    return [type, id].filter(Boolean).join(' · ');
+  }
+  return String(focus);
+}
+
+function formatNumber(value) {
+  return Number(value || 0).toLocaleString('zh-CN');
+}
+
+function formatLatency(value) {
+  const numeric = Number(value || 0);
+  return numeric > 0 ? `${Math.round(numeric).toLocaleString('zh-CN')}ms` : 'n/a';
+}
+
+function formatCost(value, currency) {
+  const numeric = Number(value || 0);
+  if (!numeric) return '0';
+  return `${numeric.toFixed(8)} ${currency || ''}`.trim();
+}
+
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 }
@@ -129,7 +266,9 @@ function latestDebugSummary(data) {
   const eventDebug = [...(data.recentEvents || data.events || [])].reverse().map((event) => event.payload?.debug).find((debug) => debug);
   const latest = agentDebug || eventDebug;
   if (!latest) return 'Smoke 已触发，但暂未找到 Debug 记录。';
-  return `Smoke 结果：${latest.providerMode} · ${latest.profileName} · ${latest.provider} · fallback=${latest.fallbackReason || '无'} · latency=${latest.latency ?? 'n/a'}ms`;
+  const usage = latest.usage || latest.providerUsageRecord || {};
+  const latency = usage.latencyMs || latest.latency?.ms || latest.latency;
+  return `Smoke 结果：${latest.providerMode} · ${latest.profileName} · ${latest.provider} · fallback=${latest.fallbackReason || '无'} · tokens=${usage.tokens ?? 'n/a'} · latency=${latency ?? 'n/a'}ms · cost=${formatCost(usage.cost, usage.currency)}`;
 }
 
 $('stepBtn').onclick = async () => { await api('/api/step', { method: 'POST', body: '{}' }); await load(); };

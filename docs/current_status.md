@@ -9,7 +9,7 @@ scope: current implementation facts, verification state, and work constraints
 
 # 当前项目状态与开发前约束
 
-> 状态更新时间：2026-05-23（真实 LLM smoke 配置清理 + Phase 2 Eval/domain export）
+> 状态更新时间：2026-05-23（真实 LLM smoke 配置清理 + Phase 2 Eval/domain export + Web Debug 总览）
 > 本文只记录当前仓库中已核对、命令已检或明确标注人工未验收的事实。长期方向见 `docs/project_vision.md`，研究 framing 见 `docs/research_framing_motivational_delegation.md`，NPC agent loop 设计见 `docs/agent_loop_architecture.md`，世界实体 schema 见 `docs/world_entity_model.md`，Process Fidelity Eval 规格见 `docs/process_fidelity_eval_spec.md`，跨域 adapter 接口见 `docs/cross_domain_adapter.md`，多层 Agent 系统设计见 `docs/agentic_game_design.md`。
 
 ## 1. 当前阶段判断
@@ -87,6 +87,7 @@ scope: current implementation facts, verification state, and work constraints
 - `config/models.json` 是本机实际联调配置，已加入 gitignore；未配置本地密钥时运行链路会依赖 fallback。
 - `npm.cmd run model:check` 会校验 profile 引用、结构和公开配置是否误写 `apiKey`。
 - `/api/model-config/reload` 支持开发期热重载模型配置；Web 观察台已能展示 profile、路由、key 状态和触发对话 smoke。
+- Web Debug 总览已读取 `/api/debug?limit=12`，展示 Provider / Cost、Director / Skill、by-feature cost、recent provider calls 和 fallback 列表；Chrome 本地页面校验已确认该卡片渲染正常且没有前端 error，in-app Browser `iab` 当前不可用。
 - Debug 记录已包含 profile、provider、messages、rawText、parsed、executed、usage、latency 和 fallbackReason。
 - 已提供 `/api/debug`、`/api/debug/director`、`/api/debug/skills`、`/api/debug/turns`、`/api/debug/influence`、`/api/debug/skill`、`/api/memory/summary`、`/api/memory/search` 查询入口。
 - Debug 列表响应会压缩长 prompt / raw text，保留预览、长度和 message 数，便于 Web Debug Console 或 Godot 调试层读取。
@@ -160,7 +161,7 @@ scope: current implementation facts, verification state, and work constraints
 
 16. **真实 LLM 证据刷新**：2026-05-22 起真实 LLM smoke 已从常规 `check` / `smoke` 拆出；2026-05-23 本轮 `npm.cmd run llm:smoke` 已通过并刷新 token、延迟、成本和 fallback 证据；修改 provider、prompt、模型配置或切换模型/key/profile 后，继续用 `npm.cmd run llm:smoke` 单独刷新真实证据。
 17. **资产补齐**：表情差分、UI 组件和行动反馈图标已进入三批 `prompt_ready` backlog 和导出清单，仍待生成、筛选、登记源图和接入；地图小人晋级状态需主人确认。
-18. **Debug Console 扩展**：后端已有 Debug / Memory 查询 API，Web 侧仍需展示 Director 队列、Skill 激活、fallback 和成本字段。Phase 2 后还要新增 Heuristic Library / Arbitration trace / 主观记忆对比视图。
+18. **Debug Console 扩展**：后端已有 Debug / Memory 查询 API，Web 侧已展示 Director / Skill、fallback 和成本总览。Phase 2 后还要新增 Heuristic Library / Arbitration trace / 主观记忆对比视图。
 
 ## 5. 开发前关注点
 
@@ -248,4 +249,4 @@ Get-Content docs\archive\daytime_integration_handoff.md
 
 8. LLM / Debug 线在切换模型、key 或 profile 后用 `npm.cmd run llm:smoke` 刷新真实 smoke。
 9. 资产线按 `docs/asset_batches/prompt_ready_export.md` 推进表情差分、生活 UI 组件和行动反馈图标，**注意 Phase 2 后资产规划要按 `open_questions.md` 末尾的"资产路线的范围调整"重新评估**。
-10. Web Debug 追加 Director / Skill / fallback 视图，Phase 2 后新增 Heuristic Library / Arbitration trace / 主观记忆对比视图。
+10. Web Debug 已追加 Director / Skill / fallback / cost 总览，下一步补 Heuristic Library / Arbitration trace / 主观记忆对比视图。

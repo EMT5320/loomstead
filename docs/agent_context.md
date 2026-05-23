@@ -9,7 +9,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 
 # Loomstead 新对话入口
 
-> 更新时间：2026-05-23（真实 LLM smoke 配置清理 + Phase 2 Eval/domain export）
+> 更新时间：2026-05-23（真实 LLM smoke 配置清理 + Phase 2 Eval/domain export + Web Debug 总览）
 > 用途：下一轮新对话、研究阶段开发和必要子代理任务的第一入口。
 
 ## 1. 当前入口
@@ -65,7 +65,8 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - 已有 `RuleBasedProvider` 和 OpenAI-compatible `CloudApiProvider`。
 - 已有按 NPC / feature 选择 profile 的配置路径：`config/models.example.json` 为提交模板且默认 rule fallback，`config/models.json` 和 `config/models.local.json` 为本机忽略 overlay；`model:check` 会按当前环境 / overlay 输出 provider 状态，本机 cloud 配置需以 `npm.cmd run llm:smoke` 单独验收。
 - Web 观察台已有 LLM 配置卡片，可查看 profile、路由、key 状态，支持热重载与一次对话 smoke。
-- Debug 记录已包含 `providerMode`、`profileName`、`apiKeyConfigured`、`messages`、`rawText`、`parsed`、`executed`、`usage`、`latency`、`fallbackReason` 和 `providerUsageRecord`；`GET /api/debug.phase2` 的 `decisionBudget.providerActuals` 会聚合真实 provider tokens / latency / cost。
+- Web Debug 总览已读取 `/api/debug?limit=12`，展示 Provider / Cost、Director / Skill、by-feature cost、recent provider calls 和 fallback 列表；Chrome 本地页面校验已确认无前端错误，in-app Browser `iab` 当前不可用。
+- Debug 记录已包含 `providerMode`、`profileName`、`apiKeyConfigured`、`messages`、`rawText`、`parsed`、`executed`、`usage`、`latency`、`fallbackReason` 和 `providerUsageRecord`；`GET /api/debug.phase2` 的 `decisionBudget.providerActuals` 会聚合真实 provider tokens / latency / cost，`/api/debug` 会提供 Web Debug 总览所需的 Director / Skill / providerActuals / fallback 快照。
 - 2026-05-17 曾用本机 `config/models.json` 跑通真实 `CloudApiProvider` smoke；2026-05-21 `npm.cmd run check` 曾跑通真实 cloud smoke；2026-05-22 起常规 `check` / `smoke` 默认跳过真实 LLM，真实链路改由 `npm.cmd run llm:smoke` 显式验收；2026-05-23 本轮已清理本机 LLM overlay，`model:check` warnings=0；同轮 `npm.cmd run llm:smoke` 已通过，dialogue / event_reaction / night_reflection 均为 `deepseek-v4-flash` 且 `fallbackReason=None`。
 
 ### Godot 客户端
@@ -124,7 +125,7 @@ git status --short; git diff --check
 ### 当前状态
 
 - Phase 1（活着的世界）done：2026-05-21 主人确认可以收口，`world_main.tscn` 进入完成基线。
-- Phase 2（骨架建立期）首轮已落地：NPC 深度卡 schema 占位已补，后端 Tool / ToolContractValidator / DecisionBudgetStore / NeedAccumulator / Motivation / ToolExecutor / ResultObserver / SubjectiveMemory / RelationshipEdge / HeuristicLibrary / `phase2.trace.v1` / `schema_registry.v1` / DomainAdapter shared Protocol / Eval L1 + 规则级 Process Fidelity + Counterfactual Replay + memory ablation + 24h stability suite 已接入 tick 与 Debug；`motivation.decision_made` 已把 need / 5 层 capability filters / 主观记忆召回 / heuristic recall / candidate scores / selected tool 接入 trace，工具完成 / 失败 / 中断会携带 decision trace ref、主观记忆 refs 和 heuristic refs；工具输入 schema / 世界前置条件失败会稳定落入 `tool.execution_failed.reason`；ToolContractValidator 已支持常用 JSON Schema 子集并覆盖 enum / additionalProperties / uniqueItems / numeric range 等稳定违规 code；LLM eligible 工具会经 NPC / feature / toolCost 三级 `decision_budget` 路由，预算事件会输出 `feature`、`costBreakdown`、`consumedDelta` 和 remaining 证据；真实 / 规则 provider 调用会回填 `provider_usage_actual.v1` 到 Debug 与 `decisionBudget.providerActuals`；ResultObserver 已按 private / participants_only / all_in_location 解析多 NPC 旁观者，并在 trace 的 `observerScope` 中输出 `spatialEvidence` / `distanceToEvent` / `reason`；Phase 2 主路径 schema 版本已集中到 `backend/app/runtime/schema_registry.py`，smoke 会校验 registry 与实时 Debug 输出一致性；Hard Delegation baseline、No Subjective Memory、No Relationship Edge、Shuffled Memory Owner、Evidence-Link Removal、Eval 导出 manifest、cross-domain adapter dry-run 和 Godot 观察者 debug 摘要面板已落地；Counterfactual Replay 的 `relationshipEffect` 已改为只移除 relationship edges 的独立 bonus 反事实。
+- Phase 2（骨架建立期）首轮已落地：NPC 深度卡 schema 占位已补，后端 Tool / ToolContractValidator / DecisionBudgetStore / NeedAccumulator / Motivation / ToolExecutor / ResultObserver / SubjectiveMemory / RelationshipEdge / HeuristicLibrary / `phase2.trace.v1` / `schema_registry.v1` / DomainAdapter shared Protocol / Eval L1 + 规则级 Process Fidelity + Counterfactual Replay + memory ablation + 24h stability suite 已接入 tick 与 Debug；`motivation.decision_made` 已把 need / 5 层 capability filters / 主观记忆召回 / heuristic recall / candidate scores / selected tool 接入 trace，工具完成 / 失败 / 中断会携带 decision trace ref、主观记忆 refs 和 heuristic refs；工具输入 schema / 世界前置条件失败会稳定落入 `tool.execution_failed.reason`；ToolContractValidator 已支持常用 JSON Schema 子集并覆盖 enum / additionalProperties / uniqueItems / numeric range 等稳定违规 code；LLM eligible 工具会经 NPC / feature / toolCost 三级 `decision_budget` 路由，预算事件会输出 `feature`、`costBreakdown`、`consumedDelta` 和 remaining 证据；真实 / 规则 provider 调用会回填 `provider_usage_actual.v1` 到 Debug 与 `decisionBudget.providerActuals`；ResultObserver 已按 private / participants_only / all_in_location 解析多 NPC 旁观者，并在 trace 的 `observerScope` 中输出 `spatialEvidence` / `distanceToEvent` / `reason`；Phase 2 主路径 schema 版本已集中到 `backend/app/runtime/schema_registry.py`，smoke 会校验 registry 与实时 Debug 输出一致性；Hard Delegation baseline、No Subjective Memory、No Relationship Edge、Shuffled Memory Owner、Evidence-Link Removal、Eval 导出 manifest、cross-domain adapter dry-run、Godot 观察者 debug 摘要面板和 Web Debug provider/fallback/cost 总览已落地；Counterfactual Replay 的 `relationshipEffect` 已改为只移除 relationship edges 的独立 bonus 反事实。
 - 项目方向：narrative-primary 的可解释多 Agent 叙事运行时，差异化主轴为"少而深 + 可解释 + 可评估"。
 
 ### Phase 2 第一入口
