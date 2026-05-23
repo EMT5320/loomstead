@@ -102,6 +102,7 @@ checks = {
     "hud clock speed controls": "_on_pause_pressed" in hud and "_on_speed_pressed" in hud and "_on_tick_clock_updated" in hud,
     "observer panel class": "class_name ObserverPanel" in observer_panel,
     "observer panel phase2 sections": "subjectiveMemory" in observer_panel and "relationshipEdges" in observer_panel and "heuristics" in observer_panel,
+    "observer panel recent trace": "recentTraceEvents" in observer_panel and "_summarize_phase2_recent_trace" in town_map,
     "asset registry class": "class_name AssetRegistry" in asset_registry,
     "asset registry backgrounds": "farm_day_anime.png" in asset_registry and "tavern_evening_anime.png" in asset_registry,
     "asset registry portraits": "npc_orren_neutral.png" in asset_registry and "player_farmer_neutral.png" in asset_registry,

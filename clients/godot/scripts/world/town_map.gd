@@ -583,6 +583,7 @@ func _build_phase2_observer_summary(payload: Dictionary) -> Dictionary:
 		"subjectiveMemory": _summarize_phase2_subjective_memory(payload.get("subjectiveMemory", {})),
 		"relationshipEdges": _summarize_phase2_relationship_edges(payload.get("relationshipEdges", {})),
 		"heuristics": _summarize_phase2_heuristics(payload.get("heuristics", {})),
+		"recentTraceEvents": _summarize_phase2_recent_trace(payload.get("recentTraceEvents", [])),
 	}
 
 
@@ -655,6 +656,64 @@ func _summarize_phase2_heuristics(section) -> String:
 		str(top_dict.get("triggerPattern", top_dict.get("heuristicId", "unknown"))),
 		float(top_dict.get("effectiveConfidence", top_dict.get("confidence", 0.0))),
 	]
+
+
+func _summarize_phase2_recent_trace(section) -> String:
+	var items := _phase2_items(section)
+	if items.is_empty():
+		return "无 recent trace"
+	var lines: Array[String] = []
+	var start_index = max(0, items.size() - 4)
+	for index in range(start_index, items.size()):
+		var item = items[index]
+		if not (item is Dictionary):
+			continue
+		var entry := item as Dictionary
+		var event_type := str(entry.get("eventType", entry.get("type", "trace")))
+		var summary := str(entry.get("summary", ""))
+		var world_time = entry.get("worldTime", {})
+		var tick_text := "t?"
+		if world_time is Dictionary:
+			tick_text = "t%d" % int((world_time as Dictionary).get("tick", -1))
+		var detail_hint := _phase2_trace_detail_hint(entry.get("details", {}))
+		lines.append("%s %s%s · %s" % [
+			tick_text,
+			_pretty_trace_type(event_type),
+			detail_hint,
+			_truncate_text(summary, 58),
+		])
+	if lines.is_empty():
+		return "recent trace 数据不可读"
+	return "\n".join(lines)
+
+
+func _phase2_trace_detail_hint(details) -> String:
+	if not (details is Dictionary):
+		return ""
+	var detail_dict := details as Dictionary
+	var tool_id := str(detail_dict.get("selectedToolId", detail_dict.get("toolId", "")))
+	if tool_id != "":
+		return " [%s]" % _short_action_label(tool_id)
+	var reason := str(detail_dict.get("reason", detail_dict.get("decisionReason", "")))
+	if reason != "":
+		return " [%s]" % _truncate_text(reason, 22)
+	return ""
+
+
+func _pretty_trace_type(event_type: String) -> String:
+	match event_type:
+		"motivation.decision_made":
+			return "decision"
+		"tool.execution_completed":
+			return "tool done"
+		"tool.execution_failed":
+			return "tool fail"
+		"tool.execution_interrupted":
+			return "interrupt"
+		"memory.result_observed":
+			return "observed"
+		_:
+			return event_type
 
 
 func _phase2_items(section) -> Array:

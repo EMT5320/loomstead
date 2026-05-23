@@ -11,6 +11,7 @@ var _motivation_value: Label
 var _subjective_memory_value: Label
 var _relationship_edges_value: Label
 var _heuristics_value: Label
+var _recent_trace_value: Label
 var _panel_visible := false
 var _current_npc_id := ""
 
@@ -49,6 +50,7 @@ func show_empty_selection() -> void:
 	_subjective_memory_value.text = "-"
 	_relationship_edges_value.text = "-"
 	_heuristics_value.text = "-"
+	_recent_trace_value.text = "-"
 
 
 func set_selected_npc(snapshot: Dictionary) -> void:
@@ -69,6 +71,7 @@ func set_selected_npc(snapshot: Dictionary) -> void:
 		_subjective_memory_value.text = "-"
 		_relationship_edges_value.text = "-"
 		_heuristics_value.text = "-"
+		_recent_trace_value.text = "-"
 
 
 func show_phase2_loading() -> void:
@@ -85,6 +88,7 @@ func set_phase2_debug_summary(summary: Dictionary) -> void:
 	_subjective_memory_value.text = str(summary.get("subjectiveMemory", "-"))
 	_relationship_edges_value.text = str(summary.get("relationshipEdges", "-"))
 	_heuristics_value.text = str(summary.get("heuristics", "-"))
+	_recent_trace_value.text = str(summary.get("recentTraceEvents", "-"))
 
 
 func _build_panel() -> void:
@@ -95,9 +99,9 @@ func _build_panel() -> void:
 	_panel.anchor_right = 1.0
 	_panel.anchor_bottom = 0.0
 	_panel.offset_left = -420.0
-	_panel.offset_top = 338.0
+	_panel.offset_top = 318.0
 	_panel.offset_right = -18.0
-	_panel.offset_bottom = 576.0
+	_panel.offset_bottom = 748.0
 	add_child(_panel)
 
 	var margin := MarginContainer.new()
@@ -136,6 +140,7 @@ func _build_panel() -> void:
 	_subjective_memory_value = _build_section_value(vbox, "subjectiveMemory")
 	_relationship_edges_value = _build_section_value(vbox, "relationshipEdges")
 	_heuristics_value = _build_section_value(vbox, "heuristics")
+	_recent_trace_value = _build_section_value(vbox, "recentTraceEvents")
 
 
 func _add_row(parent: GridContainer, key_text: String) -> void:
