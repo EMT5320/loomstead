@@ -28,6 +28,7 @@ var _visual_root: Node2D
 var _sprite: Sprite2D
 var _shadow: ColorRect
 var _fallback_body: ColorRect
+var _intent_label: Label
 var _name_label: Label
 var _action_label: Label
 
@@ -58,6 +59,10 @@ func _ready() -> void:
 	_fallback_body.size = Vector2(40.0, 58.0)
 	_fallback_body.position = Vector2(-20.0, -72.0)
 	_visual_root.add_child(_fallback_body)
+
+	_intent_label = _make_label("IntentLabel", "意图：等待同步", Vector2(-84.0, -150.0), 168.0, 13)
+	_intent_label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.52, 0.96))
+	add_child(_intent_label)
 
 	_name_label = _make_label("NameLabel", _display_name if _display_name != "" else npc_id, Vector2(-72.0, -128.0), 144.0, 15)
 	add_child(_name_label)
@@ -103,6 +108,23 @@ func configure_appearance(display_name: String, texture: Texture2D, accent_color
 func set_crowd_offset(offset: Vector2) -> void:
 	# 同一锚点允许多个 NPC 站位，表现层加小偏移避免名字和 sprite 完全重叠。
 	_crowd_offset = offset
+
+
+func set_intent_status(text: String) -> void:
+	if _intent_label == null:
+		return
+	var trimmed := text.strip_edges()
+	_intent_label.visible = trimmed != ""
+	_intent_label.text = _short_label_text(trimmed, 30)
+
+
+func set_action_status(text: String) -> void:
+	if _action_label == null:
+		return
+	var trimmed := text.strip_edges()
+	if trimmed == "":
+		return
+	_action_label.text = _short_label_text(trimmed, 32)
 
 
 func apply_tick_event(event_payload: Dictionary) -> void:
@@ -259,3 +281,9 @@ func _make_label(label_name: String, text: String, label_position: Vector2, widt
 	label.add_theme_constant_override("shadow_offset_x", 2)
 	label.add_theme_constant_override("shadow_offset_y", 2)
 	return label
+
+
+func _short_label_text(text: String, max_chars: int) -> String:
+	if text.length() <= max_chars:
+		return text
+	return "%s…" % text.substr(0, max(0, max_chars - 1))

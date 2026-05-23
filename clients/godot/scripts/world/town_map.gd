@@ -937,7 +937,11 @@ func _update_npc_plans(raw_schedules) -> void:
 			"targetAnchor": target_anchor,
 			"locationId": str(item.get("locationId", "")),
 			"presenceSource": str(item.get("presenceSource", "")),
+			"intentLabel": _format_npc_intent_label(active, target_anchor),
 		}
+		_apply_npc_intent_status(npc_id)
+	for npc_key in _npc_nodes.keys():
+		_apply_npc_intent_status(str(npc_key))
 
 
 func _target_anchor_from_schedule(schedule: Dictionary, active_action: Dictionary) -> String:
@@ -955,6 +959,45 @@ func _target_anchor_from_schedule(schedule: Dictionary, active_action: Dictionar
 		if candidate is Dictionary and str(candidate.get("anchorId", "")) != "":
 			return str(candidate.get("anchorId", ""))
 	return current_anchor
+
+
+func _format_npc_intent_label(active_action: Dictionary, target_anchor: String) -> String:
+	var primary_need = active_action.get("primaryNeed", {})
+	var need_id := ""
+	var urgency := 0.0
+	if primary_need is Dictionary:
+		need_id = str((primary_need as Dictionary).get("needId", ""))
+		urgency = float((primary_need as Dictionary).get("urgency", 0.0))
+	var decision = active_action.get("decision", {})
+	var action_id := str(active_action.get("toolId", active_action.get("id", "")))
+	if decision is Dictionary:
+		var selected_tool := str((decision as Dictionary).get("selectedToolId", ""))
+		if selected_tool != "":
+			action_id = selected_tool
+	var need_text := _need_label(need_id)
+	var action_text := _short_action_label(action_id)
+	var target_text := _pretty_anchor(target_anchor)
+	if urgency > 0.0:
+		return "意图：%s %.2f · %s → %s" % [need_text, urgency, action_text, target_text]
+	return "意图：%s · %s → %s" % [need_text, action_text, target_text]
+
+
+func _apply_npc_intent_status(npc_id: String) -> void:
+	var controller := _npc_nodes.get(npc_id, null) as NpcController
+	if controller == null:
+		return
+	var plan = _npc_plans.get(npc_id, {})
+	if plan is Dictionary:
+		controller.set_intent_status(str((plan as Dictionary).get("intentLabel", "")))
+		return
+	controller.set_intent_status("")
+
+
+func _apply_npc_action_status(npc_id: String, status: String) -> void:
+	var controller := _npc_nodes.get(npc_id, null) as NpcController
+	if controller == null:
+		return
+	controller.set_action_status(status)
 
 
 func _on_tick_clock_updated(clock: Dictionary) -> void:
@@ -1028,6 +1071,7 @@ func _ensure_npc_controller(npc_id: String) -> NpcController:
 	controller.set_crowd_offset(crowd_offset)
 	npc_layer.add_child(controller)
 	_npc_nodes[npc_id] = controller
+	_apply_npc_intent_status(npc_id)
 	return controller
 
 
@@ -1099,13 +1143,17 @@ func _update_npc_statuses_from_agents(agents: Array) -> void:
 			continue
 		var phase := str(life_action.get("phase", ""))
 		var action_id := str(life_action.get("actionId", ""))
+		var status := ""
 		if phase == "moving":
 			var progress := float(life_action.get("moveProgress", 0.0))
-			_npc_statuses[npc_id] = "移动中 %.0f%% · %s" % [progress * 100.0, _short_action_label(action_id)]
+			status = "移动中 %.0f%% · %s" % [progress * 100.0, _short_action_label(action_id)]
 		elif phase == "performing":
 			var elapsed := float(life_action.get("elapsedSeconds", 0.0))
 			var duration := maxf(1.0, float(life_action.get("durationSeconds", 1.0)))
-			_npc_statuses[npc_id] = "行动中 %.0f%% · %s" % [elapsed / duration * 100.0, _short_action_label(action_id)]
+			status = "行动中 %.0f%% · %s" % [elapsed / duration * 100.0, _short_action_label(action_id)]
+		if status != "":
+			_npc_statuses[npc_id] = status
+			_apply_npc_action_status(npc_id, status)
 
 
 func _update_npc_status_from_event(npc_id: String, event_type: String, event_payload: Dictionary) -> void:
@@ -1315,6 +1363,20 @@ func _event_anchor_for(event: Dictionary) -> String:
 
 func _short_action_label(action_id: String) -> String:
 	var lowered := action_id.to_lower()
+	if lowered == "social.chat_with":
+		return "找人聊天"
+	if lowered == "social.give_gift":
+		return "送礼"
+	if lowered == "farm.water_crop":
+		return "浇水"
+	if lowered == "shop.open_shop":
+		return "开店"
+	if lowered == "cook.prepare_meal":
+		return "做饭"
+	if lowered == "craft.repair_stall":
+		return "修摊位"
+	if lowered == "strategic.spread_rumor":
+		return "传播传闻"
 	if lowered.contains("morning"):
 		return "晨间例行"
 	if lowered.contains("afternoon"):
@@ -1326,6 +1388,22 @@ func _short_action_label(action_id: String) -> String:
 	if action_id == "":
 		return "生活行动"
 	return action_id.replace("life_", "").replace("_", " ")
+
+
+func _need_label(need_id: String) -> String:
+	match need_id:
+		"energy":
+			return "恢复体力"
+		"money_anxiety":
+			return "稳定收入"
+		"affiliation":
+			return "建立联结"
+		"recognition":
+			return "获得认可"
+		"":
+			return "等待动机"
+		_:
+			return need_id.replace("_", " ")
 
 
 func _pretty_anchor(anchor_id: String) -> String:
@@ -1360,7 +1438,8 @@ func _update_event_label(npc_id: String, event_type: String, event_payload: Dict
 		_event_label.text = "%s action: %s" % [npc_name, str(event_payload.get("actionId", "action"))]
 		return
 	if event_type == "player.talked":
-		_event_label.text = "Player talked with %s" % npc_name
+		var receipt := _talk_status_text(event_payload).replace("\n", " · ")
+		_event_label.text = "Player talked with %s · %s" % [npc_name, _truncate_text(receipt, 96)]
 		return
 	_event_label.text = "%s / %s" % [npc_name, event_type]
 
@@ -1418,11 +1497,19 @@ func _submit_talk(npc_id: String) -> void:
 		if _vn_panel != null:
 			_vn_panel.show_error("Talk response is not a dictionary.")
 		return
-	var dialogue_text := _dialogue_text(result)
-	var status_text := _talk_status_text(result)
+	var action_result := _action_result_payload(result as Dictionary)
+	var state_payload = (result as Dictionary).get("state", {})
+	if state_payload is Dictionary:
+		_apply_world_state_snapshot(state_payload as Dictionary)
+	var dialogue_text := _dialogue_text(action_result)
+	var status_text := _talk_status_text(action_result)
 	if _vn_panel != null:
 		_vn_panel.show_dialogue(npc_name, dialogue_text, status_text)
-	_update_event_label(npc_id, "player.talked", result)
+	_update_event_label(npc_id, "player.talked", action_result)
+	_observer_phase2_cache.erase(npc_id)
+	_observer_phase2_request_msec.erase(npc_id)
+	if _selected_observer_npc_id == npc_id:
+		_request_phase2_debug_for_observer(npc_id)
 
 
 func _dialogue_text(result: Dictionary) -> String:
@@ -1443,11 +1530,76 @@ func _dialogue_text(result: Dictionary) -> String:
 	return "The NPC nods to you."
 
 
+func _action_result_payload(response_payload: Dictionary) -> Dictionary:
+	var nested = response_payload.get("result", {})
+	if nested is Dictionary:
+		return nested as Dictionary
+	return response_payload
+
+
 func _talk_status_text(result: Dictionary) -> String:
 	var relation_count := _array_size(result.get("relationshipDeltas", []))
 	var memory_count := _array_size(result.get("memoryWrites", []))
 	var event_count := _array_size(result.get("eventIds", []))
-	return "backend talk - relations=%d memories=%d events=%d" % [relation_count, memory_count, event_count]
+	var lines: Array[String] = ["因果链：关系%d / 记忆%d / 事件%d" % [relation_count, memory_count, event_count]]
+	var deltas = result.get("relationshipDeltas", [])
+	if deltas is Array:
+		var delta_items := deltas as Array
+		if not delta_items.is_empty() and delta_items[0] is Dictionary:
+			var delta = (delta_items[0] as Dictionary).get("delta", {})
+			if delta is Dictionary:
+				lines.append("关系变化：%s" % _relation_delta_text(delta as Dictionary))
+	var memory_text := _latest_memory_write_text(result.get("memoryWrites", []))
+	if memory_text != "":
+		lines.append("写入记忆：%s" % _truncate_text(memory_text, 54))
+	var profile = result.get("playerProfile", {})
+	if profile is Dictionary:
+		var style_summary := str((profile as Dictionary).get("styleSummary", ""))
+		if style_summary != "":
+			lines.append("玩家风格：%s" % _truncate_text(style_summary, 42))
+	return "\n".join(lines)
+
+
+func _relation_delta_text(delta: Dictionary) -> String:
+	var parts: Array[String] = []
+	for key in ["affection", "trust", "conflict"]:
+		var value := int(delta.get(key, 0))
+		if value == 0:
+			continue
+		var sign := "+" if value > 0 else ""
+		parts.append("%s%s%d" % [_relation_label(str(key)), sign, value])
+	if parts.is_empty():
+		return "无数值变化"
+	return " / ".join(parts)
+
+
+func _relation_label(key: String) -> String:
+	match key:
+		"affection":
+			return "亲密"
+		"trust":
+			return "信任"
+		"conflict":
+			return "冲突"
+		_:
+			return key
+
+
+func _latest_memory_write_text(value) -> String:
+	if not (value is Array):
+		return ""
+	var fallback := ""
+	var write_items := value as Array
+	for item in write_items:
+		if not (item is Dictionary):
+			continue
+		var text := str((item as Dictionary).get("text", ""))
+		if text == "":
+			continue
+		fallback = text
+		if str((item as Dictionary).get("agentId", "")) != "player":
+			return text
+	return fallback
 
 
 func _array_size(value) -> int:
