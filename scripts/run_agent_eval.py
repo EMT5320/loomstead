@@ -63,6 +63,7 @@ def _compact_domain_output(result: dict) -> dict:
         "total": result.get("total"),
         "domains": result.get("domains"),
         "metrics": result.get("metrics"),
+        "export": result.get("export"),
     }
 
 
@@ -75,7 +76,7 @@ if __name__ == "__main__":
         help="?? L1 rule suite ? Process Fidelity suite ? 24h stability suite ? cross-domain adapter suite?",
     )
     parser.add_argument("--full", action="store_true", help="???? scenario ???")
-    parser.add_argument("--export-dir", type=Path, default=None, help="? Process Fidelity ????????????")
+    parser.add_argument("--export-dir", type=Path, default=None, help="? Process Fidelity / stability / domain ????????????")
     parser.add_argument("--hours", type=int, default=24, help="stability suite ?????????")
     args = parser.parse_args()
 
@@ -86,7 +87,7 @@ if __name__ == "__main__":
         result = run_stability_scenarios(hours=args.hours, export_dir=args.export_dir)
         output = result if args.full else _compact_stability_output(result)
     elif args.suite == "domain":
-        result = run_cross_domain_adapter_scenarios()
+        result = run_cross_domain_adapter_scenarios(export_dir=args.export_dir)
         output = result if args.full else _compact_domain_output(result)
     else:
         result = run_rule_scenarios()

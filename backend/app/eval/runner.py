@@ -1003,7 +1003,7 @@ def _summary_only(result: dict[str, Any]) -> dict[str, Any]:
         "metrics": result.get("metrics"),
         "ablation_comparison": result.get("ablation_comparison"),
     }
-    for key in ("hours", "ticksCompleted", "checks", "evidence"):
+    for key in ("hours", "ticksCompleted", "checks", "evidence", "domains"):
         if key in result:
             summary[key] = result.get(key)
     return summary
@@ -1086,6 +1086,8 @@ def _write_eval_manifest(
                 "npm.cmd run eval:process:export",
                 "npm.cmd run eval:stability",
                 "npm.cmd run eval:stability:export",
+                "npm.cmd run eval:domain",
+                "npm.cmd run eval:domain:export",
             ],
         },
     }
@@ -1209,7 +1211,12 @@ def _scenario_ids(result: dict[str, Any]) -> list[str]:
                 if scenario_id:
                     ids.add(scenario_id)
     for item in (result.get("items", []) if isinstance(result.get("items"), list) else []):
-        if isinstance(item, dict) and item.get("hourIndex") is not None:
+        if not isinstance(item, dict):
+            continue
+        scenario_id = str(item.get("scenarioId") or "")
+        if scenario_id:
+            ids.add(scenario_id)
+        if item.get("hourIndex") is not None:
             ids.add(f"hour_{int(item['hourIndex']):02d}")
     return sorted(ids)
 

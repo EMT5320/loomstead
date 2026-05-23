@@ -1,17 +1,28 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from app.domain.base import DomainAdapter, DomainIntervention
 from app.domain.coding import CODING_GOAL_IDS, CodingDomainAdapter
 from app.domain.narrative import NARRATIVE_GOAL_IDS, NarrativeDomainAdapter
+from app.eval.runner import (
+    _artifact_record,
+    _summary_only,
+    _timestamp_slug,
+    _unique_run_dir,
+    _utc_timestamp,
+    _write_eval_manifest,
+    _write_json,
+    _write_jsonl,
+)
 from app.eval.process_fidelity import PROCESS_METRIC_IDS, metric_summary
 
 
 BASELINE_CROSS_DOMAIN = "full_motivational_delegation"
 
 
-def run_cross_domain_adapter_scenarios() -> dict[str, Any]:
+def run_cross_domain_adapter_scenarios(*, export_dir: str | Path | None = None) -> dict[str, Any]:
     """运行 narrative primary + coding secondary 的最小跨域 adapter dry-run。"""
     suites: tuple[tuple[DomainAdapter, tuple[str, ...]], ...] = (
         (NarrativeDomainAdapter(), NARRATIVE_GOAL_IDS),
@@ -28,7 +39,7 @@ def run_cross_domain_adapter_scenarios() -> dict[str, Any]:
         domain_id: _domain_summary([item for item in items if item["domainId"] == domain_id])
         for domain_id in domain_ids
     }
-    return {
+    result = {
         "ok": all(bool(item.get("ok")) for item in items),
         "suite": "cross_domain_adapter",
         "baseline": BASELINE_CROSS_DOMAIN,
@@ -38,6 +49,9 @@ def run_cross_domain_adapter_scenarios() -> dict[str, Any]:
         "metrics": metrics,
         "items": items,
     }
+    if export_dir is not None:
+        result["export"] = _export_cross_domain_adapter_eval(result, Path(export_dir))
+    return result
 
 
 def _run_adapter_goal(adapter: DomainAdapter, *, goal_id: str, seed: int) -> dict[str, Any]:
@@ -126,3 +140,115 @@ def _domain_summary(items: list[dict[str, Any]]) -> dict[str, Any]:
         "total": len(items),
         "scenarioIds": [str(item.get("scenarioId") or "") for item in items],
     }
+
+
+def _export_cross_domain_adapter_eval(result: dict[str, Any], base_dir: Path) -> dict[str, Any]:
+    """导出跨域 adapter 证据，复用 Eval manifest 字段保持归档格式一致。"""
+    created_at = _utc_timestamp()
+    run_dir = _unique_run_dir(base_dir / f"domain_{_timestamp_slug(created_at)}")
+    per_scenario_dir = run_dir / "per_scenario"
+    per_scenario_dir.mkdir(parents=True, exist_ok=True)
+    artifacts: list[dict[str, Any]] = []
+
+    summary_path = run_dir / "summary.json"
+    _write_json(summary_path, _summary_only(result))
+    artifacts.append(_artifact_record(summary_path, run_dir, kind="summary_json"))
+
+    domain_summary_path = run_dir / "domain_summaries.json"
+    _write_json(domain_summary_path, result.get("domains", {}))
+    artifacts.append(_artifact_record(domain_summary_path, run_dir, kind="domain_summaries_json"))
+
+    items = [item for item in result.get("items", []) if isinstance(item, dict)]
+    for item in items:
+        scenario_id = str(item.get("scenarioId") or "unknown_scenario")
+        scenario_path = per_scenario_dir / f"{scenario_id}.json"
+        _write_json(scenario_path, item)
+        artifacts.append(
+            _artifact_record(
+                scenario_path,
+                run_dir,
+                kind="per_scenario_json",
+                scenario_id=scenario_id,
+                baseline=str(item.get("baseline") or ""),
+            )
+        )
+
+    trace_specs = (
+        ("domain_metrics.jsonl", "domain_metrics_jsonl", _domain_metric_trace_items(items)),
+        ("observation_trace.jsonl", "observation_trace_jsonl", _domain_observation_trace_items(items)),
+        ("intervention_trace.jsonl", "intervention_trace_jsonl", _domain_intervention_trace_items(items)),
+    )
+    for filename, kind, trace_items in trace_specs:
+        trace_path = run_dir / filename
+        _write_jsonl(trace_path, trace_items)
+        artifacts.append(_artifact_record(trace_path, run_dir, kind=kind, row_count=len(trace_items)))
+
+    manifest_path = _write_eval_manifest(
+        run_dir=run_dir,
+        result=result,
+        artifacts=artifacts,
+        created_at=created_at,
+        export_kind="cross_domain_adapter_dataset",
+    )
+    return {
+        "runDir": str(run_dir),
+        "manifest": str(manifest_path),
+        "artifactCount": len(artifacts) + 1,
+    }
+
+
+def _domain_metric_trace_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for item in items:
+        metrics = item.get("metrics", {}) if isinstance(item.get("metrics"), dict) else {}
+        for metric_id in PROCESS_METRIC_IDS:
+            rows.append(
+                {
+                    "domainId": item.get("domainId"),
+                    "scenarioId": item.get("scenarioId"),
+                    "baseline": item.get("baseline"),
+                    "metric": metric_id,
+                    "value": float(metrics.get(metric_id, 0.0)),
+                }
+            )
+    return rows
+
+
+def _domain_observation_trace_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for item in items:
+        for stage in ("initialObservation", "finalObservation"):
+            observation = item.get(stage, {}) if isinstance(item.get(stage), dict) else {}
+            rows.append(
+                {
+                    "domainId": item.get("domainId"),
+                    "scenarioId": item.get("scenarioId"),
+                    "baseline": item.get("baseline"),
+                    "stage": stage,
+                    "tick": observation.get("tick"),
+                    "goalProgress": observation.get("goalProgress", {}),
+                    "evalSignals": observation.get("evalSignals", {}),
+                    "recentEventCount": len(observation.get("recentEvents", []))
+                    if isinstance(observation.get("recentEvents"), list)
+                    else 0,
+                }
+            )
+    return rows
+
+
+def _domain_intervention_trace_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for item in items:
+        rows.append(
+            {
+                "domainId": item.get("domainId"),
+                "scenarioId": item.get("scenarioId"),
+                "baseline": item.get("baseline"),
+                "allowedInterventions": item.get("allowedInterventions", []),
+                "appliedInterventionCount": item.get("appliedInterventionCount", 0),
+                "appliedEventCount": item.get("appliedEventCount", 0),
+                "stepEventCount": item.get("stepEventCount", 0),
+                "milestones": item.get("milestones", []),
+            }
+        )
+    return rows
