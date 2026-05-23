@@ -43,6 +43,11 @@ model_config_check = subprocess.run([sys.executable, "scripts/check_model_config
 if model_config_check.returncode != 0:
     raise SystemExit(model_config_check.returncode)
 
+# Schema registry 是 Debug / Eval / Godot 共享事实源，先做静态护栏再跑 smoke。
+schema_registry_check = subprocess.run([sys.executable, "scripts/check_schema_registry.py"], cwd=ROOT)
+if schema_registry_check.returncode != 0:
+    raise SystemExit(schema_registry_check.returncode)
+
 smoke = subprocess.run([sys.executable, "scripts/smoke_test.py"], cwd=ROOT)
 if smoke.returncode != 0:
     raise SystemExit(smoke.returncode)

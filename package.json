@@ -22,6 +22,7 @@
                     "eval:archive:index":  "python scripts/index_eval_runs.py --runs-dir .run/eval-runs --write-index",
                     "eval:archive:drift":  "python scripts/index_eval_runs.py --runs-dir .run/eval-runs --write-drift-report",
                     "content:check":  "python scripts/check_npc_codex.py",
+                    "schema:check":  "python scripts/check_schema_registry.py",
                     "model:check":  "python scripts/check_model_config.py",
                     "client:env":  "python scripts/check_game_client_env.py",
                     "client:open":  "powershell -ExecutionPolicy Bypass -File scripts/open_godot_project.ps1",

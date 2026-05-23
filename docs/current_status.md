@@ -147,7 +147,7 @@ scope: current implementation facts, verification state, and work constraints
 
 6. **三层工具分层 + ToolDefinition 注册表**：10 个首批工具已落地（life / farm / shop / cook / craft / social / strategic），ToolExecutor 已具备首版持续动作、移动、事务快照、失败回滚、规则副作用、完成事件 payload、DecisionBudgetStore 路由事件和高优先级中断 trace；ToolContractValidator 已支持常用 JSON Schema 子集：type、required、properties、additionalProperties、enum、const、minLength / maxLength、pattern、minItems / maxItems、uniqueItems、items、min/maxProperties、minimum / maximum、exclusiveMinimum / exclusiveMaximum、multipleOf；更多失败模式、更真实的 LLM 预算消费策略和 schema registry 迁移覆盖仍待扩展。
 7. **MotivationEngine（替换 LifeActionExecutor）**：最小决策骨架已落地，需求计算已抽到 `NeedAccumulator`，可按 status / 空占位 motivationProfile 计算 primaryNeed、经 CapabilityRegistry 取候选工具并由 ArbitrationLayer 产出 selectedToolId 与 contributingSources；`/api/world/tick` 已切到 MotivationEngine -> ToolExecutor 主路径，旧 LifeActionExecutor 不并行运行。
-8. **CapabilityRegistry**：`need_relevance / preconditions / npc_profile / event_scope / decision_budget` 五层动态过滤 / 路由已落地，`capability_resolution.v1` 会记录每层 input / allowed / rejected count、工具级过滤理由、allowedToolIds、rejectedTools 和 decisionBudgets，并进入 MotivationEngine snapshot 与 `motivation.decision_made.details.capabilityFilters`；`DecisionBudgetStore` 已支持 NPC / feature / toolCost 三级策略、feature exhausted fallback、costBreakdown、recentUsage、`provider_usage_actual.v1` 和 providerActuals 聚合；Phase 2 主路径 schema 版本已纳入 `schema_registry.v1`；后续可继续扩更多前置条件和严格 fallback 策略。
+8. **CapabilityRegistry**：`need_relevance / preconditions / npc_profile / event_scope / decision_budget` 五层动态过滤 / 路由已落地，`capability_resolution.v1` 会记录每层 input / allowed / rejected count、工具级过滤理由、allowedToolIds、rejectedTools 和 decisionBudgets，并进入 MotivationEngine snapshot 与 `motivation.decision_made.details.capabilityFilters`；`DecisionBudgetStore` 已支持 NPC / feature / toolCost 三级策略、feature exhausted fallback、costBreakdown、recentUsage、`provider_usage_actual.v1` 和 providerActuals 聚合；Phase 2 主路径 schema 版本已纳入 `schema_registry.v1`，`schema:check` 会阻止未知 schema id 引用和散落版本字面量；后续可继续扩更多前置条件和严格 fallback 策略。
 9. **双轨主观记忆**：SubjectiveMemoryStore 最小 record/list/recall/debug_snapshot 骨架已落地，`ResultObserver + BiasFilter` 已接入运行时工具完成、失败和中断事件分发并写入统一 trace；`memory.result_observed` 已可追溯到 `tool.execution_completed` / `tool.execution_failed` / `tool.execution_interrupted`；运行时会按 NPC 召回 `tool_result` 主观记忆并传入 ArbitrationLayer，候选评分已输出 `subjectiveMemoryBonus` / `subjectiveMemoryRefCount`，`motivation.decision_made.details` 已展开 `subjectiveMemoryRecall` / `subjectiveMemoryRefs`；ResultObserver 已具备首版距离证据模型；完整遗忘、归档、遮挡 / 听力材质衰减和 LLM 增强仍待扩展。
 10. **HeuristicLibrary**：最小 schema、规则提取和 Debug snapshot 已落地；成功工具会生成 `prefer_successful_tool:<tool_id>`，社交成功会生成 `prefer_social_when_affiliation_high`，工具失败会生成 `avoid_failed_tool:<tool_id>`，工具中断会生成 `avoid_interrupted_tool:<tool_id>`；启发式带 `effectiveConfidence`、tick 衰减字段和 active / dormant 状态，已进入 MotivationEngine snapshot 与 `motivation.decision_made.details.heuristicRecall`；设计师 seed 注入、LLM 提取和更复杂的置信度更新仍待扩展。
 11. **ArbitrationLayer**：最小候选工具裁决与 contributing_sources Trace 已落地；关系边、主观记忆和启发式已可在同一需求候选内部加权，并把 `relationship_edge_refs` / `subjective_memory_refs` / `heuristic_refs` 写入 decision contributing_sources；候选评分已输出 `heuristicBonus` / `heuristicRefCount` / `heuristicConflictCount`，启发式冲突以 `highest_effective_delta_wins` 裁决；仍需完整竞争上下文裁决规则。
@@ -178,6 +178,7 @@ scope: current implementation facts, verification state, and work constraints
 npm.cmd run check
 npm.cmd run context:check
 npm.cmd run content:check
+npm.cmd run schema:check
 npm.cmd run eval:process
 npm.cmd run eval:stability
 npm.cmd run eval:domain
@@ -199,6 +200,7 @@ git diff --check
 npm.cmd run check
 npm.cmd run context:check
 npm.cmd run content:check
+npm.cmd run schema:check
 npm.cmd run eval:process
 npm.cmd run eval:stability
 npm.cmd run eval:domain
@@ -227,7 +229,7 @@ Get-Content docs\archive\daytime_integration_handoff.md
 
 ### 立即（Phase 2 收紧）
 
-1. 后端骨架线继续从当前 `motivation.decision_made -> tool.execution_completed / failed / interrupted -> memory.result_observed` trace 主路径推进到 schema registry 后续迁移检查、长期归档 promote 流程和 Godot Debug 展开，不再做旧 LifeActionExecutor shadow-run。
+1. 后端骨架线继续从当前 `motivation.decision_made -> tool.execution_completed / failed / interrupted -> memory.result_observed` trace 主路径推进到真实窗口 trace 验收、长期归档 promote 流程、更细的 schema 迁移备注和 Godot Debug 展开，不再做旧 LifeActionExecutor shadow-run。
 2. Eval 线继续扩展 `backend/app/eval/`，在当前 L1 + Process Fidelity + Counterfactual Replay + memory ablation + 24h stability + process / stability / domain manifest 导出 + archive index + drift report + cross-domain dry-run 基础上补更长期稳定性、外部仓库级 coding artifact / test 接入、paper-grade run 晋级流程和 drift report 阈值策略。
 3. Godot 观察者线已读取后端 phase2 debug 的 motivation / subjectiveMemory / relationshipEdges / heuristics / recentTraceEvents，并支持 trace 类型过滤和最新 details 摘要；下一步补真实窗口手感验收、trace copy 和更细的单条 drilldown。
 
