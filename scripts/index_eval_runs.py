@@ -21,8 +21,32 @@ DEFAULT_RUNS_DIR = ROOT / ".run" / "eval-runs"
 DEFAULT_PROMOTE_DIR = ROOT / ".run" / "eval-promoted"
 INDEX_VERSION = "phase2.eval_run_index.v1"
 DRIFT_REPORT_VERSION = "phase2.eval_run_drift.v1"
+DRIFT_POLICY_VERSION = "phase2.eval_drift_policy.v1"
 PROMOTION_RECORD_VERSION = "phase2.eval_promotion.v1"
 MANIFEST_VERSION = "phase2.eval_manifest.v1"
+DRIFT_POLICY = {
+    "policyVersion": DRIFT_POLICY_VERSION,
+    "thresholds": {
+        "maxMetricIdsAddedWithoutReview": 0,
+        "maxBaselineIdsAddedWithoutReview": 0,
+        "maxScenarioIdsAddedWithoutReview": 0,
+        "maxArtifactCountIncreaseWithoutReview": 0,
+    },
+    "severityLevels": ["none", "review", "breaking"],
+    "ruleSummary": {
+        "breaking": [
+            "latest run ok=false",
+            "ok 状态变化",
+            "schema registry 或 export kind 变化",
+            "metric / baseline / scenario id 被移除",
+            "artifact 数量下降",
+        ],
+        "review": [
+            "metric / baseline / scenario id 新增",
+            "artifact 数量增加",
+        ],
+    },
+}
 REQUIRED_MANIFEST_KEYS = (
     "manifestVersion",
     "exportKind",
@@ -256,8 +280,10 @@ def _build_promotion_record(
     drift_for_suite = _drift_comparison_for_suite(index.get("driftReport", {}), suite)
     if drift_for_suite is None:
         manual_items.append("当前 suite 缺少上一 run 对比；drift 需要人工解释或补充历史 run。")
-    elif bool(drift_for_suite.get("hasDrift")):
-        manual_items.append("drift report 发现 metric / baseline / scenario / schema / artifact 漂移，需要人工解释。")
+    elif bool(drift_for_suite.get("blocksPromotion")):
+        manual_items.append("drift policy 标记为 breaking；需要修复或写明兼容性迁移原因。")
+    elif bool(drift_for_suite.get("requiresManualReview")):
+        manual_items.append("drift policy 要求人工复核；需要说明 metric / baseline / scenario / artifact 变化原因。")
 
     promotion_status = "paper_grade_candidate" if not manual_items else "needs_manual_review"
     return {
@@ -291,7 +317,8 @@ def _build_promotion_record(
             "archiveCheckPassed": not index.get("errors"),
             "gitCleanAtExport": not bool(git.get("dirty")),
             "schemaRegistryV1": record.get("schemaRegistryVersion") == "schema_registry.v1",
-            "driftExplained": drift_for_suite is not None and not bool(drift_for_suite.get("hasDrift")),
+            "driftExplained": drift_for_suite is not None and not bool(drift_for_suite.get("requiresManualReview")),
+            "driftPolicyBlocking": bool(drift_for_suite and drift_for_suite.get("blocksPromotion")),
             "manualWindowVerified": False,
             "externalModelVerifiedIfNeeded": False,
         },
@@ -449,10 +476,14 @@ def _build_drift_report(run_records: list[dict[str, Any]], *, created_at: str) -
     return {
         "reportVersion": DRIFT_REPORT_VERSION,
         "createdAt": created_at,
+        "policy": DRIFT_POLICY,
         "summary": {
             "suiteCount": len(grouped),
             "comparisonCount": len(comparisons),
             "changedComparisonCount": sum(1 for item in comparisons if item["hasDrift"]),
+            "manualReviewComparisonCount": sum(1 for item in comparisons if item["requiresManualReview"]),
+            "blockingComparisonCount": sum(1 for item in comparisons if item["blocksPromotion"]),
+            "severityCounts": _drift_severity_counts(comparisons),
             "singleRunSuites": single_run_suites,
         },
         "comparisons": comparisons,
@@ -482,13 +513,15 @@ def _compare_latest_runs(suite: str, *, latest: dict[str, Any], previous: dict[s
         "baselines": _list_delta(latest.get("baselines", []), previous.get("baselines", [])),
         "scenarioIds": _list_delta(latest.get("scenarioIds", []), previous.get("scenarioIds", [])),
     }
-    has_drift = (
-        schema_change["changed"]
-        or export_kind_change["changed"]
-        or ok_change["changed"]
-        or artifact_count_delta != 0
-        or any(delta["added"] or delta["removed"] for delta in deltas.values())
+    policy_result = _classify_drift(
+        schema_change=schema_change,
+        export_kind_change=export_kind_change,
+        ok_change=ok_change,
+        latest_ok=bool(latest.get("ok")),
+        artifact_count_delta=artifact_count_delta,
+        deltas=deltas,
     )
+    has_drift = policy_result["severity"] != "none"
     return {
         "suite": suite,
         "latestRunDir": latest.get("runDir"),
@@ -505,7 +538,92 @@ def _compare_latest_runs(suite: str, *, latest: dict[str, Any], previous: dict[s
         "baselines": deltas["baselines"],
         "scenarioIds": deltas["scenarioIds"],
         "hasDrift": has_drift,
+        "driftSeverity": policy_result["severity"],
+        "requiresManualReview": policy_result["requiresManualReview"],
+        "blocksPromotion": policy_result["blocksPromotion"],
+        "driftPolicy": policy_result,
     }
+
+
+def _classify_drift(
+    *,
+    schema_change: dict[str, Any],
+    export_kind_change: dict[str, Any],
+    ok_change: dict[str, Any],
+    latest_ok: bool,
+    artifact_count_delta: int,
+    deltas: dict[str, dict[str, list[str]]],
+) -> dict[str, Any]:
+    """按固定阈值策略给 drift 分级，供 promote 和人工复核使用。"""
+    thresholds = DRIFT_POLICY["thresholds"]
+    checks: list[dict[str, Any]] = []
+
+    def add_check(check_id: str, breached: bool, severity: str, message: str) -> None:
+        checks.append(
+            {
+                "id": check_id,
+                "breached": bool(breached),
+                "severity": severity,
+                "message": message,
+            }
+        )
+
+    add_check("latest_ok_false", not latest_ok, "breaking", "latest run manifest ok=false")
+    add_check("ok_changed", bool(ok_change.get("changed")), "breaking", "manifest ok 状态变化")
+    add_check(
+        "schema_registry_changed",
+        bool(schema_change.get("changed")),
+        "breaking",
+        "schema registry version 变化",
+    )
+    add_check("export_kind_changed", bool(export_kind_change.get("changed")), "breaking", "export kind 变化")
+    add_check("artifact_count_decreased", artifact_count_delta < 0, "breaking", "artifact 数量下降")
+    add_check(
+        "artifact_count_increased",
+        artifact_count_delta > int(thresholds["maxArtifactCountIncreaseWithoutReview"]),
+        "review",
+        "artifact 数量增加",
+    )
+    for field, threshold_key in (
+        ("metricIds", "maxMetricIdsAddedWithoutReview"),
+        ("baselines", "maxBaselineIdsAddedWithoutReview"),
+        ("scenarioIds", "maxScenarioIdsAddedWithoutReview"),
+    ):
+        delta = deltas.get(field, {})
+        added = delta.get("added", []) if isinstance(delta, dict) else []
+        removed = delta.get("removed", []) if isinstance(delta, dict) else []
+        add_check(f"{field}_removed", bool(removed), "breaking", f"{field} 被移除")
+        add_check(
+            f"{field}_added",
+            len(added) > int(thresholds[threshold_key]),
+            "review",
+            f"{field} 新增超过免复核阈值",
+        )
+
+    breached = [item for item in checks if item["breached"]]
+    if any(item["severity"] == "breaking" for item in breached):
+        severity = "breaking"
+    elif any(item["severity"] == "review" for item in breached):
+        severity = "review"
+    else:
+        severity = "none"
+    return {
+        "policyVersion": DRIFT_POLICY_VERSION,
+        "severity": severity,
+        "requiresManualReview": severity != "none",
+        "blocksPromotion": severity == "breaking",
+        "reviewReasons": [str(item["message"]) for item in breached],
+        "checks": checks,
+    }
+
+
+def _drift_severity_counts(comparisons: list[dict[str, Any]]) -> dict[str, int]:
+    """统计 drift 严重度，保持报告 summary 可直接用于看板。"""
+    counts = {"none": 0, "review": 0, "breaking": 0}
+    for item in comparisons:
+        severity = str(item.get("driftSeverity") or "none")
+        counts[severity] = counts.get(severity, 0) + 1
+    return counts
 
 
 def _list_delta(latest_values: Any, previous_values: Any) -> dict[str, list[str]]:
