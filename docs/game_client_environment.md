@@ -172,6 +172,25 @@ clients/godot/project.godot
    - 能看到记忆写入结果。
    - 能看到夜间反思摘要。
 
+## Phase 2 观察者面板验收流程
+
+> 2026-05-23 已验证 `npm.cmd run client:run` 可以拉起 Godot 4.6.2 真实窗口；以下 UI 行为仍以人工窗口观察为准。
+
+1. 启动后端与游戏窗口：
+
+   ```powershell
+   npm.cmd run start
+   npm.cmd run client:run
+   ```
+
+2. 在 `world_main.tscn` 中按 `Tab` 打开 Observer Panel。
+3. 点击任一 NPC，确认面板显示 `npcId`、名称、location、anchor。
+4. 等待 Phase 2 Debug 同步，确认 motivation / subjectiveMemory / relationshipEdges / heuristics 摘要不为空。
+5. 在 `traceFilter` 中切换 all / decision / tool / interrupt / memory，确认 recentTraceEvents 文本随过滤变化。
+6. 点击 `Prev` / `Next`，确认 traceDetails 的单条详情与 `x/y` 序号变化。
+7. 点击 `Copy trace`，确认状态行显示“已复制 trace detail”，并能粘贴当前 trace 详情。
+8. 如果后端关闭，确认面板显示加载失败状态，游戏窗口本身不崩溃。
+
 ## 当前项目阶段
 
 当前 Godot 客户端已经从纯文本面板推进到 P0 视觉主场景：

@@ -98,8 +98,8 @@
 
 ## 下一步
 
-- Phase 2 下一步在观察者面板展开 `recentTraceEvents`，并做真实窗口手感验收。
-- 后续再补 arbitration trace / process fidelity trace 的可视化展开。
+- Phase 2 观察者面板已展开 `recentTraceEvents`，支持 trace filter、Prev / Next 单条 detail 和 Copy trace；下一步做真实窗口手感验收与空态 / 错误态文案微调。
+- 后续再补可点击 trace 行、arbitration trace / process fidelity trace 的可视化展开。
 - 等行动反馈图标和生活 UI 组件通过人工筛选后，再接入 `AssetRegistry`。
 
 更完整的新手环境说明见：

@@ -228,6 +228,8 @@ Get-Content docs\archive\daytime_integration_handoff.md
 
 2026-05-21，主人确认 Phase 1 可以收口，默认 `world_main.tscn` 进入完成基线。仍需后续人工验证的内容只保留 Phase 1 外延项：表情差分、UI 组件、真实 LLM profile 切换，以及 Phase 2 新增观察者模式 / Debug 视图。
 
+2026-05-23，本轮已启动隐藏后端并执行 `npm.cmd run client:run`，Godot 4.6.2 游戏窗口进程已成功拉起；该结果只证明真实窗口可启动，Observer Panel 的 Tab / filter / Prev / Next / Copy trace 仍需主人在窗口内人工确认。
+
 ## 8. 下一轮建议
 
 ### 立即（Phase 2 收紧）
