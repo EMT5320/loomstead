@@ -90,6 +90,8 @@ Stability suite 导出结构：
 
 `npm.cmd run eval:archive:index` 会写入 `.run/eval-runs/index.json`，生成 `phase2.eval_run_index.v1` 索引，并按 suite 给 run 标记 `keep_latest` 或 `historical_candidate`。当前工具只标记保留建议，不自动删除或搬运 run。完整策略见 `docs/eval_dataset_archive.md`。
 
+`npm.cmd run eval:archive:drift` 会写入 `.run/eval-runs/drift_report.json`，比较每个 suite 最新两次 run 的 metric、baseline、scenario、schema 和 artifact 数量变化。
+
 ## 3. Baseline 定义
 
 ### 3.1 Direct State Setter

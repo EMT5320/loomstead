@@ -27,10 +27,12 @@ npm.cmd run eval:stability:export
 npm.cmd run eval:domain:export
 npm.cmd run eval:archive:check
 npm.cmd run eval:archive:index
+npm.cmd run eval:archive:drift
 ```
 
 - `eval:archive:check`：校验所有 manifest 与 artifact 的 `bytes`、`sha256`、JSONL `rowCount`。
 - `eval:archive:index`：在 `.run/eval-runs/index.json` 写入本地索引；该文件仍属于本地运行产物。
+- `eval:archive:drift`：在 `.run/eval-runs/drift_report.json` 写入每个 suite 最新两次 run 的差异报告。
 
 ## 3. Manifest 校验规则
 
@@ -52,19 +54,31 @@ npm.cmd run eval:archive:index
 
 当前策略只做标记，不做自动删除。删除、压缩或迁移 run 必须由人工明确确认。
 
-## 5. Paper-grade 证据晋级条件
+## 5. Drift Report
+
+`eval:archive:drift` 会按 suite 比较最新 run 和上一 run，报告：
+
+- `metricIds`、`baselines`、`scenarioIds` 的新增、移除和稳定交集。
+- `schemaRegistryVersion`、`exportKind`、`ok` 的变化。
+- `artifactCountDelta`。
+- 最新 run 与上一 run 的目录、创建时间和 Git 摘要。
+
+该报告用于发现指标漂移、scenario 漏登、schema 迁移影响和导出内容变化；不会判定结果优劣。
+
+## 6. Paper-grade 证据晋级条件
 
 准备把某个 run 用作论文、报告或作品集证据前，至少满足：
 
 - `ok=true`。
 - `eval:archive:check` 通过。
+- `eval:archive:drift` 无未解释的 metric / scenario / schema 漂移。
 - `git.dirty=false` 或记录清楚 dirty 原因。
 - `schemaRegistry.registryVersion == schema_registry.v1`。
 - 相关 suite 的 README / 状态文档已同步验证命令和结果。
 - 若涉及真实模型或真实 Godot 窗口，单独记录人工验收时间与观察结论。
 
-## 6. 后续收紧方向
+## 7. 后续收紧方向
 
 - 增加可选 `--promote <runDir>`，把候选 run 复制到人工指定的长期归档目录。
-- 增加跨 run 对比报告，显示 metrics 漂移、scenario 增减和 schema 版本变化。
+- 为 drift report 增加阈值策略，例如只在 metric / scenario 变化时让 CI 失败。
 - 在真实研究样本稳定后，为 paper-grade runs 增加人工标签和备注文件。

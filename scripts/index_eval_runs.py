@@ -18,6 +18,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RUNS_DIR = ROOT / ".run" / "eval-runs"
 INDEX_VERSION = "phase2.eval_run_index.v1"
+DRIFT_REPORT_VERSION = "phase2.eval_run_drift.v1"
 MANIFEST_VERSION = "phase2.eval_manifest.v1"
 REQUIRED_MANIFEST_KEYS = (
     "manifestVersion",
@@ -40,13 +41,16 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="索引并校验 Phase 2 Eval 导出 manifest。")
     parser.add_argument("--runs-dir", type=Path, default=DEFAULT_RUNS_DIR, help="Eval run 根目录。")
     parser.add_argument("--index-path", type=Path, default=None, help="index 输出路径，默认写到 runs-dir/index.json。")
+    parser.add_argument("--drift-path", type=Path, default=None, help="drift report 输出路径，默认写到 runs-dir/drift_report.json。")
     parser.add_argument("--write-index", action="store_true", help="写入本地 index.json。")
+    parser.add_argument("--write-drift-report", action="store_true", help="写入跨 run 漂移报告。")
     parser.add_argument("--allow-empty", action="store_true", help="允许 runs-dir 中没有 manifest。")
     parser.add_argument("--keep-latest-per-suite", type=int, default=3, help="每个 suite 标记为 keep 的最新 run 数。")
     args = parser.parse_args()
 
     runs_dir = args.runs_dir if args.runs_dir.is_absolute() else ROOT / args.runs_dir
     index_path = args.index_path or runs_dir / "index.json"
+    drift_path = args.drift_path or runs_dir / "drift_report.json"
     index = build_eval_run_index(
         runs_dir,
         keep_latest_per_suite=max(1, int(args.keep_latest_per_suite)),
@@ -58,6 +62,10 @@ def main() -> None:
         index_path.parent.mkdir(parents=True, exist_ok=True)
         index_path.write_text(json.dumps(index, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         index["indexPath"] = _repo_relative(index_path)
+    if args.write_drift_report:
+        drift_path.parent.mkdir(parents=True, exist_ok=True)
+        drift_path.write_text(json.dumps(index["driftReport"], ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        index["driftPath"] = _repo_relative(drift_path)
 
     print(json.dumps(_compact_output(index), ensure_ascii=False, indent=2))
     if index["errors"]:
@@ -66,6 +74,7 @@ def main() -> None:
 
 def build_eval_run_index(runs_dir: Path, *, keep_latest_per_suite: int) -> dict[str, Any]:
     """读取所有 manifest，生成稳定索引并校验 artifact 完整性。"""
+    created_at = _utc_now()
     manifests = sorted(runs_dir.glob("*/manifest.json")) if runs_dir.exists() else []
     run_records: list[dict[str, Any]] = []
     errors: list[str] = []
@@ -81,12 +90,13 @@ def build_eval_run_index(runs_dir: Path, *, keep_latest_per_suite: int) -> dict[
     summary = _build_summary(run_records)
     return {
         "indexVersion": INDEX_VERSION,
-        "createdAt": _utc_now(),
+        "createdAt": created_at,
         "runsDir": _repo_relative(runs_dir),
         "summary": summary,
         "runs": run_records,
         "errors": errors,
         "warnings": warnings,
+        "driftReport": _build_drift_report(run_records, created_at=created_at),
         "retentionPolicy": {
             "keepLatestPerSuite": keep_latest_per_suite,
             "deleteAutomatically": False,
@@ -249,9 +259,97 @@ def _build_summary(run_records: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def _build_drift_report(run_records: list[dict[str, Any]], *, created_at: str) -> dict[str, Any]:
+    """比较每个 suite 最新两次 run，暴露 metric、baseline、scenario 与 schema 漂移。"""
+    grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for record in run_records:
+        grouped[str(record.get("suite") or "unknown")].append(record)
+
+    comparisons: list[dict[str, Any]] = []
+    single_run_suites: list[str] = []
+    for suite, records in sorted(grouped.items()):
+        records.sort(key=lambda item: str(item.get("createdAt") or ""), reverse=True)
+        if len(records) < 2:
+            single_run_suites.append(suite)
+            continue
+        comparisons.append(_compare_latest_runs(suite, latest=records[0], previous=records[1]))
+
+    return {
+        "reportVersion": DRIFT_REPORT_VERSION,
+        "createdAt": created_at,
+        "summary": {
+            "suiteCount": len(grouped),
+            "comparisonCount": len(comparisons),
+            "changedComparisonCount": sum(1 for item in comparisons if item["hasDrift"]),
+            "singleRunSuites": single_run_suites,
+        },
+        "comparisons": comparisons,
+    }
+
+
+def _compare_latest_runs(suite: str, *, latest: dict[str, Any], previous: dict[str, Any]) -> dict[str, Any]:
+    """生成单个 suite 的最新 run 与上一 run 对比。"""
+    schema_change = {
+        "latest": latest.get("schemaRegistryVersion"),
+        "previous": previous.get("schemaRegistryVersion"),
+        "changed": latest.get("schemaRegistryVersion") != previous.get("schemaRegistryVersion"),
+    }
+    export_kind_change = {
+        "latest": latest.get("exportKind"),
+        "previous": previous.get("exportKind"),
+        "changed": latest.get("exportKind") != previous.get("exportKind"),
+    }
+    ok_change = {
+        "latest": bool(latest.get("ok")),
+        "previous": bool(previous.get("ok")),
+        "changed": bool(latest.get("ok")) != bool(previous.get("ok")),
+    }
+    artifact_count_delta = int(latest.get("artifactCount") or 0) - int(previous.get("artifactCount") or 0)
+    deltas = {
+        "metricIds": _list_delta(latest.get("metricIds", []), previous.get("metricIds", [])),
+        "baselines": _list_delta(latest.get("baselines", []), previous.get("baselines", [])),
+        "scenarioIds": _list_delta(latest.get("scenarioIds", []), previous.get("scenarioIds", [])),
+    }
+    has_drift = (
+        schema_change["changed"]
+        or export_kind_change["changed"]
+        or ok_change["changed"]
+        or artifact_count_delta != 0
+        or any(delta["added"] or delta["removed"] for delta in deltas.values())
+    )
+    return {
+        "suite": suite,
+        "latestRunDir": latest.get("runDir"),
+        "previousRunDir": previous.get("runDir"),
+        "latestCreatedAt": latest.get("createdAt"),
+        "previousCreatedAt": previous.get("createdAt"),
+        "latestGit": latest.get("git"),
+        "previousGit": previous.get("git"),
+        "schemaRegistryVersion": schema_change,
+        "exportKind": export_kind_change,
+        "ok": ok_change,
+        "artifactCountDelta": artifact_count_delta,
+        "metricIds": deltas["metricIds"],
+        "baselines": deltas["baselines"],
+        "scenarioIds": deltas["scenarioIds"],
+        "hasDrift": has_drift,
+    }
+
+
+def _list_delta(latest_values: Any, previous_values: Any) -> dict[str, list[str]]:
+    """返回两个字符串列表的新增、移除和稳定交集。"""
+    latest_set = {str(value) for value in latest_values if value is not None} if isinstance(latest_values, list) else set()
+    previous_set = {str(value) for value in previous_values if value is not None} if isinstance(previous_values, list) else set()
+    return {
+        "added": sorted(latest_set - previous_set),
+        "removed": sorted(previous_set - latest_set),
+        "unchanged": sorted(latest_set & previous_set),
+    }
+
+
 def _compact_output(index: dict[str, Any]) -> dict[str, Any]:
     """命令行输出保持短；完整详情在 index 文件里。"""
-    return {
+    output = {
         "ok": not index["errors"],
         "indexVersion": index["indexVersion"],
         "runsDir": index["runsDir"],
@@ -260,6 +358,10 @@ def _compact_output(index: dict[str, Any]) -> dict[str, Any]:
         "errors": index["errors"],
         "warnings": index["warnings"],
     }
+    if index.get("driftPath"):
+        output["driftPath"] = index["driftPath"]
+        output["driftSummary"] = index["driftReport"]["summary"]
+    return output
 
 
 def _compact_git(git: Any) -> dict[str, Any]:
