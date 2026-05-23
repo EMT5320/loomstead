@@ -2,6 +2,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
+import sys
+import tempfile
+import time
 from pathlib import Path
 from typing import Any
 
@@ -61,7 +65,10 @@ class CodingDomainAdapter:
             {"id": "repo_fixture_loaded", "predicate": "external repo fixture is loaded before design"},
             {"id": "design_review_loaded", "predicate": "design review event is loaded before implementation"},
             {"id": "implementation_diff", "predicate": "implementer creates an artifact diff"},
-            {"id": "tests_executed", "predicate": "evaluation checkpoint runs tests"},
+            {
+                "id": "materialized_checkout_tested",
+                "predicate": "evaluation checkpoint materializes checkout and runs command",
+            },
             {"id": "review_completed", "predicate": "reviewer records approval with source evidence"},
             {"id": "failure_pattern_memory", "predicate": "review cites a prior failure or constraint memory"},
         ]
@@ -153,7 +160,10 @@ class CodingDomainAdapter:
             "design_review_loaded": "coding.design_review_loaded" in event_types,
             "implementation_diff": "coding.implementation_diff_created" in event_types
             and "skill_prototype.patch" in artifacts,
-            "tests_executed": "coding.tests_executed" in event_types and bool(test_report.get("passed")),
+            "materialized_checkout_tested": "coding.tests_executed" in event_types
+            and bool(test_report.get("passed"))
+            and bool(test_report.get("execution", {}).get("executed"))
+            and test_report.get("execution", {}).get("exitCode") == 0,
             "review_completed": bool(review_event) and review_report.get("status") == "approved",
             "failure_pattern_memory": bool(review_event and review_event.get("payload", {}).get("citedMemoryIds")),
         }
@@ -178,7 +188,7 @@ class CodingDomainAdapter:
             state_changes_with_source=1 if has_review_source else 0,
             relationship_relevant_decisions=1,
             decisions_with_relationship_memory=1 if process_checks["failure_pattern_memory"] else 0,
-            goal_success_override=process_checks["review_completed"] and process_checks["tests_executed"],
+            goal_success_override=process_checks["review_completed"] and process_checks["materialized_checkout_tested"],
         )
 
     def export_trace(self, world: dict[str, Any], run_dir: str) -> None:
@@ -258,12 +268,15 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
     elif "coding.tests_executed" not in event_types:
         diff_event = _first_event(world, "coding.implementation_diff_created")
         artifact = world.get("artifacts", {}).get("skill_prototype.patch", {})
-        test_cases = _run_fixture_tests(artifact)
+        test_cases, execution = _run_materialized_fixture_tests(artifact)
         test_report = {
             "testReportId": "skill_prototype.tests",
-            "command": "fixture:check_skill_stub loomstead-debug",
-            "passed": all(bool(item.get("passed")) for item in test_cases),
+            "command": execution.get("command", "python check_fixture.py <worktree>"),
+            "passed": execution.get("exitCode") == 0
+            and bool(test_cases)
+            and all(bool(item.get("passed")) for item in test_cases),
             "caseResults": test_cases,
+            "execution": execution,
             "sourceArtifactId": artifact.get("artifactId", "skill_prototype.patch"),
             "sourceEventIds": [_event_id(diff_event)],
         }
@@ -277,6 +290,8 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
                     "agentId": "reviewer",
                     "testReportId": test_report["testReportId"],
                     "passed": bool(test_report["passed"]),
+                    "exitCode": execution.get("exitCode"),
+                    "workspaceKind": execution.get("workspaceKind"),
                     "sourceArtifactId": test_report["sourceArtifactId"],
                     "sourceEventIds": test_report["sourceEventIds"],
                     "testReportSha256": test_report["sha256"],
@@ -296,7 +311,11 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
             "checklist": [
                 {"id": "repo_fixture_loaded", "passed": True},
                 {"id": "design_before_diff", "passed": True},
-                {"id": "tests_before_review", "passed": True},
+                {
+                    "id": "materialized_tests_before_review",
+                    "passed": bool(test_report.get("execution", {}).get("executed"))
+                    and test_report.get("execution", {}).get("exitCode") == 0,
+                },
                 {"id": "failure_memory_cited", "passed": True},
             ],
         }
@@ -361,16 +380,111 @@ def _build_skill_patch(repo_fixture: dict[str, Any]) -> tuple[str, dict[str, str
     return patch_text, files
 
 
-def _run_fixture_tests(artifact: dict[str, Any]) -> list[dict[str, Any]]:
-    """直接检查 patched file 内容，避免 test report 只是静态占位。"""
+def _run_materialized_fixture_tests(artifact: dict[str, Any]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """把 patched files 写入临时 checkout，并运行真实 Python 检查命令。"""
     patched_files = artifact.get("patchedFiles", {}) if isinstance(artifact.get("patchedFiles"), dict) else {}
-    skill_text = str(patched_files.get("skills/loomstead-debug/SKILL.md", ""))
-    return [
-        {"caseId": "loads_skill_md", "passed": skill_text.startswith("# Loomstead Debug Skill")},
-        {"caseId": "mentions_observer_trace", "passed": "observer trace evidence" in skill_text},
-        {"caseId": "requires_eval_domain", "passed": "eval:domain" in skill_text},
-        {"caseId": "keeps_existing_doc_guidance", "passed": "Use project docs" in skill_text},
-    ]
+    command_template = "python check_fixture.py <temporary_fixture_checkout>"
+    started = time.perf_counter()
+    try:
+        with tempfile.TemporaryDirectory(prefix="loomstead-coding-fixture-") as temp_dir:
+            worktree = Path(temp_dir) / "worktree"
+            _write_fixture_worktree(worktree, patched_files)
+            check_script = Path(temp_dir) / "check_fixture.py"
+            check_script.write_text(_fixture_check_script(), encoding="utf-8")
+            command = [sys.executable, str(check_script), str(worktree)]
+            completed = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", check=False)
+            duration_ms = round((time.perf_counter() - started) * 1000.0, 3)
+            parsed_cases = _parse_fixture_test_cases(completed.stdout)
+            execution = {
+                "executed": True,
+                "workspaceKind": "temporary_fixture_checkout",
+                "command": command_template,
+                "commandTemplate": command_template,
+                "pythonExecutable": Path(sys.executable).name,
+                "exitCode": completed.returncode,
+                "durationMs": duration_ms,
+                "stdout": completed.stdout,
+                "stderr": completed.stderr,
+                "workspaceFiles": sorted(str(path) for path in patched_files.keys()),
+                "workspaceFileHashes": {
+                    str(path): _stable_digest(str(content)) for path, content in patched_files.items()
+                },
+            }
+            return parsed_cases, execution
+    except Exception as exc:
+        duration_ms = round((time.perf_counter() - started) * 1000.0, 3)
+        return (
+            [{"caseId": "materialize_fixture_checkout", "passed": False, "error": repr(exc)}],
+            {
+                "executed": False,
+                "workspaceKind": "temporary_fixture_checkout",
+                "command": command_template,
+                "commandTemplate": command_template,
+                "pythonExecutable": Path(sys.executable).name,
+                "exitCode": None,
+                "durationMs": duration_ms,
+                "stdout": "",
+                "stderr": repr(exc),
+                "workspaceFiles": sorted(str(path) for path in patched_files.keys()),
+                "workspaceFileHashes": {
+                    str(path): _stable_digest(str(content)) for path, content in patched_files.items()
+                },
+            },
+        )
+
+
+def _write_fixture_worktree(worktree: Path, files: dict[str, Any]) -> None:
+    """按 repo 相对路径写入临时 worktree，避免测试只读内存对象。"""
+    worktree.mkdir(parents=True, exist_ok=True)
+    resolved_worktree = worktree.resolve()
+    for rel_path, content in files.items():
+        path = (worktree / str(rel_path)).resolve()
+        if not path.is_relative_to(resolved_worktree):
+            raise ValueError(f"fixture path 越出临时 worktree：{rel_path}")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(str(content), encoding="utf-8")
+
+
+def _fixture_check_script() -> str:
+    """返回临时测试脚本源码，命令执行结果会进入 test report。"""
+    return "\n".join(
+        [
+            "from __future__ import annotations",
+            "import json",
+            "import sys",
+            "from pathlib import Path",
+            "",
+            "worktree = Path(sys.argv[1])",
+            "skill_path = worktree / 'skills' / 'loomstead-debug' / 'SKILL.md'",
+            "skill_text = skill_path.read_text(encoding='utf-8') if skill_path.exists() else ''",
+            "cases = [",
+            "    {'caseId': 'loads_skill_md', 'passed': skill_text.startswith('# Loomstead Debug Skill')},",
+            "    {'caseId': 'mentions_observer_trace', 'passed': 'observer trace evidence' in skill_text},",
+            "    {'caseId': 'requires_eval_domain', 'passed': 'eval:domain' in skill_text},",
+            "    {'caseId': 'keeps_existing_doc_guidance', 'passed': 'Use project docs' in skill_text},",
+            "]",
+            "print(json.dumps({'caseResults': cases}, ensure_ascii=False))",
+            "raise SystemExit(0 if all(item['passed'] for item in cases) else 1)",
+            "",
+        ]
+    )
+
+
+def _parse_fixture_test_cases(stdout: str) -> list[dict[str, Any]]:
+    """解析真实命令输出；解析失败时返回单个失败 case 便于 Eval 定位。"""
+    try:
+        payload = json.loads(stdout.strip() or "{}")
+    except json.JSONDecodeError as exc:
+        return [{"caseId": "parse_fixture_test_output", "passed": False, "error": repr(exc)}]
+    cases = payload.get("caseResults", [])
+    if not isinstance(cases, list):
+        return [{"caseId": "parse_fixture_test_output", "passed": False, "error": "caseResults_not_list"}]
+    parsed_cases = [dict(item) for item in cases if isinstance(item, dict)]
+    if len(parsed_cases) != len(cases):
+        return [{"caseId": "parse_fixture_test_output", "passed": False, "error": "caseResult_not_object"}]
+    if not parsed_cases:
+        return [{"caseId": "parse_fixture_test_output", "passed": False, "error": "caseResults_empty"}]
+    return parsed_cases
 
 
 def _append_event(world: dict[str, Any], event_type: str, payload: dict[str, Any]) -> dict[str, Any]:
