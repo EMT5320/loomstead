@@ -585,6 +585,7 @@ func _build_phase2_observer_summary(payload: Dictionary) -> Dictionary:
 		"heuristics": _summarize_phase2_heuristics(payload.get("heuristics", {})),
 		"recentTraceEvents": _summarize_phase2_recent_trace(payload.get("recentTraceEvents", [])),
 		"recentTraceEventGroups": _build_phase2_trace_filter_summaries(payload.get("recentTraceEvents", [])),
+		"recentTraceDetailGroups": _build_phase2_trace_detail_groups(payload.get("recentTraceEvents", [])),
 		"recentTraceDetails": _summarize_phase2_trace_details(payload.get("recentTraceEvents", [])),
 	}
 
@@ -674,6 +675,16 @@ func _build_phase2_trace_filter_summaries(section) -> Dictionary:
 	}
 
 
+func _build_phase2_trace_detail_groups(section) -> Dictionary:
+	return {
+		"all": _phase2_trace_details_for_filter(section, "all"),
+		"decision": _phase2_trace_details_for_filter(section, "decision"),
+		"tool": _phase2_trace_details_for_filter(section, "tool"),
+		"interrupt": _phase2_trace_details_for_filter(section, "interrupt"),
+		"memory": _phase2_trace_details_for_filter(section, "memory"),
+	}
+
+
 func _summarize_phase2_recent_trace_for_filter(section, filter_id: String) -> String:
 	var items := _phase2_items(section)
 	if items.is_empty():
@@ -710,6 +721,26 @@ func _summarize_phase2_recent_trace_for_filter(section, filter_id: String) -> St
 	return "\n".join(lines)
 
 
+func _phase2_trace_details_for_filter(section, filter_id: String) -> Array[String]:
+	var items := _phase2_items(section)
+	var details: Array[String] = []
+	if items.is_empty():
+		return details
+	var filtered_items: Array = []
+	for item in items:
+		if not (item is Dictionary):
+			continue
+		var entry := item as Dictionary
+		var event_type := str(entry.get("eventType", entry.get("type", "trace")))
+		if _phase2_trace_filter_matches(event_type, filter_id):
+			filtered_items.append(entry)
+	var start_index = max(0, filtered_items.size() - 4)
+	for index in range(start_index, filtered_items.size()):
+		var entry := filtered_items[index] as Dictionary
+		details.append(_phase2_trace_detail_text(entry))
+	return details
+
+
 func _summarize_phase2_trace_details(section) -> String:
 	var items := _phase2_items(section)
 	if items.is_empty():
@@ -718,16 +749,30 @@ func _summarize_phase2_trace_details(section) -> String:
 	if not (latest is Dictionary):
 		return "trace detail 数据不可读"
 	var entry := latest as Dictionary
+	return _phase2_trace_detail_text(entry)
+
+
+func _phase2_trace_detail_text(entry: Dictionary) -> String:
+	# Detail 文本同时服务面板展示和 Copy trace，保留关键 id 与原始 details 摘要。
 	var event_type := str(entry.get("eventType", entry.get("type", "trace")))
 	var trace_id := str(entry.get("traceId", entry.get("id", "")))
+	var span_id := str(entry.get("spanId", ""))
+	var summary := str(entry.get("summary", ""))
+	var world_time = entry.get("worldTime", {})
+	var tick_text := "?"
+	if world_time is Dictionary:
+		tick_text = str((world_time as Dictionary).get("tick", "?"))
 	var details = entry.get("details", {})
 	var detail_text := "{}"
 	if details is Dictionary:
 		detail_text = JSON.stringify(details)
-	return "latest=%s id=%s details=%s" % [
+	return "tick=%s type=%s trace=%s span=%s summary=%s details=%s" % [
+		tick_text,
 		_pretty_trace_type(event_type),
 		trace_id if trace_id != "" else "-",
-		_truncate_text(detail_text, 96),
+		span_id if span_id != "" else "-",
+		_truncate_text(summary, 64),
+		_truncate_text(detail_text, 144),
 	]
 
 

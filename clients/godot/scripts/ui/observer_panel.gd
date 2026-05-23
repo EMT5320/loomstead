@@ -12,10 +12,16 @@ var _subjective_memory_value: Label
 var _relationship_edges_value: Label
 var _heuristics_value: Label
 var _recent_trace_filter: OptionButton
+var _trace_prev_button: Button
+var _trace_next_button: Button
+var _trace_copy_button: Button
+var _trace_index_value: Label
 var _recent_trace_value: Label
 var _recent_trace_detail_value: Label
 var _recent_trace_summaries: Dictionary = {}
+var _recent_trace_detail_groups: Dictionary = {}
 var _recent_trace_details := "-"
+var _current_trace_detail_index := 0
 var _current_trace_filter := "all"
 var _panel_visible := false
 var _current_npc_id := ""
@@ -94,7 +100,9 @@ func set_phase2_debug_summary(summary: Dictionary) -> void:
 	_relationship_edges_value.text = str(summary.get("relationshipEdges", "-"))
 	_heuristics_value.text = str(summary.get("heuristics", "-"))
 	_recent_trace_summaries = _trace_summary_dict(summary)
+	_recent_trace_detail_groups = _trace_detail_group_dict(summary)
 	_recent_trace_details = str(summary.get("recentTraceDetails", "-"))
+	_select_latest_trace_detail()
 	_update_recent_trace_view()
 
 
@@ -176,6 +184,26 @@ func _build_recent_trace_filter(parent: VBoxContainer) -> void:
 	_recent_trace_filter.item_selected.connect(_on_recent_trace_filter_selected)
 	row.add_child(_recent_trace_filter)
 
+	_trace_prev_button = Button.new()
+	_trace_prev_button.text = "Prev"
+	_trace_prev_button.pressed.connect(_on_trace_prev_pressed)
+	row.add_child(_trace_prev_button)
+
+	_trace_next_button = Button.new()
+	_trace_next_button.text = "Next"
+	_trace_next_button.pressed.connect(_on_trace_next_pressed)
+	row.add_child(_trace_next_button)
+
+	_trace_copy_button = Button.new()
+	_trace_copy_button.text = "Copy trace"
+	_trace_copy_button.pressed.connect(_on_trace_copy_pressed)
+	row.add_child(_trace_copy_button)
+
+	_trace_index_value = Label.new()
+	_trace_index_value.text = "0/0"
+	_trace_index_value.add_theme_font_size_override("font_size", 12)
+	row.add_child(_trace_index_value)
+
 
 func _add_row(parent: GridContainer, key_text: String) -> void:
 	var key_label := Label.new()
@@ -209,6 +237,7 @@ func _on_recent_trace_filter_selected(index: int) -> void:
 	if _recent_trace_filter == null:
 		return
 	_current_trace_filter = str(_recent_trace_filter.get_item_metadata(index))
+	_select_latest_trace_detail()
 	_update_recent_trace_view()
 
 
@@ -219,9 +248,18 @@ func _trace_summary_dict(summary: Dictionary) -> Dictionary:
 	return {"all": str(summary.get("recentTraceEvents", "-"))}
 
 
+func _trace_detail_group_dict(summary: Dictionary) -> Dictionary:
+	var groups = summary.get("recentTraceDetailGroups", {})
+	if groups is Dictionary:
+		return (groups as Dictionary).duplicate(true)
+	return {"all": [str(summary.get("recentTraceDetails", "-"))]}
+
+
 func _reset_recent_trace_view() -> void:
 	_recent_trace_summaries = {"all": "-"}
+	_recent_trace_detail_groups = {"all": ["-"]}
 	_recent_trace_details = "-"
+	_current_trace_detail_index = 0
 	_current_trace_filter = "all"
 	if _recent_trace_filter != null:
 		_recent_trace_filter.select(0)
@@ -233,4 +271,58 @@ func _update_recent_trace_view() -> void:
 		var trace_text := str(_recent_trace_summaries.get(_current_trace_filter, _recent_trace_summaries.get("all", "-")))
 		_recent_trace_value.text = trace_text
 	if _recent_trace_detail_value != null:
-		_recent_trace_detail_value.text = _recent_trace_details
+		var details := _trace_details_for_filter()
+		if details.is_empty():
+			_recent_trace_detail_value.text = _recent_trace_details
+		else:
+			_current_trace_detail_index = int(clamp(_current_trace_detail_index, 0, max(0, details.size() - 1)))
+			_recent_trace_detail_value.text = str(details[_current_trace_detail_index])
+	_update_trace_index_label()
+
+
+func _trace_details_for_filter() -> Array:
+	var details = _recent_trace_detail_groups.get(_current_trace_filter, _recent_trace_detail_groups.get("all", []))
+	if details is Array:
+		var detail_array := details as Array
+		return detail_array
+	return []
+
+
+func _select_latest_trace_detail() -> void:
+	var details := _trace_details_for_filter()
+	_current_trace_detail_index = max(0, details.size() - 1)
+
+
+func _update_trace_index_label() -> void:
+	if _trace_index_value == null:
+		return
+	var details := _trace_details_for_filter()
+	if details.is_empty():
+		_trace_index_value.text = "0/0"
+		return
+	_trace_index_value.text = "%d/%d" % [_current_trace_detail_index + 1, details.size()]
+
+
+func _on_trace_prev_pressed() -> void:
+	var details := _trace_details_for_filter()
+	if details.is_empty():
+		return
+	_current_trace_detail_index = max(0, _current_trace_detail_index - 1)
+	_update_recent_trace_view()
+
+
+func _on_trace_next_pressed() -> void:
+	var details := _trace_details_for_filter()
+	if details.is_empty():
+		return
+	_current_trace_detail_index = min(details.size() - 1, _current_trace_detail_index + 1)
+	_update_recent_trace_view()
+
+
+func _on_trace_copy_pressed() -> void:
+	var details := _trace_details_for_filter()
+	if details.is_empty():
+		return
+	# 复制当前单条 trace detail，便于真实窗口验收时粘贴到 issue / 文档。
+	DisplayServer.clipboard_set(str(details[_current_trace_detail_index]))
+	_phase2_status_value.text = "状态：已复制 trace detail"
