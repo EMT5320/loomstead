@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: eval
-last_verified: 2026-05-20
+last_verified: 2026-05-23
 startup_load: on-demand
 source_of_truth: true
 scope: process fidelity metrics, hard delegation baseline, ablation protocol, dataset outputs
@@ -13,7 +13,7 @@ scope: process fidelity metrics, hard delegation baseline, ablation protocol, da
 
 ## 1. 设计目标
 
-Eval 不只是 sanity check。它必须回答三个审稿级问题：
+Eval 需要超越 sanity check。它必须回答三个审稿级问题：
 
 ```text
 Q1. 为什么不直接 task delegation？
@@ -48,22 +48,41 @@ Q3. 与已有 generative agents / social simulation 相比，我们评估的新�
 
 ### 2.2 输出目录
 
+当前本地导出根目录默认为 `.run/eval-runs/`；可通过 `--export-dir <path>` 覆盖。
+
+Process suite 导出结构：
+
 ```text
-.kiro/eval-runs/run_YYYY-MM-DDTHH-MM-SS/
+.run/eval-runs/run_YYYY-MM-DDTHH-MM-SSZ/
 ├── summary.json
+├── ablation_comparison.json
+├── manifest.json
 ├── per_scenario/
-│   └── E1_close_friend_goal_seed_001.json
-├── event_store_dump.jsonl
-├── subjective_views_dump.jsonl
-├── relationship_edges_dump.jsonl
+│   ├── E1_close_friend_goal_full_motivational_delegation.json
+│   └── E1_close_friend_goal_hard_delegation.json
 ├── intervention_trace.jsonl
 ├── goal_progress_trace.jsonl
 ├── counterfactual_replay.jsonl
-├── memory_ablation_trace.jsonl
-├── stability_trace.jsonl
-├── ablation_comparison.json
-└── human_rating_samples.jsonl
+└── memory_ablation_trace.jsonl
 ```
+
+Stability suite 导出结构：
+
+```text
+.run/eval-runs/stability_YYYY-MM-DDTHH-MM-SSZ/
+├── summary.json
+├── stability_trace.jsonl
+├── final_evidence.json
+└── manifest.json
+```
+
+`manifest.json` 当前使用 `phase2.eval_manifest.v1`，至少包含：
+
+- `exportKind`、`createdAt`、`suite`、`baseline`、`ok` 和 `runDirName`。
+- Git 快照：`commit`、`shortCommit`、`branch`、`dirty`、`statusShort`。
+- `schemaRegistry` 快照，当前由 `backend/app/runtime/schema_registry.py` 生成。
+- `metricIds`、`baselines`、`scenarioIds`。
+- `artifacts[]`：每个导出文件的相对 `path`、`kind`、`bytes`、`sha256`；JSONL 文件额外记录 `rowCount`。
 
 ## 3. Baseline 定义
 
@@ -110,7 +129,7 @@ Director 将目标拆为明确子任务并委派给具体 Agent。NPC 作为 wor
 }
 ```
 
-这不是作弊 baseline，而是最关键对照：它代表传统 task delegation / todo-list agent 思路。
+这个 baseline 是关键对照，用来代表传统 task delegation / todo-list agent 思路。
 
 预期：goal_success 可能高，但 forced_action_rate、director_overreach_rate、process_believability_score 差。
 

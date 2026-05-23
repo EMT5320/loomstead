@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import hashlib
 import json
+import subprocess
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
@@ -10,7 +12,7 @@ from app.eval.process_fidelity import build_process_metrics, metric_summary, pro
 from app.eval.scenarios import DEFAULT_L1_SCENARIOS, DEFAULT_PROCESS_GOALS, EvalScenario, ProcessGoalSpec
 from app.runtime.agent_runtime import AgentRuntime
 from app.runtime.motivation_engine import MotivationEngine
-from app.runtime.schema_registry import require_schema_version
+from app.runtime.schema_registry import require_schema_version, schema_registry_snapshot
 from app.world.world_state import create_initial_world
 
 
@@ -879,30 +881,116 @@ def _safe_ratio(numerator: int | float, denominator: int | float) -> float:
 
 
 def _export_process_eval(result: dict[str, Any], base_dir: Path) -> dict[str, Any]:
-    run_dir = base_dir / f"run_{datetime.now(timezone.utc).strftime('%Y-%m-%dT%H-%M-%SZ')}"
+    created_at = _utc_timestamp()
+    run_dir = _unique_run_dir(base_dir / f"run_{_timestamp_slug(created_at)}")
     per_scenario_dir = run_dir / "per_scenario"
     per_scenario_dir.mkdir(parents=True, exist_ok=True)
-    _write_json(run_dir / "summary.json", _summary_only(result))
-    _write_json(run_dir / "ablation_comparison.json", result["ablation_comparison"])
+    artifacts: list[dict[str, Any]] = []
+
+    summary_path = run_dir / "summary.json"
+    _write_json(summary_path, _summary_only(result))
+    artifacts.append(_artifact_record(summary_path, run_dir, kind="summary_json"))
+
+    comparison_path = run_dir / "ablation_comparison.json"
+    _write_json(comparison_path, result["ablation_comparison"])
+    artifacts.append(_artifact_record(comparison_path, run_dir, kind="ablation_comparison_json"))
+
     for baseline, run in result["baselines"].items():
         for item in run["items"]:
             scenario_id = item["scenario"]["scenarioId"]
-            _write_json(per_scenario_dir / f"{scenario_id}_{baseline}.json", item)
-    _write_jsonl(run_dir / "intervention_trace.jsonl", _baseline_items(result, BASELINE_HARD_DELEGATION))
-    _write_jsonl(run_dir / "goal_progress_trace.jsonl", _baseline_items(result, BASELINE_FULL))
-    _write_jsonl(run_dir / "counterfactual_replay.jsonl", _counterfactual_replay_items(result, BASELINE_FULL))
-    _write_jsonl(run_dir / "memory_ablation_trace.jsonl", _memory_ablation_trace_items(result))
-    return {"runDir": str(run_dir)}
+            scenario_path = per_scenario_dir / f"{scenario_id}_{baseline}.json"
+            _write_json(scenario_path, item)
+            artifacts.append(
+                _artifact_record(
+                    scenario_path,
+                    run_dir,
+                    kind="per_scenario_json",
+                    scenario_id=scenario_id,
+                    baseline=baseline,
+                )
+            )
+
+    trace_specs = (
+        (
+            "intervention_trace.jsonl",
+            "intervention_trace_jsonl",
+            _baseline_items(result, BASELINE_HARD_DELEGATION),
+            BASELINE_HARD_DELEGATION,
+        ),
+        (
+            "goal_progress_trace.jsonl",
+            "goal_progress_trace_jsonl",
+            _baseline_items(result, BASELINE_FULL),
+            BASELINE_FULL,
+        ),
+        (
+            "counterfactual_replay.jsonl",
+            "counterfactual_replay_jsonl",
+            _counterfactual_replay_items(result, BASELINE_FULL),
+            BASELINE_FULL,
+        ),
+        (
+            "memory_ablation_trace.jsonl",
+            "memory_ablation_trace_jsonl",
+            _memory_ablation_trace_items(result),
+            None,
+        ),
+    )
+    for filename, kind, items, baseline in trace_specs:
+        trace_path = run_dir / filename
+        _write_jsonl(trace_path, items)
+        artifacts.append(
+            _artifact_record(trace_path, run_dir, kind=kind, row_count=len(items), baseline=baseline)
+        )
+
+    manifest_path = _write_eval_manifest(
+        run_dir=run_dir,
+        result=result,
+        artifacts=artifacts,
+        created_at=created_at,
+        export_kind="process_fidelity_dataset",
+    )
+    return {
+        "runDir": str(run_dir),
+        "manifest": str(manifest_path),
+        "artifactCount": len(artifacts) + 1,
+    }
 
 
 def _export_stability_eval(result: dict[str, Any], base_dir: Path) -> dict[str, Any]:
-    run_dir = base_dir / f"stability_{datetime.now(timezone.utc).strftime('%Y-%m-%dT%H-%M-%SZ')}"
+    created_at = _utc_timestamp()
+    run_dir = _unique_run_dir(base_dir / f"stability_{_timestamp_slug(created_at)}")
     run_dir.mkdir(parents=True, exist_ok=True)
-    _write_json(run_dir / "summary.json", _summary_only(result))
-    _write_jsonl(run_dir / "stability_trace.jsonl", list(result.get("items", [])))
+    artifacts: list[dict[str, Any]] = []
+
+    summary_path = run_dir / "summary.json"
+    _write_json(summary_path, _summary_only(result))
+    artifacts.append(_artifact_record(summary_path, run_dir, kind="summary_json"))
+
+    trace_items = list(result.get("items", []))
+    trace_path = run_dir / "stability_trace.jsonl"
+    _write_jsonl(trace_path, trace_items)
+    artifacts.append(
+        _artifact_record(trace_path, run_dir, kind="stability_trace_jsonl", row_count=len(trace_items))
+    )
+
     evidence = result.get("evidence", {}) if isinstance(result.get("evidence"), dict) else {}
-    _write_json(run_dir / "final_evidence.json", evidence)
-    return {"runDir": str(run_dir)}
+    evidence_path = run_dir / "final_evidence.json"
+    _write_json(evidence_path, evidence)
+    artifacts.append(_artifact_record(evidence_path, run_dir, kind="final_evidence_json"))
+
+    manifest_path = _write_eval_manifest(
+        run_dir=run_dir,
+        result=result,
+        artifacts=artifacts,
+        created_at=created_at,
+        export_kind="stability_dataset",
+    )
+    return {
+        "runDir": str(run_dir),
+        "manifest": str(manifest_path),
+        "artifactCount": len(artifacts) + 1,
+    }
 
 
 def _summary_only(result: dict[str, Any]) -> dict[str, Any]:
@@ -966,6 +1054,164 @@ def _memory_ablation_trace_items(result: dict[str, Any]) -> list[dict[str, Any]]
                 }
             )
     return items
+
+
+def _write_eval_manifest(
+    *,
+    run_dir: Path,
+    result: dict[str, Any],
+    artifacts: list[dict[str, Any]],
+    created_at: str,
+    export_kind: str,
+) -> Path:
+    """写入 Eval 数据集 manifest，固定 run 元数据、schema 版本和 artifact 校验信息。"""
+    manifest = {
+        "manifestVersion": "phase2.eval_manifest.v1",
+        "exportKind": export_kind,
+        "createdAt": created_at,
+        "suite": result.get("suite"),
+        "baseline": result.get("baseline"),
+        "ok": result.get("ok"),
+        "runDirName": run_dir.name,
+        "git": _git_snapshot(),
+        "schemaRegistry": schema_registry_snapshot(),
+        "metricIds": _metric_ids(result.get("metrics")),
+        "baselines": _baseline_names(result),
+        "scenarioIds": _scenario_ids(result),
+        "artifacts": artifacts,
+        "verification": {
+            "summary": "每个 artifact 提供 bytes / sha256；JSONL artifact 额外提供 rowCount，便于后续复核导出完整性。",
+            "localCommands": [
+                "npm.cmd run eval:process",
+                "npm.cmd run eval:process:export",
+                "npm.cmd run eval:stability",
+                "npm.cmd run eval:stability:export",
+            ],
+        },
+    }
+    manifest_path = run_dir / "manifest.json"
+    _write_json(manifest_path, manifest)
+    return manifest_path
+
+
+def _artifact_record(
+    path: Path,
+    run_dir: Path,
+    *,
+    kind: str,
+    row_count: int | None = None,
+    baseline: str | None = None,
+    scenario_id: str | None = None,
+) -> dict[str, Any]:
+    """生成稳定 artifact 索引；路径统一相对 run_dir，方便移动归档目录。"""
+    record: dict[str, Any] = {
+        "path": path.relative_to(run_dir).as_posix(),
+        "kind": kind,
+        "bytes": path.stat().st_size,
+        "sha256": _sha256_file(path),
+    }
+    if row_count is not None:
+        record["rowCount"] = row_count
+    if baseline:
+        record["baseline"] = baseline
+    if scenario_id:
+        record["scenarioId"] = scenario_id
+    return record
+
+
+def _unique_run_dir(path: Path) -> Path:
+    """避免同一秒内连续导出互相覆盖。"""
+    if not path.exists():
+        return path
+    for index in range(1, 100):
+        candidate = path.with_name(f"{path.name}_{index:02d}")
+        if not candidate.exists():
+            return candidate
+    raise RuntimeError(f"无法创建唯一 Eval 导出目录：{path}")
+
+
+def _utc_timestamp() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+
+
+def _timestamp_slug(timestamp: str) -> str:
+    """把 ISO UTC 时间转为 Windows 友好的目录片段。"""
+    return timestamp.replace("+00:00", "Z").replace(":", "-")
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _git_snapshot() -> dict[str, Any]:
+    """尽量记录当前 Git 状态；非 Git 环境下保持 manifest 可写。"""
+    commit = _git_output("rev-parse", "HEAD")
+    branch = _git_output("rev-parse", "--abbrev-ref", "HEAD")
+    status = _git_output("status", "--short")
+    return {
+        "commit": commit,
+        "shortCommit": commit[:7] if commit else None,
+        "branch": branch,
+        "dirty": bool(status),
+        "statusShort": status.splitlines()[:20] if status else [],
+    }
+
+
+def _git_output(*args: str) -> str | None:
+    try:
+        completed = subprocess.run(
+            ["git", *args],
+            cwd=Path.cwd(),
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+    except OSError:
+        return None
+    if completed.returncode != 0:
+        return None
+    return completed.stdout.strip()
+
+
+def _metric_ids(metrics: Any) -> list[str]:
+    if not isinstance(metrics, list):
+        return []
+    ids = [
+        str(item.get("metric") or "")
+        for item in metrics
+        if isinstance(item, dict) and item.get("metric")
+    ]
+    return sorted(set(ids))
+
+
+def _baseline_names(result: dict[str, Any]) -> list[str]:
+    baselines = result.get("baselines")
+    if isinstance(baselines, dict):
+        return sorted(str(key) for key in baselines.keys())
+    baseline = str(result.get("baseline") or "")
+    return [baseline] if baseline else []
+
+
+def _scenario_ids(result: dict[str, Any]) -> list[str]:
+    ids: set[str] = set()
+    baselines = result.get("baselines")
+    if isinstance(baselines, dict):
+        for run in baselines.values():
+            for item in (run.get("items", []) if isinstance(run, dict) else []):
+                scenario = item.get("scenario", {}) if isinstance(item, dict) else {}
+                scenario_id = str(scenario.get("scenarioId") or "")
+                if scenario_id:
+                    ids.add(scenario_id)
+    for item in (result.get("items", []) if isinstance(result.get("items"), list) else []):
+        if isinstance(item, dict) and item.get("hourIndex") is not None:
+            ids.add(f"hour_{int(item['hourIndex']):02d}")
+    return sorted(ids)
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
