@@ -1254,13 +1254,13 @@ Phase 1（"活着的世界"）已使用 `LifeActionExecutor` + `/api/world/tick`
 |---|---|---|
 | ToolDefinition + ToolRegistry | 完整接口 | 至少注册 8-12 个工具实现 |
 | MotivationEngine | 完整决策周期 | 三层路由 + 决策预算 + Fallback |
-| CapabilityRegistry | 动态生成 | 4 层过滤齐全 |
+| CapabilityRegistry | 动态生成 | 5 层过滤 / 路由齐全 |
 | NeedAccumulator | 完整 4 类需求 | 每 NPC NeedProfile 实例 |
 | ArbitrationLayer | 完整裁决 + Trace | contributing_sources 完整 |
 | ResultObserver + BiasFilter | 模板 + slot fill 版 | LLM 增强放 Phase 3 |
-| SubjectiveMemoryStore | 完整 schema | 衰减、归档、召回 |
+| SubjectiveMemoryStore | 完整 schema | 最小 record/list/recall/debug 已落地；衰减、归档继续收紧 |
 | RelationshipEdgeStore | 双时间戳 | 至少 5 种边类型 |
-| HeuristicLibrary | 完整 schema | 规则提取 + LLM 提取（受预算约束） |
+| HeuristicLibrary | 完整 schema | 规则提取 + 衰减 + Debug 已落地；LLM 提取受预算约束继续收紧 |
 | EvalFramework | scripts/run_agent_eval.py + L1 suite | 5-8 个 L1 scenario |
 | Godot 观察者模式 | 最小可用 | 切换 + NPC 信息面板 |
 

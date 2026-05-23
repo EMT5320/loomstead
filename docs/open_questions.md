@@ -19,7 +19,7 @@ scope: confirmed decisions, unresolved questions, and validation points
 
 - 项目从"二次元田园 RPG"重定位为 **"可解释的多 Agent 叙事运行时"**。
 - 对外口径："一个可解释的多 Agent 叙事运行时：通过 Director / Event Skill、主观记忆、关系演化和 Debug Trace，让少量深度 NPC 在可玩的 Godot 生活模拟切片中产生可追踪成长。"
-- 项目名在 2026-05-21 确认为 `Loomstead`，替代早期 `Loomstead` 对外名。
+- 项目名在 2026-05-21 确认为 `Loomstead`，早期内部代号和旧仓库名只作历史背景。
 - 差异化主轴：**少而深 + 可解释 + 可评估**。
 - 与 Smallville / AI Town / AIvilization / Project Sid 的"广而浅"路线区分。
 
@@ -74,7 +74,7 @@ scope: confirmed decisions, unresolved questions, and validation points
 
 ### 启发式学习（Heuristic Library）
 
-- **作为 Phase 2 骨架核心**：schema + 规则提取 + LLM 提取（受预算约束）+ 激活机制 + 衰减 + 设计师 heuristicSeeds 注入 + Debug 可视化都必须 Phase 2 到位。
+- **作为 Phase 2 骨架核心**：schema、规则提取、激活机制、衰减和 Debug 可视化已进入当前骨架；LLM 提取（受预算约束）与设计师 heuristicSeeds 注入是 Phase 2 收紧项，未验收前不写入完成口径。
 - 提取触发条件：失败/痛苦记忆 emotional_intensity ≥ 0.7。
 - 是项目"自我进化"叙事的硬支撑，可视化是作品集传播点。
 - 详见 `docs/agent_loop_architecture.md` §8。

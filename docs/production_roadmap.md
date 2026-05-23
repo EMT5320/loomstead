@@ -248,13 +248,13 @@ Phase 2 启动时 **直接退役** Phase 1 的 `LifeActionExecutor`，不并行�
 | --- | --- | --- |
 | ToolDefinition + ToolRegistry | 完整接口，注册 8-12 个工具实现 | `backend/app/tools/` |
 | MotivationEngine | 完整决策周期 + 三层路由 + 决策预算 + Fallback | `backend/app/runtime/motivation_engine.py` |
-| CapabilityRegistry | 4 层动态过滤齐全 | `backend/app/runtime/capability_registry.py` |
+| CapabilityRegistry | 5 层动态过滤 / 路由齐全（need_relevance / preconditions / npc_profile / event_scope / decision_budget） | `backend/app/runtime/capability_registry.py` |
 | NeedAccumulator + NeedProfile | 完整 4 类需求，每 NPC 实例 | `backend/app/runtime/need_accumulator.py` |
 | ArbitrationLayer | 完整裁决 + Trace（contributing_sources 写入 EventStore） | `backend/app/runtime/arbitration.py` |
 | ResultObserver + BiasFilter | 模板 + slot fill 版（LLM 增强放 Phase 3） | `backend/app/memory/observer.py` |
-| SubjectiveMemoryStore | 完整 schema：衰减、归档、召回 | `backend/app/memory/subjective.py` |
+| SubjectiveMemoryStore | 最小 record/list/recall/debug 已落地；完整衰减、归档和增强召回继续收紧 | `backend/app/memory/subjective_memory.py` |
 | RelationshipEdgeStore | 双时间戳 + 至少 5 种边类型 | `backend/app/memory/relationship_edges.py` |
-| HeuristicLibrary | 完整 schema + 规则提取 + LLM 提取（受预算约束） | `backend/app/memory/heuristic.py` |
+| HeuristicLibrary | 最小 schema + 规则提取 + 衰减 + Debug 已落地；LLM 提取和设计师 seed 注入继续收紧 | `backend/app/memory/heuristic.py` |
 | WorldEntities | FarmPlot / Item / Inventory / Shop / Building / Time / Weather schema | `backend/app/world/entities/` |
 | EvalFramework | scripts/run_agent_eval.py + L1 scenario suite (5-8 个) | `scripts/run_agent_eval.py`, `backend/app/eval/` |
 | ResearchFraming | Motivational Delegation + Process Fidelity Eval 研究文档 | `docs/research_framing_motivational_delegation.md` |
@@ -398,7 +398,7 @@ curl.exe -N http://localhost:8787/api/events
 
 ### Phase 2 第一组开工动作
 
-- **后端骨架线**：新建 `backend/app/tools/`、`backend/app/runtime/motivation_engine.py`、`backend/app/memory/subjective.py` 雏形 + 单元测试。
+- **后端骨架线**：新建 `backend/app/tools/`、`backend/app/runtime/motivation_engine.py`、`backend/app/memory/subjective_memory.py` 雏形 + 单元测试。
 - **Eval 线**：新建 `scripts/run_agent_eval.py` 雏形 + L1 scenario 第一个用例。
 - **Godot 观察者线**：先做"按 Tab 切换 + 点击 NPC 显示空白面板"最小骨架。
 - **内容 schema 线**：占位字段已补；实际 4 核心 NPC 数据填充放 Phase 3。
