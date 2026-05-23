@@ -1258,7 +1258,7 @@ Phase 1（"活着的世界"）已使用 `LifeActionExecutor` + `/api/world/tick`
 | NeedAccumulator | 完整 4 类需求 | 每 NPC NeedProfile 实例 |
 | ArbitrationLayer | 完整裁决 + Trace | contributing_sources 完整 |
 | ResultObserver + BiasFilter | 模板 + slot fill 版 | LLM 增强放 Phase 3 |
-| SubjectiveMemoryStore | 完整 schema | 最小 record/list/recall/debug 已落地；衰减、归档继续收紧 |
+| SubjectiveMemoryStore | 完整 schema | record/list/recall/debug 已落地；tick 级 effectiveSalience 衰减、低显著性归档、active / archived debug 计数已接入；夜间反思 consolidation 写回继续收紧 |
 | RelationshipEdgeStore | 双时间戳 | 至少 5 种边类型 |
 | HeuristicLibrary | 完整 schema | 规则提取 + 衰减 + Debug 已落地；LLM 提取受预算约束继续收紧 |
 | EvalFramework | scripts/run_agent_eval.py + L1 suite | 5-8 个 L1 scenario |

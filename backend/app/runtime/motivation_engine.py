@@ -56,7 +56,7 @@ class MotivationEngine:
             "needs": [need.to_dict() for need in sorted(needs, key=lambda item: item.urgency, reverse=True)],
             "capabilities": [tool.to_dict() for tool in candidates],
             "capabilityFilters": capability_resolution.to_debug_dict(),
-            "subjectiveMemoryRecall": self._subjective_memory_recall_debug(subjective_memory_records),
+            "subjectiveMemoryRecall": self._subjective_memory_recall_debug(subjective_memory_records, world_tick),
             "heuristicRecall": self._heuristic_recall_debug(heuristics, world_tick),
             "decision": decision.to_dict(),
         }
@@ -66,13 +66,25 @@ class MotivationEngine:
         items = [self.evaluate_npc(world, npc_id) for npc_id in candidate_ids[:limit]]
         return {"version": require_schema_version("motivation_engine"), "items": items}
 
-    def _subjective_memory_recall_debug(self, records: list[dict[str, Any]]) -> dict[str, Any]:
+    def _subjective_memory_recall_debug(self, records: list[dict[str, Any]], world_tick: int) -> dict[str, Any]:
+        active_records = [item for item in records if str(item.get("status") or "active") == "active"]
         return {
             "version": require_schema_version("subjective_memory_recall"),
             "query": "tool_result",
+            "worldTick": world_tick,
             "count": len(records),
-            "recordIds": [str(item.get("recordId") or "") for item in records[:8] if str(item.get("recordId") or "")],
-            "sourceEventIds": [str(item.get("sourceEventId") or "") for item in records[:8] if str(item.get("sourceEventId") or "")],
+            "activeCount": len(active_records),
+            "recordIds": [str(item.get("recordId") or "") for item in active_records[:8] if str(item.get("recordId") or "")],
+            "sourceEventIds": [str(item.get("sourceEventId") or "") for item in active_records[:8] if str(item.get("sourceEventId") or "")],
+            "recordSalience": [
+                {
+                    "recordId": str(item.get("recordId") or ""),
+                    "effectiveSalience": item.get("effectiveSalience"),
+                    "status": item.get("status") or "active",
+                }
+                for item in active_records[:8]
+                if str(item.get("recordId") or "")
+            ],
         }
 
     def _heuristic_recall_debug(self, heuristics: list[dict[str, Any]], world_tick: int) -> dict[str, Any]:

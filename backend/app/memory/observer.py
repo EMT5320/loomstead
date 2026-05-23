@@ -33,6 +33,7 @@ class BiasFilter:
             emotional_valence=valence,
             confidence=0.72 if observer_id != actor_id else 0.9,
             tags=("tool_result", tool_id, event_type),
+            created_tick=int(world.get("clock", {}).get("tick", 0)) if isinstance(world.get("clock"), dict) else 0,
         )
 
     def _valence(self, *, observer_id: str, actor_id: str, tool_id: str, event_type: str) -> float:
@@ -78,14 +79,15 @@ class ResultObserver:
         observer_scope = self._observer_scope(world, event)
         observer_ids = list(observer_scope["observerIds"])
         memory_items = []
+        world_tick = int(world.get("clock", {}).get("tick", 0)) if isinstance(world.get("clock"), dict) else 0
         for observer_id in observer_ids:
             record = self.bias_filter.build_record(observer_id=observer_id, world=world, event=event)
-            subjective_memory.add(record)
-            memory_items.append(record.to_dict())
+            subjective_memory.add(record, world_tick=world_tick)
+            memory_items.append(record.to_dict(world_tick=world_tick))
             agent = world.get("agents", {}).get(observer_id)
             if isinstance(agent, dict):
                 # 同步一条短记忆到旧 memory list，保证现有 RAG-lite 和 Debug 页面继续能看到新证据。
-                remember(agent, record.text, tick=int(world.get("clock", {}).get("tick", 0)), importance=0.58, tags=["subjective", "tool_result"])
+                remember(agent, record.text, tick=world_tick, importance=0.58, tags=["subjective", "tool_result"])
 
         relationship_items = [edge.to_dict() for edge in relationship_edges.apply_tool_event(world, event)]
         heuristic = heuristic_library.extract_from_event(event)

@@ -198,9 +198,12 @@ def _compact_subjective_memory_recall(value: Any) -> dict[str, Any]:
     return {
         "version": value.get("version"),
         "query": value.get("query"),
+        "worldTick": value.get("worldTick"),
         "count": value.get("count"),
+        "activeCount": value.get("activeCount"),
         "recordIds": _compact_list(value.get("recordIds"), 6),
         "sourceEventIds": _compact_list(value.get("sourceEventIds"), 6),
+        "recordSalience": _compact_list(value.get("recordSalience"), 6),
     }
 
 

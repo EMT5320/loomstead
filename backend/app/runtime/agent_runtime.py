@@ -204,7 +204,7 @@ class AgentRuntime:
             "decisionBudget": self.decision_budget.debug_snapshot(self.world, npc_ids=npc_ids),
             "motivation": {"version": require_schema_version("motivation_engine"), "items": self._phase2_decisions(npc_ids[:6])},
             "toolRuntime": self._phase2_tool_runtime_snapshot(npc_ids),
-            "subjectiveMemory": self.subjective_memory_store.debug_snapshot(agent_id=npc_id, limit=20),
+            "subjectiveMemory": self.subjective_memory_store.debug_snapshot(agent_id=npc_id, limit=20, world_tick=world_tick),
             "relationshipEdges": self.relationship_edge_store.debug_snapshot(agent_id=npc_id, limit=30),
             "heuristics": self.heuristic_library.debug_snapshot(agent_id=npc_id, limit=20, world_tick=world_tick),
             "recentTraceEvents": self._phase2_recent_trace_events(filters),
@@ -299,12 +299,14 @@ class AgentRuntime:
         return decisions
 
     def _phase2_subjective_memory_recall(self, npc_id: str, limit: int = 8) -> list[dict[str, Any]]:
+        world_tick = int(self.world.get("clock", {}).get("tick", 0)) if isinstance(self.world.get("clock"), dict) else 0
         return [
-            record.to_dict()
+            record.to_dict(world_tick=world_tick)
             for record in self.subjective_memory_store.recall(
                 agent_id=npc_id,
                 query="tool_result",
                 limit=limit,
+                world_tick=world_tick,
             )
         ]
 
@@ -1069,6 +1071,7 @@ class AgentRuntime:
             # 主观记忆与关系边也进入 EventStore，保证 Eval / Debug 能从同一条事件流回放因果。
             tick_events.append(self.event_store.append("memory.result_observed", observation))
 
+        memory_decay = self.subjective_memory_store.apply_decay(world_tick=int(self.world["clock"].get("tick", 0)))
         self._run_director_v0()
         self.event_store.add_snapshot(self.world)
         self.event_store.append(
@@ -1080,6 +1083,7 @@ class AgentRuntime:
                 "phase": self.world["clock"]["phase"],
                 "npcEventCount": len(tick_events),
                 "agentDiffCount": len(execution.get("agents", [])),
+                "subjectiveMemoryDecay": memory_decay,
             },
         )
         return {
@@ -1195,9 +1199,12 @@ class AgentRuntime:
         return {
             "version": recall.get("version"),
             "query": recall.get("query"),
+            "worldTick": recall.get("worldTick"),
             "count": recall.get("count"),
+            "activeCount": recall.get("activeCount"),
             "recordIds": list(recall.get("recordIds", []))[:8] if isinstance(recall.get("recordIds"), list) else [],
             "sourceEventIds": list(recall.get("sourceEventIds", []))[:8] if isinstance(recall.get("sourceEventIds"), list) else [],
+            "recordSalience": list(recall.get("recordSalience", []))[:8] if isinstance(recall.get("recordSalience"), list) else [],
         }
 
     def _phase2_heuristic_recall_ref(self, recall: dict[str, Any]) -> dict[str, Any]:

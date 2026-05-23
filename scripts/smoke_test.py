@@ -21,6 +21,7 @@ if hasattr(sys.stdout, "reconfigure"):
 from app.director import DirectorBeat, WorldDigest  # noqa: E402
 from app.config.model_config import ModelConfigStore  # noqa: E402
 from app.main import create_handler, create_town_app  # noqa: E402
+from app.memory.subjective_memory import SubjectiveMemoryRecord, SubjectiveMemoryStore  # noqa: E402
 from app.providers.context_builder import (  # noqa: E402
     build_player_dialogue_context,
     validate_gossip_propagation_payload,
@@ -492,6 +493,60 @@ def assert_motivation_profile_weight_contract() -> None:
     energy = next((score for score in scores if score.need_id == "energy"), None)
     if energy is None or round(energy.weight, 4) != 2.0 or round(energy.urgency, 4) != 1.0:
         raise RuntimeError("NeedAccumulator 应读取 motivationProfile.needs.energy.weight")
+
+
+def assert_subjective_memory_decay_archive() -> dict:
+    """确认 SubjectiveMemoryStore 支持显著性衰减、低强度归档和 active recall。"""
+    store = SubjectiveMemoryStore()
+    store.add(
+        SubjectiveMemoryRecord(
+            record_id="memory.old.neutral",
+            agent_id="kai",
+            source_event_id="event.old.neutral",
+            perspective="subjective",
+            text="凯娅记得一条很淡的 tool_result 线索。",
+            emotional_valence=0.02,
+            confidence=0.45,
+            tags=("tool_result", "neutral"),
+            created_tick=0,
+            salience=0.12,
+        ),
+        world_tick=0,
+    )
+    store.add(
+        SubjectiveMemoryRecord(
+            record_id="memory.old.strong",
+            agent_id="kai",
+            source_event_id="event.old.strong",
+            perspective="subjective",
+            text="凯娅记得一次强烈的 tool_result 失误。",
+            emotional_valence=-0.65,
+            confidence=0.8,
+            tags=("tool_result", "failure"),
+            created_tick=0,
+            salience=0.5,
+        ),
+        world_tick=0,
+    )
+    archived = store.apply_decay(world_tick=140)
+    if archived.get("archivedCount") != 1 or "memory.old.neutral" not in archived.get("archivedRecordIds", []):
+        raise RuntimeError("低显著性、低情绪强度主观记忆应进入归档")
+    snapshot = store.debug_snapshot(agent_id="kai", world_tick=140)
+    if snapshot.get("archivedCount") != 1 or snapshot.get("activeCount") != 1:
+        raise RuntimeError("SubjectiveMemoryStore debug 应暴露 active / archived 计数")
+    if snapshot.get("version") != schema_version_map()["subjective_memory_store"]:
+        raise RuntimeError("SubjectiveMemoryStore debug version 应与 schema registry 一致")
+    recalled = store.recall(agent_id="kai", query="tool_result", world_tick=140)
+    if [record.record_id for record in recalled] != ["memory.old.strong"]:
+        raise RuntimeError("SubjectiveMemoryStore recall 应只返回 active 记忆")
+    item = recalled[0].to_dict(world_tick=140)
+    if float(item.get("effectiveSalience") or 0.0) >= float(item.get("salience") or 0.0):
+        raise RuntimeError("主观记忆 effectiveSalience 应随时间衰减")
+    return {
+        "activeCount": snapshot.get("activeCount"),
+        "archivedCount": snapshot.get("archivedCount"),
+        "recalled": recalled[0].record_id,
+    }
 
 
 def assert_designer_heuristic_seed_injection() -> dict:
@@ -967,6 +1022,8 @@ def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
     recall_debug = motivation["items"][0].get("subjectiveMemoryRecall")
     if not isinstance(recall_debug, dict) or recall_debug.get("version") != versions["subjective_memory_recall"]:
         raise RuntimeError(f"{label}.phase2.motivation 应包含 {versions['subjective_memory_recall']}")
+    if "worldTick" not in recall_debug or "activeCount" not in recall_debug:
+        raise RuntimeError(f"{label}.phase2.motivation.subjectiveMemoryRecall 应包含 worldTick / activeCount")
     heuristic_recall = motivation["items"][0].get("heuristicRecall")
     if not isinstance(heuristic_recall, dict) or heuristic_recall.get("version") != versions["heuristic_recall"]:
         raise RuntimeError(f"{label}.phase2.motivation 应包含 {versions['heuristic_recall']}")
@@ -990,6 +1047,8 @@ def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
     subjective_memory = phase2.get("subjectiveMemory")
     if not isinstance(subjective_memory, dict) or subjective_memory.get("version") != versions["subjective_memory_store"]:
         raise RuntimeError(f"{label}.phase2.subjectiveMemory 应返回 {versions['subjective_memory_store']}")
+    if "activeCount" not in subjective_memory or "archivedCount" not in subjective_memory:
+        raise RuntimeError(f"{label}.phase2.subjectiveMemory 应返回 activeCount / archivedCount")
     heuristics = phase2.get("heuristics")
     if not isinstance(heuristics, dict) or heuristics.get("version") != versions["heuristic_library"]:
         raise RuntimeError(f"{label}.phase2.heuristics 应返回 {versions['heuristic_library']}")
@@ -1975,6 +2034,7 @@ if not memory_search["items"]:
 http_debug_summary = assert_http_debug_endpoints(app)
 fallback_summary = assert_provider_fallback_debug()
 assert_motivation_profile_weight_contract()
+subjective_memory_summary = assert_subjective_memory_decay_archive()
 designer_heuristic_summary = assert_designer_heuristic_seed_injection()
 schema_subset_summary = assert_tool_contract_json_schema_subset()
 phase2_budget_summary = assert_phase2_decision_budget_routing()
@@ -2005,6 +2065,7 @@ print(
         "memoryHits": http_debug_summary["memoryHits"],
         "influenceEvents": http_debug_summary["influenceEvents"],
         "fallbackItems": fallback_summary["fallbackItems"],
+        "subjectiveMemoryDecay": subjective_memory_summary,
         "designerHeuristics": designer_heuristic_summary,
         "schemaSubset": schema_subset_summary,
         "phase2Schemas": phase2_schema_summary,
