@@ -929,6 +929,7 @@ def assert_phase2_schema_registry_contract(phase2: dict | None = None) -> dict:
         "motivation_engine",
         "need_accumulator",
         "tool_runtime",
+        "world_entities",
         "subjective_memory_store",
         "subjective_memory_recall",
         "relationship_edge_store",
@@ -969,6 +970,7 @@ def assert_phase2_schema_registry_contract(phase2: dict | None = None) -> dict:
             "needAccumulator": "need_accumulator",
             "motivation": "motivation_engine",
             "toolRuntime": "tool_runtime",
+            "worldEntities": "world_entities",
             "subjectiveMemory": "subjective_memory_store",
             "relationshipEdges": "relationship_edge_store",
             "heuristics": "heuristic_library",
@@ -1044,6 +1046,14 @@ def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
     tool_runtime = phase2.get("toolRuntime")
     if not isinstance(tool_runtime, dict) or tool_runtime.get("version") != versions["tool_runtime"] or not tool_runtime.get("items"):
         raise RuntimeError(f"{label}.phase2.toolRuntime 应返回 ToolExecutor 运行态")
+    world_entities = phase2.get("worldEntities")
+    if not isinstance(world_entities, dict) or world_entities.get("version") != versions["world_entities"]:
+        raise RuntimeError(f"{label}.phase2.worldEntities 应返回 {versions['world_entities']}")
+    required_entity_kinds = {"farm_plot", "item", "inventory", "shop", "building", "time", "weather"}
+    by_kind = world_entities.get("byKind", {}) if isinstance(world_entities.get("byKind"), dict) else {}
+    missing_entity_kinds = sorted(kind for kind in required_entity_kinds if int(by_kind.get(kind) or 0) <= 0)
+    if missing_entity_kinds:
+        raise RuntimeError(f"{label}.phase2.worldEntities 缺少实体类型：{missing_entity_kinds}")
     subjective_memory = phase2.get("subjectiveMemory")
     if not isinstance(subjective_memory, dict) or subjective_memory.get("version") != versions["subjective_memory_store"]:
         raise RuntimeError(f"{label}.phase2.subjectiveMemory 应返回 {versions['subjective_memory_store']}")

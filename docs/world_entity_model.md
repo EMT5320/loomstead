@@ -13,6 +13,8 @@ scope: world entities (FarmPlot, Item, Inventory, Shop, Building, Time, Weather)
 > 用途：定义 `Loomstead` 的世界实体 schema，作为 NPC Agent 工具调用的"行动空间"。本文档与 [`agent_loop_architecture.md`](./agent_loop_architecture.md) 配套，前者讲 NPC 怎么决策，本文讲 NPC 决策的对象和效果作用在什么状态上。
 > 边界：本文聚焦数据契约和状态规则，不讲 Godot 渲染层细节；不讲具体 NPC 内容（见 `npc_deep_card_spec.md` 和 `game_content_storyline.md`）；不讲资产 manifest（见 `art_direction.md` 和 `assets/manifests/`）。
 
+> 实现状态（2026-05-23）：`backend/app/world/entities/schema.py` 已补齐 FarmPlot / Item / Inventory / Shop / Building / Time / Weather typed dataclass 与统一 `WorldEntity` 投影；`GET /api/debug.phase2.worldEntities` 已暴露 `world_entities.v1` 快照。当前 Shop / Weather 仍是 Phase 2 规则投影，真实经济和天气推进留后续扩展。
+
 ## 0. 设计原则
 
 ### 0.1 工具即内容

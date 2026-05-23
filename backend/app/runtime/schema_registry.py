@@ -161,6 +161,16 @@ SCHEMA_DEFINITIONS: dict[str, RuntimeSchemaDefinition] = {
         debug_surface="phase2.toolRuntime",
         required_fields=("items",),
     ),
+    "world_entities": RuntimeSchemaDefinition(
+        schema_id="world_entities",
+        version="world_entities.v1",
+        owner="world",
+        status="active",
+        description="Typed WorldEntity snapshot for FarmPlot, Item, Inventory, Shop, Building, Time, and Weather.",
+        producer="app.world.entities.schema",
+        debug_surface="phase2.worldEntities",
+        required_fields=("count", "byKind", "items"),
+    ),
     "subjective_memory_store": RuntimeSchemaDefinition(
         schema_id="subjective_memory_store",
         version="subjective_memory_store.v1",

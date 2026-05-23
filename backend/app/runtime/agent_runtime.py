@@ -51,6 +51,7 @@ from app.skills import (
     get_event_skill,
     list_event_skills,
 )
+from app.world.entities import world_entity_snapshot
 from app.world.seed_data import DAY1_EVENT_ID, DAY1_LOCATION_IDS, DAY1_NPC_IDS
 from app.world.world_state import (
     action_budget_for_phase,
@@ -202,6 +203,7 @@ class AgentRuntime:
             "tools": self.capability_registry.tool_registry.to_debug_payload(),
             "needAccumulator": self.motivation_engine.need_accumulator.debug_snapshot(self.world, npc_ids=npc_ids, delta_minutes=20.0),
             "decisionBudget": self.decision_budget.debug_snapshot(self.world, npc_ids=npc_ids),
+            "worldEntities": world_entity_snapshot(self.world),
             "motivation": {"version": require_schema_version("motivation_engine"), "items": self._phase2_decisions(npc_ids[:6])},
             "toolRuntime": self._phase2_tool_runtime_snapshot(npc_ids),
             "subjectiveMemory": self.subjective_memory_store.debug_snapshot(agent_id=npc_id, limit=20, world_tick=world_tick),
