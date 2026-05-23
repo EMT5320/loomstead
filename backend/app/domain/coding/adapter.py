@@ -24,11 +24,12 @@ class CodingDomainAdapter:
 
     def build_initial_world(self, scenario_id: str, seed: int) -> dict[str, Any]:
         goal = self.parse_goal(scenario_id)
+        repo_fixture = _build_repo_fixture()
         return {
             "tick": 0,
             "seed": seed,
             "goalId": goal.goal_id,
-            "repoFixture": _build_repo_fixture(),
+            "repoFixture": repo_fixture,
             "agents": {
                 "pm": {"role": "PM", "state": "scoping"},
                 "architect": {"role": "Architect", "state": "waiting"},
@@ -51,7 +52,8 @@ class CodingDomainAdapter:
                     "type": "coding.repo_fixture_loaded",
                     "payload": {
                         "repoFixtureId": "loomstead-debug-skill-fixture.v1",
-                        "fileCount": 2,
+                        "fileCount": len(repo_fixture.get("files", {})),
+                        "testCommand": repo_fixture.get("testCommand"),
                     },
                 },
             ],
@@ -66,8 +68,8 @@ class CodingDomainAdapter:
             {"id": "design_review_loaded", "predicate": "design review event is loaded before implementation"},
             {"id": "implementation_diff", "predicate": "implementer creates an artifact diff"},
             {
-                "id": "materialized_checkout_tested",
-                "predicate": "evaluation checkpoint materializes checkout and runs command",
+                "id": "external_repo_checkout_tested",
+                "predicate": "evaluation checkpoint checks out external repo and runs its test command",
             },
             {"id": "review_completed", "predicate": "reviewer records approval with source evidence"},
             {"id": "failure_pattern_memory", "predicate": "review cites a prior failure or constraint memory"},
@@ -160,7 +162,7 @@ class CodingDomainAdapter:
             "design_review_loaded": "coding.design_review_loaded" in event_types,
             "implementation_diff": "coding.implementation_diff_created" in event_types
             and "skill_prototype.patch" in artifacts,
-            "materialized_checkout_tested": "coding.tests_executed" in event_types
+            "external_repo_checkout_tested": "coding.tests_executed" in event_types
             and bool(test_report.get("passed"))
             and bool(test_report.get("execution", {}).get("executed"))
             and test_report.get("execution", {}).get("exitCode") == 0,
@@ -188,7 +190,7 @@ class CodingDomainAdapter:
             state_changes_with_source=1 if has_review_source else 0,
             relationship_relevant_decisions=1,
             decisions_with_relationship_memory=1 if process_checks["failure_pattern_memory"] else 0,
-            goal_success_override=process_checks["review_completed"] and process_checks["materialized_checkout_tested"],
+            goal_success_override=process_checks["review_completed"] and process_checks["external_repo_checkout_tested"],
         )
 
     def export_trace(self, world: dict[str, Any], run_dir: str) -> None:
@@ -268,7 +270,8 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
     elif "coding.tests_executed" not in event_types:
         diff_event = _first_event(world, "coding.implementation_diff_created")
         artifact = world.get("artifacts", {}).get("skill_prototype.patch", {})
-        test_cases, execution = _run_materialized_fixture_tests(artifact)
+        repo_fixture = world.get("repoFixture", {}) if isinstance(world.get("repoFixture"), dict) else {}
+        test_cases, execution = _run_external_checkout_fixture_tests(artifact, repo_fixture)
         test_report = {
             "testReportId": "skill_prototype.tests",
             "command": execution.get("command", "python check_fixture.py <worktree>"),
@@ -312,7 +315,7 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
                 {"id": "repo_fixture_loaded", "passed": True},
                 {"id": "design_before_diff", "passed": True},
                 {
-                    "id": "materialized_tests_before_review",
+                    "id": "external_checkout_tests_before_review",
                     "passed": bool(test_report.get("execution", {}).get("executed"))
                     and test_report.get("execution", {}).get("exitCode") == 0,
                 },
@@ -348,6 +351,7 @@ def _build_repo_fixture() -> dict[str, Any]:
             "# Loomstead Debug Skill\n\n"
             "Use project docs before changing runtime code.\n"
         ),
+        "check_skill.py": _repo_fixture_test_script(),
     }
     return {
         "fixtureId": "loomstead-debug-skill-fixture.v1",
@@ -355,7 +359,9 @@ def _build_repo_fixture() -> dict[str, Any]:
         "defaultBranch": "main",
         "files": files,
         "fileHashes": {path: _stable_digest(content) for path, content in files.items()},
-        "testCommand": "fixture:check_skill_stub loomstead-debug",
+        "testCommand": "python check_skill.py",
+        "testCommandSource": "repo_fixture",
+        "sourceRepoKind": "deterministic_local_git_repository",
     }
 
 
@@ -380,31 +386,57 @@ def _build_skill_patch(repo_fixture: dict[str, Any]) -> tuple[str, dict[str, str
     return patch_text, files
 
 
-def _run_materialized_fixture_tests(artifact: dict[str, Any]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    """把 patched files 写入临时 checkout，并运行真实 Python 检查命令。"""
+def _run_external_checkout_fixture_tests(
+    artifact: dict[str, Any], repo_fixture: dict[str, Any]
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """创建独立 git 仓库、执行真实 checkout，并运行仓库自带测试命令。"""
     patched_files = artifact.get("patchedFiles", {}) if isinstance(artifact.get("patchedFiles"), dict) else {}
-    command_template = "python check_fixture.py <temporary_fixture_checkout>"
+    repo_files = repo_fixture.get("files", {}) if isinstance(repo_fixture.get("files"), dict) else {}
+    command_template = str(repo_fixture.get("testCommand") or "python check_skill.py")
+    checkout_steps: list[dict[str, Any]] = []
     started = time.perf_counter()
     try:
         with tempfile.TemporaryDirectory(prefix="loomstead-coding-fixture-") as temp_dir:
-            worktree = Path(temp_dir) / "worktree"
-            _write_fixture_worktree(worktree, patched_files)
-            check_script = Path(temp_dir) / "check_fixture.py"
-            check_script.write_text(_fixture_check_script(), encoding="utf-8")
-            command = [sys.executable, str(check_script), str(worktree)]
-            completed = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", check=False)
+            source_repo = Path(temp_dir) / "source-repo"
+            checkout = Path(temp_dir) / "checkout"
+            _write_fixture_worktree(source_repo, repo_files)
+            checkout_steps.extend(_initialise_git_repo(source_repo))
+            source_head = _run_git_command(["rev-parse", "HEAD"], cwd=source_repo, check=True)["stdout"].strip()
+            checkout_steps.append(
+                _run_git_command(
+                    ["clone", "--quiet", str(source_repo), str(checkout)],
+                    cwd=Path(temp_dir),
+                    check=True,
+                )
+            )
+            checkout_head = _run_git_command(["rev-parse", "HEAD"], cwd=checkout, check=True)["stdout"].strip()
+            _write_fixture_worktree(checkout, patched_files)
+            checkout_status = _run_git_command(["status", "--short"], cwd=checkout, check=True)["stdout"].splitlines()
+            command = _repo_test_command(command_template)
+            completed = subprocess.run(command, cwd=checkout, capture_output=True, text=True, encoding="utf-8", check=False)
             duration_ms = round((time.perf_counter() - started) * 1000.0, 3)
             parsed_cases = _parse_fixture_test_cases(completed.stdout)
             execution = {
                 "executed": True,
-                "workspaceKind": "temporary_fixture_checkout",
+                "workspaceKind": "git_external_repo_checkout",
+                "sourceRepoKind": repo_fixture.get("sourceRepoKind", "deterministic_local_git_repository"),
+                "checkoutMethod": "git clone",
                 "command": command_template,
                 "commandTemplate": command_template,
+                "testCommandSource": repo_fixture.get("testCommandSource", "repo_fixture"),
                 "pythonExecutable": Path(sys.executable).name,
                 "exitCode": completed.returncode,
                 "durationMs": duration_ms,
                 "stdout": completed.stdout,
                 "stderr": completed.stderr,
+                "checkoutSteps": checkout_steps,
+                "git": {
+                    "defaultBranch": repo_fixture.get("defaultBranch", "main"),
+                    "sourceHead": source_head,
+                    "checkoutHead": checkout_head,
+                    "statusAfterPatch": checkout_status,
+                },
+                "sourceRepoFiles": sorted(str(path) for path in repo_files.keys()),
                 "workspaceFiles": sorted(str(path) for path in patched_files.keys()),
                 "workspaceFileHashes": {
                     str(path): _stable_digest(str(content)) for path, content in patched_files.items()
@@ -414,17 +446,22 @@ def _run_materialized_fixture_tests(artifact: dict[str, Any]) -> tuple[list[dict
     except Exception as exc:
         duration_ms = round((time.perf_counter() - started) * 1000.0, 3)
         return (
-            [{"caseId": "materialize_fixture_checkout", "passed": False, "error": repr(exc)}],
+            [{"caseId": "external_repo_checkout", "passed": False, "error": repr(exc)}],
             {
                 "executed": False,
-                "workspaceKind": "temporary_fixture_checkout",
+                "workspaceKind": "git_external_repo_checkout",
+                "sourceRepoKind": repo_fixture.get("sourceRepoKind", "deterministic_local_git_repository"),
+                "checkoutMethod": "git clone",
                 "command": command_template,
                 "commandTemplate": command_template,
+                "testCommandSource": repo_fixture.get("testCommandSource", "repo_fixture"),
                 "pythonExecutable": Path(sys.executable).name,
                 "exitCode": None,
                 "durationMs": duration_ms,
                 "stdout": "",
                 "stderr": repr(exc),
+                "checkoutSteps": checkout_steps,
+                "sourceRepoFiles": sorted(str(path) for path in repo_files.keys()),
                 "workspaceFiles": sorted(str(path) for path in patched_files.keys()),
                 "workspaceFileHashes": {
                     str(path): _stable_digest(str(content)) for path, content in patched_files.items()
@@ -445,17 +482,16 @@ def _write_fixture_worktree(worktree: Path, files: dict[str, Any]) -> None:
         path.write_text(str(content), encoding="utf-8")
 
 
-def _fixture_check_script() -> str:
-    """返回临时测试脚本源码，命令执行结果会进入 test report。"""
+def _repo_fixture_test_script() -> str:
+    """返回仓库自带测试脚本源码，随外部 fixture repo 一起 checkout。"""
     return "\n".join(
         [
             "from __future__ import annotations",
             "import json",
-            "import sys",
             "from pathlib import Path",
             "",
-            "worktree = Path(sys.argv[1])",
-            "skill_path = worktree / 'skills' / 'loomstead-debug' / 'SKILL.md'",
+            "repo_root = Path(__file__).resolve().parent",
+            "skill_path = repo_root / 'skills' / 'loomstead-debug' / 'SKILL.md'",
             "skill_text = skill_path.read_text(encoding='utf-8') if skill_path.exists() else ''",
             "cases = [",
             "    {'caseId': 'loads_skill_md', 'passed': skill_text.startswith('# Loomstead Debug Skill')},",
@@ -468,6 +504,53 @@ def _fixture_check_script() -> str:
             "",
         ]
     )
+
+
+def _initialise_git_repo(repo_dir: Path) -> list[dict[str, Any]]:
+    """初始化本地 git 源仓库，模拟真实外部仓库 checkout 起点。"""
+    steps: list[dict[str, Any]] = []
+    steps.append(_run_git_command(["init", "--quiet"], cwd=repo_dir, check=True))
+    steps.append(_run_git_command(["checkout", "-B", "main"], cwd=repo_dir, check=True))
+    steps.append(_run_git_command(["config", "user.email", "fixture@example.invalid"], cwd=repo_dir, check=True))
+    steps.append(_run_git_command(["config", "user.name", "Loomstead Fixture"], cwd=repo_dir, check=True))
+    steps.append(_run_git_command(["add", "--all"], cwd=repo_dir, check=True))
+    steps.append(_run_git_command(["commit", "--quiet", "-m", "initial fixture repo"], cwd=repo_dir, check=True))
+    return steps
+
+
+def _run_git_command(command: list[str], *, cwd: Path, check: bool) -> dict[str, Any]:
+    """执行 git 命令并记录可复核结果，降低临时路径噪声。"""
+    completed = subprocess.run(["git", *command], cwd=cwd, capture_output=True, text=True, encoding="utf-8", check=False)
+    result = {
+        "command": "git " + " ".join(_display_command_part(part) for part in command),
+        "exitCode": completed.returncode,
+        "stdout": _sanitize_temp_paths(completed.stdout),
+        "stderr": _sanitize_temp_paths(completed.stderr),
+    }
+    if check and completed.returncode != 0:
+        raise RuntimeError(f"git command failed: {result}")
+    return result
+
+
+def _repo_test_command(command_template: str) -> list[str]:
+    """把 repo fixture 的测试命令转换为无 shell 的 subprocess 参数。"""
+    if command_template != "python check_skill.py":
+        raise ValueError(f"不支持的 repo fixture 测试命令：{command_template}")
+    return [sys.executable, "check_skill.py"]
+
+
+def _sanitize_temp_paths(value: str) -> str:
+    """减少测试报告中的临时绝对路径噪声，保留命令结果主体。"""
+    return value.replace("\\", "/")
+
+
+def _display_command_part(value: str) -> str:
+    """把临时 checkout 路径压缩成稳定占位符，避免 artifact 随路径漂移。"""
+    normalized = value.replace("\\", "/")
+    if "loomstead-coding-fixture-" not in normalized and ":" not in normalized:
+        return value
+    name = Path(value).name or "path"
+    return f"<{name}>"
 
 
 def _parse_fixture_test_cases(stdout: str) -> list[dict[str, Any]]:
