@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -31,6 +32,8 @@ class CodingDomainAdapter:
             },
             "constraints": [],
             "artifacts": {},
+            "testReports": {},
+            "reviewReports": {},
             "dependencies": {},
             "events": [
                 {
@@ -72,7 +75,12 @@ class CodingDomainAdapter:
             tick=int(world.get("tick", 0)),
             world_summary={
                 "artifactCount": float(len(world.get("artifacts", {}))),
+                "testReportCount": float(len(world.get("testReports", {}))),
+                "reviewReportCount": float(len(world.get("reviewReports", {}))),
                 "constraintCount": float(len(world.get("constraints", []))),
+                "artifactRefs": sorted(str(key) for key in world.get("artifacts", {}).keys()),
+                "testReportRefs": sorted(str(key) for key in world.get("testReports", {}).keys()),
+                "reviewReportRefs": sorted(str(key) for key in world.get("reviewReports", {}).keys()),
             },
             agent_summaries={agent_id: dict(summary) for agent_id, summary in world.get("agents", {}).items()},
             recent_events=[dict(event) for event in world.get("events", [])[-12:]],
@@ -120,11 +128,17 @@ class CodingDomainAdapter:
     def evaluate(self, world: dict[str, Any], goal: DomainGoalSpec) -> dict[str, float]:
         event_types = {str(event.get("type") or "") for event in world.get("events", [])}
         review_event = _first_event(world, "coding.review_completed")
+        artifacts = world.get("artifacts", {}) if isinstance(world.get("artifacts"), dict) else {}
+        test_reports = world.get("testReports", {}) if isinstance(world.get("testReports"), dict) else {}
+        review_reports = world.get("reviewReports", {}) if isinstance(world.get("reviewReports"), dict) else {}
+        test_report = test_reports.get("skill_prototype.tests", {})
+        review_report = review_reports.get("skill_prototype.review", {})
         process_checks = {
             "design_review_loaded": "coding.design_review_loaded" in event_types,
-            "implementation_diff": "coding.implementation_diff_created" in event_types,
-            "tests_executed": "coding.tests_executed" in event_types,
-            "review_completed": bool(review_event),
+            "implementation_diff": "coding.implementation_diff_created" in event_types
+            and "skill_prototype.diff" in artifacts,
+            "tests_executed": "coding.tests_executed" in event_types and bool(test_report.get("passed")),
+            "review_completed": bool(review_event) and review_report.get("status") == "approved",
             "failure_pattern_memory": bool(review_event and review_event.get("payload", {}).get("citedMemoryIds")),
         }
         # Coding domain 用 review dependency trace 对齐通用 relationship_consistency 指标。
@@ -152,52 +166,134 @@ class CodingDomainAdapter:
         )
 
     def export_trace(self, world: dict[str, Any], run_dir: str) -> None:
-        # skeleton 保留最小导出，后续可接 Eval manifest 统一索引。
+        # 导出 coding dry-run 的可审计工件，便于单独复核 artifact / test / review 链路。
         path = Path(run_dir)
         path.mkdir(parents=True, exist_ok=True)
         (path / "coding_events.jsonl").write_text(
             "".join(json.dumps(event, ensure_ascii=False) + "\n" for event in world.get("events", [])),
             encoding="utf-8",
         )
+        for key, filename in (
+            ("artifacts", "coding_artifacts.json"),
+            ("testReports", "coding_test_reports.json"),
+            ("reviewReports", "coding_review_reports.json"),
+        ):
+            (path / filename).write_text(
+                json.dumps(world.get(key, {}), ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
 
 
 def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
     emitted: list[dict[str, Any]] = []
     event_types = {str(event.get("type") or "") for event in world.get("events", [])}
     if "coding.design_review_loaded" not in event_types:
-        emitted.append(_append_event(world, "coding.design_review_loaded", {"agentId": "architect"}))
+        emitted.append(
+            _append_event(
+                world,
+                "coding.design_review_loaded",
+                {
+                    "agentId": "architect",
+                    "designDocRef": "design.skill_prototype.v1",
+                    "acceptedConstraints": ["must_run_tests"],
+                },
+            )
+        )
         world["agents"]["architect"]["state"] = "design_reviewed"
     elif "coding.implementation_diff_created" not in event_types:
         design_event = _first_event(world, "coding.design_review_loaded")
-        world.setdefault("artifacts", {})["skill_prototype.diff"] = {"status": "created"}
+        patch_text = "\n".join(
+            [
+                "+++ skills/loomstead-debug/SKILL.md",
+                "+# Loomstead Debug Skill",
+                "+Use observer trace evidence before proposing runtime changes.",
+                "+Always run eval:domain before marking adapter changes done.",
+            ]
+        )
+        artifact = {
+            "artifactId": "skill_prototype.diff",
+            "kind": "patch",
+            "path": "skills/loomstead-debug/SKILL.md",
+            "status": "created",
+            "sourceEventIds": [_event_id(design_event)],
+            "changedFiles": ["skills/loomstead-debug/SKILL.md"],
+            "patchPreview": patch_text,
+            "sha256": _stable_digest(patch_text),
+        }
+        world.setdefault("artifacts", {})["skill_prototype.diff"] = artifact
         emitted.append(
             _append_event(
                 world,
                 "coding.implementation_diff_created",
-                {"agentId": "implementer", "sourceEventIds": [_event_id(design_event)]},
+                {
+                    "agentId": "implementer",
+                    "artifactId": artifact["artifactId"],
+                    "sourceEventIds": artifact["sourceEventIds"],
+                    "artifactSha256": artifact["sha256"],
+                },
             )
         )
         world["agents"]["implementer"]["state"] = "diff_created"
     elif "coding.tests_executed" not in event_types:
         diff_event = _first_event(world, "coding.implementation_diff_created")
+        artifact = world.get("artifacts", {}).get("skill_prototype.diff", {})
+        test_report = {
+            "testReportId": "skill_prototype.tests",
+            "command": "python scripts/check_skill_stub.py --skill loomstead-debug",
+            "passed": True,
+            "caseResults": [
+                {"caseId": "loads_skill_md", "passed": True},
+                {"caseId": "mentions_observer_trace", "passed": True},
+                {"caseId": "requires_eval_domain", "passed": True},
+            ],
+            "sourceArtifactId": artifact.get("artifactId", "skill_prototype.diff"),
+            "sourceEventIds": [_event_id(diff_event)],
+        }
+        test_report["sha256"] = _stable_digest(json.dumps(test_report, ensure_ascii=False, sort_keys=True))
+        world.setdefault("testReports", {})["skill_prototype.tests"] = test_report
         emitted.append(
             _append_event(
                 world,
                 "coding.tests_executed",
-                {"agentId": "reviewer", "passed": True, "sourceEventIds": [_event_id(diff_event)]},
+                {
+                    "agentId": "reviewer",
+                    "testReportId": test_report["testReportId"],
+                    "passed": True,
+                    "sourceArtifactId": test_report["sourceArtifactId"],
+                    "sourceEventIds": test_report["sourceEventIds"],
+                    "testReportSha256": test_report["sha256"],
+                },
             )
         )
     elif "coding.review_completed" not in event_types:
         test_event = _first_event(world, "coding.tests_executed")
+        test_report = world.get("testReports", {}).get("skill_prototype.tests", {})
+        review_report = {
+            "reviewReportId": "skill_prototype.review",
+            "status": "approved",
+            "sourceTestReportId": test_report.get("testReportId", "skill_prototype.tests"),
+            "sourceEventIds": [_event_id(test_event)],
+            "citedMemoryIds": ["prior_failure.skip_tests"],
+            "checklist": [
+                {"id": "design_before_diff", "passed": True},
+                {"id": "tests_before_review", "passed": True},
+                {"id": "failure_memory_cited", "passed": True},
+            ],
+        }
+        review_report["sha256"] = _stable_digest(json.dumps(review_report, ensure_ascii=False, sort_keys=True))
+        world.setdefault("reviewReports", {})["skill_prototype.review"] = review_report
         emitted.append(
             _append_event(
                 world,
                 "coding.review_completed",
                 {
                     "agentId": "reviewer",
-                    "status": "approved",
-                    "sourceEventIds": [_event_id(test_event)],
-                    "citedMemoryIds": ["prior_failure.skip_tests"],
+                    "reviewReportId": review_report["reviewReportId"],
+                    "status": review_report["status"],
+                    "sourceTestReportId": review_report["sourceTestReportId"],
+                    "sourceEventIds": review_report["sourceEventIds"],
+                    "citedMemoryIds": review_report["citedMemoryIds"],
+                    "reviewReportSha256": review_report["sha256"],
                 },
             )
         )
@@ -226,3 +322,7 @@ def _first_event(world: dict[str, Any], event_type: str) -> dict[str, Any] | Non
 
 def _event_id(event: dict[str, Any] | None) -> str:
     return str(event.get("id") if isinstance(event, dict) else "")
+
+
+def _stable_digest(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()

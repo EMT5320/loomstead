@@ -80,6 +80,7 @@ def _run_adapter_goal(adapter: DomainAdapter, *, goal_id: str, seed: int) -> dic
         "milestones": adapter.propose_default_milestones(goal),
         "initialObservation": initial_observation.to_dict(),
         "finalObservation": final_observation.to_dict(),
+        "domainEvidence": _extract_domain_evidence(world),
     }
 
 
@@ -114,6 +115,18 @@ def _target_agents(goal_payload: dict[str, Any]) -> list[str]:
         str(outcome.get("targetNpcId") or ""),
     ]
     return [agent_id for agent_id in agents if agent_id] or ["pm", "architect", "implementer", "reviewer"]
+
+
+def _extract_domain_evidence(world: Any) -> dict[str, Any]:
+    if not isinstance(world, dict):
+        return {}
+    evidence_keys = ("artifacts", "testReports", "reviewReports", "dependencies")
+    # 只抽取跨域 dry-run 的可审计工件，避免把完整 world 快照塞进 Eval item。
+    return {
+        key: world.get(key, {})
+        for key in evidence_keys
+        if isinstance(world.get(key), dict) and world.get(key)
+    }
 
 
 def _domain_metric_summaries(items: list[dict[str, Any]], domain_ids: list[str]) -> list[dict[str, Any]]:
@@ -177,6 +190,7 @@ def _export_cross_domain_adapter_eval(result: dict[str, Any], base_dir: Path) ->
         ("domain_metrics.jsonl", "domain_metrics_jsonl", _domain_metric_trace_items(items)),
         ("observation_trace.jsonl", "observation_trace_jsonl", _domain_observation_trace_items(items)),
         ("intervention_trace.jsonl", "intervention_trace_jsonl", _domain_intervention_trace_items(items)),
+        ("domain_evidence.jsonl", "domain_evidence_jsonl", _domain_evidence_trace_items(items)),
     )
     for filename, kind, trace_items in trace_specs:
         trace_path = run_dir / filename
@@ -249,6 +263,23 @@ def _domain_intervention_trace_items(items: list[dict[str, Any]]) -> list[dict[s
                 "appliedEventCount": item.get("appliedEventCount", 0),
                 "stepEventCount": item.get("stepEventCount", 0),
                 "milestones": item.get("milestones", []),
+            }
+        )
+    return rows
+
+
+def _domain_evidence_trace_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for item in items:
+        evidence = item.get("domainEvidence", {}) if isinstance(item.get("domainEvidence"), dict) else {}
+        if not evidence:
+            continue
+        rows.append(
+            {
+                "domainId": item.get("domainId"),
+                "scenarioId": item.get("scenarioId"),
+                "baseline": item.get("baseline"),
+                "domainEvidence": evidence,
             }
         )
     return rows
