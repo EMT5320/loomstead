@@ -13,7 +13,11 @@ from app.domain.base import DomainGoalSpec, DomainIntervention, DomainObservatio
 from app.eval.process_fidelity import build_process_metrics
 
 
-CODING_GOAL_IDS = ("coding.skill_prototype_dryrun",)
+CODING_GOAL_IDS = ("coding.skill_prototype_dryrun", "coding.skill_regression_fix_dryrun")
+CODING_GOAL_TEXT = {
+    "coding.skill_prototype_dryrun": "Develop a skill prototype through design, tests, and review.",
+    "coding.skill_regression_fix_dryrun": "Fix a skill regression through design, checkout tests, and review.",
+}
 
 
 class CodingDomainAdapter:
@@ -24,7 +28,7 @@ class CodingDomainAdapter:
 
     def build_initial_world(self, scenario_id: str, seed: int) -> dict[str, Any]:
         goal = self.parse_goal(scenario_id)
-        repo_fixture = _build_repo_fixture()
+        repo_fixture = _build_repo_fixture(goal.goal_id)
         return {
             "tick": 0,
             "seed": seed,
@@ -40,7 +44,7 @@ class CodingDomainAdapter:
             "artifacts": {},
             "testReports": {},
             "reviewReports": {},
-            "dependencies": {"repoFixtureId": "loomstead-debug-skill-fixture.v1"},
+            "dependencies": {"repoFixtureId": repo_fixture.get("fixtureId", "")},
             "events": [
                 {
                     "id": "coding_evt_000",
@@ -51,7 +55,7 @@ class CodingDomainAdapter:
                     "id": "coding_evt_001",
                     "type": "coding.repo_fixture_loaded",
                     "payload": {
-                        "repoFixtureId": "loomstead-debug-skill-fixture.v1",
+                        "repoFixtureId": repo_fixture.get("fixtureId", ""),
                         "fileCount": len(repo_fixture.get("files", {})),
                         "testCommand": repo_fixture.get("testCommand"),
                     },
@@ -60,8 +64,10 @@ class CodingDomainAdapter:
         }
 
     def parse_goal(self, raw_goal: str) -> DomainGoalSpec:
-        known_goal_text = "Develop a skill prototype through design, tests, and review."
-        if raw_goal not in CODING_GOAL_IDS and raw_goal != known_goal_text:
+        goal_id = raw_goal
+        if raw_goal in CODING_GOAL_TEXT.values():
+            goal_id = next(key for key, value in CODING_GOAL_TEXT.items() if value == raw_goal)
+        if goal_id not in CODING_GOAL_IDS:
             raise ValueError(f"未知 coding goal：{raw_goal}")
         required_process = [
             {"id": "repo_fixture_loaded", "predicate": "external repo fixture is loaded before design"},
@@ -74,14 +80,18 @@ class CodingDomainAdapter:
             {"id": "review_completed", "predicate": "reviewer records approval with source evidence"},
             {"id": "failure_pattern_memory", "predicate": "review cites a prior failure or constraint memory"},
         ]
+        desired_artifact = (
+            "skill_regression_fix" if goal_id == "coding.skill_regression_fix_dryrun" else "skill_prototype"
+        )
         return DomainGoalSpec(
-            goal_id="coding.skill_prototype_dryrun",
-            natural_language_goal="Develop a skill prototype through design, tests, and review.",
-            desired_outcome={"artifact": "skill_prototype", "reviewStatus": "approved", "tests": "passed"},
+            goal_id=goal_id,
+            natural_language_goal=CODING_GOAL_TEXT[goal_id],
+            desired_outcome={"artifact": desired_artifact, "reviewStatus": "approved", "tests": "passed"},
             forbidden_shortcuts=[
                 "direct_artifact_without_design",
                 "review_status_set_without_review",
                 "delete_failing_test",
+                "mark_regression_fixed_without_checkout_test",
             ],
             required_process=required_process,
             allowed_interventions=["event_skill_load", "constraint_injection", "evaluation_checkpoint"],
@@ -155,13 +165,16 @@ class CodingDomainAdapter:
         test_reports = world.get("testReports", {}) if isinstance(world.get("testReports"), dict) else {}
         review_reports = world.get("reviewReports", {}) if isinstance(world.get("reviewReports"), dict) else {}
         repo_fixture = world.get("repoFixture", {}) if isinstance(world.get("repoFixture"), dict) else {}
-        test_report = test_reports.get("skill_prototype.tests", {})
-        review_report = review_reports.get("skill_prototype.review", {})
+        artifact_id = str(repo_fixture.get("artifactId") or "skill_prototype.patch")
+        test_report_id = str(repo_fixture.get("testReportId") or "skill_prototype.tests")
+        review_report_id = str(repo_fixture.get("reviewReportId") or "skill_prototype.review")
+        test_report = test_reports.get(test_report_id, {})
+        review_report = review_reports.get(review_report_id, {})
         process_checks = {
             "repo_fixture_loaded": "coding.repo_fixture_loaded" in event_types and bool(repo_fixture.get("files")),
             "design_review_loaded": "coding.design_review_loaded" in event_types,
             "implementation_diff": "coding.implementation_diff_created" in event_types
-            and "skill_prototype.patch" in artifacts,
+            and artifact_id in artifacts,
             "external_repo_checkout_tested": "coding.tests_executed" in event_types
             and bool(test_report.get("passed"))
             and bool(test_report.get("execution", {}).get("executed"))
@@ -211,9 +224,13 @@ class CodingDomainAdapter:
                 json.dumps(world.get(key, {}), ensure_ascii=False, indent=2) + "\n",
                 encoding="utf-8",
             )
-        patch_text = str(world.get("artifacts", {}).get("skill_prototype.patch", {}).get("patchText", ""))
-        if patch_text:
-            (path / "skill_prototype.patch").write_text(patch_text + "\n", encoding="utf-8")
+        for artifact_id, artifact in sorted(world.get("artifacts", {}).items()):
+            if not isinstance(artifact, dict):
+                continue
+            patch_text = str(artifact.get("patchText", ""))
+            if patch_text:
+                patch_filename = artifact_id if str(artifact_id).endswith(".patch") else f"{artifact_id}.patch"
+                (path / patch_filename).write_text(patch_text + "\n", encoding="utf-8")
 
 
 def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
@@ -238,9 +255,10 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
         repo_fixture = world.get("repoFixture", {}) if isinstance(world.get("repoFixture"), dict) else {}
         patch_text, patched_files = _build_skill_patch(repo_fixture)
         base_files = repo_fixture.get("files", {}) if isinstance(repo_fixture.get("files"), dict) else {}
-        target_path = "skills/loomstead-debug/SKILL.md"
+        target_path = str(repo_fixture.get("targetPath") or "skills/loomstead-debug/SKILL.md")
+        artifact_id = str(repo_fixture.get("artifactId") or "skill_prototype.patch")
         artifact = {
-            "artifactId": "skill_prototype.patch",
+            "artifactId": artifact_id,
             "kind": "repo_patch",
             "repoFixtureId": repo_fixture.get("fixtureId", ""),
             "path": target_path,
@@ -253,7 +271,7 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
             "patchedFiles": patched_files,
             "sha256": _stable_digest(patch_text),
         }
-        world.setdefault("artifacts", {})["skill_prototype.patch"] = artifact
+        world.setdefault("artifacts", {})[artifact_id] = artifact
         emitted.append(
             _append_event(
                 world,
@@ -269,11 +287,13 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
         world["agents"]["implementer"]["state"] = "diff_created"
     elif "coding.tests_executed" not in event_types:
         diff_event = _first_event(world, "coding.implementation_diff_created")
-        artifact = world.get("artifacts", {}).get("skill_prototype.patch", {})
         repo_fixture = world.get("repoFixture", {}) if isinstance(world.get("repoFixture"), dict) else {}
+        artifact_id = str(repo_fixture.get("artifactId") or "skill_prototype.patch")
+        test_report_id = str(repo_fixture.get("testReportId") or "skill_prototype.tests")
+        artifact = world.get("artifacts", {}).get(artifact_id, {})
         test_cases, execution = _run_external_checkout_fixture_tests(artifact, repo_fixture)
         test_report = {
-            "testReportId": "skill_prototype.tests",
+            "testReportId": test_report_id,
             "command": execution.get("command", "python check_fixture.py <worktree>"),
             "passed": execution.get("exitCode") == 0
             and bool(test_cases)
@@ -284,7 +304,7 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
             "sourceEventIds": [_event_id(diff_event)],
         }
         test_report["sha256"] = _stable_digest(json.dumps(test_report, ensure_ascii=False, sort_keys=True))
-        world.setdefault("testReports", {})["skill_prototype.tests"] = test_report
+        world.setdefault("testReports", {})[test_report_id] = test_report
         emitted.append(
             _append_event(
                 world,
@@ -303,11 +323,14 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
         )
     elif "coding.review_completed" not in event_types:
         test_event = _first_event(world, "coding.tests_executed")
-        test_report = world.get("testReports", {}).get("skill_prototype.tests", {})
+        repo_fixture = world.get("repoFixture", {}) if isinstance(world.get("repoFixture"), dict) else {}
+        test_report_id = str(repo_fixture.get("testReportId") or "skill_prototype.tests")
+        review_report_id = str(repo_fixture.get("reviewReportId") or "skill_prototype.review")
+        test_report = world.get("testReports", {}).get(test_report_id, {})
         review_report = {
-            "reviewReportId": "skill_prototype.review",
+            "reviewReportId": review_report_id,
             "status": "approved",
-            "sourceTestReportId": test_report.get("testReportId", "skill_prototype.tests"),
+            "sourceTestReportId": test_report.get("testReportId", test_report_id),
             "sourceEventIds": [_event_id(test_event)],
             "repoFixtureId": world.get("repoFixture", {}).get("fixtureId", ""),
             "citedMemoryIds": ["prior_failure.skip_tests"],
@@ -323,7 +346,7 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
             ],
         }
         review_report["sha256"] = _stable_digest(json.dumps(review_report, ensure_ascii=False, sort_keys=True))
-        world.setdefault("reviewReports", {})["skill_prototype.review"] = review_report
+        world.setdefault("reviewReports", {})[review_report_id] = review_report
         emitted.append(
             _append_event(
                 world,
@@ -343,36 +366,75 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
     return emitted
 
 
-def _build_repo_fixture() -> dict[str, Any]:
+def _build_repo_fixture(goal_id: str) -> dict[str, Any]:
     """构造可重复的外部仓库 fixture，模拟跨域 coding 输入。"""
+    if goal_id == "coding.skill_regression_fix_dryrun":
+        fixture_id = "loomstead-debug-regression-fixture.v1"
+        artifact_id = "skill_regression_fix.patch"
+        test_report_id = "skill_regression_fix.tests"
+        review_report_id = "skill_regression_fix.review"
+        planned_additions = [
+            "Check regression evidence before approving fixes.",
+            "Run npm.cmd run check for runtime-facing skill changes.",
+        ]
+        test_expectations = [
+            {"caseId": "loads_skill_md", "type": "startswith", "value": "# Loomstead Debug Skill"},
+            {"caseId": "keeps_existing_doc_guidance", "type": "contains", "value": "Use project docs"},
+            {
+                "caseId": "requires_regression_evidence",
+                "type": "contains",
+                "value": "regression evidence before approving fixes",
+            },
+            {"caseId": "requires_repo_check_command", "type": "contains", "value": "npm.cmd run check"},
+        ]
+    else:
+        fixture_id = "loomstead-debug-skill-fixture.v1"
+        artifact_id = "skill_prototype.patch"
+        test_report_id = "skill_prototype.tests"
+        review_report_id = "skill_prototype.review"
+        planned_additions = [
+            "Use observer trace evidence before proposing runtime changes.",
+            "Always run eval:domain before marking adapter changes done.",
+        ]
+        test_expectations = [
+            {"caseId": "loads_skill_md", "type": "startswith", "value": "# Loomstead Debug Skill"},
+            {"caseId": "mentions_observer_trace", "type": "contains", "value": "observer trace evidence"},
+            {"caseId": "requires_eval_domain", "type": "contains", "value": "eval:domain"},
+            {"caseId": "keeps_existing_doc_guidance", "type": "contains", "value": "Use project docs"},
+        ]
+
     files = {
         "README.md": "# Skill Fixture\n\nThis fixture represents a tiny external skill repository.\n",
         "skills/loomstead-debug/SKILL.md": (
             "# Loomstead Debug Skill\n\n"
             "Use project docs before changing runtime code.\n"
         ),
-        "check_skill.py": _repo_fixture_test_script(),
+        "check_skill.py": _repo_fixture_test_script(test_expectations),
     }
     return {
-        "fixtureId": "loomstead-debug-skill-fixture.v1",
+        "fixtureId": fixture_id,
         "repoName": "fixture/loomstead-debug-skill",
         "defaultBranch": "main",
         "files": files,
         "fileHashes": {path: _stable_digest(content) for path, content in files.items()},
+        "targetPath": "skills/loomstead-debug/SKILL.md",
+        "artifactId": artifact_id,
+        "testReportId": test_report_id,
+        "reviewReportId": review_report_id,
         "testCommand": "python check_skill.py",
         "testCommandSource": "repo_fixture",
+        "plannedAdditions": planned_additions,
+        "testExpectations": test_expectations,
         "sourceRepoKind": "deterministic_local_git_repository",
     }
 
 
 def _build_skill_patch(repo_fixture: dict[str, Any]) -> tuple[str, dict[str, str]]:
     files = dict(repo_fixture.get("files", {})) if isinstance(repo_fixture.get("files"), dict) else {}
-    target_path = "skills/loomstead-debug/SKILL.md"
+    target_path = str(repo_fixture.get("targetPath") or "skills/loomstead-debug/SKILL.md")
     original = str(files.get(target_path, ""))
-    additions = [
-        "Use observer trace evidence before proposing runtime changes.",
-        "Always run eval:domain before marking adapter changes done.",
-    ]
+    planned_additions = repo_fixture.get("plannedAdditions", [])
+    additions = [str(item) for item in planned_additions] if isinstance(planned_additions, list) else []
     patched = original.rstrip() + "\n" + "\n".join(additions) + "\n"
     files[target_path] = patched
     patch_text = "\n".join(
@@ -482,23 +544,31 @@ def _write_fixture_worktree(worktree: Path, files: dict[str, Any]) -> None:
         path.write_text(str(content), encoding="utf-8")
 
 
-def _repo_fixture_test_script() -> str:
+def _repo_fixture_test_script(expectations: list[dict[str, str]]) -> str:
     """返回仓库自带测试脚本源码，随外部 fixture repo 一起 checkout。"""
+    expectation_json = json.dumps(expectations, ensure_ascii=False, sort_keys=True)
     return "\n".join(
         [
             "from __future__ import annotations",
             "import json",
             "from pathlib import Path",
             "",
+            f"EXPECTATIONS = {expectation_json!r}",
+            "expectations = json.loads(EXPECTATIONS)",
             "repo_root = Path(__file__).resolve().parent",
             "skill_path = repo_root / 'skills' / 'loomstead-debug' / 'SKILL.md'",
             "skill_text = skill_path.read_text(encoding='utf-8') if skill_path.exists() else ''",
-            "cases = [",
-            "    {'caseId': 'loads_skill_md', 'passed': skill_text.startswith('# Loomstead Debug Skill')},",
-            "    {'caseId': 'mentions_observer_trace', 'passed': 'observer trace evidence' in skill_text},",
-            "    {'caseId': 'requires_eval_domain', 'passed': 'eval:domain' in skill_text},",
-            "    {'caseId': 'keeps_existing_doc_guidance', 'passed': 'Use project docs' in skill_text},",
-            "]",
+            "cases = []",
+            "for item in expectations:",
+            "    value = str(item.get('value', ''))",
+            "    check_type = item.get('type')",
+            "    if check_type == 'startswith':",
+            "        passed = skill_text.startswith(value)",
+            "    elif check_type == 'contains':",
+            "        passed = value in skill_text",
+            "    else:",
+            "        passed = False",
+            "    cases.append({'caseId': item.get('caseId', 'unknown_case'), 'passed': passed})",
             "print(json.dumps({'caseResults': cases}, ensure_ascii=False))",
             "raise SystemExit(0 if all(item['passed'] for item in cases) else 1)",
             "",
