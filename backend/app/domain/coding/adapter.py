@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import difflib
 import hashlib
 import json
 import subprocess
@@ -14,17 +15,22 @@ from app.eval.process_fidelity import build_process_metrics
 
 
 FAILING_TEST_REPAIR_GOAL_ID = "coding.skill_failing_test_repair_dryrun"
+MULTIFILE_REVIEW_GOAL_ID = "coding.skill_multifile_review_dryrun"
 
 CODING_GOAL_IDS = (
     "coding.skill_prototype_dryrun",
     "coding.skill_regression_fix_dryrun",
     FAILING_TEST_REPAIR_GOAL_ID,
+    MULTIFILE_REVIEW_GOAL_ID,
 )
 CODING_GOAL_TEXT = {
     "coding.skill_prototype_dryrun": "Develop a skill prototype through design, tests, and review.",
     "coding.skill_regression_fix_dryrun": "Fix a skill regression through design, checkout tests, and review.",
     FAILING_TEST_REPAIR_GOAL_ID: (
         "Repair a failing skill test through checkout, patch, passing tests, and review."
+    ),
+    MULTIFILE_REVIEW_GOAL_ID: (
+        "Update a skill and its metadata through a multi-file patch, checkout tests, and rubric review."
     ),
 }
 
@@ -38,6 +44,10 @@ class CodingDomainAdapter:
     def build_initial_world(self, scenario_id: str, seed: int) -> dict[str, Any]:
         goal = self.parse_goal(scenario_id)
         repo_fixture = _build_repo_fixture(goal.goal_id)
+        dependencies = {"repoFixtureId": repo_fixture.get("fixtureId", "")}
+        for key in ("metadataPath", "reviewRubricPath"):
+            if repo_fixture.get(key):
+                dependencies[key] = repo_fixture[key]
         return {
             "tick": 0,
             "seed": seed,
@@ -54,7 +64,7 @@ class CodingDomainAdapter:
             "prePatchTestReports": {},
             "testReports": {},
             "reviewReports": {},
-            "dependencies": {"repoFixtureId": repo_fixture.get("fixtureId", "")},
+            "dependencies": dependencies,
             "events": [
                 {
                     "id": "coding_evt_000",
@@ -67,6 +77,8 @@ class CodingDomainAdapter:
                     "payload": {
                         "repoFixtureId": repo_fixture.get("fixtureId", ""),
                         "fileCount": len(repo_fixture.get("files", {})),
+                        "metadataPath": repo_fixture.get("metadataPath"),
+                        "reviewRubricPath": repo_fixture.get("reviewRubricPath"),
                         "testCommand": repo_fixture.get("testCommand"),
                     },
                 },
@@ -98,10 +110,26 @@ class CodingDomainAdapter:
                     "predicate": "evaluation checkpoint records the failing test before implementation",
                 },
             )
+        if goal_id == MULTIFILE_REVIEW_GOAL_ID:
+            required_process.insert(
+                2,
+                {
+                    "id": "review_rubric_loaded",
+                    "predicate": "review rubric is loaded before implementation",
+                },
+            )
+            required_process.insert(
+                4,
+                {
+                    "id": "metadata_dependency_updated",
+                    "predicate": "implementation updates dependency metadata alongside skill content",
+                },
+            )
         desired_artifact = {
             "coding.skill_prototype_dryrun": "skill_prototype",
             "coding.skill_regression_fix_dryrun": "skill_regression_fix",
             FAILING_TEST_REPAIR_GOAL_ID: "skill_failing_test_repair",
+            MULTIFILE_REVIEW_GOAL_ID: "skill_multifile_review",
         }[goal_id]
         success_evidence = ["design_event", "diff_event", "test_event", "review_event"]
         if goal_id == FAILING_TEST_REPAIR_GOAL_ID:
@@ -202,6 +230,12 @@ class CodingDomainAdapter:
         pre_patch_report = pre_patch_reports.get(pre_patch_test_report_id, {})
         test_report = test_reports.get(test_report_id, {})
         review_report = review_reports.get(review_report_id, {})
+        artifact = artifacts.get(artifact_id, {}) if isinstance(artifacts.get(artifact_id), dict) else {}
+        changed_files = [str(path) for path in artifact.get("changedFiles", [])] if isinstance(
+            artifact.get("changedFiles"), list
+        ) else []
+        metadata_path = str(repo_fixture.get("metadataPath") or "")
+        review_rubric_path = str(repo_fixture.get("reviewRubricPath") or "")
         pre_patch_cases = (
             pre_patch_report.get("caseResults", []) if isinstance(pre_patch_report.get("caseResults"), list) else []
         )
@@ -215,9 +249,15 @@ class CodingDomainAdapter:
         process_checks = {
             "repo_fixture_loaded": "coding.repo_fixture_loaded" in event_types and bool(repo_fixture.get("files")),
             "design_review_loaded": "coding.design_review_loaded" in event_types,
+            "review_rubric_loaded": "coding.review_rubric_loaded" in event_types
+            and bool(review_rubric_path)
+            and review_rubric_path in repo_fixture.get("files", {}),
             "pre_patch_failure_observed": pre_patch_failure_observed,
             "implementation_diff": "coding.implementation_diff_created" in event_types
             and artifact_id in artifacts,
+            "metadata_dependency_updated": bool(metadata_path)
+            and metadata_path in changed_files
+            and bool(artifact.get("fileSha256", {}).get(metadata_path)),
             "external_repo_checkout_tested": "coding.tests_executed" in event_types
             and bool(test_report.get("passed"))
             and test_report.get("testPhase") == "post_patch"
@@ -283,18 +323,31 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
     emitted: list[dict[str, Any]] = []
     event_types = {str(event.get("type") or "") for event in world.get("events", [])}
     if "coding.design_review_loaded" not in event_types:
-        emitted.append(
-            _append_event(
-                world,
-                "coding.design_review_loaded",
-                {
-                    "agentId": "architect",
-                    "designDocRef": "design.skill_prototype.v1",
-                    "repoFixtureId": world.get("repoFixture", {}).get("fixtureId", ""),
-                    "acceptedConstraints": ["must_run_tests"],
-                },
-            )
+        repo_fixture = world.get("repoFixture", {}) if isinstance(world.get("repoFixture"), dict) else {}
+        design_event = _append_event(
+            world,
+            "coding.design_review_loaded",
+            {
+                "agentId": "architect",
+                "designDocRef": repo_fixture.get("designDocRef", "design.skill_prototype.v1"),
+                "repoFixtureId": repo_fixture.get("fixtureId", ""),
+                "acceptedConstraints": ["must_run_tests"],
+                "reviewRubricPath": repo_fixture.get("reviewRubricPath"),
+            },
         )
+        emitted.append(design_event)
+        if repo_fixture.get("reviewRubricPath"):
+            emitted.append(
+                _append_event(
+                    world,
+                    "coding.review_rubric_loaded",
+                    {
+                        "agentId": "architect",
+                        "reviewRubricPath": repo_fixture.get("reviewRubricPath"),
+                        "sourceEventIds": [_event_id(design_event)],
+                    },
+                )
+            )
         world["agents"]["architect"]["state"] = "design_reviewed"
     elif _requires_pre_patch_failure(world) and "coding.pre_patch_tests_failed" not in event_types:
         design_event = _first_event(world, "coding.design_review_loaded")
@@ -355,9 +408,11 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
     elif "coding.implementation_diff_created" not in event_types:
         design_event = _first_event(world, "coding.design_review_loaded")
         repo_fixture = world.get("repoFixture", {}) if isinstance(world.get("repoFixture"), dict) else {}
-        patch_text, patched_files = _build_skill_patch(repo_fixture)
+        patch_text, patched_files, changed_files = _build_skill_patch(repo_fixture)
         base_files = repo_fixture.get("files", {}) if isinstance(repo_fixture.get("files"), dict) else {}
-        target_path = str(repo_fixture.get("targetPath") or "skills/loomstead-debug/SKILL.md")
+        target_path = changed_files[0] if changed_files else str(
+            repo_fixture.get("targetPath") or "skills/loomstead-debug/SKILL.md"
+        )
         artifact_id = str(repo_fixture.get("artifactId") or "skill_prototype.patch")
         artifact = {
             "artifactId": artifact_id,
@@ -366,9 +421,16 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
             "path": target_path,
             "status": "created",
             "sourceEventIds": [_event_id(design_event)],
-            "changedFiles": [target_path],
+            "changedFiles": changed_files,
             "baseFileSha256": _stable_digest(str(base_files.get(target_path, ""))),
             "patchedFileSha256": _stable_digest(str(patched_files.get(target_path, ""))),
+            "fileSha256": {
+                path: {
+                    "base": _stable_digest(str(base_files.get(path, ""))),
+                    "patched": _stable_digest(str(patched_files.get(path, ""))),
+                }
+                for path in changed_files
+            },
             "patchText": patch_text,
             "patchedFiles": patched_files,
             "sha256": _stable_digest(patch_text),
@@ -383,6 +445,7 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
                     "artifactId": artifact["artifactId"],
                     "sourceEventIds": artifact["sourceEventIds"],
                     "artifactSha256": artifact["sha256"],
+                    "changedFiles": artifact["changedFiles"],
                 },
             )
         )
@@ -438,6 +501,13 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
         test_report_id = str(repo_fixture.get("testReportId") or "skill_prototype.tests")
         review_report_id = str(repo_fixture.get("reviewReportId") or "skill_prototype.review")
         requires_pre_patch = _requires_pre_patch_failure(world)
+        artifact_id = str(repo_fixture.get("artifactId") or "skill_prototype.patch")
+        artifact = world.get("artifacts", {}).get(artifact_id, {})
+        changed_files = [str(path) for path in artifact.get("changedFiles", [])] if isinstance(
+            artifact, dict
+        ) and isinstance(artifact.get("changedFiles"), list) else []
+        metadata_path = str(repo_fixture.get("metadataPath") or "")
+        review_rubric_path = str(repo_fixture.get("reviewRubricPath") or "")
         pre_patch_report = world.get("prePatchTestReports", {}).get(pre_patch_test_report_id, {})
         test_report = world.get("testReports", {}).get(test_report_id, {})
         source_event_ids = [_event_id(test_event)]
@@ -453,6 +523,26 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
             },
             {"id": "failure_memory_cited", "passed": True},
         ]
+        if review_rubric_path:
+            checklist.insert(
+                2,
+                {
+                    "id": "review_rubric_loaded",
+                    "passed": "coding.review_rubric_loaded" in event_types
+                    and review_rubric_path in repo_fixture.get("files", {}),
+                },
+            )
+        if metadata_path:
+            checklist.insert(
+                3 if review_rubric_path else 2,
+                {
+                    "id": "metadata_dependency_updated",
+                    "passed": metadata_path in changed_files
+                    and bool(artifact.get("fileSha256", {}).get(metadata_path))
+                    if isinstance(artifact, dict)
+                    else False,
+                },
+            )
         if requires_pre_patch:
             checklist.insert(
                 2,
@@ -474,6 +564,8 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
             "sourceTestReportId": test_report.get("testReportId", test_report_id),
             "sourceEventIds": source_event_ids,
             "repoFixtureId": world.get("repoFixture", {}).get("fixtureId", ""),
+            "reviewRubricPath": review_rubric_path or None,
+            "metadataPath": metadata_path or None,
             "citedMemoryIds": cited_memory_ids,
             "checklist": checklist,
         }
@@ -508,6 +600,9 @@ def _build_repo_fixture(goal_id: str) -> dict[str, Any]:
     """构造可重复的外部仓库 fixture，模拟跨域 coding 输入。"""
     requires_pre_patch_failure = False
     pre_patch_test_report_id = None
+    metadata_path = None
+    review_rubric_path = None
+    planned_file_updates: list[dict[str, Any]] = []
     if goal_id == FAILING_TEST_REPAIR_GOAL_ID:
         fixture_id = "loomstead-debug-failing-test-fixture.v1"
         artifact_id = "skill_failing_test_repair.patch"
@@ -528,6 +623,72 @@ def _build_repo_fixture(goal_id: str) -> dict[str, Any]:
                 "value": "failing test evidence before repair",
             },
             {"caseId": "requires_eval_domain_after_repair", "type": "contains", "value": "eval:domain"},
+        ]
+    elif goal_id == MULTIFILE_REVIEW_GOAL_ID:
+        fixture_id = "loomstead-debug-multifile-fixture.v1"
+        artifact_id = "skill_multifile_review.patch"
+        test_report_id = "skill_multifile_review.tests"
+        review_report_id = "skill_multifile_review.review"
+        metadata_path = "skills/loomstead-debug/metadata.json"
+        review_rubric_path = "docs/review_rubric.md"
+        planned_additions = [
+            "Review against docs/review_rubric.md before approving metadata-sensitive changes.",
+            "Record eval:domain evidence in skill metadata quality gates.",
+        ]
+        planned_file_updates = [
+            {
+                "path": "skills/loomstead-debug/SKILL.md",
+                "appendLines": planned_additions,
+            },
+            {
+                "path": metadata_path,
+                "jsonMerge": {
+                    "version": "0.2.0",
+                    "requiresReviewRubric": True,
+                    "qualityGates": ["manual_review", "eval:domain", "review_rubric"],
+                },
+            },
+            {
+                "path": review_rubric_path,
+                "appendLines": [
+                    "Verify metadata qualityGates includes eval:domain.",
+                    "Verify skill instructions cite docs/review_rubric.md.",
+                ],
+            },
+        ]
+        test_expectations = [
+            {
+                "caseId": "loads_skill_md",
+                "type": "startswith",
+                "path": "skills/loomstead-debug/SKILL.md",
+                "value": "# Loomstead Debug Skill",
+            },
+            {
+                "caseId": "skill_cites_review_rubric",
+                "type": "contains",
+                "path": "skills/loomstead-debug/SKILL.md",
+                "value": "Review against docs/review_rubric.md",
+            },
+            {
+                "caseId": "metadata_requires_rubric",
+                "type": "json_field_equals",
+                "path": metadata_path,
+                "field": "requiresReviewRubric",
+                "value": True,
+            },
+            {
+                "caseId": "metadata_eval_domain_gate",
+                "type": "json_array_contains",
+                "path": metadata_path,
+                "field": "qualityGates",
+                "value": "eval:domain",
+            },
+            {
+                "caseId": "rubric_mentions_metadata_gate",
+                "type": "contains",
+                "path": review_rubric_path,
+                "value": "metadata qualityGates includes eval:domain",
+            },
         ]
     elif goal_id == "coding.skill_regression_fix_dryrun":
         fixture_id = "loomstead-debug-regression-fixture.v1"
@@ -570,6 +731,22 @@ def _build_repo_fixture(goal_id: str) -> dict[str, Any]:
             "# Loomstead Debug Skill\n\n"
             "Use project docs before changing runtime code.\n"
         ),
+        "skills/loomstead-debug/metadata.json": json.dumps(
+            {
+                "id": "loomstead-debug",
+                "version": "0.1.0",
+                "qualityGates": ["manual_review"],
+                "requiresReviewRubric": False,
+            },
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        "docs/review_rubric.md": (
+            "# Review Rubric\n\n"
+            "- Confirm existing doc guidance remains intact.\n"
+        ),
         "check_skill.py": _repo_fixture_test_script(test_expectations),
     }
     return {
@@ -579,36 +756,88 @@ def _build_repo_fixture(goal_id: str) -> dict[str, Any]:
         "files": files,
         "fileHashes": {path: _stable_digest(content) for path, content in files.items()},
         "targetPath": "skills/loomstead-debug/SKILL.md",
+        "targetPaths": [
+            str(update.get("path"))
+            for update in planned_file_updates
+            if isinstance(update, dict) and update.get("path")
+        ]
+        or ["skills/loomstead-debug/SKILL.md"],
         "artifactId": artifact_id,
         "prePatchTestReportId": pre_patch_test_report_id,
         "testReportId": test_report_id,
         "reviewReportId": review_report_id,
+        "metadataPath": metadata_path,
+        "reviewRubricPath": review_rubric_path,
         "testCommand": "python check_skill.py",
         "testCommandSource": "repo_fixture",
         "plannedAdditions": planned_additions,
+        "plannedFileUpdates": planned_file_updates,
         "testExpectations": test_expectations,
         "requiresPrePatchFailure": requires_pre_patch_failure,
         "sourceRepoKind": "deterministic_local_git_repository",
     }
 
 
-def _build_skill_patch(repo_fixture: dict[str, Any]) -> tuple[str, dict[str, str]]:
+def _build_skill_patch(repo_fixture: dict[str, Any]) -> tuple[str, dict[str, str], list[str]]:
     files = dict(repo_fixture.get("files", {})) if isinstance(repo_fixture.get("files"), dict) else {}
-    target_path = str(repo_fixture.get("targetPath") or "skills/loomstead-debug/SKILL.md")
-    original = str(files.get(target_path, ""))
-    planned_additions = repo_fixture.get("plannedAdditions", [])
-    additions = [str(item) for item in planned_additions] if isinstance(planned_additions, list) else []
-    patched = original.rstrip() + "\n" + "\n".join(additions) + "\n"
-    files[target_path] = patched
-    patch_text = "\n".join(
-        [
-            f"--- a/{target_path}",
-            f"+++ b/{target_path}",
-            "@@",
-            *[f"+{line}" for line in additions],
-        ]
+    planned_file_updates = (
+        repo_fixture.get("plannedFileUpdates", []) if isinstance(repo_fixture.get("plannedFileUpdates"), list) else []
     )
-    return patch_text, files
+    if not planned_file_updates:
+        target_path = str(repo_fixture.get("targetPath") or "skills/loomstead-debug/SKILL.md")
+        planned_additions = repo_fixture.get("plannedAdditions", [])
+        planned_file_updates = [
+            {
+                "path": target_path,
+                "appendLines": [str(item) for item in planned_additions]
+                if isinstance(planned_additions, list)
+                else [],
+            }
+        ]
+
+    patch_sections: list[str] = []
+    changed_files: list[str] = []
+    for update in planned_file_updates:
+        if not isinstance(update, dict):
+            continue
+        target_path = str(update.get("path") or repo_fixture.get("targetPath") or "skills/loomstead-debug/SKILL.md")
+        original = str(files.get(target_path, ""))
+        patched = _apply_fixture_file_update(original, update)
+        files[target_path] = patched
+        changed_files.append(target_path)
+        patch_sections.extend(_build_patch_section(target_path, original, patched))
+
+    return "\n".join(patch_sections), files, changed_files
+
+
+def _apply_fixture_file_update(original: str, update: dict[str, Any]) -> str:
+    """按 fixture 描述生成单文件补丁结果，支持文本追加和简单 JSON 合并。"""
+    if isinstance(update.get("jsonMerge"), dict):
+        try:
+            payload = json.loads(original or "{}")
+        except json.JSONDecodeError:
+            payload = {}
+        if not isinstance(payload, dict):
+            payload = {}
+        payload.update(update["jsonMerge"])
+        return json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+
+    append_lines = update.get("appendLines", [])
+    additions = [str(item) for item in append_lines] if isinstance(append_lines, list) else []
+    return original.rstrip() + "\n" + "\n".join(additions) + "\n"
+
+
+def _build_patch_section(target_path: str, original: str, patched: str) -> list[str]:
+    """生成稳定的轻量 patch 片段，供 Eval artifact 审阅变更范围。"""
+    return list(
+        difflib.unified_diff(
+            original.splitlines(),
+            patched.splitlines(),
+            fromfile=f"a/{target_path}",
+            tofile=f"b/{target_path}",
+            lineterm="",
+        )
+    )
 
 
 def _run_external_checkout_fixture_tests(
@@ -710,7 +939,7 @@ def _write_fixture_worktree(worktree: Path, files: dict[str, Any]) -> None:
         path.write_text(str(content), encoding="utf-8")
 
 
-def _repo_fixture_test_script(expectations: list[dict[str, str]]) -> str:
+def _repo_fixture_test_script(expectations: list[dict[str, Any]]) -> str:
     """返回仓库自带测试脚本源码，随外部 fixture repo 一起 checkout。"""
     expectation_json = json.dumps(expectations, ensure_ascii=False, sort_keys=True)
     return "\n".join(
@@ -722,16 +951,40 @@ def _repo_fixture_test_script(expectations: list[dict[str, str]]) -> str:
             f"EXPECTATIONS = {expectation_json!r}",
             "expectations = json.loads(EXPECTATIONS)",
             "repo_root = Path(__file__).resolve().parent",
-            "skill_path = repo_root / 'skills' / 'loomstead-debug' / 'SKILL.md'",
-            "skill_text = skill_path.read_text(encoding='utf-8') if skill_path.exists() else ''",
+            "",
+            "def read_text(rel_path):",
+            "    path = repo_root / rel_path",
+            "    return path.read_text(encoding='utf-8') if path.exists() else ''",
+            "",
+            "def read_json(rel_path):",
+            "    text = read_text(rel_path)",
+            "    return json.loads(text) if text else None",
+            "",
+            "def get_field(payload, dotted):",
+            "    current = payload",
+            "    for part in str(dotted).split('.'):",
+            "        if not isinstance(current, dict) or part not in current:",
+            "            return None",
+            "        current = current[part]",
+            "    return current",
+            "",
             "cases = []",
             "for item in expectations:",
             "    value = str(item.get('value', ''))",
             "    check_type = item.get('type')",
+            "    rel_path = Path(str(item.get('path') or 'skills/loomstead-debug/SKILL.md'))",
+            "    file_text = read_text(rel_path)",
             "    if check_type == 'startswith':",
-            "        passed = skill_text.startswith(value)",
+            "        passed = file_text.startswith(value)",
             "    elif check_type == 'contains':",
-            "        passed = value in skill_text",
+            "        passed = value in file_text",
+            "    elif check_type == 'json_field_equals':",
+            "        payload = read_json(rel_path)",
+            "        passed = get_field(payload, item.get('field')) == item.get('value')",
+            "    elif check_type == 'json_array_contains':",
+            "        payload = read_json(rel_path)",
+            "        actual = get_field(payload, item.get('field'))",
+            "        passed = isinstance(actual, list) and item.get('value') in actual",
             "    else:",
             "        passed = False",
             "    cases.append({'caseId': item.get('caseId', 'unknown_case'), 'passed': passed})",
