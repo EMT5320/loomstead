@@ -89,7 +89,7 @@ First skeleton pass is already in place. Current implemented pieces include:
 - `phase2.trace.v1` across decision, tool result, interruption, and memory-observation events.
 - World entity skeleton for farm plots and time snapshots.
 - Rule-level Process Fidelity Eval, counterfactual replay, memory / relationship ablations, 24-hour stability eval, manifest-backed local eval exports, and a cross-domain adapter dry-run/export suite with coding artifact/test/review evidence.
-- Godot ObserverPanel reading `/api/debug.phase2` summaries and recent trace events for the selected NPC.
+- Godot ObserverPanel reading `/api/debug.phase2` summaries, filtered recent trace events, and latest trace details for the selected NPC.
 
 The old `LifeActionExecutor` is frozen for regression fixes. Phase 2 does not run a shadow path beside MotivationEngine. Current eval results remain rule-level / posterior ablation guardrails, so they should be described as scaffolding evidence rather than final research proof.
 

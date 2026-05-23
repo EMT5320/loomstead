@@ -9,7 +9,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 
 # Loomstead 新对话入口
 
-> 更新时间：2026-05-23（Phase 2 Eval/domain export + Godot trace panel closeout）
+> 更新时间：2026-05-23（Phase 2 Eval/domain export + Godot trace filter closeout）
 > 用途：下一轮新对话、研究阶段开发和必要子代理任务的第一入口。
 
 ## 1. 当前入口
@@ -130,9 +130,9 @@ git status --short; git diff --check
 ### Phase 2 第一入口
 
 1. 完整总骨架以 `docs/production_roadmap.md` §4.3 的 15 项为准；`docs/agent_loop_architecture.md` §13.3 是 Agent Loop 内部 11 项。
-2. 后端第十五刀已过：`schema_registry.v1` 已落地，`/api/debug.phase2.schemaRegistry` 可枚举 Phase 2 trace、motivation、budget、provider usage、observer、subjective memory、relationship edge、heuristic 和 Event Skill outcome 版本；smoke 已校验 registry 与实时 Debug 输出一致。下一刀补跨域 adapter 证据加深、长期 trace dataset 归档策略和 Godot `recentTraceEvents` 展开。
+2. 后端第十五刀已过：`schema_registry.v1` 已落地，`/api/debug.phase2.schemaRegistry` 可枚举 Phase 2 trace、motivation、budget、provider usage、observer、subjective memory、relationship edge、heuristic 和 Event Skill outcome 版本；smoke 已校验 registry 与实时 Debug 输出一致。下一刀补长期 trace dataset 归档策略、schema registry 后续迁移检查和真实窗口 trace 体验验收。
 3. Eval 第六刀已过：`scripts/run_agent_eval.py --suite process` 已输出 3 个 GoalSpec、10 项指标、Full / Hard / No Subjective Memory / No Relationship Edge / Shuffled Owner / Evidence-Link Removal 六组对照、Counterfactual Replay 和本地导出；Counterfactual Replay 已区分 `relationshipEffect`、`subjectiveMemoryEffect` 与 `heuristicEffect`；Full 关系因果使用为 `1.0`，No Subjective Memory 覆盖降至 `0.8` 且关系因果仍为 `1.0`，owner/source 等对照关系因果为 `0.0`。注意：Hard Delegation 仍是合成 baseline，No Subjective Memory 仍是后验 ablation，Counterfactual Replay 因果判据仍需收紧。`--suite stability` 已通过 24 游戏小时：`ticksCompleted=24`、`failedToolCount=0`、`interruptedToolCount=3`、`budget.decision_consumed=5`、`memory_observation_per_tool_result=1.0`、`active_agent_count=6`、`heuristic_count=18`、`heuristic_decision_ref_rate=0.097222`；该 heuristic 指标已通过稳定召回排序固定。`eval:process:export`、`eval:stability:export` 与 `eval:domain:export` 会写入 `manifest.json`，记录 artifact `sha256` / `bytes` / JSONL `rowCount`、Git 状态和 `schema_registry.v1` 快照；domain 导出包含 per-scenario JSON、domain metrics、observation trace、intervention trace 与 domain evidence JSONL。`npm.cmd run eval:domain` 已跑通 3 个 narrative GoalSpec + 1 个 coding dry-run 的跨域 adapter suite，coding dry-run 已生成确定性 patch / test report / review report 证据。
-4. Godot 第三刀已过：Tab 观察者面板已读取后端 phase2 debug 摘要，并展开最近 4 条 `recentTraceEvents` 的 tick / event type / tool hint / summary；下一刀补 trace filter / drilldown 和真实窗口体验验收。
+4. Godot 第四刀已过：Tab 观察者面板已读取后端 phase2 debug 摘要，展开最近 4 条 `recentTraceEvents` 的 tick / event type / tool hint / summary，并支持 all / decision / tool / interrupt / memory 类型过滤和最新 trace details 摘要；下一刀补真实窗口体验、trace copy 和单条 drilldown。
 5. `LifeActionExecutor` 旧线定位为回归修复；Phase 2 不并行运行旧规则和 MotivationEngine。
 
 ### 离线基线检查
@@ -152,5 +152,5 @@ npm.cmd run asset:check; npm.cmd run client:env; npm.cmd run client:run:check
 - 任务拆分优先按当前开发线选择源文档：后端 Agent Loop / Eval / Godot 观察者 / Content schema / 资产管线 / 文档治理。
 - 后端骨架线关注 `backend/app/tools/`、`backend/app/runtime/`、`backend/app/memory/`、`backend/app/world/entities/`，近期目标是跨域 adapter 证据加深、trace dataset 长期归档策略和 schema registry 后续迁移检查。
 - Eval 线关注 `scripts/run_agent_eval.py`、`backend/app/eval/`、`backend/app/domain/`，近期目标是更长期 stability 套件、外部仓库级 coding artifact / test 接入和 dataset 后续归档策略。
-- Godot 观察者线关注 `clients/godot/`，近期目标是 `recentTraceEvents` filter / drilldown、空态 / 错误态文案和真实窗口验收。
+- Godot 观察者线关注 `clients/godot/`，近期目标是真实窗口验收、trace copy、单条 drilldown 和空态 / 错误态文案。
 - 多子代理并行减少后，默认不维护大看板；若临时并行，避免多个 worker 同时修改 `docs/current_status.md`、`docs/agent_context.md` 等治理入口。

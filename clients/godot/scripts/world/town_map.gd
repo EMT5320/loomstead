@@ -584,6 +584,8 @@ func _build_phase2_observer_summary(payload: Dictionary) -> Dictionary:
 		"relationshipEdges": _summarize_phase2_relationship_edges(payload.get("relationshipEdges", {})),
 		"heuristics": _summarize_phase2_heuristics(payload.get("heuristics", {})),
 		"recentTraceEvents": _summarize_phase2_recent_trace(payload.get("recentTraceEvents", [])),
+		"recentTraceEventGroups": _build_phase2_trace_filter_summaries(payload.get("recentTraceEvents", [])),
+		"recentTraceDetails": _summarize_phase2_trace_details(payload.get("recentTraceEvents", [])),
 	}
 
 
@@ -659,16 +661,37 @@ func _summarize_phase2_heuristics(section) -> String:
 
 
 func _summarize_phase2_recent_trace(section) -> String:
+	return _summarize_phase2_recent_trace_for_filter(section, "all")
+
+
+func _build_phase2_trace_filter_summaries(section) -> Dictionary:
+	return {
+		"all": _summarize_phase2_recent_trace_for_filter(section, "all"),
+		"decision": _summarize_phase2_recent_trace_for_filter(section, "decision"),
+		"tool": _summarize_phase2_recent_trace_for_filter(section, "tool"),
+		"interrupt": _summarize_phase2_recent_trace_for_filter(section, "interrupt"),
+		"memory": _summarize_phase2_recent_trace_for_filter(section, "memory"),
+	}
+
+
+func _summarize_phase2_recent_trace_for_filter(section, filter_id: String) -> String:
 	var items := _phase2_items(section)
 	if items.is_empty():
 		return "无 recent trace"
-	var lines: Array[String] = []
-	var start_index = max(0, items.size() - 4)
-	for index in range(start_index, items.size()):
-		var item = items[index]
+	var filtered_items: Array = []
+	for item in items:
 		if not (item is Dictionary):
 			continue
 		var entry := item as Dictionary
+		var event_type := str(entry.get("eventType", entry.get("type", "trace")))
+		if _phase2_trace_filter_matches(event_type, filter_id):
+			filtered_items.append(entry)
+	if filtered_items.is_empty():
+		return "无 %s trace" % filter_id
+	var lines: Array[String] = []
+	var start_index = max(0, filtered_items.size() - 4)
+	for index in range(start_index, filtered_items.size()):
+		var entry := filtered_items[index] as Dictionary
 		var event_type := str(entry.get("eventType", entry.get("type", "trace")))
 		var summary := str(entry.get("summary", ""))
 		var world_time = entry.get("worldTime", {})
@@ -685,6 +708,43 @@ func _summarize_phase2_recent_trace(section) -> String:
 	if lines.is_empty():
 		return "recent trace 数据不可读"
 	return "\n".join(lines)
+
+
+func _summarize_phase2_trace_details(section) -> String:
+	var items := _phase2_items(section)
+	if items.is_empty():
+		return "无 trace detail"
+	var latest = items[items.size() - 1]
+	if not (latest is Dictionary):
+		return "trace detail 数据不可读"
+	var entry := latest as Dictionary
+	var event_type := str(entry.get("eventType", entry.get("type", "trace")))
+	var trace_id := str(entry.get("traceId", entry.get("id", "")))
+	var details = entry.get("details", {})
+	var detail_text := "{}"
+	if details is Dictionary:
+		detail_text = JSON.stringify(details)
+	return "latest=%s id=%s details=%s" % [
+		_pretty_trace_type(event_type),
+		trace_id if trace_id != "" else "-",
+		_truncate_text(detail_text, 96),
+	]
+
+
+func _phase2_trace_filter_matches(event_type: String, filter_id: String) -> bool:
+	match filter_id:
+		"all":
+			return true
+		"decision":
+			return event_type == "motivation.decision_made"
+		"tool":
+			return event_type == "tool.execution_completed" or event_type == "tool.execution_failed"
+		"interrupt":
+			return event_type == "tool.execution_interrupted"
+		"memory":
+			return event_type == "memory.result_observed"
+		_:
+			return true
 
 
 func _phase2_trace_detail_hint(details) -> String:
