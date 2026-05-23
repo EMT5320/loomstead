@@ -507,6 +507,14 @@ def _run_runtime_process_scenario(
         subjective_memory_records=subjective_memories_for_decision,
         heuristics=heuristics_for_decision,
     )
+    decision_without_relationship_edges = runtime.motivation_engine.evaluate_npc(
+        runtime.world,
+        scenario.npc_id,
+        delta_minutes=20.0,
+        relationship_edges=[],
+        subjective_memory_records=subjective_memories_for_decision,
+        heuristics=heuristics_for_decision,
+    )
     decision_without_relationship_memory = runtime.motivation_engine.evaluate_npc(
         runtime.world,
         scenario.npc_id,
@@ -518,6 +526,7 @@ def _run_runtime_process_scenario(
     counterfactual_replay = _build_counterfactual_replay(
         scenario=scenario,
         decision_with_relationship_memory=decision_with_relationship_memory,
+        decision_without_relationship_edges=decision_without_relationship_edges,
         decision_without_relationship_memory=decision_without_relationship_memory,
         relationship_source_ids=relationship_source_ids,
         subjective_memory_source_ids=memory_source_ids,
@@ -740,14 +749,17 @@ def _build_counterfactual_replay(
     *,
     scenario: ProcessGoalSpec,
     decision_with_relationship_memory: dict[str, Any],
+    decision_without_relationship_edges: dict[str, Any],
     decision_without_relationship_memory: dict[str, Any],
     relationship_source_ids: set[str],
     subjective_memory_source_ids: set[str],
     heuristic_source_ids: set[str],
 ) -> dict[str, Any]:
     with_decision = _decision_payload(decision_with_relationship_memory)
+    without_relationship_decision = _decision_payload(decision_without_relationship_edges)
     without_decision = _decision_payload(decision_without_relationship_memory)
     selected_with = str(with_decision.get("selectedToolId") or "")
+    selected_without_relationship = str(without_relationship_decision.get("selectedToolId") or "")
     selected_without = str(without_decision.get("selectedToolId") or "")
     relationship_refs = [ref for ref in with_decision.get("relationshipEdgeRefs", []) if isinstance(ref, dict)]
     relevant_refs = [
@@ -772,17 +784,40 @@ def _build_counterfactual_replay(
         list(with_decision.get("candidateScores", [])),
         list(without_decision.get("candidateScores", [])),
     )
+    relationship_score_effect = _candidate_field_changed(
+        list(with_decision.get("candidateScores", [])),
+        list(without_relationship_decision.get("candidateScores", [])),
+        "relationshipBonus",
+    )
+    subjective_memory_score_effect = _candidate_field_changed(
+        list(with_decision.get("candidateScores", [])),
+        list(without_decision.get("candidateScores", [])),
+        "subjectiveMemoryBonus",
+    )
+    heuristic_score_effect = _candidate_field_changed(
+        list(with_decision.get("candidateScores", [])),
+        list(without_decision.get("candidateScores", [])),
+        "heuristicBonus",
+    )
     decision_effect = bool(selected_with) and bool(selected_without) and (selected_with != selected_without or score_effect)
-    relationship_effect = bool(relevant_refs) and decision_effect
-    subjective_memory_effect = bool(relevant_subjective_memory_refs) and decision_effect
-    heuristic_effect = bool(relevant_heuristic_refs) and decision_effect
+    relationship_decision_effect = bool(selected_with) and bool(selected_without_relationship) and selected_with != selected_without_relationship
+    # 关系记忆的因果使用必须有目标关系引用，并且关系 bonus 在只移除关系边的反事实中发生变化；
+    # 这样避免把主观记忆或启发式引起的分数变化误计为关系记忆贡献。
+    relationship_effect = bool(relevant_refs) and relationship_score_effect
+    subjective_memory_effect = bool(relevant_subjective_memory_refs) and subjective_memory_score_effect
+    heuristic_effect = bool(relevant_heuristic_refs) and heuristic_score_effect
     return {
         "selectedWithRelationshipMemory": selected_with or None,
+        "selectedWithoutRelationshipEdges": selected_without_relationship or None,
         "selectedWithoutRelationshipMemory": selected_without or None,
         "effect": relationship_effect or subjective_memory_effect or heuristic_effect,
         "relationshipEffect": relationship_effect,
         "subjectiveMemoryEffect": subjective_memory_effect,
         "heuristicEffect": heuristic_effect,
+        "relationshipScoreEffect": relationship_score_effect,
+        "relationshipDecisionEffect": relationship_decision_effect,
+        "subjectiveMemoryScoreEffect": subjective_memory_score_effect,
+        "heuristicScoreEffect": heuristic_score_effect,
         "relationshipEdgeRefs": relationship_refs,
         "relevantRelationshipEdgeRefs": relevant_refs,
         "subjectiveMemoryRefs": subjective_memory_refs,
@@ -790,8 +825,10 @@ def _build_counterfactual_replay(
         "heuristicRefs": heuristic_refs,
         "relevantHeuristicRefs": relevant_heuristic_refs,
         "candidateScoresWithRelationshipMemory": list(with_decision.get("candidateScores", [])),
+        "candidateScoresWithoutRelationshipEdges": list(without_relationship_decision.get("candidateScores", [])),
         "candidateScoresWithoutRelationshipMemory": list(without_decision.get("candidateScores", [])),
         "reasonWithRelationshipMemory": with_decision.get("reason"),
+        "reasonWithoutRelationshipEdges": without_relationship_decision.get("reason"),
         "reasonWithoutRelationshipMemory": without_decision.get("reason"),
     }
 
@@ -843,6 +880,23 @@ def _candidate_scores_changed(with_scores: list[Any], without_scores: list[Any])
         if round(float(item.get("subjectiveMemoryBonus") or 0.0), 6) != round(float(other.get("subjectiveMemoryBonus") or 0.0), 6):
             return True
         if round(float(item.get("heuristicBonus") or 0.0), 6) != round(float(other.get("heuristicBonus") or 0.0), 6):
+            return True
+    return False
+
+
+def _candidate_field_changed(with_scores: list[Any], without_scores: list[Any], field: str) -> bool:
+    """比较候选分数字段，给反事实 replay 提供单一信号的因果证据。"""
+    without_by_tool = {
+        str(item.get("toolId") or ""): item
+        for item in without_scores
+        if isinstance(item, dict)
+    }
+    for item in with_scores:
+        if not isinstance(item, dict):
+            continue
+        tool_id = str(item.get("toolId") or "")
+        other = without_by_tool.get(tool_id, {})
+        if round(float(item.get(field) or 0.0), 6) != round(float(other.get(field) or 0.0), 6):
             return True
     return False
 
