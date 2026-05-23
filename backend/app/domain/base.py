@@ -137,3 +137,13 @@ DEFAULT_TOWN_DOMAIN = DomainAdapterMetadata(
     entity_namespaces=("farm", "inventory", "shop", "building", "time", "weather"),
     supported_tool_namespaces=("life", "farm", "shop", "social", "strategic"),
 )
+
+DEFAULT_CODING_DOMAIN = DomainAdapterMetadata(
+    domain_id="loomstead.coding.v0",
+    kind="task",
+    description="Secondary coding dry-run domain for portability checks.",
+    entity_namespaces=("artifact", "dependency", "test", "review", "issue"),
+    supported_tool_namespaces=("design", "implement", "test", "review"),
+)
+
+DEFAULT_DOMAIN_METADATA = (DEFAULT_TOWN_DOMAIN, DEFAULT_CODING_DOMAIN)

@@ -9,7 +9,7 @@ scope: current implementation facts, verification state, and work constraints
 
 # 当前项目状态与开发前约束
 
-> 状态更新时间：2026-05-23（Phase 2 Eval determinism + export manifest closeout）
+> 状态更新时间：2026-05-23（Phase 2 Eval manifest + cross-domain adapter closeout）
 > 本文只记录当前仓库中已核对、命令已检或明确标注人工未验收的事实。长期方向见 `docs/project_vision.md`，研究 framing 见 `docs/research_framing_motivational_delegation.md`，NPC agent loop 设计见 `docs/agent_loop_architecture.md`，世界实体 schema 见 `docs/world_entity_model.md`，Process Fidelity Eval 规格见 `docs/process_fidelity_eval_spec.md`，跨域 adapter 接口见 `docs/cross_domain_adapter.md`，多层 Agent 系统设计见 `docs/agentic_game_design.md`。
 
 ## 1. 当前阶段判断
@@ -30,7 +30,7 @@ scope: current implementation facts, verification state, and work constraints
 ### 当前阶段位置
 
 - **Phase 1（活着的世界）**：done。2026-05-21 主人确认 Phase 1 可以收口，默认 `world_main` 作为已验收完成基线进入冻结维护。
-- **Phase 2（骨架建立期）**：首轮骨架已落地，进入 trace / eval 收紧期。文档前置工作已完成，NPC 深度卡 schema 已增补 `motivationProfile` / `capabilityPreferences` / `heuristicSeeds` 占位字段；后端 ToolDefinition / ToolContractValidator / DecisionBudgetStore / CapabilityRegistry / MotivationEngine / NeedAccumulator / ArbitrationLayer / ToolExecutor / ResultObserver / SubjectiveMemoryStore / RelationshipEdgeStore / HeuristicLibrary / DomainAdapter shared Protocol / WorldEntity farm_plot+time skeleton / Eval L1 + 规则级 Process Fidelity + Counterfactual Replay + subjective / relationship memory ablation + 24h stability 的最小骨架已落地，并接入 Debug snapshot、`/api/world/tick`、`motivation.decision_made`、`tool.execution_failed`、`tool.execution_interrupted`、`budget.decision_consumed` / `budget.decision_fallback`、`memory.result_observed`、`phase2.trace.v1`、`schema_registry.v1` 与 `npm.cmd run check`。SubjectiveMemoryStore 与 HeuristicLibrary 召回均已进入 ArbitrationLayer 候选评分和 decision trace。Godot 观察者面板已开始读取 `/api/debug.phase2`。ToolContractValidator 已支持常用 JSON Schema 子集；DecisionBudgetStore 已从单通道固定额度扩展为 NPC / feature / tool cost 策略，输出 `costBreakdown`、`recentUsage`，并聚合真实 / 规则 provider 的 `provider_usage_actual.v1` 到 `providerActuals`；ResultObserver 已按 `observerVisibility` 区分 private / participants_only / all_in_location，并输出带 `observer_spatial_model.v1` 与 `spatialEvidence` 的 `observer_scope.v1`；`/api/debug.phase2.schemaRegistry` 已集中暴露 trace / motivation / budget / memory / observer / Event Skill outcome 版本，smoke 会校验实时 Debug 输出一致性。旧 `LifeActionExecutor` 不再服务 tick 主路径。
+- **Phase 2（骨架建立期）**：首轮骨架已落地，进入 trace / eval 收紧期。文档前置工作已完成，NPC 深度卡 schema 已增补 `motivationProfile` / `capabilityPreferences` / `heuristicSeeds` 占位字段；后端 ToolDefinition / ToolContractValidator / DecisionBudgetStore / CapabilityRegistry / MotivationEngine / NeedAccumulator / ArbitrationLayer / ToolExecutor / ResultObserver / SubjectiveMemoryStore / RelationshipEdgeStore / HeuristicLibrary / DomainAdapter shared Protocol / narrative adapter / coding dry-run skeleton / WorldEntity farm_plot+time skeleton / Eval L1 + 规则级 Process Fidelity + Counterfactual Replay + subjective / relationship memory ablation + 24h stability + cross-domain adapter suite 的最小骨架已落地，并接入 Debug snapshot、`/api/world/tick`、`motivation.decision_made`、`tool.execution_failed`、`tool.execution_interrupted`、`budget.decision_consumed` / `budget.decision_fallback`、`memory.result_observed`、`phase2.trace.v1`、`schema_registry.v1` 与 `npm.cmd run check`。SubjectiveMemoryStore 与 HeuristicLibrary 召回均已进入 ArbitrationLayer 候选评分和 decision trace。Godot 观察者面板已开始读取 `/api/debug.phase2`。ToolContractValidator 已支持常用 JSON Schema 子集；DecisionBudgetStore 已从单通道固定额度扩展为 NPC / feature / tool cost 策略，输出 `costBreakdown`、`recentUsage`，并聚合真实 / 规则 provider 的 `provider_usage_actual.v1` 到 `providerActuals`；ResultObserver 已按 `observerVisibility` 区分 private / participants_only / all_in_location，并输出带 `observer_spatial_model.v1` 与 `spatialEvidence` 的 `observer_scope.v1`；`/api/debug.phase2.schemaRegistry` 已集中暴露 trace / motivation / budget / memory / observer / Event Skill outcome 版本，smoke 会校验实时 Debug 输出一致性。旧 `LifeActionExecutor` 不再服务 tick 主路径。
 
 ## 2. 本轮核对结果
 
@@ -152,7 +152,7 @@ scope: current implementation facts, verification state, and work constraints
 10. **HeuristicLibrary**：最小 schema、规则提取和 Debug snapshot 已落地；成功工具会生成 `prefer_successful_tool:<tool_id>`，社交成功会生成 `prefer_social_when_affiliation_high`，工具失败会生成 `avoid_failed_tool:<tool_id>`，工具中断会生成 `avoid_interrupted_tool:<tool_id>`；启发式带 `effectiveConfidence`、tick 衰减字段和 active / dormant 状态，已进入 MotivationEngine snapshot 与 `motivation.decision_made.details.heuristicRecall`；设计师 seed 注入、LLM 提取和更复杂的置信度更新仍待扩展。
 11. **ArbitrationLayer**：最小候选工具裁决与 contributing_sources Trace 已落地；关系边、主观记忆和启发式已可在同一需求候选内部加权，并把 `relationship_edge_refs` / `subjective_memory_refs` / `heuristic_refs` 写入 decision contributing_sources；候选评分已输出 `heuristicBonus` / `heuristicRefCount` / `heuristicConflictCount`，启发式冲突以 `highest_effective_delta_wins` 裁决；仍需完整竞争上下文裁决规则。
 12. **WorldEntities**：WorldEntity dataclass 与 farm_plot / time 快照转换骨架已落地，完整 FarmPlot / Item / Inventory / Shop / Building / Time / Weather schema 仍待扩展。
-13. **EvalFramework**：`scripts/run_agent_eval.py`、`backend/app/eval/` 与 5 个 L1 rule scenario 已落地，并纳入 `npm.cmd run check`；输出已包含 Full / Hard Delegation / No Relationship Edge 三组 rule baseline、`mean/std/n` 和 `ablation_comparison`。`npm.cmd run eval:process` 已新增 3 个 process-constrained GoalSpec、10 项 Process Fidelity 指标、Full / Hard Delegation / No Subjective Memory / No Relationship Edge / Shuffled Memory Owner / Evidence-Link Removal 六组 process baseline、Counterfactual Replay 和 `.run/eval-runs` 导出脚本；Counterfactual Replay 现在区分 `relationshipEffect`、`subjectiveMemoryEffect` 与 `heuristicEffect`；当前 Full baseline 的 `relationship_memory_causal_use_rate=1.0`，No Subjective Memory 的 `required_process_coverage=0.8` 且 `relationship_memory_causal_use_rate=1.0`，Hard / No Relationship Edge / Shuffled Memory Owner / Evidence-Link Removal 的关系记忆因果使用均为 `0.0`。这些结果当前属于规则级 / 后验 ablation 骨架，用于 CI 护栏和方向验证；Hard Delegation 仍是合成 baseline，No Subjective Memory 不是全程 runtime 级禁用，Counterfactual Replay 的因果判据仍需收紧。`npm.cmd run eval:stability` 已验证规则版 AgentRuntime 连续 24 游戏小时稳定推进：`ticksCompleted=24`、`completedToolCount=144`、`failedToolCount=0`、`interruptedToolCount=3`、`budget.decision_consumed=5`、`trace_schema_coverage=1.0`、`memory_observation_per_tool_result=1.0`、`tool_interruption_rate=0.020408`、`relationshipEdgeCount=8`、`heuristic_count=18`、`heuristic_decision_ref_rate=0.097222`、6 个首发 NPC 均参与。2026-05-23 已修正主观记忆召回的同分排序，避免事件 uuid 影响 stability 指标；`eval:process:export` 与 `eval:stability:export` 现在会写入 `manifest.json`，记录 artifact `sha256` / `bytes` / JSONL `rowCount`、Git 状态和 `schema_registry.v1` 快照。更严格跨域 GoalSpec 仍待补齐。
+13. **EvalFramework**：`scripts/run_agent_eval.py`、`backend/app/eval/` 与 5 个 L1 rule scenario 已落地，并纳入 `npm.cmd run check`；输出已包含 Full / Hard Delegation / No Relationship Edge 三组 rule baseline、`mean/std/n` 和 `ablation_comparison`。`npm.cmd run eval:process` 已新增 3 个 process-constrained GoalSpec、10 项 Process Fidelity 指标、Full / Hard Delegation / No Subjective Memory / No Relationship Edge / Shuffled Memory Owner / Evidence-Link Removal 六组 process baseline、Counterfactual Replay 和 `.run/eval-runs` 导出脚本；Counterfactual Replay 现在区分 `relationshipEffect`、`subjectiveMemoryEffect` 与 `heuristicEffect`；当前 Full baseline 的 `relationship_memory_causal_use_rate=1.0`，No Subjective Memory 的 `required_process_coverage=0.8` 且 `relationship_memory_causal_use_rate=1.0`，Hard / No Relationship Edge / Shuffled Memory Owner / Evidence-Link Removal 的关系记忆因果使用均为 `0.0`。这些结果当前属于规则级 / 后验 ablation 骨架，用于 CI 护栏和方向验证；Hard Delegation 仍是合成 baseline，No Subjective Memory 不是全程 runtime 级禁用，Counterfactual Replay 的因果判据仍需收紧。`npm.cmd run eval:stability` 已验证规则版 AgentRuntime 连续 24 游戏小时稳定推进：`ticksCompleted=24`、`completedToolCount=144`、`failedToolCount=0`、`interruptedToolCount=3`、`budget.decision_consumed=5`、`trace_schema_coverage=1.0`、`memory_observation_per_tool_result=1.0`、`tool_interruption_rate=0.020408`、`relationshipEdgeCount=8`、`heuristic_count=18`、`heuristic_decision_ref_rate=0.097222`、6 个首发 NPC 均参与。2026-05-23 已修正主观记忆召回的同分排序，避免事件 uuid 影响 stability 指标；`eval:process:export` 与 `eval:stability:export` 现在会写入 `manifest.json`，记录 artifact `sha256` / `bytes` / JSONL `rowCount`、Git 状态和 `schema_registry.v1` 快照；`npm.cmd run eval:domain` 已跑通跨域 adapter dry-run：3 个 narrative GoalSpec 走现有 AgentRuntime 主路径，1 个 coding skeleton dry-run 走 design / implementation / tests / review 事件链，并用统一 `full_motivational_delegation` baseline 输出 town / coding summary schema。更真实 coding artifact / test 证据和跨域导出 manifest 仍待补齐。
 14. **Godot 观察者模式**：Tab 切换、点击 NPC / `E` talk 同步选中、NPC 信息面板和 `/api/debug.phase2` 摘要读取已落地；后端已提供 `recentTraceEvents.details`；后续补 Godot 侧展开 UI、真实窗口体验验收和更细的 trace 可视化。
 15. **NPC 深度卡实际数据填充**：4 核心 NPC 的 motivationProfile / capabilityPreferences / heuristicSeeds 实际内容，Phase 3 填；2 stub 继续默认权重或按需要升级。
 
@@ -178,6 +178,9 @@ scope: current implementation facts, verification state, and work constraints
 npm.cmd run check
 npm.cmd run context:check
 npm.cmd run content:check
+npm.cmd run eval:process
+npm.cmd run eval:stability
+npm.cmd run eval:domain
 npm.cmd run smoke
 npm.cmd run asset:check
 npm.cmd run client:env
@@ -194,6 +197,9 @@ git diff --check
 npm.cmd run check
 npm.cmd run context:check
 npm.cmd run content:check
+npm.cmd run eval:process
+npm.cmd run eval:stability
+npm.cmd run eval:domain
 npm.cmd run smoke
 npm.cmd run asset:check
 npm.cmd run client:env
@@ -217,8 +223,8 @@ Get-Content docs\archive\daytime_integration_handoff.md
 
 ### 立即（Phase 2 收紧）
 
-1. 后端骨架线继续从当前 `motivation.decision_made -> tool.execution_completed / failed / interrupted -> memory.result_observed` trace 主路径推进到跨域 GoalSpec、长期 trace dataset 归档策略和 Godot Debug 展开，不再做旧 LifeActionExecutor shadow-run。
-2. Eval 线继续扩展 `backend/app/eval/`，在当前 L1 + Process Fidelity + Counterfactual Replay + memory ablation + 24h stability + manifest 导出基础上补跨域 GoalSpec、更长期稳定性和 dataset 归档留存策略。
+1. 后端骨架线继续从当前 `motivation.decision_made -> tool.execution_completed / failed / interrupted -> memory.result_observed` trace 主路径推进到跨域 adapter 证据加深、长期 trace dataset 归档策略和 Godot Debug 展开，不再做旧 LifeActionExecutor shadow-run。
+2. Eval 线继续扩展 `backend/app/eval/`，在当前 L1 + Process Fidelity + Counterfactual Replay + memory ablation + 24h stability + manifest 导出 + cross-domain dry-run 基础上补更长期稳定性、跨域导出 manifest 和 dataset 归档留存策略。
 3. Godot 观察者线已读取后端 phase2 debug 的 motivation / subjectiveMemory / relationshipEdges / heuristics；下一步补 recentTraceEvents 展开、空态文案和真实窗口手感验收。
 
 ### Phase 2 硬约束

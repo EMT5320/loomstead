@@ -15,6 +15,8 @@
                     "eval:process:export":  "python scripts/run_agent_eval.py --suite process --export-dir .run/eval-runs",
                     "eval:stability":  "python scripts/run_agent_eval.py --suite stability",
                     "eval:stability:export":  "python scripts/run_agent_eval.py --suite stability --export-dir .run/eval-runs",
+                    "eval:domain":  "python scripts/run_agent_eval.py --suite domain",
+                    "eval:domain:full":  "python scripts/run_agent_eval.py --suite domain --full",
                     "content:check":  "python scripts/check_npc_codex.py",
                     "model:check":  "python scripts/check_model_config.py",
                     "client:env":  "python scripts/check_game_client_env.py",

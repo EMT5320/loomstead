@@ -51,6 +51,10 @@ agent_eval = subprocess.run([sys.executable, "scripts/run_agent_eval.py"], cwd=R
 if agent_eval.returncode != 0:
     raise SystemExit(agent_eval.returncode)
 
+domain_eval = subprocess.run([sys.executable, "scripts/run_agent_eval.py", "--suite", "domain"], cwd=ROOT)
+if domain_eval.returncode != 0:
+    raise SystemExit(domain_eval.returncode)
+
 asset_manifest_check = subprocess.run([sys.executable, "scripts/check_asset_manifest.py"], cwd=ROOT)
 if asset_manifest_check.returncode != 0:
     raise SystemExit(asset_manifest_check.returncode)

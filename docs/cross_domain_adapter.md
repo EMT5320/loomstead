@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: research-runtime
-last_verified: 2026-05-22
+last_verified: 2026-05-23
 startup_load: on-demand
 source_of_truth: true
 scope: cross-domain adapter interface, narrative primary boundary, optional task domain portability
@@ -9,17 +9,17 @@ scope: cross-domain adapter interface, narrative primary boundary, optional task
 
 # 跨域 Adapter 接口：Narrative-primary, Task-secondary
 
-> 本文定义跨域 adapter 的最小接口。目的不是把项目扩张成通用 Agent 平台，而是让 `Loomstead` 的核心研究抽象可以离开小镇被验证。小镇仍是 primary domain；task / coding domain 只作为 secondary validation。
+> 本文定义跨域 adapter 的最小接口，用于让 `Loomstead` 的核心研究抽象离开小镇后仍可验证。小镇仍是 primary domain；task / coding domain 只作为 secondary validation。
 
 ## 1. 设计原则
 
-1. 小镇是第一研究环境，不是临时 demo。
+1. 小镇是第一研究环境，承担 primary validation 责任。
 2. Adapter 只抽象“目标、干预、观察、评估”四件事。
 3. 核心 Runtime 不依赖具体场景名词，例如 crop、festival、tavern。
 4. 任何新 domain 都必须支持 EventStore、AgentState、Memory、Relationship / Dependency Graph、ToolExecutor、EvalTrace。
-5. Phase 2 只实现接口和 narrative adapter；coding adapter 只做 skeleton。
+5. Phase 2 实现接口、narrative adapter、coding skeleton 和 1 个 coding dry-run scenario。
 
-当前实现状态（2026-05-22）：`backend/app/domain/base.py` 已落地 shared dataclasses、`DomainAdapter` Protocol 与 `DEFAULT_TOWN_DOMAIN` metadata；narrative adapter、coding adapter skeleton 和跨域 dry-run scenario 仍是 Phase 2 后续缺口。
+当前实现状态（2026-05-23）：`backend/app/domain/base.py` 已落地 shared dataclasses、`DomainAdapter` Protocol、`DEFAULT_TOWN_DOMAIN` / `DEFAULT_CODING_DOMAIN` metadata；`backend/app/domain/narrative/adapter.py` 已接入 3 个 narrative GoalSpec 和现有 AgentRuntime 主路径；`backend/app/domain/coding/adapter.py` 已提供 coding skeleton 与 1 个 dry-run scenario；`npm.cmd run eval:domain` 会用统一 `full_motivational_delegation` baseline 输出跨域 summary schema。
 
 ## 2. Core Interface
 
@@ -178,12 +178,13 @@ Forbidden shortcuts:
 - 复刻 Claude Code / Codex / OpenClaw 的产品能力。
 - 在 Phase 2 完成 coding domain 全实现。
 
-Phase 2 的 adapter 完整收口验收要求：
+Phase 2 的 adapter 当前验收点：
 
 ```text
-1. NarrativeAdapter 可运行至少 3 个 GoalSpec。
-2. CodingAdapter 有 skeleton 和 1 个 dry-run scenario。
-3. Eval 能用相同 baseline 名称比较不同 domain 的 summary schema。
+1. NarrativeAdapter 已运行 3 个 GoalSpec：close_friend_traceable / repair_trust_memory / affiliation_bias_agent_choice。
+2. CodingAdapter 已有 skeleton 和 1 个 dry-run scenario：coding.skill_prototype_dryrun。
+3. Eval 已用相同 baseline 名称比较 town / coding domain 的 summary schema：npm.cmd run eval:domain。
+4. 后续收紧项：coding dry-run 接入更真实 artifact/test 证据，跨域导出接入 eval manifest。
 ```
 
 ## 6. Directory Proposal

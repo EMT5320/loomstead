@@ -33,7 +33,7 @@ The value is in the path: motivation shifts, shared events, misunderstanding rep
 - **Research status**: research preview.
 - **Current phase**: Phase 1 is closed; Phase 2 runtime skeleton has partially landed and is now in trace / eval tightening.
 - **Primary domain**: narrative town slice.
-- **Secondary domain**: task / coding adapters for portability checks, not the main product direction.
+- **Secondary domain**: task / coding adapters for portability checks as a secondary research path.
 - **Differentiation**: few-but-deep NPCs, explainable traces, process fidelity evaluation.
 
 Core axes:
@@ -88,7 +88,7 @@ First skeleton pass is already in place. Current implemented pieces include:
 - SubjectiveMemoryStore, RelationshipEdgeStore, ResultObserver, and HeuristicLibrary feeding later decisions.
 - `phase2.trace.v1` across decision, tool result, interruption, and memory-observation events.
 - World entity skeleton for farm plots and time snapshots.
-- Rule-level Process Fidelity Eval, counterfactual replay, memory / relationship ablations, 24-hour stability eval, and manifest-backed local eval exports.
+- Rule-level Process Fidelity Eval, counterfactual replay, memory / relationship ablations, 24-hour stability eval, manifest-backed local eval exports, and a cross-domain adapter dry-run suite.
 - Godot ObserverPanel reading `/api/debug.phase2` summaries for the selected NPC.
 
 The old `LifeActionExecutor` is frozen for regression fixes. Phase 2 does not run a shadow path beside MotivationEngine. Current eval results remain rule-level / posterior ablation guardrails, so they should be described as scaffolding evidence rather than final research proof.

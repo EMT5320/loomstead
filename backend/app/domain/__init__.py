@@ -1,4 +1,6 @@
 from app.domain.base import (
+    DEFAULT_CODING_DOMAIN,
+    DEFAULT_DOMAIN_METADATA,
     DEFAULT_TOWN_DOMAIN,
     DomainAdapter,
     DomainAdapterMetadata,
@@ -9,6 +11,8 @@ from app.domain.base import (
 )
 
 __all__ = [
+    "DEFAULT_CODING_DOMAIN",
+    "DEFAULT_DOMAIN_METADATA",
     "DEFAULT_TOWN_DOMAIN",
     "DomainAdapter",
     "DomainAdapterMetadata",
