@@ -120,7 +120,7 @@ def _target_agents(goal_payload: dict[str, Any]) -> list[str]:
 def _extract_domain_evidence(world: Any) -> dict[str, Any]:
     if not isinstance(world, dict):
         return {}
-    evidence_keys = ("artifacts", "testReports", "reviewReports", "dependencies")
+    evidence_keys = ("repoFixture", "artifacts", "testReports", "reviewReports", "dependencies")
     # 只抽取跨域 dry-run 的可审计工件，避免把完整 world 快照塞进 Eval item。
     return {
         key: world.get(key, {})
@@ -185,6 +185,7 @@ def _export_cross_domain_adapter_eval(result: dict[str, Any], base_dir: Path) ->
                 baseline=str(item.get("baseline") or ""),
             )
         )
+        artifacts.extend(_write_domain_evidence_files(run_dir, item))
 
     trace_specs = (
         ("domain_metrics.jsonl", "domain_metrics_jsonl", _domain_metric_trace_items(items)),
@@ -283,3 +284,80 @@ def _domain_evidence_trace_items(items: list[dict[str, Any]]) -> list[dict[str, 
             }
         )
     return rows
+
+
+def _write_domain_evidence_files(run_dir: Path, item: dict[str, Any]) -> list[dict[str, Any]]:
+    """把 coding fixture 的 patch / test / review 证据写成独立 artifact。"""
+    evidence = item.get("domainEvidence", {}) if isinstance(item.get("domainEvidence"), dict) else {}
+    if not evidence:
+        return []
+    scenario_id = str(item.get("scenarioId") or "unknown_scenario")
+    baseline = str(item.get("baseline") or "")
+    evidence_dir = run_dir / "domain_evidence" / _safe_path_part(scenario_id)
+    evidence_dir.mkdir(parents=True, exist_ok=True)
+    artifacts: list[dict[str, Any]] = []
+
+    repo_fixture = evidence.get("repoFixture", {})
+    if isinstance(repo_fixture, dict) and repo_fixture:
+        repo_path = evidence_dir / "repo_fixture.json"
+        _write_json(repo_path, repo_fixture)
+        artifacts.append(
+            _artifact_record(
+                repo_path,
+                run_dir,
+                kind="domain_evidence_repo_fixture_json",
+                scenario_id=scenario_id,
+                baseline=baseline,
+            )
+        )
+
+    artifact_map = evidence.get("artifacts", {})
+    if isinstance(artifact_map, dict):
+        for artifact_id, artifact in sorted(artifact_map.items()):
+            if not isinstance(artifact, dict):
+                continue
+            patch_text = str(artifact.get("patchText", ""))
+            if not patch_text:
+                continue
+            patch_name = _safe_path_part(str(artifact_id))
+            if not patch_name.endswith(".patch"):
+                patch_name = f"{patch_name}.patch"
+            patch_path = evidence_dir / patch_name
+            patch_path.write_text(patch_text + "\n", encoding="utf-8")
+            artifacts.append(
+                _artifact_record(
+                    patch_path,
+                    run_dir,
+                    kind="domain_evidence_patch_diff",
+                    scenario_id=scenario_id,
+                    baseline=baseline,
+                )
+            )
+
+    for report_key, filename_prefix, kind in (
+        ("testReports", "test_report", "domain_evidence_test_report_json"),
+        ("reviewReports", "review_report", "domain_evidence_review_report_json"),
+    ):
+        report_map = evidence.get(report_key, {})
+        if not isinstance(report_map, dict):
+            continue
+        for report_id, report in sorted(report_map.items()):
+            if not isinstance(report, dict):
+                continue
+            report_path = evidence_dir / f"{filename_prefix}_{_safe_path_part(str(report_id))}.json"
+            _write_json(report_path, report)
+            artifacts.append(
+                _artifact_record(
+                    report_path,
+                    run_dir,
+                    kind=kind,
+                    scenario_id=scenario_id,
+                    baseline=baseline,
+                )
+            )
+
+    return artifacts
+
+
+def _safe_path_part(value: str) -> str:
+    return "".join(char if char.isalnum() or char in {"-", "_", "."} else "_" for char in value)

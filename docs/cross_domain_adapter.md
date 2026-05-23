@@ -19,7 +19,7 @@ scope: cross-domain adapter interface, narrative primary boundary, optional task
 4. 任何新 domain 都必须支持 EventStore、AgentState、Memory、Relationship / Dependency Graph、ToolExecutor、EvalTrace。
 5. Phase 2 实现接口、narrative adapter、coding skeleton 和 1 个 coding dry-run scenario。
 
-当前实现状态（2026-05-23）：`backend/app/domain/base.py` 已落地 shared dataclasses、`DomainAdapter` Protocol、`DEFAULT_TOWN_DOMAIN` / `DEFAULT_CODING_DOMAIN` metadata；`backend/app/domain/narrative/adapter.py` 已接入 3 个 narrative GoalSpec 和现有 AgentRuntime 主路径；`backend/app/domain/coding/adapter.py` 已提供 coding skeleton 与 1 个 dry-run scenario，并生成确定性 patch / test report / review report 证据；`npm.cmd run eval:domain` 会用统一 `full_motivational_delegation` baseline 输出跨域 summary schema；`npm.cmd run eval:domain:export` 会导出 per-scenario JSON、domain metrics、observation trace、intervention trace、domain evidence JSONL 和 `phase2.eval_manifest.v1` manifest。
+当前实现状态（2026-05-23）：`backend/app/domain/base.py` 已落地 shared dataclasses、`DomainAdapter` Protocol、`DEFAULT_TOWN_DOMAIN` / `DEFAULT_CODING_DOMAIN` metadata；`backend/app/domain/narrative/adapter.py` 已接入 3 个 narrative GoalSpec 和现有 AgentRuntime 主路径；`backend/app/domain/coding/adapter.py` 已提供 1 个 repo fixture scenario，加载确定性外部仓库快照，生成 patch、patched file hash、fixture test report 和 review report 证据；`npm.cmd run eval:domain` 会用统一 `full_motivational_delegation` baseline 输出跨域 summary schema；`npm.cmd run eval:domain:export` 会导出 per-scenario JSON、domain metrics、observation trace、intervention trace、domain evidence JSONL、独立 repo fixture / patch / test / review artifacts 和 `phase2.eval_manifest.v1` manifest。
 
 ## 2. Core Interface
 
@@ -182,10 +182,10 @@ Phase 2 的 adapter 当前验收点：
 
 ```text
 1. NarrativeAdapter 已运行 3 个 GoalSpec：close_friend_traceable / repair_trust_memory / affiliation_bias_agent_choice。
-2. CodingAdapter 已有 skeleton 和 1 个 dry-run scenario：coding.skill_prototype_dryrun。
+2. CodingAdapter 已有 repo fixture 级 scenario：coding.skill_prototype_dryrun，覆盖 repo fixture loaded -> design -> patch -> fixture tests -> review。
 3. Eval 已用相同 baseline 名称比较 town / coding domain 的 summary schema：npm.cmd run eval:domain。
-4. Eval 导出已接入 manifest 与 domain evidence JSONL：npm.cmd run eval:domain:export。
-5. 后续收紧项：coding dry-run 接入外部仓库级 artifact/test 执行证据，dataset 归档策略补长期留存规则。
+4. Eval 导出已接入 manifest、domain evidence JSONL 和独立 coding evidence artifacts：npm.cmd run eval:domain:export。
+5. 后续收紧项：把 repo fixture 升级为真实外部仓库 checkout / test 命令执行证据，并为跨域 coding 证据增加更多 scenario。
 ```
 
 ## 6. Directory Proposal
