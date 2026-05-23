@@ -13,10 +13,19 @@ from app.domain.base import DomainGoalSpec, DomainIntervention, DomainObservatio
 from app.eval.process_fidelity import build_process_metrics
 
 
-CODING_GOAL_IDS = ("coding.skill_prototype_dryrun", "coding.skill_regression_fix_dryrun")
+FAILING_TEST_REPAIR_GOAL_ID = "coding.skill_failing_test_repair_dryrun"
+
+CODING_GOAL_IDS = (
+    "coding.skill_prototype_dryrun",
+    "coding.skill_regression_fix_dryrun",
+    FAILING_TEST_REPAIR_GOAL_ID,
+)
 CODING_GOAL_TEXT = {
     "coding.skill_prototype_dryrun": "Develop a skill prototype through design, tests, and review.",
     "coding.skill_regression_fix_dryrun": "Fix a skill regression through design, checkout tests, and review.",
+    FAILING_TEST_REPAIR_GOAL_ID: (
+        "Repair a failing skill test through checkout, patch, passing tests, and review."
+    ),
 }
 
 
@@ -42,6 +51,7 @@ class CodingDomainAdapter:
             },
             "constraints": [],
             "artifacts": {},
+            "prePatchTestReports": {},
             "testReports": {},
             "reviewReports": {},
             "dependencies": {"repoFixtureId": repo_fixture.get("fixtureId", "")},
@@ -80,9 +90,22 @@ class CodingDomainAdapter:
             {"id": "review_completed", "predicate": "reviewer records approval with source evidence"},
             {"id": "failure_pattern_memory", "predicate": "review cites a prior failure or constraint memory"},
         ]
-        desired_artifact = (
-            "skill_regression_fix" if goal_id == "coding.skill_regression_fix_dryrun" else "skill_prototype"
-        )
+        if goal_id == FAILING_TEST_REPAIR_GOAL_ID:
+            required_process.insert(
+                3,
+                {
+                    "id": "pre_patch_failure_observed",
+                    "predicate": "evaluation checkpoint records the failing test before implementation",
+                },
+            )
+        desired_artifact = {
+            "coding.skill_prototype_dryrun": "skill_prototype",
+            "coding.skill_regression_fix_dryrun": "skill_regression_fix",
+            FAILING_TEST_REPAIR_GOAL_ID: "skill_failing_test_repair",
+        }[goal_id]
+        success_evidence = ["design_event", "diff_event", "test_event", "review_event"]
+        if goal_id == FAILING_TEST_REPAIR_GOAL_ID:
+            success_evidence.insert(1, "pre_patch_test_event")
         return DomainGoalSpec(
             goal_id=goal_id,
             natural_language_goal=CODING_GOAL_TEXT[goal_id],
@@ -95,8 +118,8 @@ class CodingDomainAdapter:
             ],
             required_process=required_process,
             allowed_interventions=["event_skill_load", "constraint_injection", "evaluation_checkpoint"],
-            success_evidence=["design_event", "diff_event", "test_event", "review_event"],
-            max_steps=4,
+            success_evidence=success_evidence,
+            max_steps=5 if goal_id == FAILING_TEST_REPAIR_GOAL_ID else 4,
         )
 
     def observe(self, world: dict[str, Any], goal: DomainGoalSpec) -> DomainObservation:
@@ -104,6 +127,7 @@ class CodingDomainAdapter:
             tick=int(world.get("tick", 0)),
             world_summary={
                 "artifactCount": float(len(world.get("artifacts", {}))),
+                "prePatchTestReportCount": float(len(world.get("prePatchTestReports", {}))),
                 "testReportCount": float(len(world.get("testReports", {}))),
                 "reviewReportCount": float(len(world.get("reviewReports", {}))),
                 "constraintCount": float(len(world.get("constraints", []))),
@@ -112,6 +136,9 @@ class CodingDomainAdapter:
                 if isinstance(world.get("repoFixture"), dict)
                 else [],
                 "artifactRefs": sorted(str(key) for key in world.get("artifacts", {}).keys()),
+                "prePatchTestReportRefs": sorted(
+                    str(key) for key in world.get("prePatchTestReports", {}).keys()
+                ),
                 "testReportRefs": sorted(str(key) for key in world.get("testReports", {}).keys()),
                 "reviewReportRefs": sorted(str(key) for key in world.get("reviewReports", {}).keys()),
             },
@@ -162,22 +189,40 @@ class CodingDomainAdapter:
         event_types = {str(event.get("type") or "") for event in world.get("events", [])}
         review_event = _first_event(world, "coding.review_completed")
         artifacts = world.get("artifacts", {}) if isinstance(world.get("artifacts"), dict) else {}
+        pre_patch_reports = (
+            world.get("prePatchTestReports", {}) if isinstance(world.get("prePatchTestReports"), dict) else {}
+        )
         test_reports = world.get("testReports", {}) if isinstance(world.get("testReports"), dict) else {}
         review_reports = world.get("reviewReports", {}) if isinstance(world.get("reviewReports"), dict) else {}
         repo_fixture = world.get("repoFixture", {}) if isinstance(world.get("repoFixture"), dict) else {}
         artifact_id = str(repo_fixture.get("artifactId") or "skill_prototype.patch")
+        pre_patch_test_report_id = str(repo_fixture.get("prePatchTestReportId") or "skill_prototype.pre_patch_tests")
         test_report_id = str(repo_fixture.get("testReportId") or "skill_prototype.tests")
         review_report_id = str(repo_fixture.get("reviewReportId") or "skill_prototype.review")
+        pre_patch_report = pre_patch_reports.get(pre_patch_test_report_id, {})
         test_report = test_reports.get(test_report_id, {})
         review_report = review_reports.get(review_report_id, {})
+        pre_patch_cases = (
+            pre_patch_report.get("caseResults", []) if isinstance(pre_patch_report.get("caseResults"), list) else []
+        )
+        pre_patch_failure_observed = (
+            "coding.pre_patch_tests_failed" in event_types
+            and bool(pre_patch_report.get("expectedFailure"))
+            and bool(pre_patch_report.get("execution", {}).get("executed"))
+            and pre_patch_report.get("execution", {}).get("exitCode") not in (None, 0)
+            and any(not bool(case.get("passed")) for case in pre_patch_cases if isinstance(case, dict))
+        )
         process_checks = {
             "repo_fixture_loaded": "coding.repo_fixture_loaded" in event_types and bool(repo_fixture.get("files")),
             "design_review_loaded": "coding.design_review_loaded" in event_types,
+            "pre_patch_failure_observed": pre_patch_failure_observed,
             "implementation_diff": "coding.implementation_diff_created" in event_types
             and artifact_id in artifacts,
             "external_repo_checkout_tested": "coding.tests_executed" in event_types
             and bool(test_report.get("passed"))
+            and test_report.get("testPhase") == "post_patch"
             and bool(test_report.get("execution", {}).get("executed"))
+            and test_report.get("execution", {}).get("testPhase") == "post_patch"
             and test_report.get("execution", {}).get("exitCode") == 0,
             "review_completed": bool(review_event) and review_report.get("status") == "approved",
             "failure_pattern_memory": bool(review_event and review_event.get("payload", {}).get("citedMemoryIds")),
@@ -217,6 +262,7 @@ class CodingDomainAdapter:
         for key, filename in (
             ("repoFixture", "coding_repo_fixture.json"),
             ("artifacts", "coding_artifacts.json"),
+            ("prePatchTestReports", "coding_pre_patch_test_reports.json"),
             ("testReports", "coding_test_reports.json"),
             ("reviewReports", "coding_review_reports.json"),
         ):
@@ -250,6 +296,62 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
             )
         )
         world["agents"]["architect"]["state"] = "design_reviewed"
+    elif _requires_pre_patch_failure(world) and "coding.pre_patch_tests_failed" not in event_types:
+        design_event = _first_event(world, "coding.design_review_loaded")
+        repo_fixture = world.get("repoFixture", {}) if isinstance(world.get("repoFixture"), dict) else {}
+        pre_patch_test_report_id = str(
+            repo_fixture.get("prePatchTestReportId") or "skill_failing_test_repair.pre_patch_tests"
+        )
+        base_artifact = {
+            "artifactId": "pre_patch_fixture_state",
+            "patchedFiles": repo_fixture.get("files", {}) if isinstance(repo_fixture.get("files"), dict) else {},
+        }
+        test_cases, execution = _run_external_checkout_fixture_tests(
+            base_artifact,
+            repo_fixture,
+            test_phase="pre_patch",
+        )
+        failing_case_ids = [
+            str(item.get("caseId") or "unknown_case")
+            for item in test_cases
+            if isinstance(item, dict) and not bool(item.get("passed"))
+        ]
+        failure_observed = execution.get("exitCode") not in (None, 0) and bool(failing_case_ids)
+        pre_patch_report = {
+            "testReportId": pre_patch_test_report_id,
+            "command": execution.get("command", "python check_fixture.py <worktree>"),
+            "testPhase": "pre_patch",
+            "passed": False,
+            "expectedFailure": True,
+            "failureObserved": failure_observed,
+            "failingCaseIds": failing_case_ids,
+            "caseResults": test_cases,
+            "execution": execution,
+            "sourceArtifactId": base_artifact["artifactId"],
+            "sourceEventIds": [_event_id(design_event)],
+        }
+        pre_patch_report["sha256"] = _stable_digest(
+            json.dumps(pre_patch_report, ensure_ascii=False, sort_keys=True)
+        )
+        world.setdefault("prePatchTestReports", {})[pre_patch_test_report_id] = pre_patch_report
+        emitted.append(
+            _append_event(
+                world,
+                "coding.pre_patch_tests_failed",
+                {
+                    "agentId": "reviewer",
+                    "testReportId": pre_patch_report["testReportId"],
+                    "expectedFailure": True,
+                    "failureObserved": failure_observed,
+                    "failingCaseIds": failing_case_ids,
+                    "exitCode": execution.get("exitCode"),
+                    "workspaceKind": execution.get("workspaceKind"),
+                    "sourceEventIds": pre_patch_report["sourceEventIds"],
+                    "testReportSha256": pre_patch_report["sha256"],
+                },
+            )
+        )
+        world["agents"]["reviewer"]["state"] = "pre_patch_failure_observed"
     elif "coding.implementation_diff_created" not in event_types:
         design_event = _first_event(world, "coding.design_review_loaded")
         repo_fixture = world.get("repoFixture", {}) if isinstance(world.get("repoFixture"), dict) else {}
@@ -291,10 +393,15 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
         artifact_id = str(repo_fixture.get("artifactId") or "skill_prototype.patch")
         test_report_id = str(repo_fixture.get("testReportId") or "skill_prototype.tests")
         artifact = world.get("artifacts", {}).get(artifact_id, {})
-        test_cases, execution = _run_external_checkout_fixture_tests(artifact, repo_fixture)
+        test_cases, execution = _run_external_checkout_fixture_tests(
+            artifact,
+            repo_fixture,
+            test_phase="post_patch",
+        )
         test_report = {
             "testReportId": test_report_id,
             "command": execution.get("command", "python check_fixture.py <worktree>"),
+            "testPhase": "post_patch",
             "passed": execution.get("exitCode") == 0
             and bool(test_cases)
             and all(bool(item.get("passed")) for item in test_cases),
@@ -323,27 +430,52 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
         )
     elif "coding.review_completed" not in event_types:
         test_event = _first_event(world, "coding.tests_executed")
+        pre_patch_event = _first_event(world, "coding.pre_patch_tests_failed")
         repo_fixture = world.get("repoFixture", {}) if isinstance(world.get("repoFixture"), dict) else {}
+        pre_patch_test_report_id = str(
+            repo_fixture.get("prePatchTestReportId") or "skill_failing_test_repair.pre_patch_tests"
+        )
         test_report_id = str(repo_fixture.get("testReportId") or "skill_prototype.tests")
         review_report_id = str(repo_fixture.get("reviewReportId") or "skill_prototype.review")
+        requires_pre_patch = _requires_pre_patch_failure(world)
+        pre_patch_report = world.get("prePatchTestReports", {}).get(pre_patch_test_report_id, {})
         test_report = world.get("testReports", {}).get(test_report_id, {})
+        source_event_ids = [_event_id(test_event)]
+        if requires_pre_patch:
+            source_event_ids.insert(0, _event_id(pre_patch_event))
+        checklist = [
+            {"id": "repo_fixture_loaded", "passed": True},
+            {"id": "design_before_diff", "passed": True},
+            {
+                "id": "external_checkout_tests_before_review",
+                "passed": bool(test_report.get("execution", {}).get("executed"))
+                and test_report.get("execution", {}).get("exitCode") == 0,
+            },
+            {"id": "failure_memory_cited", "passed": True},
+        ]
+        if requires_pre_patch:
+            checklist.insert(
+                2,
+                {
+                    "id": "pre_patch_failure_observed",
+                    "passed": bool(pre_patch_report.get("failureObserved"))
+                    and pre_patch_report.get("execution", {}).get("exitCode") not in (None, 0),
+                },
+            )
+        cited_memory_ids = ["prior_failure.skip_tests"]
+        if requires_pre_patch:
+            cited_memory_ids.append("prior_failure.failing_test_first")
         review_report = {
             "reviewReportId": review_report_id,
             "status": "approved",
+            "sourcePrePatchTestReportId": pre_patch_report.get("testReportId", pre_patch_test_report_id)
+            if requires_pre_patch
+            else None,
             "sourceTestReportId": test_report.get("testReportId", test_report_id),
-            "sourceEventIds": [_event_id(test_event)],
+            "sourceEventIds": source_event_ids,
             "repoFixtureId": world.get("repoFixture", {}).get("fixtureId", ""),
-            "citedMemoryIds": ["prior_failure.skip_tests"],
-            "checklist": [
-                {"id": "repo_fixture_loaded", "passed": True},
-                {"id": "design_before_diff", "passed": True},
-                {
-                    "id": "external_checkout_tests_before_review",
-                    "passed": bool(test_report.get("execution", {}).get("executed"))
-                    and test_report.get("execution", {}).get("exitCode") == 0,
-                },
-                {"id": "failure_memory_cited", "passed": True},
-            ],
+            "citedMemoryIds": cited_memory_ids,
+            "checklist": checklist,
         }
         review_report["sha256"] = _stable_digest(json.dumps(review_report, ensure_ascii=False, sort_keys=True))
         world.setdefault("reviewReports", {})[review_report_id] = review_report
@@ -366,9 +498,38 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
     return emitted
 
 
+def _requires_pre_patch_failure(world: dict[str, Any]) -> bool:
+    """判断当前 fixture 是否要求先记录失败测试，再进入修复补丁。"""
+    repo_fixture = world.get("repoFixture", {}) if isinstance(world.get("repoFixture"), dict) else {}
+    return bool(repo_fixture.get("requiresPrePatchFailure"))
+
+
 def _build_repo_fixture(goal_id: str) -> dict[str, Any]:
     """构造可重复的外部仓库 fixture，模拟跨域 coding 输入。"""
-    if goal_id == "coding.skill_regression_fix_dryrun":
+    requires_pre_patch_failure = False
+    pre_patch_test_report_id = None
+    if goal_id == FAILING_TEST_REPAIR_GOAL_ID:
+        fixture_id = "loomstead-debug-failing-test-fixture.v1"
+        artifact_id = "skill_failing_test_repair.patch"
+        test_report_id = "skill_failing_test_repair.tests"
+        pre_patch_test_report_id = "skill_failing_test_repair.pre_patch_tests"
+        review_report_id = "skill_failing_test_repair.review"
+        requires_pre_patch_failure = True
+        planned_additions = [
+            "Add failing test evidence before repair.",
+            "Run eval:domain after the repair passes.",
+        ]
+        test_expectations = [
+            {"caseId": "loads_skill_md", "type": "startswith", "value": "# Loomstead Debug Skill"},
+            {"caseId": "keeps_existing_doc_guidance", "type": "contains", "value": "Use project docs"},
+            {
+                "caseId": "requires_failing_test_evidence",
+                "type": "contains",
+                "value": "failing test evidence before repair",
+            },
+            {"caseId": "requires_eval_domain_after_repair", "type": "contains", "value": "eval:domain"},
+        ]
+    elif goal_id == "coding.skill_regression_fix_dryrun":
         fixture_id = "loomstead-debug-regression-fixture.v1"
         artifact_id = "skill_regression_fix.patch"
         test_report_id = "skill_regression_fix.tests"
@@ -419,12 +580,14 @@ def _build_repo_fixture(goal_id: str) -> dict[str, Any]:
         "fileHashes": {path: _stable_digest(content) for path, content in files.items()},
         "targetPath": "skills/loomstead-debug/SKILL.md",
         "artifactId": artifact_id,
+        "prePatchTestReportId": pre_patch_test_report_id,
         "testReportId": test_report_id,
         "reviewReportId": review_report_id,
         "testCommand": "python check_skill.py",
         "testCommandSource": "repo_fixture",
         "plannedAdditions": planned_additions,
         "testExpectations": test_expectations,
+        "requiresPrePatchFailure": requires_pre_patch_failure,
         "sourceRepoKind": "deterministic_local_git_repository",
     }
 
@@ -449,11 +612,12 @@ def _build_skill_patch(repo_fixture: dict[str, Any]) -> tuple[str, dict[str, str
 
 
 def _run_external_checkout_fixture_tests(
-    artifact: dict[str, Any], repo_fixture: dict[str, Any]
+    artifact: dict[str, Any], repo_fixture: dict[str, Any], *, test_phase: str = "post_patch"
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """创建独立 git 仓库、执行真实 checkout，并运行仓库自带测试命令。"""
-    patched_files = artifact.get("patchedFiles", {}) if isinstance(artifact.get("patchedFiles"), dict) else {}
     repo_files = repo_fixture.get("files", {}) if isinstance(repo_fixture.get("files"), dict) else {}
+    patched_files = artifact.get("patchedFiles", {}) if isinstance(artifact.get("patchedFiles"), dict) else {}
+    workspace_files = repo_files if test_phase == "pre_patch" else patched_files
     command_template = str(repo_fixture.get("testCommand") or "python check_skill.py")
     checkout_steps: list[dict[str, Any]] = []
     started = time.perf_counter()
@@ -472,7 +636,7 @@ def _run_external_checkout_fixture_tests(
                 )
             )
             checkout_head = _run_git_command(["rev-parse", "HEAD"], cwd=checkout, check=True)["stdout"].strip()
-            _write_fixture_worktree(checkout, patched_files)
+            _write_fixture_worktree(checkout, workspace_files)
             checkout_status = _run_git_command(["status", "--short"], cwd=checkout, check=True)["stdout"].splitlines()
             command = _repo_test_command(command_template)
             completed = subprocess.run(command, cwd=checkout, capture_output=True, text=True, encoding="utf-8", check=False)
@@ -480,6 +644,7 @@ def _run_external_checkout_fixture_tests(
             parsed_cases = _parse_fixture_test_cases(completed.stdout)
             execution = {
                 "executed": True,
+                "testPhase": test_phase,
                 "workspaceKind": "git_external_repo_checkout",
                 "sourceRepoKind": repo_fixture.get("sourceRepoKind", "deterministic_local_git_repository"),
                 "checkoutMethod": "git clone",
@@ -499,9 +664,9 @@ def _run_external_checkout_fixture_tests(
                     "statusAfterPatch": checkout_status,
                 },
                 "sourceRepoFiles": sorted(str(path) for path in repo_files.keys()),
-                "workspaceFiles": sorted(str(path) for path in patched_files.keys()),
+                "workspaceFiles": sorted(str(path) for path in workspace_files.keys()),
                 "workspaceFileHashes": {
-                    str(path): _stable_digest(str(content)) for path, content in patched_files.items()
+                    str(path): _stable_digest(str(content)) for path, content in workspace_files.items()
                 },
             }
             return parsed_cases, execution
@@ -511,6 +676,7 @@ def _run_external_checkout_fixture_tests(
             [{"caseId": "external_repo_checkout", "passed": False, "error": repr(exc)}],
             {
                 "executed": False,
+                "testPhase": test_phase,
                 "workspaceKind": "git_external_repo_checkout",
                 "sourceRepoKind": repo_fixture.get("sourceRepoKind", "deterministic_local_git_repository"),
                 "checkoutMethod": "git clone",
@@ -524,9 +690,9 @@ def _run_external_checkout_fixture_tests(
                 "stderr": repr(exc),
                 "checkoutSteps": checkout_steps,
                 "sourceRepoFiles": sorted(str(path) for path in repo_files.keys()),
-                "workspaceFiles": sorted(str(path) for path in patched_files.keys()),
+                "workspaceFiles": sorted(str(path) for path in workspace_files.keys()),
                 "workspaceFileHashes": {
-                    str(path): _stable_digest(str(content)) for path, content in patched_files.items()
+                    str(path): _stable_digest(str(content)) for path, content in workspace_files.items()
                 },
             },
         )

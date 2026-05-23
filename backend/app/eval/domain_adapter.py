@@ -120,7 +120,14 @@ def _target_agents(goal_payload: dict[str, Any]) -> list[str]:
 def _extract_domain_evidence(world: Any) -> dict[str, Any]:
     if not isinstance(world, dict):
         return {}
-    evidence_keys = ("repoFixture", "artifacts", "testReports", "reviewReports", "dependencies")
+    evidence_keys = (
+        "repoFixture",
+        "artifacts",
+        "prePatchTestReports",
+        "testReports",
+        "reviewReports",
+        "dependencies",
+    )
     # 只抽取跨域 dry-run 的可审计工件，避免把完整 world 快照塞进 Eval item。
     return {
         key: world.get(key, {})
@@ -335,6 +342,7 @@ def _write_domain_evidence_files(run_dir: Path, item: dict[str, Any]) -> list[di
             )
 
     for report_key, filename_prefix, kind in (
+        ("prePatchTestReports", "pre_patch_test_report", "domain_evidence_pre_patch_test_report_json"),
         ("testReports", "test_report", "domain_evidence_test_report_json"),
         ("reviewReports", "review_report", "domain_evidence_review_report_json"),
     ):
