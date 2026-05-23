@@ -23,6 +23,7 @@ INDEX_VERSION = "phase2.eval_run_index.v1"
 DRIFT_REPORT_VERSION = "phase2.eval_run_drift.v1"
 DRIFT_POLICY_VERSION = "phase2.eval_drift_policy.v1"
 PROMOTION_RECORD_VERSION = "phase2.eval_promotion.v1"
+PROMOTION_TEMPLATE_VERSION = "phase2.eval_promotion_template.v1"
 MANIFEST_VERSION = "phase2.eval_manifest.v1"
 DRIFT_POLICY = {
     "policyVersion": DRIFT_POLICY_VERSION,
@@ -44,6 +45,45 @@ DRIFT_POLICY = {
         "review": [
             "metric / baseline / scenario id 新增",
             "artifact 数量增加",
+        ],
+    },
+}
+PROMOTION_PURPOSE_TEMPLATES = {
+    "paper": {
+        "purposeLabel": "论文证据",
+        "requiredNotes": [
+            "说明该 run 支撑的研究问题或表格编号。",
+            "记录 baseline / ablation 与主要指标解读。",
+            "说明 drift policy、git dirty 和人工窗口验收状态。",
+        ],
+        "extraChecklist": [
+            "确认 schema 与论文方法描述一致。",
+            "确认导出 artifact 可复现。",
+            "确认真实模型或人工窗口证据已单独记录。",
+        ],
+    },
+    "portfolio": {
+        "purposeLabel": "作品集证据",
+        "requiredNotes": [
+            "说明该 run 支撑的可展示能力。",
+            "记录一段非技术读者可理解的结果摘要。",
+            "列出截图、视频或 Godot 窗口验收引用。",
+        ],
+        "extraChecklist": [
+            "确认展示素材不包含本机密钥或私有路径。",
+            "确认失败或人工未验收项已在展示说明中标注。",
+        ],
+    },
+    "regression": {
+        "purposeLabel": "回归基线证据",
+        "requiredNotes": [
+            "说明该 run 锁定的回归范围。",
+            "记录预期稳定的 metric / scenario 集合。",
+            "说明允许漂移的字段和后续触发条件。",
+        ],
+        "extraChecklist": [
+            "确认未来回归脚本会引用同一 suite。",
+            "确认 drift policy 输出已保存。",
         ],
     },
 }
@@ -72,6 +112,12 @@ def main() -> None:
     parser.add_argument("--promote", type=str, default=None, help="把指定 runDirName 或 run 路径复制到长期候选归档。")
     parser.add_argument("--promote-dir", type=Path, default=DEFAULT_PROMOTE_DIR, help="promote 输出根目录。")
     parser.add_argument("--promotion-id", type=str, default=None, help="promote 目标目录名，默认沿用 runDirName。")
+    parser.add_argument(
+        "--promotion-purpose",
+        choices=sorted(PROMOTION_PURPOSE_TEMPLATES.keys()),
+        default="paper",
+        help="写入 promotion record 的用途模板。",
+    )
     parser.add_argument("--promotion-note", type=str, default="", help="写入 promotion record 的人工备注。")
     parser.add_argument("--write-index", action="store_true", help="写入本地 index.json。")
     parser.add_argument("--write-drift-report", action="store_true", help="写入跨 run 漂移报告。")
@@ -104,6 +150,7 @@ def main() -> None:
             args.promote,
             promote_dir=promote_dir,
             promotion_id=args.promotion_id,
+            promotion_purpose=args.promotion_purpose,
             promotion_note=args.promotion_note,
         )
         index["promotion"] = promotion
@@ -213,6 +260,7 @@ def promote_eval_run(
     *,
     promote_dir: Path,
     promotion_id: str | None,
+    promotion_purpose: str,
     promotion_note: str,
 ) -> dict[str, Any]:
     """复制一个已校验 run 到 promote 目录，并写入晋级记录。"""
@@ -236,7 +284,14 @@ def promote_eval_run(
 
     promote_dir.mkdir(parents=True, exist_ok=True)
     shutil.copytree(source_dir, target_dir)
-    promotion_record = _build_promotion_record(index, record, source_dir=source_dir, target_dir=target_dir, note=promotion_note)
+    promotion_record = _build_promotion_record(
+        index,
+        record,
+        source_dir=source_dir,
+        target_dir=target_dir,
+        purpose=promotion_purpose,
+        note=promotion_note,
+    )
     (target_dir / "promotion_record.json").write_text(
         json.dumps(promotion_record, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
@@ -247,6 +302,7 @@ def promote_eval_run(
         "sourceRunDir": record["runDir"],
         "promotedRunDir": _repo_relative(target_dir),
         "promotionStatus": promotion_record["promotionStatus"],
+        "promotionPurpose": promotion_record["promotionPurpose"],
         "manualReviewItems": promotion_record["manualReviewItems"],
     }
 
@@ -267,10 +323,14 @@ def _build_promotion_record(
     *,
     source_dir: Path,
     target_dir: Path,
+    purpose: str,
     note: str,
 ) -> dict[str, Any]:
     manual_items: list[str] = []
+    purpose_template = _promotion_template_for(purpose)
     git = record.get("git", {}) if isinstance(record.get("git"), dict) else {}
+    if not note.strip():
+        manual_items.append(f"promotion note 为空；请按 {purpose_template['purposeLabel']} 模板补充人工备注。")
     if bool(git.get("dirty")):
         manual_items.append("manifest git.dirty=true；需要说明导出时工作区改动原因，或重新从干净 commit 导出。")
     if not bool(record.get("ok")):
@@ -288,8 +348,11 @@ def _build_promotion_record(
     promotion_status = "paper_grade_candidate" if not manual_items else "needs_manual_review"
     return {
         "promotionVersion": PROMOTION_RECORD_VERSION,
+        "promotionTemplateVersion": PROMOTION_TEMPLATE_VERSION,
         "promotedAt": _utc_now(),
         "promotionStatus": promotion_status,
+        "promotionPurpose": purpose,
+        "promotionTemplate": purpose_template,
         "sourceRunDir": _repo_relative(source_dir),
         "promotedRunDir": _repo_relative(target_dir),
         "promotionNote": note,
@@ -345,20 +408,42 @@ def _promotion_markdown(record: dict[str, Any]) -> str:
         manual_text = "- 暂无自动发现的人工复核项。"
     checklist = record.get("paperGradeChecklist", {})
     checklist_text = "\n".join(f"- {key}: {value}" for key, value in checklist.items())
+    template = record.get("promotionTemplate", {}) if isinstance(record.get("promotionTemplate"), dict) else {}
+    required_notes = template.get("requiredNotes", []) if isinstance(template.get("requiredNotes"), list) else []
+    extra_checklist = template.get("extraChecklist", []) if isinstance(template.get("extraChecklist"), list) else []
+    required_note_text = "\n".join(f"- {item}" for item in required_notes) or "- 未配置。"
+    extra_checklist_text = "\n".join(f"- [ ] {item}" for item in extra_checklist) or "- [ ] 未配置。"
     return (
         "# Eval Run Promotion\n\n"
         f"- status: `{record.get('promotionStatus')}`\n"
+        f"- purpose: `{record.get('promotionPurpose')}` ({template.get('purposeLabel', '-')})\n"
         f"- promotedAt: `{record.get('promotedAt')}`\n"
         f"- sourceRunDir: `{record.get('sourceRunDir')}`\n"
         f"- suite: `{record.get('suite')}`\n"
         f"- baseline: `{record.get('baseline')}`\n"
         f"- manifestSha256: `{record.get('manifestSha256')}`\n"
         f"- note: {record.get('promotionNote') or '-'}\n\n"
+        "## Purpose note prompts\n\n"
+        f"{required_note_text}\n\n"
         "## Manual review items\n\n"
         f"{manual_text}\n\n"
         "## Paper-grade checklist\n\n"
-        f"{checklist_text}\n"
+        f"{checklist_text}\n\n"
+        "## Purpose checklist\n\n"
+        f"{extra_checklist_text}\n"
     )
+
+
+def _promotion_template_for(purpose: str) -> dict[str, Any]:
+    """返回 promotion 用途模板，避免 PROMOTION.md 只有空泛备注。"""
+    template = PROMOTION_PURPOSE_TEMPLATES.get(purpose) or PROMOTION_PURPOSE_TEMPLATES["paper"]
+    return {
+        "templateVersion": PROMOTION_TEMPLATE_VERSION,
+        "purpose": purpose if purpose in PROMOTION_PURPOSE_TEMPLATES else "paper",
+        "purposeLabel": template["purposeLabel"],
+        "requiredNotes": list(template["requiredNotes"]),
+        "extraChecklist": list(template["extraChecklist"]),
+    }
 
 
 def re_match_safe_name(value: str) -> bool:

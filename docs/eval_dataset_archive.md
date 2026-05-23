@@ -85,7 +85,7 @@ npm.cmd run eval:archive:promote -- domain_2026-05-23T06-37-22Z
 常用可选参数：
 
 ```powershell
-python scripts/index_eval_runs.py --runs-dir .run/eval-runs --promote <runDirName> --promotion-id <targetName> --promotion-note "人工备注"
+python scripts/index_eval_runs.py --runs-dir .run/eval-runs --promote <runDirName> --promotion-id <targetName> --promotion-purpose paper --promotion-note "人工备注"
 ```
 
 Promotion 规则：
@@ -95,8 +95,9 @@ Promotion 规则：
 3. promote 会完整复制源 run，并额外写入：
    - `promotion_record.json`：机器可读的晋级记录，版本 `phase2.eval_promotion.v1`。
    - `PROMOTION.md`：人工复核摘要。
-4. 若 manifest 记录 `git.dirty=true`、manifest `ok=false`、缺少 drift 对比或 drift policy 要求人工复核，`promotionStatus` 会标为 `needs_manual_review`。
-5. 只有自动检查无人工复核项时，`promotionStatus` 才会标为 `paper_grade_candidate`。
+4. `--promotion-purpose` 支持 `paper`、`portfolio`、`regression` 三类备注模板，并写入 `phase2.eval_promotion_template.v1`。
+5. 若 manifest 记录 `git.dirty=true`、manifest `ok=false`、promotion note 为空、缺少 drift 对比或 drift policy 要求人工复核，`promotionStatus` 会标为 `needs_manual_review`。
+6. 只有自动检查无人工复核项时，`promotionStatus` 才会标为 `paper_grade_candidate`。
 
 Promotion 不代表证据已经可直接用于论文；它表示该 run 已从滚动导出区进入人工复核候选区。
 
@@ -115,6 +116,5 @@ Promotion 不代表证据已经可直接用于论文；它表示该 run 已从�
 
 ## 8. 后续收紧方向
 
-- 增加 promotion 备注模板，区分论文、作品集和回归证据三种用途。
 - 在真实研究样本稳定后，把 drift policy 接入 CI gate，区分 warning、manual review 和 blocking。
 - 在真实研究样本稳定后，为 paper-grade runs 增加人工标签和备注文件。
