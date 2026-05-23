@@ -55,6 +55,11 @@ domain_eval = subprocess.run([sys.executable, "scripts/run_agent_eval.py", "--su
 if domain_eval.returncode != 0:
     raise SystemExit(domain_eval.returncode)
 
+# 本地 eval-runs 可能为空；check 只要求已有 manifest 与 artifact 自洽。
+eval_archive_check = subprocess.run([sys.executable, "scripts/index_eval_runs.py", "--allow-empty"], cwd=ROOT)
+if eval_archive_check.returncode != 0:
+    raise SystemExit(eval_archive_check.returncode)
+
 asset_manifest_check = subprocess.run([sys.executable, "scripts/check_asset_manifest.py"], cwd=ROOT)
 if asset_manifest_check.returncode != 0:
     raise SystemExit(asset_manifest_check.returncode)

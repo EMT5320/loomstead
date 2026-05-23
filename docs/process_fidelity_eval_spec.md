@@ -84,6 +84,12 @@ Stability suite 导出结构：
 - `metricIds`、`baselines`、`scenarioIds`。
 - `artifacts[]`：每个导出文件的相对 `path`、`kind`、`bytes`、`sha256`；JSONL 文件额外记录 `rowCount`。
 
+### 2.3 本地导出索引与归档
+
+`npm.cmd run eval:archive:check` 会读取 `.run/eval-runs/*/manifest.json`，复核 manifest 版本、run 目录名、artifact `bytes`、`sha256` 和 JSONL `rowCount`。
+
+`npm.cmd run eval:archive:index` 会写入 `.run/eval-runs/index.json`，生成 `phase2.eval_run_index.v1` 索引，并按 suite 给 run 标记 `keep_latest` 或 `historical_candidate`。当前工具只标记保留建议，不自动删除或搬运 run。完整策略见 `docs/eval_dataset_archive.md`。
+
 ## 3. Baseline 定义
 
 ### 3.1 Direct State Setter

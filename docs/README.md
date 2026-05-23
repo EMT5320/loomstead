@@ -31,6 +31,7 @@ scope: 文档分层索引与渐进式读取路线
 - [`gameplay_system_architecture.md`](./gameplay_system_architecture.md)：游戏本体架构、地图主循环、Godot / 后端边界。
 - [`production_roadmap.md`](./production_roadmap.md)：阶段路线（Phase 1 已收口 / Phase 2-6 重排）。
 - [`process_fidelity_eval_spec.md`](./process_fidelity_eval_spec.md)：研究向 Eval 指标、hard delegation baseline、ablation protocol、dataset 输出规格。
+- [`eval_dataset_archive.md`](./eval_dataset_archive.md)：Eval 导出 manifest 索引、artifact 校验和本地归档保留策略。
 - [`cross_domain_adapter.md`](./cross_domain_adapter.md)：跨域 adapter 接口，保证小镇 primary、为 task-secondary 验证保留路径。
 - [`open_questions.md`](./open_questions.md)：已确认决策、剩余问题和实现中验证点。
 
