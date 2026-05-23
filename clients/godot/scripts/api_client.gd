@@ -2,6 +2,7 @@ class_name ApiClient
 extends Node
 
 var base_url: String = "http://127.0.0.1:8787"
+var request_timeout_seconds: float = 10.0
 var _http: HTTPRequest
 
 
@@ -49,7 +50,13 @@ func get_phase2_debug(agent_id: String) -> Dictionary:
 func _ensure_http() -> void:
 	if _http == null:
 		_http = HTTPRequest.new()
+		_http.timeout = request_timeout_seconds
 		add_child(_http)
+
+
+func cancel_current_request() -> void:
+	if _http != null and _http.get_http_client_status() != HTTPClient.STATUS_DISCONNECTED:
+		_http.cancel_request()
 
 
 func _request_json(method: String, path: String, payload: Dictionary) -> Dictionary:

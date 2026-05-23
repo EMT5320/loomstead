@@ -20,6 +20,7 @@ var _recent_trace_value: Label
 var _recent_trace_detail_value: Label
 var _recent_trace_summaries: Dictionary = {}
 var _recent_trace_detail_groups: Dictionary = {}
+var _recent_trace_copy_detail_groups: Dictionary = {}
 var _recent_trace_details := "-"
 var _current_trace_detail_index := 0
 var _current_trace_filter := "all"
@@ -94,6 +95,9 @@ func show_phase2_error(error_message: String) -> void:
 
 
 func set_phase2_debug_summary(summary: Dictionary) -> void:
+	var previous_details := _trace_details_for_filter()
+	var was_following_latest := previous_details.is_empty() or _current_trace_detail_index >= previous_details.size() - 1
+	var previous_index := _current_trace_detail_index
 	_phase2_status_value.text = "状态：已同步"
 	_motivation_value.text = str(summary.get("motivation", "-"))
 	_subjective_memory_value.text = str(summary.get("subjectiveMemory", "-"))
@@ -101,8 +105,13 @@ func set_phase2_debug_summary(summary: Dictionary) -> void:
 	_heuristics_value.text = str(summary.get("heuristics", "-"))
 	_recent_trace_summaries = _trace_summary_dict(summary)
 	_recent_trace_detail_groups = _trace_detail_group_dict(summary)
+	_recent_trace_copy_detail_groups = _trace_copy_detail_group_dict(summary)
 	_recent_trace_details = str(summary.get("recentTraceDetails", "-"))
-	_select_latest_trace_detail()
+	if was_following_latest:
+		_select_latest_trace_detail()
+	else:
+		var next_details := _trace_details_for_filter()
+		_current_trace_detail_index = int(clamp(previous_index, 0, max(0, next_details.size() - 1)))
 	_update_recent_trace_view()
 
 
@@ -255,9 +264,17 @@ func _trace_detail_group_dict(summary: Dictionary) -> Dictionary:
 	return {"all": [str(summary.get("recentTraceDetails", "-"))]}
 
 
+func _trace_copy_detail_group_dict(summary: Dictionary) -> Dictionary:
+	var groups = summary.get("recentTraceCopyDetailGroups", {})
+	if groups is Dictionary:
+		return (groups as Dictionary).duplicate(true)
+	return _trace_detail_group_dict(summary)
+
+
 func _reset_recent_trace_view() -> void:
 	_recent_trace_summaries = {"all": "-"}
 	_recent_trace_detail_groups = {"all": ["-"]}
+	_recent_trace_copy_detail_groups = {"all": ["-"]}
 	_recent_trace_details = "-"
 	_current_trace_detail_index = 0
 	_current_trace_filter = "all"
@@ -286,6 +303,14 @@ func _trace_details_for_filter() -> Array:
 		var detail_array := details as Array
 		return detail_array
 	return []
+
+
+func _trace_copy_details_for_filter() -> Array:
+	var details = _recent_trace_copy_detail_groups.get(_current_trace_filter, _recent_trace_copy_detail_groups.get("all", []))
+	if details is Array:
+		var detail_array := details as Array
+		return detail_array
+	return _trace_details_for_filter()
 
 
 func _select_latest_trace_detail() -> void:
@@ -323,6 +348,10 @@ func _on_trace_copy_pressed() -> void:
 	var details := _trace_details_for_filter()
 	if details.is_empty():
 		return
+	var copy_details := _trace_copy_details_for_filter()
+	var copy_text := str(details[_current_trace_detail_index])
+	if _current_trace_detail_index < copy_details.size():
+		copy_text = str(copy_details[_current_trace_detail_index])
 	# 复制当前单条 trace detail，便于真实窗口验收时粘贴到 issue / 文档。
-	DisplayServer.clipboard_set(str(details[_current_trace_detail_index]))
+	DisplayServer.clipboard_set(copy_text)
 	_phase2_status_value.text = "状态：已复制 trace detail"

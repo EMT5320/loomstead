@@ -586,6 +586,7 @@ func _build_phase2_observer_summary(payload: Dictionary) -> Dictionary:
 		"recentTraceEvents": _summarize_phase2_recent_trace(payload.get("recentTraceEvents", [])),
 		"recentTraceEventGroups": _build_phase2_trace_filter_summaries(payload.get("recentTraceEvents", [])),
 		"recentTraceDetailGroups": _build_phase2_trace_detail_groups(payload.get("recentTraceEvents", [])),
+		"recentTraceCopyDetailGroups": _build_phase2_trace_copy_detail_groups(payload.get("recentTraceEvents", [])),
 		"recentTraceDetails": _summarize_phase2_trace_details(payload.get("recentTraceEvents", [])),
 	}
 
@@ -685,6 +686,16 @@ func _build_phase2_trace_detail_groups(section) -> Dictionary:
 	}
 
 
+func _build_phase2_trace_copy_detail_groups(section) -> Dictionary:
+	return {
+		"all": _phase2_trace_details_for_filter(section, "all", true),
+		"decision": _phase2_trace_details_for_filter(section, "decision", true),
+		"tool": _phase2_trace_details_for_filter(section, "tool", true),
+		"interrupt": _phase2_trace_details_for_filter(section, "interrupt", true),
+		"memory": _phase2_trace_details_for_filter(section, "memory", true),
+	}
+
+
 func _summarize_phase2_recent_trace_for_filter(section, filter_id: String) -> String:
 	var items := _phase2_items(section)
 	if items.is_empty():
@@ -721,7 +732,7 @@ func _summarize_phase2_recent_trace_for_filter(section, filter_id: String) -> St
 	return "\n".join(lines)
 
 
-func _phase2_trace_details_for_filter(section, filter_id: String) -> Array[String]:
+func _phase2_trace_details_for_filter(section, filter_id: String, full_detail: bool = false) -> Array[String]:
 	var items := _phase2_items(section)
 	var details: Array[String] = []
 	if items.is_empty():
@@ -737,7 +748,7 @@ func _phase2_trace_details_for_filter(section, filter_id: String) -> Array[Strin
 	var start_index = max(0, filtered_items.size() - 4)
 	for index in range(start_index, filtered_items.size()):
 		var entry := filtered_items[index] as Dictionary
-		details.append(_phase2_trace_detail_text(entry))
+		details.append(_phase2_trace_detail_text(entry, full_detail))
 	return details
 
 
@@ -752,8 +763,8 @@ func _summarize_phase2_trace_details(section) -> String:
 	return _phase2_trace_detail_text(entry)
 
 
-func _phase2_trace_detail_text(entry: Dictionary) -> String:
-	# Detail 文本同时服务面板展示和 Copy trace，保留关键 id 与原始 details 摘要。
+func _phase2_trace_detail_text(entry: Dictionary, full_detail: bool = false) -> String:
+	# 面板展示保留摘要；Copy trace 使用完整 details，避免人工验收时拿到省略文本。
 	var event_type := str(entry.get("eventType", entry.get("type", "trace")))
 	var trace_id := str(entry.get("traceId", entry.get("id", "")))
 	var span_id := str(entry.get("spanId", ""))
@@ -766,13 +777,16 @@ func _phase2_trace_detail_text(entry: Dictionary) -> String:
 	var detail_text := "{}"
 	if details is Dictionary:
 		detail_text = JSON.stringify(details)
+	if not full_detail:
+		summary = _truncate_text(summary, 64)
+		detail_text = _truncate_text(detail_text, 144)
 	return "tick=%s type=%s trace=%s span=%s summary=%s details=%s" % [
 		tick_text,
 		_pretty_trace_type(event_type),
 		trace_id if trace_id != "" else "-",
 		span_id if span_id != "" else "-",
-		_truncate_text(summary, 64),
-		_truncate_text(detail_text, 144),
+		summary,
+		detail_text,
 	]
 
 
