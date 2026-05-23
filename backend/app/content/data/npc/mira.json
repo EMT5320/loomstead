@@ -32,7 +32,15 @@
     "personalityModifiers": {}
   },
   "capabilityPreferences": {},
-  "heuristicSeeds": [],
+  "heuristicSeeds": [
+    {
+      "heuristic_id": "designer_prefer_chat_when_recognition_rises",
+      "trigger_pattern": {"needId": "recognition", "toolId": "social.chat_with"},
+      "adjustment": {"toolId": "social.chat_with", "weightDelta": 0.05},
+      "confidence": 0.52,
+      "narrative": "米拉想确认自己被看见时，常通过轻声交谈寻找反馈。"
+    }
+  ],
   "secrets": [
     {
       "id": "secret_mira_discount_orren",

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any, Iterable, Literal
 
 from app.runtime.schema_registry import require_schema_version
 
@@ -21,6 +21,8 @@ class HeuristicMemory:
     status: HeuristicStatus = "active"
     created_tick: int | None = None
     updated_tick: int | None = None
+    source_kind: str = "observed_event"
+    narrative: str | None = None
 
     def to_dict(self, world_tick: int | None = None) -> dict[str, Any]:
         return {
@@ -34,6 +36,8 @@ class HeuristicMemory:
             "status": self.status,
             "createdTick": self.created_tick,
             "updatedTick": self.updated_tick,
+            "sourceKind": self.source_kind,
+            "narrative": self.narrative,
         }
 
     def effective_confidence(self, world_tick: int | None = None) -> float:
@@ -98,8 +102,20 @@ class HeuristicLibrary:
             )
         return None
 
-    def add(self, *, agent_id: str, trigger_pattern: str, adjustment: dict[str, Any], confidence: float, source_event_id: str | None, world_tick: int | None = None) -> HeuristicMemory:
-        heuristic_id = f"{agent_id}:{trigger_pattern}"
+    def add(
+        self,
+        *,
+        agent_id: str,
+        trigger_pattern: str,
+        adjustment: dict[str, Any],
+        confidence: float,
+        source_event_id: str | None,
+        world_tick: int | None = None,
+        heuristic_id: str | None = None,
+        source_kind: str = "observed_event",
+        narrative: str | None = None,
+    ) -> HeuristicMemory:
+        heuristic_id = heuristic_id or f"{agent_id}:{trigger_pattern}"
         existing = self._items.get(heuristic_id)
         created_tick = existing.created_tick if existing else world_tick
         item = HeuristicMemory(
@@ -112,9 +128,34 @@ class HeuristicLibrary:
             status="active",
             created_tick=created_tick,
             updated_tick=world_tick,
+            source_kind=source_kind,
+            narrative=narrative,
         )
         self._items[heuristic_id] = item
         return item
+
+    def inject_designer_seeds(self, *, agent_id: str, seeds: Iterable[Any], world_tick: int | None = None) -> list[HeuristicMemory]:
+        """把 NPC 深度卡中的设计师启发式种子注入运行时库。"""
+        injected: list[HeuristicMemory] = []
+        for seed in seeds:
+            seed_id = self._seed_value(seed, "heuristic_id", "heuristicId", "id")
+            adjustment = self._normalize_adjustment(self._seed_value(seed, "adjustment"))
+            if not seed_id or not adjustment or adjustment.get("weightDelta") is None:
+                continue
+            trigger_pattern = self._designer_trigger_pattern(seed_id, self._seed_value(seed, "trigger_pattern", "triggerPattern"))
+            item = self.add(
+                agent_id=agent_id,
+                heuristic_id=f"{agent_id}:designer:{seed_id}",
+                trigger_pattern=trigger_pattern,
+                adjustment=adjustment,
+                confidence=self._safe_float(self._seed_value(seed, "confidence"), 0.5),
+                source_event_id=f"designer_seed:{agent_id}:{seed_id}",
+                world_tick=world_tick,
+                source_kind="designer_seed",
+                narrative=str(self._seed_value(seed, "narrative") or ""),
+            )
+            injected.append(item)
+        return injected
 
     def list(self, agent_id: str | None = None, limit: int = 20) -> list[HeuristicMemory]:
         items = [item for item in self._items.values() if agent_id is None or item.agent_id == agent_id]
@@ -138,3 +179,53 @@ class HeuristicLibrary:
             return int(world_time.get("tick"))
         except (TypeError, ValueError):
             return None
+
+    def _seed_value(self, seed: Any, *names: str) -> Any:
+        for name in names:
+            if isinstance(seed, dict) and name in seed:
+                return seed.get(name)
+            if hasattr(seed, name):
+                return getattr(seed, name)
+        return None
+
+    def _normalize_adjustment(self, raw: Any) -> dict[str, Any]:
+        if not isinstance(raw, dict):
+            return {}
+        normalized = dict(raw)
+        aliases = {"tool_id": "toolId", "need_id": "needId", "weight_delta": "weightDelta"}
+        for source_key, target_key in aliases.items():
+            if source_key in normalized and target_key not in normalized:
+                normalized[target_key] = normalized[source_key]
+        if normalized.get("toolId") is not None:
+            normalized["toolId"] = str(normalized.get("toolId"))
+        if normalized.get("needId") is not None:
+            normalized["needId"] = str(normalized.get("needId"))
+        if normalized.get("weightDelta") is not None:
+            normalized["weightDelta"] = self._safe_number(normalized.get("weightDelta"), 0.0)
+        if not normalized.get("toolId") and not normalized.get("needId"):
+            return {}
+        return {key: value for key, value in normalized.items() if key in {"toolId", "needId", "weightDelta"}}
+
+    def _designer_trigger_pattern(self, seed_id: str, trigger_pattern: Any) -> str:
+        if isinstance(trigger_pattern, dict):
+            need_id = str(trigger_pattern.get("needId") or trigger_pattern.get("need_id") or "")
+            tool_id = str(trigger_pattern.get("toolId") or trigger_pattern.get("tool_id") or "")
+            parts = [f"designer_seed:{seed_id}"]
+            if need_id:
+                parts.append(f"need={need_id}")
+            if tool_id:
+                parts.append(f"tool={tool_id}")
+            return "|".join(parts)
+        return f"designer_seed:{seed_id}"
+
+    def _safe_float(self, value: Any, fallback: float) -> float:
+        try:
+            return max(0.0, min(1.0, float(value)))
+        except (TypeError, ValueError):
+            return fallback
+
+    def _safe_number(self, value: Any, fallback: float) -> float:
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return fallback

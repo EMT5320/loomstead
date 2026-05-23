@@ -32,7 +32,15 @@
     "personalityModifiers": {}
   },
   "capabilityPreferences": {},
-  "heuristicSeeds": [],
+  "heuristicSeeds": [
+    {
+      "heuristic_id": "designer_prefer_crop_care_money_anxiety",
+      "trigger_pattern": {"needId": "money_anxiety", "toolId": "farm.water_crop"},
+      "adjustment": {"toolId": "farm.water_crop", "weightDelta": 0.06},
+      "confidence": 0.58,
+      "narrative": "布兰娜担心账目和供货时，会优先把农作照料放在前面。"
+    }
+  ],
   "secrets": [
     {
       "id": "secret_bram_anonymous_help",

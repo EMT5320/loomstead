@@ -64,6 +64,8 @@ _MIN_FALLBACK_PER_TIER = 2
 _VALID_GOSSIP_VISIBILITY = {"hidden", "town_known"}
 _VALID_TIME_WINDOWS = {"morning", "afternoon", "evening", "night"}
 _VALID_RELATIONSHIP_DIRECTIONS = {"up", "steady", "down"}
+_VALID_HEURISTIC_NEEDS = {"hunger", "energy", "sleep_pressure", "money_anxiety", "affiliation", "recognition", "goal_progress"}
+_MAX_HEURISTIC_WEIGHT_DELTA = 0.2
 
 
 class CodexValidationError(ValueError):
@@ -171,12 +173,30 @@ def _build_heuristic_seed(raw: Any, context: str) -> HeuristicSeed:
     _ensure_keys(raw, ("heuristic_id", "trigger_pattern", "adjustment", "confidence", "narrative"), context)
     heuristic_id = str(raw["heuristic_id"]).strip()
     trigger_pattern = raw["trigger_pattern"]
-    adjustment = raw["adjustment"]
+    adjustment = dict(raw["adjustment"]) if isinstance(raw["adjustment"], dict) else raw["adjustment"]
     confidence = raw["confidence"]
     narrative = str(raw["narrative"]).strip()
     _require(heuristic_id != "", f"{context}.heuristic_id 不能为空")
     _require(isinstance(trigger_pattern, dict), f"{context}.trigger_pattern 必须是对象")
     _require(isinstance(adjustment, dict), f"{context}.adjustment 必须是对象")
+    if "tool_id" in adjustment and "toolId" not in adjustment:
+        adjustment["toolId"] = adjustment["tool_id"]
+    if "need_id" in adjustment and "needId" not in adjustment:
+        adjustment["needId"] = adjustment["need_id"]
+    if "weight_delta" in adjustment and "weightDelta" not in adjustment:
+        adjustment["weightDelta"] = adjustment["weight_delta"]
+    tool_id = str(adjustment.get("toolId") or "").strip()
+    need_id = str(adjustment.get("needId") or "").strip()
+    _require(tool_id != "" or need_id != "", f"{context}.adjustment 必须包含 toolId 或 needId")
+    if need_id:
+        _require(need_id in _VALID_HEURISTIC_NEEDS, f"{context}.adjustment.needId 非法：{need_id}")
+    weight_delta = adjustment.get("weightDelta")
+    _require(isinstance(weight_delta, (int, float)), f"{context}.adjustment.weightDelta 必须是数字")
+    _require(
+        -_MAX_HEURISTIC_WEIGHT_DELTA <= float(weight_delta) <= _MAX_HEURISTIC_WEIGHT_DELTA,
+        f"{context}.adjustment.weightDelta 必须在 -{_MAX_HEURISTIC_WEIGHT_DELTA} 到 {_MAX_HEURISTIC_WEIGHT_DELTA} 之间",
+    )
+    adjustment["weightDelta"] = float(weight_delta)
     _require(isinstance(confidence, (int, float)), f"{context}.confidence 必须是数字")
     _require(0 <= float(confidence) <= 1, f"{context}.confidence 必须在 0-1 区间")
     _require(narrative != "", f"{context}.narrative 不能为空")

@@ -99,6 +99,7 @@ class AgentRuntime:
         self.subjective_memory_store = SubjectiveMemoryStore()
         self.relationship_edge_store = RelationshipEdgeStore()
         self.heuristic_library = HeuristicLibrary()
+        self._load_designer_heuristic_seeds()
         self.result_observer = ResultObserver()
         self.provider_mode_override = provider_mode
         self.provider_mode = self._resolve_runtime_provider_mode()
@@ -112,6 +113,26 @@ class AgentRuntime:
         self.director_queue = DirectorQueueManager(self.director_validator)
         self.world.setdefault("directorState", {"activatedEventSkills": [], "consumedBeatIds": []})
         self.event_store.append("system.ready", {"message": "Loomstead Python 运行时已启动。", "providerMode": self.provider_mode})
+
+    def _load_designer_heuristic_seeds(self) -> None:
+        """启动时把 NPC 深度卡的 designer heuristic seeds 注入运行时启发式库。"""
+        world_tick = int(self.world.get("clock", {}).get("tick", 0)) if isinstance(self.world.get("clock"), dict) else 0
+        injected_items: list[dict[str, Any]] = []
+        for npc_id, card in self.npc_deep_cards.items():
+            seeds = getattr(card, "heuristic_seeds", ())
+            if not seeds:
+                continue
+            for item in self.heuristic_library.inject_designer_seeds(agent_id=npc_id, seeds=seeds, world_tick=world_tick):
+                injected_items.append(item.to_dict(world_tick=world_tick))
+        if injected_items:
+            self.event_store.append(
+                "heuristic.designer_seeds_loaded",
+                {
+                    "count": len(injected_items),
+                    "agentIds": sorted({str(item.get("agentId") or "") for item in injected_items}),
+                    "heuristicIds": [str(item.get("heuristicId") or "") for item in injected_items],
+                },
+            )
 
     def reload_model_config(self) -> dict[str, Any]:
         """热重载模型配置，避免每次调整 profile 后都重启开发服务器。"""

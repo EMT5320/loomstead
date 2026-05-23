@@ -32,7 +32,15 @@
     "personalityModifiers": {}
   },
   "capabilityPreferences": {},
-  "heuristicSeeds": [],
+  "heuristicSeeds": [
+    {
+      "heuristic_id": "designer_prefer_chat_affiliation_old_friend",
+      "trigger_pattern": {"needId": "affiliation", "toolId": "social.chat_with"},
+      "adjustment": {"toolId": "social.chat_with", "weightDelta": 0.05},
+      "confidence": 0.54,
+      "narrative": "奥蕾娅察觉关系需要修补时，会先选择低压的交谈。"
+    }
+  ],
   "secrets": [
     {
       "id": "secret_orren_old_calendar",

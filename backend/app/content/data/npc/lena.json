@@ -32,7 +32,15 @@
     "personalityModifiers": {}
   },
   "capabilityPreferences": {},
-  "heuristicSeeds": [],
+  "heuristicSeeds": [
+    {
+      "heuristic_id": "designer_prefer_repair_when_recognition_rises",
+      "trigger_pattern": {"needId": "recognition", "toolId": "craft.repair_stall"},
+      "adjustment": {"toolId": "craft.repair_stall", "weightDelta": 0.05},
+      "confidence": 0.53,
+      "narrative": "莉娜想证明自己可靠时，会倾向先处理看得见的修补任务。"
+    }
+  ],
   "secrets": [
     {
       "id": "secret_lena_own_health",

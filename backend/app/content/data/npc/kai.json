@@ -32,7 +32,15 @@
     "personalityModifiers": {}
   },
   "capabilityPreferences": {},
-  "heuristicSeeds": [],
+  "heuristicSeeds": [
+    {
+      "heuristic_id": "designer_prefer_social_chat_affiliation",
+      "trigger_pattern": {"needId": "affiliation", "toolId": "social.chat_with"},
+      "adjustment": {"toolId": "social.chat_with", "weightDelta": 0.07},
+      "confidence": 0.56,
+      "narrative": "节日前压力升高时，凯娅会先用聊天稳住现场气氛。"
+    }
+  ],
   "secrets": [
     {
       "id": "secret_kai_debt",

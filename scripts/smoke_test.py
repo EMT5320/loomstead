@@ -494,6 +494,65 @@ def assert_motivation_profile_weight_contract() -> None:
         raise RuntimeError("NeedAccumulator 应读取 motivationProfile.needs.energy.weight")
 
 
+def assert_designer_heuristic_seed_injection() -> dict:
+    """确认 NPC 深度卡 designer heuristicSeeds 会进入 HeuristicLibrary 并参与仲裁。"""
+    heuristic_app = create_town_app(provider_mode="rule")
+    runtime = heuristic_app.runtime
+    debug = heuristic_app.debug_phase2({"agentId": "kai"})
+    items = debug.get("heuristics", {}).get("items", [])
+    designer_items = [
+        item
+        for item in items
+        if isinstance(item, dict) and item.get("sourceKind") == "designer_seed"
+    ]
+    if not designer_items:
+        raise RuntimeError("HeuristicLibrary 应注入 NPC 深度卡 designer heuristicSeeds")
+    first = designer_items[0]
+    if first.get("agentId") != "kai" or first.get("adjustment", {}).get("toolId") != "social.chat_with":
+        raise RuntimeError("designer heuristic seed 应保留 agentId 与 toolId")
+    if not first.get("narrative") or not first.get("sourceEventId", "").startswith("designer_seed:kai:"):
+        raise RuntimeError("designer heuristic seed 应保留 narrative 和稳定 sourceEventId")
+
+    world = runtime.world
+    agent = world["agents"]["kai"]
+    agent["status"].update({"energy": 100, "money": 100, "social": 0})
+    agent["todayGoals"] = []
+    agent["locationId"] = "plaza"
+    agent["anchorId"] = "plaza_fountain"
+    for presence in world.get("npcPresence", []):
+        if isinstance(presence, dict) and presence.get("agentId") == "kai":
+            presence["locationId"] = "plaza"
+            presence["anchorId"] = "plaza_fountain"
+
+    decision = runtime.motivation_engine.evaluate_npc(
+        world,
+        "kai",
+        delta_minutes=0.0,
+        heuristics=runtime._phase2_heuristic_recall("kai"),
+    )
+    if decision.get("primaryNeed", {}).get("needId") != "affiliation":
+        raise RuntimeError("designer heuristic 仲裁用例应锁定 affiliation 需求")
+    chat_score = next(
+        (
+            item
+            for item in decision.get("decision", {}).get("candidateScores", [])
+            if isinstance(item, dict) and item.get("toolId") == "social.chat_with"
+        ),
+        None,
+    )
+    if not isinstance(chat_score, dict) or int(chat_score.get("heuristicRefCount") or 0) < 1:
+        raise RuntimeError("social.chat_with 应引用 designer heuristic seed")
+    if float(chat_score.get("heuristicBonus") or 0.0) <= 0:
+        raise RuntimeError("designer heuristic seed 应给目标工具提供正向 heuristicBonus")
+    if decision.get("decision", {}).get("selectedToolId") != "social.chat_with":
+        raise RuntimeError("designer heuristic seed 应能影响同需求候选排序")
+    return {
+        "designerSeedCount": len(designer_items),
+        "selectedTool": decision["decision"]["selectedToolId"],
+        "heuristicBonus": chat_score.get("heuristicBonus"),
+    }
+
+
 def assert_phase2_decision_budget_routing() -> dict:
     """确认 LLM eligible 工具会经过 NPC / feature / tool 预算路由，并在耗尽时降级。"""
     versions = schema_version_map()
@@ -1916,6 +1975,7 @@ if not memory_search["items"]:
 http_debug_summary = assert_http_debug_endpoints(app)
 fallback_summary = assert_provider_fallback_debug()
 assert_motivation_profile_weight_contract()
+designer_heuristic_summary = assert_designer_heuristic_seed_injection()
 schema_subset_summary = assert_tool_contract_json_schema_subset()
 phase2_budget_summary = assert_phase2_decision_budget_routing()
 phase2_observer_summary = assert_phase2_observer_visibility_scope()
@@ -1945,6 +2005,7 @@ print(
         "memoryHits": http_debug_summary["memoryHits"],
         "influenceEvents": http_debug_summary["influenceEvents"],
         "fallbackItems": fallback_summary["fallbackItems"],
+        "designerHeuristics": designer_heuristic_summary,
         "schemaSubset": schema_subset_summary,
         "phase2Schemas": phase2_schema_summary,
         "phase2Budget": phase2_budget_summary,

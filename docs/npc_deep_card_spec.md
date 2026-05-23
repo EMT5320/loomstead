@@ -130,7 +130,7 @@ backend/app/content/
 
 ### 5.3.1 `motivationProfile` / `capabilityPreferences` / `heuristicSeeds`
 
-Phase 2 启动时新增三项字段。当前 6 张卡先填 schema 占位，实际动机权重、工具偏好和设计师启发式种子在 Phase 3 内容期填充。
+Phase 2 启动时新增三项字段。当前 6 张卡已保留 `motivationProfile` / `capabilityPreferences` 占位，并填入首批 `heuristicSeeds` 作为 designer seed；Runtime 会在启动时把这些 seed 注入 `HeuristicLibrary`，经验提取出的启发式仍可在后续 tick 中覆盖或竞争。
 
 ```jsonc
 "motivationProfile": {
@@ -138,7 +138,15 @@ Phase 2 启动时新增三项字段。当前 6 张卡先填 schema 占位，实�
   "personalityModifiers": {}
 },
 "capabilityPreferences": {},
-"heuristicSeeds": []
+"heuristicSeeds": [
+  {
+    "heuristic_id": "designer_prefer_social_chat_affiliation",
+    "trigger_pattern": {"needId": "affiliation", "toolId": "social.chat_with"},
+    "adjustment": {"toolId": "social.chat_with", "weightDelta": 0.07},
+    "confidence": 0.56,
+    "narrative": "节日前压力升高时，凯娅会先用聊天稳住现场气氛。"
+  }
+]
 ```
 
 完整形态见 `agent_loop_architecture.md` §11：
@@ -146,9 +154,9 @@ Phase 2 启动时新增三项字段。当前 6 张卡先填 schema 占位，实�
 - `motivationProfile.needs`：需求权重、衰减速率和阈值。
 - `motivationProfile.personalityModifiers`：外向性、风险偏好、尽责性等人格修正。
 - `capabilityPreferences`：按 tool id 记录 NPC 对工具的偏好加权。
-- `heuristicSeeds`：设计师注入的可被经验覆盖的启发式种子。
+- `heuristicSeeds`：设计师注入的可被经验覆盖的启发式种子；`adjustment` 必须包含 `toolId` 或 `needId`，且 `weightDelta` 保持在 `-0.2..0.2`。
 
-Phase 2 只要求字段存在且结构合法，不要求每位 NPC 有实际数据。
+Phase 2 继续允许 `motivationProfile` / `capabilityPreferences` 为空；`heuristicSeeds` 建议每位核心 NPC 至少 1 条，便于 Debug 和 Eval 观察 designer prior 与经验启发式的差异。
 
 ### 5.4 `secrets`
 
@@ -355,7 +363,7 @@ Phase 2 只要求字段存在且结构合法，不要求每位 NPC 有实际数�
 - `giftReactions` 四档齐全。
 - `assetRefs` 所有 id 命中 `asset_manifest.json`（缺失给 warning，不阻塞）。
 - `monologueSeeds` 至少 8 条。
-- `motivationProfile` / `capabilityPreferences` / `heuristicSeeds` 必须存在；Phase 2 允许空占位。
+- `motivationProfile` / `capabilityPreferences` / `heuristicSeeds` 必须存在；`heuristicSeeds.adjustment.weightDelta` 必须保持在 `-0.2..0.2`。
 - `lifeActionSeeds` 至少 3 条并覆盖 morning/afternoon/evening，`relatedNpcIds` 仅引用其他合法 NPC。
 - `dailyRumorBeats` 至少 2 条且覆盖 hidden/town_known，`spreadTargets` 仅引用其他合法 NPC。
 - `relationshipBeatSeeds` 至少 2 条且覆盖 up 与 steady/down，`stageHint` 命中本卡关系阶段。

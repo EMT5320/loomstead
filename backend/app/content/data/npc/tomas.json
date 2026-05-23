@@ -32,7 +32,15 @@
     "personalityModifiers": {}
   },
   "capabilityPreferences": {},
-  "heuristicSeeds": [],
+  "heuristicSeeds": [
+    {
+      "heuristic_id": "designer_prefer_open_shop_money_anxiety",
+      "trigger_pattern": {"needId": "money_anxiety", "toolId": "shop.open_shop"},
+      "adjustment": {"toolId": "shop.open_shop", "weightDelta": 0.06},
+      "confidence": 0.55,
+      "narrative": "托马斯感到收入压力时，会先把摊位秩序和营业节奏稳定下来。"
+    }
+  ],
   "secrets": [
     {
       "id": "secret_tomas_silent_repairs",
