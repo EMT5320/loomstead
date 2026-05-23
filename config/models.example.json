@@ -6,7 +6,7 @@
       "provider": "cloud",
       "baseUrl": "https://api.deepseek.com",
       "apiKeyEnv": "DEEPSEEK_API_KEY",
-      "model": "deepseek-chat",
+      "model": "deepseek-v4-flash",
       "temperature": 0.8,
       "maxTokens": 900,
       "timeoutSeconds": 60,
@@ -16,15 +16,18 @@
         "inputCacheMissPerMillionTokens": 0.14,
         "outputPerMillionTokens": 0.28,
         "source": "deepseek_official_2026_05_16"
+      },
+      "responseFormat": {
+        "type": "json_object"
       }
     },
     "cheap_daily": {
       "provider": "cloud",
       "baseUrl": "https://api.deepseek.com",
       "apiKeyEnv": "DEEPSEEK_API_KEY",
-      "model": "deepseek-chat",
+      "model": "deepseek-v4-flash",
       "temperature": 0.65,
-      "maxTokens": 600,
+      "maxTokens": 1200,
       "timeoutSeconds": 45,
       "pricing": {
         "currency": "USD",
@@ -32,13 +35,16 @@
         "inputCacheMissPerMillionTokens": 0.14,
         "outputPerMillionTokens": 0.28,
         "source": "deepseek_official_2026_05_16"
+      },
+      "responseFormat": {
+        "type": "json_object"
       }
     },
     "dialogue_story": {
       "provider": "cloud",
       "baseUrl": "https://api.deepseek.com",
       "apiKeyEnv": "DEEPSEEK_API_KEY",
-      "model": "deepseek-chat",
+      "model": "deepseek-v4-flash",
       "temperature": 1.0,
       "maxTokens": 1100,
       "timeoutSeconds": 60,
@@ -57,7 +63,7 @@
       "provider": "cloud",
       "baseUrl": "https://api.deepseek.com",
       "apiKeyEnv": "DEEPSEEK_API_KEY",
-      "model": "deepseek-chat",
+      "model": "deepseek-v4-flash",
       "temperature": 0.85,
       "maxTokens": 900,
       "timeoutSeconds": 45,
@@ -76,7 +82,7 @@
       "provider": "cloud",
       "baseUrl": "https://api.deepseek.com",
       "apiKeyEnv": "DEEPSEEK_API_KEY",
-      "model": "deepseek-chat",
+      "model": "deepseek-v4-flash",
       "temperature": 0.75,
       "maxTokens": 1200,
       "timeoutSeconds": 60,

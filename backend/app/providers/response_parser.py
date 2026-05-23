@@ -126,10 +126,24 @@ def _try_json_loads(text: str) -> Any:
 
 
 def _normalize_feature_fields(payload: dict[str, Any], feature: str) -> dict[str, Any]:
+    payload = _unwrap_feature_payload(payload)
     if feature == FEATURE_DIALOGUE:
+        if "memory" in payload and "memory_to_save" not in payload:
+            payload = dict(payload)
+            payload["memory_to_save"] = payload.get("memory")
         if "memoryToSave" in payload and "memory_to_save" not in payload:
             payload = dict(payload)
             payload["memory_to_save"] = payload.get("memoryToSave")
+        if "speech" not in payload:
+            speech = _first_speech_from_lines(payload.get("dialogue")) or _first_speech_from_lines(payload.get("lines"))
+            if speech:
+                payload = dict(payload)
+                payload["speech"] = speech
+        if payload.get("speech") and "memory_to_save" not in payload:
+            # 云端模型有时会返回 event_reaction 形态的 dialogue/lines；这里保留结构化结果，
+            # 并用已解析台词生成一条可保存的主观记忆，避免真实 smoke 被误判为自然语言兜底。
+            payload = dict(payload)
+            payload["memory_to_save"] = f"我和玩家聊到：{str(payload.get('speech'))[:80]}"
     if feature == FEATURE_EVENT_REACTION:
         if "lines" in payload and "dialogue" not in payload:
             payload = dict(payload)
@@ -142,6 +156,28 @@ def _normalize_feature_fields(payload: dict[str, Any], feature: str) -> dict[str
             payload = dict(payload)
             payload["reflections"] = [{"agentId": payload.get("agentId") or "unknown", "text": payload.get("reflection")}]
     return payload
+
+
+def _unwrap_feature_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    """兼容模型把结构化结果包在 response/result/output 下的情况。"""
+    for key in ("response", "result", "output"):
+        nested = payload.get(key)
+        if isinstance(nested, dict):
+            return nested
+    return payload
+
+
+def _first_speech_from_lines(value: Any) -> str:
+    """从 dialogue/lines 风格数组里提取第一条可展示台词。"""
+    if not isinstance(value, list):
+        return ""
+    for item in value:
+        if not isinstance(item, dict):
+            continue
+        speech = item.get("speech") or item.get("text") or item.get("line")
+        if speech:
+            return str(speech)
+    return ""
 
 
 def _is_feature_payload_valid(payload: dict[str, Any], feature: str) -> bool:

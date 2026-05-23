@@ -9,7 +9,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 
 # Loomstead 新对话入口
 
-> 更新时间：2026-05-23（Phase 2 Eval/domain export + multi-file checkout evidence）
+> 更新时间：2026-05-23（真实 LLM smoke 配置清理 + Phase 2 Eval/domain export）
 > 用途：下一轮新对话、研究阶段开发和必要子代理任务的第一入口。
 
 ## 1. 当前入口
@@ -66,7 +66,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - 已有按 NPC / feature 选择 profile 的配置路径：`config/models.example.json` 为提交模板且默认 rule fallback，`config/models.json` 和 `config/models.local.json` 为本机忽略 overlay；`model:check` 会按当前环境 / overlay 输出 provider 状态，本机 cloud 配置需以 `npm.cmd run llm:smoke` 单独验收。
 - Web 观察台已有 LLM 配置卡片，可查看 profile、路由、key 状态，支持热重载与一次对话 smoke。
 - Debug 记录已包含 `providerMode`、`profileName`、`apiKeyConfigured`、`messages`、`rawText`、`parsed`、`executed`、`usage`、`latency`、`fallbackReason` 和 `providerUsageRecord`；`GET /api/debug.phase2` 的 `decisionBudget.providerActuals` 会聚合真实 provider tokens / latency / cost。
-- 2026-05-17 曾用本机 `config/models.json` 跑通真实 `CloudApiProvider` smoke；2026-05-21 `npm.cmd run check` 曾跑通真实 cloud smoke；2026-05-22 起常规 `check` / `smoke` 默认跳过真实 LLM，真实链路改由 `npm.cmd run llm:smoke` 显式验收；2026-05-22 本轮 `npm.cmd run llm:smoke` 已通过，dialogue / event_reaction / night_reflection 均为 `deepseek-v4-flash` 且 `fallbackReason=None`。
+- 2026-05-17 曾用本机 `config/models.json` 跑通真实 `CloudApiProvider` smoke；2026-05-21 `npm.cmd run check` 曾跑通真实 cloud smoke；2026-05-22 起常规 `check` / `smoke` 默认跳过真实 LLM，真实链路改由 `npm.cmd run llm:smoke` 显式验收；2026-05-23 本轮已清理本机 LLM overlay，`model:check` warnings=0；同轮 `npm.cmd run llm:smoke` 已通过，dialogue / event_reaction / night_reflection 均为 `deepseek-v4-flash` 且 `fallbackReason=None`。
 
 ### Godot 客户端
 

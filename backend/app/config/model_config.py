@@ -15,7 +15,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
             "provider": "cloud",
             "baseUrl": "https://api.deepseek.com",
             "apiKeyEnv": "DEEPSEEK_API_KEY",
-            "model": "deepseek-chat",
+            "model": "deepseek-v4-flash",
             "temperature": 0.8,
             "maxTokens": 900,
             "timeoutSeconds": 60,
@@ -209,7 +209,7 @@ class ModelConfigStore:
         """兼容早期环境变量，方便主人临时覆盖模型。"""
         if profile.get("provider") == "cloud":
             profile["baseUrl"] = os.getenv("AGENT_TOWN_BASE_URL", profile.get("baseUrl", "https://api.deepseek.com"))
-            profile["model"] = os.getenv("AGENT_TOWN_MODEL", profile.get("model", "deepseek-chat"))
+            profile["model"] = os.getenv("AGENT_TOWN_MODEL", profile.get("model", "deepseek-v4-flash"))
             if os.getenv("AGENT_TOWN_TEMPERATURE"):
                 profile["temperature"] = float(os.getenv("AGENT_TOWN_TEMPERATURE", "0.8"))
         return profile

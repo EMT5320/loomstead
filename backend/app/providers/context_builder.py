@@ -126,6 +126,8 @@ def build_player_dialogue_messages(context: dict[str, Any]) -> list[dict[str, st
         feature=FEATURE_DIALOGUE,
         required_fields=("speech", "memory_to_save"),
         extra_rules=[
+            '输出形态固定为单层 JSON 对象：{"speech":"...","memory_to_save":"..."}。',
+            "不要返回 dialogue 数组、lines 数组、Markdown 或嵌套 response/result/output。",
             "speech 需像 NPC 当下直接说的话，长度控制在 1-3 句。",
             "memory_to_save 需是 NPC 第一人称主观记忆，长度控制在 1 句。",
             "如果使用了 memoryEvidence，请额外返回 memory_evidence_used，便于客户端展示 NPC 记忆影响。",
