@@ -92,6 +92,8 @@ Stability suite 导出结构：
 
 `npm.cmd run eval:archive:drift` 会写入 `.run/eval-runs/drift_report.json`，比较每个 suite 最新两次 run 的 metric、baseline、scenario、schema 和 artifact 数量变化。
 
+`npm.cmd run eval:archive:promote -- <runDirName>` 会把已校验 run 复制到 `.run/eval-promoted/`，并写入 `phase2.eval_promotion.v1` 记录；若导出时 `git.dirty=true` 或 drift 缺少解释，promotion 状态会保持 `needs_manual_review`。
+
 ## 3. Baseline 定义
 
 ### 3.1 Direct State Setter

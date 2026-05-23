@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import shutil
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -17,8 +18,10 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RUNS_DIR = ROOT / ".run" / "eval-runs"
+DEFAULT_PROMOTE_DIR = ROOT / ".run" / "eval-promoted"
 INDEX_VERSION = "phase2.eval_run_index.v1"
 DRIFT_REPORT_VERSION = "phase2.eval_run_drift.v1"
+PROMOTION_RECORD_VERSION = "phase2.eval_promotion.v1"
 MANIFEST_VERSION = "phase2.eval_manifest.v1"
 REQUIRED_MANIFEST_KEYS = (
     "manifestVersion",
@@ -42,6 +45,10 @@ def main() -> None:
     parser.add_argument("--runs-dir", type=Path, default=DEFAULT_RUNS_DIR, help="Eval run 根目录。")
     parser.add_argument("--index-path", type=Path, default=None, help="index 输出路径，默认写到 runs-dir/index.json。")
     parser.add_argument("--drift-path", type=Path, default=None, help="drift report 输出路径，默认写到 runs-dir/drift_report.json。")
+    parser.add_argument("--promote", type=str, default=None, help="把指定 runDirName 或 run 路径复制到长期候选归档。")
+    parser.add_argument("--promote-dir", type=Path, default=DEFAULT_PROMOTE_DIR, help="promote 输出根目录。")
+    parser.add_argument("--promotion-id", type=str, default=None, help="promote 目标目录名，默认沿用 runDirName。")
+    parser.add_argument("--promotion-note", type=str, default="", help="写入 promotion record 的人工备注。")
     parser.add_argument("--write-index", action="store_true", help="写入本地 index.json。")
     parser.add_argument("--write-drift-report", action="store_true", help="写入跨 run 漂移报告。")
     parser.add_argument("--allow-empty", action="store_true", help="允许 runs-dir 中没有 manifest。")
@@ -51,6 +58,7 @@ def main() -> None:
     runs_dir = args.runs_dir if args.runs_dir.is_absolute() else ROOT / args.runs_dir
     index_path = args.index_path or runs_dir / "index.json"
     drift_path = args.drift_path or runs_dir / "drift_report.json"
+    promote_dir = args.promote_dir if args.promote_dir.is_absolute() else ROOT / args.promote_dir
     index = build_eval_run_index(
         runs_dir,
         keep_latest_per_suite=max(1, int(args.keep_latest_per_suite)),
@@ -66,6 +74,15 @@ def main() -> None:
         drift_path.parent.mkdir(parents=True, exist_ok=True)
         drift_path.write_text(json.dumps(index["driftReport"], ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         index["driftPath"] = _repo_relative(drift_path)
+    if args.promote:
+        promotion = promote_eval_run(
+            index,
+            args.promote,
+            promote_dir=promote_dir,
+            promotion_id=args.promotion_id,
+            promotion_note=args.promotion_note,
+        )
+        index["promotion"] = promotion
 
     print(json.dumps(_compact_output(index), ensure_ascii=False, indent=2))
     if index["errors"]:
@@ -164,6 +181,161 @@ def _read_manifest_record(manifest_path: Path) -> tuple[dict[str, Any], list[str
         errors,
         warnings,
     )
+
+
+def promote_eval_run(
+    index: dict[str, Any],
+    run_ref: str,
+    *,
+    promote_dir: Path,
+    promotion_id: str | None,
+    promotion_note: str,
+) -> dict[str, Any]:
+    """复制一个已校验 run 到 promote 目录，并写入晋级记录。"""
+    if index["errors"]:
+        raise SystemExit("存在 archive 校验错误，禁止 promote。")
+    record = _find_run_record(index["runs"], run_ref)
+    if record is None:
+        raise SystemExit(f"未找到可 promote 的 run：{run_ref}")
+    if not bool(record.get("valid")):
+        raise SystemExit(f"run 校验未通过，禁止 promote：{run_ref}")
+
+    source_dir = ROOT / str(record["runDir"])
+    if not source_dir.exists():
+        raise SystemExit(f"run 目录不存在：{source_dir}")
+    target_name = promotion_id or source_dir.name
+    if not re_match_safe_name(target_name):
+        raise SystemExit(f"promotion-id 只能包含字母、数字、点、下划线和短横线：{target_name}")
+    target_dir = promote_dir / target_name
+    if target_dir.exists():
+        raise SystemExit(f"promote 目标已存在，避免覆盖：{target_dir}")
+
+    promote_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(source_dir, target_dir)
+    promotion_record = _build_promotion_record(index, record, source_dir=source_dir, target_dir=target_dir, note=promotion_note)
+    (target_dir / "promotion_record.json").write_text(
+        json.dumps(promotion_record, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    (target_dir / "PROMOTION.md").write_text(_promotion_markdown(promotion_record), encoding="utf-8")
+    return {
+        "promoted": True,
+        "sourceRunDir": record["runDir"],
+        "promotedRunDir": _repo_relative(target_dir),
+        "promotionStatus": promotion_record["promotionStatus"],
+        "manualReviewItems": promotion_record["manualReviewItems"],
+    }
+
+
+def _find_run_record(run_records: list[dict[str, Any]], run_ref: str) -> dict[str, Any] | None:
+    ref_path = Path(run_ref)
+    ref_name = ref_path.name if ref_path.name else run_ref
+    for record in run_records:
+        run_dir = str(record.get("runDir") or "")
+        if run_ref == run_dir or ref_name == Path(run_dir).name:
+            return record
+    return None
+
+
+def _build_promotion_record(
+    index: dict[str, Any],
+    record: dict[str, Any],
+    *,
+    source_dir: Path,
+    target_dir: Path,
+    note: str,
+) -> dict[str, Any]:
+    manual_items: list[str] = []
+    git = record.get("git", {}) if isinstance(record.get("git"), dict) else {}
+    if bool(git.get("dirty")):
+        manual_items.append("manifest git.dirty=true；需要说明导出时工作区改动原因，或重新从干净 commit 导出。")
+    if not bool(record.get("ok")):
+        manual_items.append("manifest ok=false；不能作为 paper-grade 证据。")
+
+    suite = str(record.get("suite") or "unknown")
+    drift_for_suite = _drift_comparison_for_suite(index.get("driftReport", {}), suite)
+    if drift_for_suite is None:
+        manual_items.append("当前 suite 缺少上一 run 对比；drift 需要人工解释或补充历史 run。")
+    elif bool(drift_for_suite.get("hasDrift")):
+        manual_items.append("drift report 发现 metric / baseline / scenario / schema / artifact 漂移，需要人工解释。")
+
+    promotion_status = "paper_grade_candidate" if not manual_items else "needs_manual_review"
+    return {
+        "promotionVersion": PROMOTION_RECORD_VERSION,
+        "promotedAt": _utc_now(),
+        "promotionStatus": promotion_status,
+        "sourceRunDir": _repo_relative(source_dir),
+        "promotedRunDir": _repo_relative(target_dir),
+        "promotionNote": note,
+        "suite": suite,
+        "baseline": record.get("baseline"),
+        "ok": bool(record.get("ok")),
+        "manifestVersion": record.get("manifestVersion"),
+        "manifestSha256": record.get("manifestSha256"),
+        "git": record.get("git"),
+        "schemaRegistryVersion": record.get("schemaRegistryVersion"),
+        "metricIds": record.get("metricIds", []),
+        "baselines": record.get("baselines", []),
+        "scenarioIds": record.get("scenarioIds", []),
+        "artifactCount": record.get("artifactCount"),
+        "archiveChecks": {
+            "archiveIndexVersion": index.get("indexVersion"),
+            "archiveCheckPassed": not index.get("errors"),
+            "manifestValid": bool(record.get("valid")),
+            "artifactCount": record.get("artifactCount"),
+        },
+        "driftComparison": drift_for_suite,
+        "manualReviewItems": manual_items,
+        "paperGradeChecklist": {
+            "okTrue": bool(record.get("ok")),
+            "archiveCheckPassed": not index.get("errors"),
+            "gitCleanAtExport": not bool(git.get("dirty")),
+            "schemaRegistryV1": record.get("schemaRegistryVersion") == "schema_registry.v1",
+            "driftExplained": drift_for_suite is not None and not bool(drift_for_suite.get("hasDrift")),
+            "manualWindowVerified": False,
+            "externalModelVerifiedIfNeeded": False,
+        },
+    }
+
+
+def _drift_comparison_for_suite(drift_report: Any, suite: str) -> dict[str, Any] | None:
+    if not isinstance(drift_report, dict):
+        return None
+    comparisons = drift_report.get("comparisons", [])
+    if not isinstance(comparisons, list):
+        return None
+    for item in comparisons:
+        if isinstance(item, dict) and item.get("suite") == suite:
+            return item
+    return None
+
+
+def _promotion_markdown(record: dict[str, Any]) -> str:
+    manual_items = record.get("manualReviewItems", [])
+    if manual_items:
+        manual_text = "\n".join(f"- {item}" for item in manual_items)
+    else:
+        manual_text = "- 暂无自动发现的人工复核项。"
+    checklist = record.get("paperGradeChecklist", {})
+    checklist_text = "\n".join(f"- {key}: {value}" for key, value in checklist.items())
+    return (
+        "# Eval Run Promotion\n\n"
+        f"- status: `{record.get('promotionStatus')}`\n"
+        f"- promotedAt: `{record.get('promotedAt')}`\n"
+        f"- sourceRunDir: `{record.get('sourceRunDir')}`\n"
+        f"- suite: `{record.get('suite')}`\n"
+        f"- baseline: `{record.get('baseline')}`\n"
+        f"- manifestSha256: `{record.get('manifestSha256')}`\n"
+        f"- note: {record.get('promotionNote') or '-'}\n\n"
+        "## Manual review items\n\n"
+        f"{manual_text}\n\n"
+        "## Paper-grade checklist\n\n"
+        f"{checklist_text}\n"
+    )
+
+
+def re_match_safe_name(value: str) -> bool:
+    return bool(value) and all(ch.isalnum() or ch in {"-", "_", "."} for ch in value)
 
 
 def _validate_artifact(run_dir: Path, artifact: Any) -> tuple[dict[str, Any], list[str], list[str]]:
@@ -361,6 +533,8 @@ def _compact_output(index: dict[str, Any]) -> dict[str, Any]:
     if index.get("driftPath"):
         output["driftPath"] = index["driftPath"]
         output["driftSummary"] = index["driftReport"]["summary"]
+    if index.get("promotion"):
+        output["promotion"] = index["promotion"]
     return output
 
 
