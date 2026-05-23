@@ -24,6 +24,7 @@ scope: eval export manifest indexing, archive validation, and local retention po
 ```powershell
 npm.cmd run eval:process:export
 npm.cmd run eval:stability:export
+npm.cmd run eval:stability:long:export
 npm.cmd run eval:domain:export
 npm.cmd run eval:archive:check
 npm.cmd run eval:archive:index

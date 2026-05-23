@@ -68,16 +68,16 @@ def _compact_domain_output(result: dict) -> dict:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="?? Loomstead Phase 2 Eval?")
+    parser = argparse.ArgumentParser(description="运行 Loomstead Phase 2 Eval。")
     parser.add_argument(
         "--suite",
         choices=("rule", "process", "stability", "domain"),
         default="rule",
-        help="?? L1 rule suite ? Process Fidelity suite ? 24h stability suite ? cross-domain adapter suite?",
+        help="选择 L1 rule、Process Fidelity、stability 或 cross-domain adapter suite。",
     )
-    parser.add_argument("--full", action="store_true", help="???? scenario ???")
-    parser.add_argument("--export-dir", type=Path, default=None, help="? Process Fidelity / stability / domain ????????????")
-    parser.add_argument("--hours", type=int, default=24, help="stability suite ?????????")
+    parser.add_argument("--full", action="store_true", help="输出完整 scenario 明细。")
+    parser.add_argument("--export-dir", type=Path, default=None, help="导出 Process Fidelity / stability / domain 数据集。")
+    parser.add_argument("--hours", type=int, default=24, help="stability suite 推进的游戏小时数。")
     args = parser.parse_args()
 
     if args.suite == "process":
@@ -91,7 +91,7 @@ if __name__ == "__main__":
         output = result if args.full else _compact_domain_output(result)
     else:
         result = run_rule_scenarios()
-        # ??????????? npm.cmd run check ??? scenario ?????????????? --full?
+        # 默认保持简短输出，避免 npm.cmd run check 被 scenario 明细刷屏；需要明细时用 --full。
         output = result if args.full else _compact_rule_output(result)
 
     print(json.dumps(output, ensure_ascii=False, indent=2))

@@ -117,8 +117,10 @@ def run_stability_scenarios(
     hours: int = DEFAULT_STABILITY_HOURS,
     export_dir: str | Path | None = None,
 ) -> dict[str, Any]:
-    """连续推进规则版 AgentRuntime，用 24 游戏小时验证 tick 主路径稳定性。"""
+    """连续推进规则版 AgentRuntime，用可配置游戏小时数验证 tick 主路径稳定性。"""
     hours = max(1, int(hours))
+    baseline = _stability_baseline(hours)
+    suite = f"stability_{hours}h"
     runtime = AgentRuntime(provider_mode="rule")
     initial_clock = dict(runtime.world.get("clock", {}))
     tick_items: list[dict[str, Any]] = []
@@ -196,20 +198,20 @@ def run_stability_scenarios(
         "multi_agent_participation": len(active_agent_ids) >= 4,
     }
     metrics = [
-        metric_summary("stability_tick_success_rate", tick_success_values, baseline=BASELINE_STABILITY_24H),
-        metric_summary("trace_schema_coverage", [trace_schema_coverage], baseline=BASELINE_STABILITY_24H),
-        metric_summary("memory_observation_per_tool_result", [memory_observation_ratio], baseline=BASELINE_STABILITY_24H),
-        metric_summary("tool_failure_rate", [_safe_ratio(failed_tool_count, tool_result_count)], baseline=BASELINE_STABILITY_24H),
-        metric_summary("tool_interruption_rate", [_safe_ratio(interrupted_tool_count, tool_result_count)], baseline=BASELINE_STABILITY_24H),
-        metric_summary("active_agent_count", [float(len(active_agent_ids))], baseline=BASELINE_STABILITY_24H),
-        metric_summary("relationship_edge_count", [float(relationship_edge_count)], baseline=BASELINE_STABILITY_24H),
-        metric_summary("heuristic_count", [float(heuristic_count)], baseline=BASELINE_STABILITY_24H),
-        metric_summary("heuristic_decision_ref_rate", [heuristic_decision_ratio], baseline=BASELINE_STABILITY_24H),
+        metric_summary("stability_tick_success_rate", tick_success_values, baseline=baseline),
+        metric_summary("trace_schema_coverage", [trace_schema_coverage], baseline=baseline),
+        metric_summary("memory_observation_per_tool_result", [memory_observation_ratio], baseline=baseline),
+        metric_summary("tool_failure_rate", [_safe_ratio(failed_tool_count, tool_result_count)], baseline=baseline),
+        metric_summary("tool_interruption_rate", [_safe_ratio(interrupted_tool_count, tool_result_count)], baseline=baseline),
+        metric_summary("active_agent_count", [float(len(active_agent_ids))], baseline=baseline),
+        metric_summary("relationship_edge_count", [float(relationship_edge_count)], baseline=baseline),
+        metric_summary("heuristic_count", [float(heuristic_count)], baseline=baseline),
+        metric_summary("heuristic_decision_ref_rate", [heuristic_decision_ratio], baseline=baseline),
     ]
     result = {
         "ok": all(checks.values()),
-        "suite": "stability_24h",
-        "baseline": BASELINE_STABILITY_24H,
+        "suite": suite,
+        "baseline": baseline,
         "hours": hours,
         "ticksCompleted": int(sum(tick_success_values)),
         "checks": checks,
@@ -235,6 +237,12 @@ def run_stability_scenarios(
     if export_dir is not None:
         result["export"] = _export_stability_eval(result, Path(export_dir))
     return result
+
+
+def _stability_baseline(hours: int) -> str:
+    if int(hours) == DEFAULT_STABILITY_HOURS:
+        return BASELINE_STABILITY_24H
+    return f"rule_{int(hours)}h_stability"
 
 
 def apply_scenario_setup(world: dict[str, Any], scenario: EvalScenario) -> None:
