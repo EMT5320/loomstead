@@ -871,18 +871,18 @@
     }
   },
   "process_fidelity": {
-    "runDirName": "run_2026-05-23T12-25-11Z",
+    "runDirName": "run_2026-05-24T08-32-57Z",
     "manifest": {
       "manifestVersion": "phase2.eval_manifest.v1",
       "exportKind": "process_fidelity_dataset",
-      "createdAt": "2026-05-23T12:25:11+00:00",
+      "createdAt": "2026-05-24T08:32:57+00:00",
       "suite": "process_fidelity",
       "baseline": "full_motivational_delegation",
       "ok": true,
-      "runDirName": "run_2026-05-23T12-25-11Z",
+      "runDirName": "run_2026-05-24T08-32-57Z",
       "git": {
-        "commit": "95bd7e369deeb24e5577c0f2444789f54e1f6ed1",
-        "shortCommit": "95bd7e3",
+        "commit": "adf2ee4642f1186367fba923afeea1f1f62712f8",
+        "shortCommit": "adf2ee4",
         "branch": "main",
         "dirty": false,
         "statusShort": []
@@ -1082,31 +1082,50 @@
             "notes": []
           },
           {
+            "id": "world_entities",
+            "version": "world_entities.v1",
+            "owner": "world",
+            "status": "active",
+            "description": "Typed WorldEntity snapshot for FarmPlot, Item, Inventory, Shop, Building, Time, and Weather.",
+            "producer": "app.world.entities.schema",
+            "debugSurface": "phase2.worldEntities",
+            "requiredFields": [
+              "count",
+              "byKind",
+              "items"
+            ],
+            "notes": []
+          },
+          {
             "id": "subjective_memory_store",
-            "version": "subjective_memory_store.v0",
+            "version": "subjective_memory_store.v1",
             "owner": "memory",
-            "status": "legacy_compat",
-            "description": "Subjective memory debug store snapshot.",
+            "status": "active",
+            "description": "Subjective memory debug store snapshot with decay and archive metadata.",
             "producer": "app.memory.subjective_memory",
             "debugSurface": "phase2.subjectiveMemory",
             "requiredFields": [
               "agentId",
               "count",
+              "activeCount",
+              "archivedCount",
               "items"
             ],
             "notes": []
           },
           {
             "id": "subjective_memory_recall",
-            "version": "subjective_memory_recall.v1",
+            "version": "subjective_memory_recall.v2",
             "owner": "runtime",
             "status": "active",
-            "description": "Subjective memory recall evidence injected into decision scoring.",
+            "description": "Subjective memory recall evidence injected into decision scoring, including salience after decay.",
             "producer": "app.runtime.motivation_engine",
             "debugSurface": "phase2.motivation.items[].subjectiveMemoryRecall",
             "requiredFields": [
               "query",
+              "worldTick",
               "count",
+              "activeCount",
               "recordIds",
               "sourceEventIds"
             ],
@@ -1191,8 +1210,9 @@
           "motivation_engine": "motivation_engine.v0",
           "need_accumulator": "need_accumulator.v0",
           "tool_runtime": "tool_runtime.v1",
-          "subjective_memory_store": "subjective_memory_store.v0",
-          "subjective_memory_recall": "subjective_memory_recall.v1",
+          "world_entities": "world_entities.v1",
+          "subjective_memory_store": "subjective_memory_store.v1",
+          "subjective_memory_recall": "subjective_memory_recall.v2",
           "relationship_edge_store": "relationship_edge_store.v0",
           "heuristic_library": "heuristic_library.v0",
           "heuristic_recall": "heuristic_recall.v1",
@@ -1221,6 +1241,7 @@
       ],
       "scenarioIds": [
         "pf.affiliation_bias_remains_agent_initiated",
+        "pf.branna_forgiveness_requires_memory",
         "pf.repair_talk_requires_memory_trace",
         "pf.shared_chat_builds_traceable_trust"
       ],
@@ -1228,189 +1249,237 @@
         {
           "path": "summary.json",
           "kind": "summary_json",
-          "bytes": 17756,
-          "sha256": "9e563a613b1aacbec26a1e008b91385bbc48eea7a428c84ad6fe04517980eaa3"
+          "bytes": 17991,
+          "sha256": "5913ab624a5d0b04b071404f53690c93702c727038c6ed17a1289baf2e708f31"
         },
         {
           "path": "ablation_comparison.json",
           "kind": "ablation_comparison_json",
-          "bytes": 5618,
-          "sha256": "c4b0ba6d2e7153d3c6c91e5838948841c41a4e63dc6fee7b269bfda37a6c14da"
+          "bytes": 5758,
+          "sha256": "6380075442c787019795213b3758f013f718b99fd55ac77e66927d36916f0910"
         },
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_full_motivational_delegation.json",
           "kind": "per_scenario_json",
-          "bytes": 18288,
-          "sha256": "1d5129e55d7b1ebf6e7e934b6b573b17401f34cfaf5ffa133b0a95a82cc40c48",
+          "bytes": 19739,
+          "sha256": "cea305f1f6a9b0519b0b2a27a3ec301d21ccbe8808419abb75f1a962d256c140",
           "baseline": "full_motivational_delegation",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation.json",
           "kind": "per_scenario_json",
-          "bytes": 17907,
-          "sha256": "16964ede1fddffb39510e19dd38272ccf61e25ec4de6eabaac8f72821a1abc68",
+          "bytes": 17240,
+          "sha256": "9a451aa269dfcf50004fc8c6b57c62e0697cb0e3a8d58aec866f6d76f165ca3b",
           "baseline": "full_motivational_delegation",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_full_motivational_delegation.json",
           "kind": "per_scenario_json",
-          "bytes": 16845,
-          "sha256": "fb58edd7af9b9084b4189b2d1b6b429262fb85a125477cbe558e0a20d03c5921",
+          "bytes": 17226,
+          "sha256": "265b366f5fce49d526a6e7d9173e823f1a28abda970736fa0750a6cecbb5f389",
           "baseline": "full_motivational_delegation",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
+          "path": "per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation.json",
+          "kind": "per_scenario_json",
+          "bytes": 19270,
+          "sha256": "329ca6c900f03a0bef35aae2e4b405106d830a9191347975cf3cf41ac8548c7b",
+          "baseline": "full_motivational_delegation",
+          "scenarioId": "pf.branna_forgiveness_requires_memory"
+        },
+        {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_hard_delegation.json",
           "kind": "per_scenario_json",
-          "bytes": 1543,
-          "sha256": "a730b99b5555fa51f8d17bb0d1e1550f23352c017b7a1553c9d632a00ec26389",
+          "bytes": 1572,
+          "sha256": "9426b750b662f482f198f16f1bc80a9fe1ca63287c435c9597cdde03f6514c12",
           "baseline": "hard_delegation",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_hard_delegation.json",
           "kind": "per_scenario_json",
-          "bytes": 1560,
-          "sha256": "1acd1469625bea3f48910fb583d3d0ad9ddf80c74b57f387156a782f425e323b",
+          "bytes": 1589,
+          "sha256": "b085b364ee74dc58532936ac2c37b3f80df310c2a14c768e349938f20c0ad92c",
           "baseline": "hard_delegation",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_hard_delegation.json",
           "kind": "per_scenario_json",
-          "bytes": 1566,
-          "sha256": "7e089c0629a9aeaa599a506a23b4d2763bd1aac1eaf66a0bacd21728119597d0",
+          "bytes": 1595,
+          "sha256": "0442734c78ea80ef573bee7841bcda71be8ee5a8f6c507d8c6f96072bc462075",
           "baseline": "hard_delegation",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
+          "path": "per_scenario/pf.branna_forgiveness_requires_memory_hard_delegation.json",
+          "kind": "per_scenario_json",
+          "bytes": 1724,
+          "sha256": "2fcb19c71facb3fe4776360917b1927b9300c4b3067e9faebe9a2d3204df7854",
+          "baseline": "hard_delegation",
+          "scenarioId": "pf.branna_forgiveness_requires_memory"
+        },
+        {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_subjective_memory.json",
           "kind": "per_scenario_json",
-          "bytes": 15917,
-          "sha256": "06cd4a36ebb9c010c7a7066948d50dff7a7e62b65c803d4af87db1469129fbe0",
+          "bytes": 18149,
+          "sha256": "42f99925287d2a4c65edbd5e488442fbf406dabd8cb4923710d036990ebf5cf6",
           "baseline": "no_subjective_memory",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_subjective_memory.json",
           "kind": "per_scenario_json",
-          "bytes": 15342,
-          "sha256": "03b99fbe50e62eb46a2378b5464a663058dfe1f8622b5da169c61cd175641ad9",
+          "bytes": 15646,
+          "sha256": "e2447952600c30dd670e2d0e87f95569f039436c1d839a0b90425ba500d39442",
           "baseline": "no_subjective_memory",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_subjective_memory.json",
           "kind": "per_scenario_json",
-          "bytes": 15072,
-          "sha256": "9716f00859e0a10fb8b9c9b3fcd1f48aa8f3b84a29ccdbd587e231d4ac072692",
+          "bytes": 15636,
+          "sha256": "ead3aa1a3a32a5f24c289475e09fa3a6b19c7e5bf4ae83108b7560ed02c7e894",
           "baseline": "no_subjective_memory",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
+          "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_subjective_memory.json",
+          "kind": "per_scenario_json",
+          "bytes": 17284,
+          "sha256": "934450734047ee4c0db9d4effb1cdcbe8f11459a2bbd3d0b1d5d36fadbb95fef",
+          "baseline": "no_subjective_memory",
+          "scenarioId": "pf.branna_forgiveness_requires_memory"
+        },
+        {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_relationship_edge.json",
           "kind": "per_scenario_json",
-          "bytes": 17218,
-          "sha256": "c3f35e54537aa7b0981c4874c712a6ffc2dd40f1812dd717dcebb6097e0b56d6",
+          "bytes": 18312,
+          "sha256": "d923a506450535f98892bd39dd4dc3b5fa2c28a118c422f55db945fda34124db",
           "baseline": "no_relationship_edge",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_relationship_edge.json",
           "kind": "per_scenario_json",
-          "bytes": 16464,
-          "sha256": "863dd47885faf5c8058862a20e74e67442a6fb81d6a588608689e0d99a7773da",
+          "bytes": 16792,
+          "sha256": "80b080e7a3cc7e903005b7b51af73ad073637305d6c8768549a4ff5edcab87e9",
           "baseline": "no_relationship_edge",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_relationship_edge.json",
           "kind": "per_scenario_json",
-          "bytes": 15668,
-          "sha256": "5287afbd34b5793498081351fef882d452f1465d2df9514fde9a4027ecc61e86",
+          "bytes": 16784,
+          "sha256": "7ad37f27302ca35a4f8ad0f5776f06482398d0f7e8e3f117add7a6f789a403e1",
           "baseline": "no_relationship_edge",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
+          "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_relationship_edge.json",
+          "kind": "per_scenario_json",
+          "bytes": 18057,
+          "sha256": "dd64520ab2827eec807e64599148888c0e3a28675b72fbb4c38490448cce40d2",
+          "baseline": "no_relationship_edge",
+          "scenarioId": "pf.branna_forgiveness_requires_memory"
+        },
+        {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_shuffled_memory_owner.json",
           "kind": "per_scenario_json",
-          "bytes": 17220,
-          "sha256": "9fc0b4e9fa327f93e957d225c99386a4e94b2b791166cdbf6873a88e1b94a91e",
+          "bytes": 18315,
+          "sha256": "dcc2e68964ad3c6663c6827d3984f502fd553cf970b3c19d232207fad07e272a",
           "baseline": "shuffled_memory_owner",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_shuffled_memory_owner.json",
           "kind": "per_scenario_json",
-          "bytes": 16466,
-          "sha256": "36f0462ee1255eda7cfceac232dc99857ddb2eab6c9eff93827ad183ada3b6a1",
+          "bytes": 16795,
+          "sha256": "f6f5eedb43413b8b232f4abc4735123cdb8754231cd87886fdb80f4932d8b5e2",
           "baseline": "shuffled_memory_owner",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_shuffled_memory_owner.json",
           "kind": "per_scenario_json",
-          "bytes": 15670,
-          "sha256": "177c078420dff8354d41557b0caad5c3f423fc09c840517ccb02d43945d4a09b",
+          "bytes": 16787,
+          "sha256": "0706524e105cd850d40cdb08ac9a127cd12e905e65597ea0f786da05d350eeb4",
           "baseline": "shuffled_memory_owner",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
+          "path": "per_scenario/pf.branna_forgiveness_requires_memory_shuffled_memory_owner.json",
+          "kind": "per_scenario_json",
+          "bytes": 18060,
+          "sha256": "41bf7aefb56369164dbc7c65fffb3ae778f7d11c8beb399d600f008be4b2b7dc",
+          "baseline": "shuffled_memory_owner",
+          "scenarioId": "pf.branna_forgiveness_requires_memory"
+        },
+        {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_evidence_link_removal.json",
           "kind": "per_scenario_json",
-          "bytes": 17219,
-          "sha256": "bb83442cb273a67934fec04e43009d8cb887a4b36e627b75169a9267b5bffdb8",
+          "bytes": 18314,
+          "sha256": "3694ed4a4326b8b49191972f59ad82b1af31c3a765aec833d47a4d92df475500",
           "baseline": "evidence_link_removal",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_evidence_link_removal.json",
           "kind": "per_scenario_json",
-          "bytes": 16464,
-          "sha256": "60b08e4175ef4a752d976d46d20f504d2f20c8cc4e4d457cc4e93c2c466f1fa0",
+          "bytes": 16794,
+          "sha256": "0dd4ac11477818a47740c9bb84f358d95d071b94edfcaacab573d4ba81cdafae",
           "baseline": "evidence_link_removal",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_evidence_link_removal.json",
           "kind": "per_scenario_json",
-          "bytes": 15668,
-          "sha256": "bef9a2bb4025444e201bba9387caf5adb3a5d73af6e8307049afe487065eda9b",
+          "bytes": 16786,
+          "sha256": "f8a980bfbe1647178c5db5d1794d73d20eb93e1d517e545cae4a60dc3fa7e4c1",
           "baseline": "evidence_link_removal",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
+          "path": "per_scenario/pf.branna_forgiveness_requires_memory_evidence_link_removal.json",
+          "kind": "per_scenario_json",
+          "bytes": 18058,
+          "sha256": "8e42217fbd0456f4a7b7e1ed1dc0fa50cac74134e54362412e32d9ca1e496e62",
+          "baseline": "evidence_link_removal",
+          "scenarioId": "pf.branna_forgiveness_requires_memory"
+        },
+        {
           "path": "intervention_trace.jsonl",
           "kind": "intervention_trace_jsonl",
-          "bytes": 3745,
-          "sha256": "fc43dcec7607bdc1fdd1c75ef98d07f3759648ac2d0e04b1258e856794ec7e91",
-          "rowCount": 3,
+          "bytes": 5214,
+          "sha256": "a64aa07b94234255038aa3c8a3704a83667f3d6e9a67958c809db287efdf859a",
+          "rowCount": 4,
           "baseline": "hard_delegation"
         },
         {
           "path": "goal_progress_trace.jsonl",
           "kind": "goal_progress_trace_jsonl",
-          "bytes": 34871,
-          "sha256": "89dde616f91de37fa3ac4a30abaf197ea70c9610bc1e39d8ca58c9e6b0793831",
-          "rowCount": 3,
+          "bytes": 49726,
+          "sha256": "200e6e0f45a24fc69117eb06d2bc968ebbb929e1a2ff84c68384a1aa500c3871",
+          "rowCount": 4,
           "baseline": "full_motivational_delegation"
         },
         {
           "path": "counterfactual_replay.jsonl",
           "kind": "counterfactual_replay_jsonl",
-          "bytes": 16142,
-          "sha256": "046e61e6d358f59b947a1892fd1b837b281de75bbbbeee01d2cacc7eff1861ab",
-          "rowCount": 3,
+          "bytes": 25836,
+          "sha256": "97a708a8bc807c473318bad64b707da1560cca2c746692c2b4304720d2675f9c",
+          "rowCount": 4,
           "baseline": "full_motivational_delegation"
         },
         {
           "path": "memory_ablation_trace.jsonl",
           "kind": "memory_ablation_trace_jsonl",
-          "bytes": 9714,
-          "sha256": "028851fec8b978cdaeb7a303270d9e44dc49d0d0dd466e5c9dbcd8492ad0ae01",
-          "rowCount": 12
+          "bytes": 17976,
+          "sha256": "bcdcc125252cb9cebac0eb0966d5a66fa2eb4ea932d5c6033a92ae9fa1faf270",
+          "rowCount": 16
         }
       ],
       "verification": {
@@ -1429,14 +1498,14 @@
       "ok": true,
       "suite": "process_fidelity",
       "baseline": "full_motivational_delegation",
-      "passed": 3,
-      "total": 3,
+      "passed": 4,
+      "total": 4,
       "metrics": [
         {
           "metric": "goal_success_rate",
           "mean": 1.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "full_motivational_delegation",
           "scenarioId": "aggregate"
         },
@@ -1444,7 +1513,7 @@
           "metric": "shortcut_violation_rate",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "full_motivational_delegation",
           "scenarioId": "aggregate"
         },
@@ -1452,7 +1521,7 @@
           "metric": "required_process_coverage",
           "mean": 1.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "full_motivational_delegation",
           "scenarioId": "aggregate"
         },
@@ -1460,7 +1529,7 @@
           "metric": "forced_action_rate",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "full_motivational_delegation",
           "scenarioId": "aggregate"
         },
@@ -1468,7 +1537,7 @@
           "metric": "agent_initiated_action_ratio",
           "mean": 1.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "full_motivational_delegation",
           "scenarioId": "aggregate"
         },
@@ -1476,7 +1545,7 @@
           "metric": "intervention_overreach_rate",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "full_motivational_delegation",
           "scenarioId": "aggregate"
         },
@@ -1484,7 +1553,7 @@
           "metric": "relationship_memory_causal_use_rate",
           "mean": 1.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "full_motivational_delegation",
           "scenarioId": "aggregate"
         },
@@ -1492,7 +1561,7 @@
           "metric": "causal_trace_coverage",
           "mean": 1.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "full_motivational_delegation",
           "scenarioId": "aggregate"
         },
@@ -1500,7 +1569,7 @@
           "metric": "relationship_consistency",
           "mean": 1.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "full_motivational_delegation",
           "scenarioId": "aggregate"
         },
@@ -1508,7 +1577,7 @@
           "metric": "process_believability_score",
           "mean": 1.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "full_motivational_delegation",
           "scenarioId": "aggregate"
         },
@@ -1516,7 +1585,7 @@
           "metric": "goal_success_rate",
           "mean": 1.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "hard_delegation",
           "scenarioId": "aggregate"
         },
@@ -1524,15 +1593,15 @@
           "metric": "shortcut_violation_rate",
           "mean": 1.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "hard_delegation",
           "scenarioId": "aggregate"
         },
         {
           "metric": "required_process_coverage",
-          "mean": 0.2,
-          "std": 0.0,
-          "n": 3,
+          "mean": 0.185714,
+          "std": 0.024744,
+          "n": 4,
           "baseline": "hard_delegation",
           "scenarioId": "aggregate"
         },
@@ -1540,7 +1609,7 @@
           "metric": "forced_action_rate",
           "mean": 1.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "hard_delegation",
           "scenarioId": "aggregate"
         },
@@ -1548,7 +1617,7 @@
           "metric": "agent_initiated_action_ratio",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "hard_delegation",
           "scenarioId": "aggregate"
         },
@@ -1556,7 +1625,7 @@
           "metric": "intervention_overreach_rate",
           "mean": 1.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "hard_delegation",
           "scenarioId": "aggregate"
         },
@@ -1564,7 +1633,7 @@
           "metric": "relationship_memory_causal_use_rate",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "hard_delegation",
           "scenarioId": "aggregate"
         },
@@ -1572,7 +1641,7 @@
           "metric": "causal_trace_coverage",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "hard_delegation",
           "scenarioId": "aggregate"
         },
@@ -1580,15 +1649,15 @@
           "metric": "relationship_consistency",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "hard_delegation",
           "scenarioId": "aggregate"
         },
         {
           "metric": "process_believability_score",
-          "mean": 0.04,
-          "std": 0.0,
-          "n": 3,
+          "mean": 0.037143,
+          "std": 0.004949,
+          "n": 4,
           "baseline": "hard_delegation",
           "scenarioId": "aggregate"
         },
@@ -1596,7 +1665,7 @@
           "metric": "goal_success_rate",
           "mean": 1.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "no_subjective_memory",
           "scenarioId": "aggregate"
         },
@@ -1604,15 +1673,15 @@
           "metric": "shortcut_violation_rate",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "no_subjective_memory",
           "scenarioId": "aggregate"
         },
         {
           "metric": "required_process_coverage",
-          "mean": 0.8,
-          "std": 0.0,
-          "n": 3,
+          "mean": 0.742857,
+          "std": 0.098974,
+          "n": 4,
           "baseline": "no_subjective_memory",
           "scenarioId": "aggregate"
         },
@@ -1620,7 +1689,7 @@
           "metric": "forced_action_rate",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "no_subjective_memory",
           "scenarioId": "aggregate"
         },
@@ -1628,7 +1697,7 @@
           "metric": "agent_initiated_action_ratio",
           "mean": 1.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "no_subjective_memory",
           "scenarioId": "aggregate"
         },
@@ -1636,7 +1705,7 @@
           "metric": "intervention_overreach_rate",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "no_subjective_memory",
           "scenarioId": "aggregate"
         },
@@ -1644,7 +1713,7 @@
           "metric": "relationship_memory_causal_use_rate",
           "mean": 1.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "no_subjective_memory",
           "scenarioId": "aggregate"
         },
@@ -1652,7 +1721,7 @@
           "metric": "causal_trace_coverage",
           "mean": 1.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "no_subjective_memory",
           "scenarioId": "aggregate"
         },
@@ -1660,15 +1729,15 @@
           "metric": "relationship_consistency",
           "mean": 1.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "no_subjective_memory",
           "scenarioId": "aggregate"
         },
         {
           "metric": "process_believability_score",
-          "mean": 0.96,
-          "std": 0.0,
-          "n": 3,
+          "mean": 0.948572,
+          "std": 0.019795,
+          "n": 4,
           "baseline": "no_subjective_memory",
           "scenarioId": "aggregate"
         },
@@ -1676,7 +1745,7 @@
           "metric": "goal_success_rate",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "no_relationship_edge",
           "scenarioId": "aggregate"
         },
@@ -1684,15 +1753,15 @@
           "metric": "shortcut_violation_rate",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "no_relationship_edge",
           "scenarioId": "aggregate"
         },
         {
           "metric": "required_process_coverage",
-          "mean": 0.8,
-          "std": 0.0,
-          "n": 3,
+          "mean": 0.814286,
+          "std": 0.024744,
+          "n": 4,
           "baseline": "no_relationship_edge",
           "scenarioId": "aggregate"
         },
@@ -1700,7 +1769,7 @@
           "metric": "forced_action_rate",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "no_relationship_edge",
           "scenarioId": "aggregate"
         },
@@ -1708,7 +1777,7 @@
           "metric": "agent_initiated_action_ratio",
           "mean": 1.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "no_relationship_edge",
           "scenarioId": "aggregate"
         },
@@ -1716,7 +1785,7 @@
           "metric": "intervention_overreach_rate",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "no_relationship_edge",
           "scenarioId": "aggregate"
         },
@@ -1724,7 +1793,7 @@
           "metric": "relationship_memory_causal_use_rate",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "no_relationship_edge",
           "scenarioId": "aggregate"
         },
@@ -1732,7 +1801,7 @@
           "metric": "causal_trace_coverage",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "no_relationship_edge",
           "scenarioId": "aggregate"
         },
@@ -1740,15 +1809,15 @@
           "metric": "relationship_consistency",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "no_relationship_edge",
           "scenarioId": "aggregate"
         },
         {
           "metric": "process_believability_score",
-          "mean": 0.56,
-          "std": 0.0,
-          "n": 3,
+          "mean": 0.562857,
+          "std": 0.004949,
+          "n": 4,
           "baseline": "no_relationship_edge",
           "scenarioId": "aggregate"
         },
@@ -1756,7 +1825,7 @@
           "metric": "goal_success_rate",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "shuffled_memory_owner",
           "scenarioId": "aggregate"
         },
@@ -1764,15 +1833,15 @@
           "metric": "shortcut_violation_rate",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "shuffled_memory_owner",
           "scenarioId": "aggregate"
         },
         {
           "metric": "required_process_coverage",
-          "mean": 0.8,
-          "std": 0.0,
-          "n": 3,
+          "mean": 0.814286,
+          "std": 0.024744,
+          "n": 4,
           "baseline": "shuffled_memory_owner",
           "scenarioId": "aggregate"
         },
@@ -1780,7 +1849,7 @@
           "metric": "forced_action_rate",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "shuffled_memory_owner",
           "scenarioId": "aggregate"
         },
@@ -1788,7 +1857,7 @@
           "metric": "agent_initiated_action_ratio",
           "mean": 1.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "shuffled_memory_owner",
           "scenarioId": "aggregate"
         },
@@ -1796,7 +1865,7 @@
           "metric": "intervention_overreach_rate",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "shuffled_memory_owner",
           "scenarioId": "aggregate"
         },
@@ -1804,7 +1873,7 @@
           "metric": "relationship_memory_causal_use_rate",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "shuffled_memory_owner",
           "scenarioId": "aggregate"
         },
@@ -1812,7 +1881,7 @@
           "metric": "causal_trace_coverage",
           "mean": 1.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "shuffled_memory_owner",
           "scenarioId": "aggregate"
         },
@@ -1820,15 +1889,15 @@
           "metric": "relationship_consistency",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "shuffled_memory_owner",
           "scenarioId": "aggregate"
         },
         {
           "metric": "process_believability_score",
-          "mean": 0.76,
-          "std": 0.0,
-          "n": 3,
+          "mean": 0.762857,
+          "std": 0.004949,
+          "n": 4,
           "baseline": "shuffled_memory_owner",
           "scenarioId": "aggregate"
         },
@@ -1836,7 +1905,7 @@
           "metric": "goal_success_rate",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "evidence_link_removal",
           "scenarioId": "aggregate"
         },
@@ -1844,15 +1913,15 @@
           "metric": "shortcut_violation_rate",
           "mean": 1.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "evidence_link_removal",
           "scenarioId": "aggregate"
         },
         {
           "metric": "required_process_coverage",
-          "mean": 0.8,
-          "std": 0.0,
-          "n": 3,
+          "mean": 0.814286,
+          "std": 0.024744,
+          "n": 4,
           "baseline": "evidence_link_removal",
           "scenarioId": "aggregate"
         },
@@ -1860,7 +1929,7 @@
           "metric": "forced_action_rate",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "evidence_link_removal",
           "scenarioId": "aggregate"
         },
@@ -1868,7 +1937,7 @@
           "metric": "agent_initiated_action_ratio",
           "mean": 1.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "evidence_link_removal",
           "scenarioId": "aggregate"
         },
@@ -1876,7 +1945,7 @@
           "metric": "intervention_overreach_rate",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "evidence_link_removal",
           "scenarioId": "aggregate"
         },
@@ -1884,7 +1953,7 @@
           "metric": "relationship_memory_causal_use_rate",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "evidence_link_removal",
           "scenarioId": "aggregate"
         },
@@ -1892,7 +1961,7 @@
           "metric": "causal_trace_coverage",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "evidence_link_removal",
           "scenarioId": "aggregate"
         },
@@ -1900,15 +1969,15 @@
           "metric": "relationship_consistency",
           "mean": 0.0,
           "std": 0.0,
-          "n": 3,
+          "n": 4,
           "baseline": "evidence_link_removal",
           "scenarioId": "aggregate"
         },
         {
           "metric": "process_believability_score",
-          "mean": 0.36,
-          "std": 0.0,
-          "n": 3,
+          "mean": 0.362857,
+          "std": 0.004949,
+          "n": 4,
           "baseline": "evidence_link_removal",
           "scenarioId": "aggregate"
         }
@@ -1920,232 +1989,232 @@
             "goal_success_rate": {
               "mean": 1.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             },
             "required_process_coverage": {
               "mean": 1.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             },
             "process_believability_score": {
               "mean": 1.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             },
             "causal_trace_coverage": {
               "mean": 1.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             },
             "relationship_memory_causal_use_rate": {
               "mean": 1.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             },
             "shortcut_violation_rate": {
               "mean": 0.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             }
           },
           "hard_delegation": {
             "goal_success_rate": {
               "mean": 1.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             },
             "required_process_coverage": {
-              "mean": 0.2,
-              "std": 0.0,
-              "n": 3
+              "mean": 0.185714,
+              "std": 0.024744,
+              "n": 4
             },
             "process_believability_score": {
-              "mean": 0.04,
-              "std": 0.0,
-              "n": 3
+              "mean": 0.037143,
+              "std": 0.004949,
+              "n": 4
             },
             "causal_trace_coverage": {
               "mean": 0.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             },
             "relationship_memory_causal_use_rate": {
               "mean": 0.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             },
             "shortcut_violation_rate": {
               "mean": 1.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             }
           },
           "no_subjective_memory": {
             "goal_success_rate": {
               "mean": 1.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             },
             "required_process_coverage": {
-              "mean": 0.8,
-              "std": 0.0,
-              "n": 3
+              "mean": 0.742857,
+              "std": 0.098974,
+              "n": 4
             },
             "process_believability_score": {
-              "mean": 0.96,
-              "std": 0.0,
-              "n": 3
+              "mean": 0.948572,
+              "std": 0.019795,
+              "n": 4
             },
             "causal_trace_coverage": {
               "mean": 1.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             },
             "relationship_memory_causal_use_rate": {
               "mean": 1.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             },
             "shortcut_violation_rate": {
               "mean": 0.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             }
           },
           "no_relationship_edge": {
             "goal_success_rate": {
               "mean": 0.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             },
             "required_process_coverage": {
-              "mean": 0.8,
-              "std": 0.0,
-              "n": 3
+              "mean": 0.814286,
+              "std": 0.024744,
+              "n": 4
             },
             "process_believability_score": {
-              "mean": 0.56,
-              "std": 0.0,
-              "n": 3
+              "mean": 0.562857,
+              "std": 0.004949,
+              "n": 4
             },
             "causal_trace_coverage": {
               "mean": 0.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             },
             "relationship_memory_causal_use_rate": {
               "mean": 0.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             },
             "shortcut_violation_rate": {
               "mean": 0.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             }
           },
           "shuffled_memory_owner": {
             "goal_success_rate": {
               "mean": 0.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             },
             "required_process_coverage": {
-              "mean": 0.8,
-              "std": 0.0,
-              "n": 3
+              "mean": 0.814286,
+              "std": 0.024744,
+              "n": 4
             },
             "process_believability_score": {
-              "mean": 0.76,
-              "std": 0.0,
-              "n": 3
+              "mean": 0.762857,
+              "std": 0.004949,
+              "n": 4
             },
             "causal_trace_coverage": {
               "mean": 1.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             },
             "relationship_memory_causal_use_rate": {
               "mean": 0.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             },
             "shortcut_violation_rate": {
               "mean": 0.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             }
           },
           "evidence_link_removal": {
             "goal_success_rate": {
               "mean": 0.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             },
             "required_process_coverage": {
-              "mean": 0.8,
-              "std": 0.0,
-              "n": 3
+              "mean": 0.814286,
+              "std": 0.024744,
+              "n": 4
             },
             "process_believability_score": {
-              "mean": 0.36,
-              "std": 0.0,
-              "n": 3
+              "mean": 0.362857,
+              "std": 0.004949,
+              "n": 4
             },
             "causal_trace_coverage": {
               "mean": 0.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             },
             "relationship_memory_causal_use_rate": {
               "mean": 0.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             },
             "shortcut_violation_rate": {
               "mean": 1.0,
               "std": 0.0,
-              "n": 3
+              "n": 4
             }
           }
         },
         "delta_vs_full": {
           "hard_delegation": {
             "goal_success_rate": 0.0,
-            "required_process_coverage": -0.8,
-            "process_believability_score": -0.96,
+            "required_process_coverage": -0.814286,
+            "process_believability_score": -0.962857,
             "causal_trace_coverage": -1.0,
             "relationship_memory_causal_use_rate": -1.0,
             "shortcut_violation_rate": 1.0
           },
           "no_subjective_memory": {
             "goal_success_rate": 0.0,
-            "required_process_coverage": -0.2,
-            "process_believability_score": -0.04,
+            "required_process_coverage": -0.257143,
+            "process_believability_score": -0.051428,
             "causal_trace_coverage": 0.0,
             "relationship_memory_causal_use_rate": 0.0,
             "shortcut_violation_rate": 0.0
           },
           "no_relationship_edge": {
             "goal_success_rate": -1.0,
-            "required_process_coverage": -0.2,
-            "process_believability_score": -0.44,
+            "required_process_coverage": -0.185714,
+            "process_believability_score": -0.437143,
             "causal_trace_coverage": -1.0,
             "relationship_memory_causal_use_rate": -1.0,
             "shortcut_violation_rate": 0.0
           },
           "shuffled_memory_owner": {
             "goal_success_rate": -1.0,
-            "required_process_coverage": -0.2,
-            "process_believability_score": -0.24,
+            "required_process_coverage": -0.185714,
+            "process_believability_score": -0.237143,
             "causal_trace_coverage": 0.0,
             "relationship_memory_causal_use_rate": -1.0,
             "shortcut_violation_rate": 0.0
           },
           "evidence_link_removal": {
             "goal_success_rate": -1.0,
-            "required_process_coverage": -0.2,
-            "process_believability_score": -0.64,
+            "required_process_coverage": -0.185714,
+            "process_believability_score": -0.637143,
             "causal_trace_coverage": -1.0,
             "relationship_memory_causal_use_rate": -1.0,
             "shortcut_violation_rate": 1.0
