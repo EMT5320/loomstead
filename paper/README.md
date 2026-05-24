@@ -8,6 +8,7 @@ This directory keeps the Loomstead paper workflow tied to concrete repository ev
 - Target shape: research preview / workshop / arXiv technical report draft.
 - Core claim: a Director can shape motivation, opportunity, information, event pressure, resources, and constraints while autonomous NPCs choose actions through their own memory, relationships, heuristics, and tool capabilities.
 - Evidence boundary: current results are rule-level scaffolding evidence from Process Fidelity, baseline / ablation, 24h / 72h stability, cross-domain adapter exports, and manifest checks. More seeds, LLM-backed runs, human believability scoring, and real Godot observer-mode validation remain open.
+- Current drafting policy: skeleton first. Keep claims narrow, reserve contribution slots, and fill strong empirical language only after the matching evidence is promoted.
 
 ## Directory layout
 
@@ -18,6 +19,7 @@ paper/
 |-- outline.md
 |-- claim_evidence_matrix.md
 |-- figures.md
+|-- claim_policy.md
 |-- references.bib
 |-- diagrams/
 |-- generated/
@@ -48,6 +50,7 @@ git diff --check
 ## Writing rules
 
 - Keep claims evidence-linked.
+- Prefer skeleton placeholders over early overclaiming.
 - Label rule-level results as scaffolding evidence.
 - Keep the town slice as the primary validation domain.
 - Use the coding adapter as secondary portability evidence.

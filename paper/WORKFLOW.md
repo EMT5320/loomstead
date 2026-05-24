@@ -4,13 +4,14 @@
 
 Read these sources first:
 
+- `paper/claim_policy.md`
 - `docs/research_framing_motivational_delegation.md`
 - `docs/process_fidelity_eval_spec.md`
 - `docs/cross_domain_adapter.md`
 - `docs/agent_loop_architecture.md`
 - `docs/current_status.md`
 
-Goal: confirm the paper claim, evidence sources, unfinished experiments, and current limitations.
+Goal: confirm the paper claim slots, evidence sources, unfinished experiments, current limitations, and allowed claim strength.
 
 ## 2. Evidence refresh
 
@@ -46,9 +47,12 @@ Before writing prose, update `paper/claim_evidence_matrix.md`:
 4. Add the missing evidence.
 5. Assign the target figure or table.
 
+Keep claim strength aligned with `paper/claim_policy.md`. Early sections should reserve stable skeleton slots and avoid final empirical phrasing until evidence is promoted.
+
 ## 4. Literature workflow
 
 - Use Zotero as the formal citation library.
+- Use `paper/lit_review/zotero_intake_workflow.md` as the browser + Zotero intake checklist.
 - Keep `paper/references.bib` and `paper/latex/references.bib` limited to cited or actively planned references; keep them in sync until a Zotero export helper is added.
 - Use `scripts/paper_search.py` for metadata discovery and reading-queue updates.
 - Use `paper/lit_review/*.md` for short notes, contrast points, and citation placement.

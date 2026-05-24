@@ -6,7 +6,7 @@
 
 ## Abstract sketch
 
-Persistent multi-agent narratives often involve goals whose value lies in the path taken: friendships should grow through shared events, trust repair should depend on remembered harm and observed compensation, and festivals should succeed through visible social and resource processes. Loomstead studies motivational delegation, where a Director shapes conditions through motivation bias, opportunity scheduling, information exposure, event pressure, and constraints while autonomous NPC agents choose actions through their own motivation, memory, relationships, and heuristics. The system pairs a playable Godot town slice with a Python runtime, traceable tool execution, subjective memory, relationship edges, and Process Fidelity Eval. Current results provide rule-level evidence across process-constrained scenarios, hard-delegation and memory ablations, 24h / 72h stability runs, and a small cross-domain coding adapter.
+Persistent multi-agent narratives often involve goals whose value lies in the path taken: friendships should grow through shared events, trust repair should depend on remembered harm and observed compensation, and festivals should succeed through visible social and resource processes. Loomstead studies motivational delegation, where a Director shapes conditions through motivation bias, opportunity scheduling, information exposure, event pressure, and constraints while autonomous NPC agents choose actions through their own motivation, memory, relationships, and heuristics. The system pairs a playable Godot town slice with a Python runtime, traceable tool execution, subjective memory, relationship edges, and Process Fidelity Eval. Current results are rule-level scaffold evidence used to validate the claim/eval/export workflow while stronger empirical claims wait for additional development and experiments.
 
 ## 1. Introduction
 
@@ -54,6 +54,8 @@ Persistent multi-agent narratives often involve goals whose value lies in the pa
 - Dataset export and manifest validation.
 
 ## 6. Experiments
+
+Drafting policy: keep this section as an evidence skeleton until promoted runs, repeated seeds, LLM-backed windows, and human ratings are available.
 
 ### 6.1 Process Fidelity Scenarios
 

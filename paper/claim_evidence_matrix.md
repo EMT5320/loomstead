@@ -13,6 +13,7 @@
 | C9 | The first related-work framing can separate believable simulation, drama management, task-oriented multi-agent orchestration, and interactive agent evaluation. | verified literature seed | `paper/lit_review/source_index.md`, `paper/references.bib`, primary source pages | Table 6 | Add trace-debugging papers, human believability protocols, and exact Zotero keys | Related Work |
 | C10 | The draft can now show paper-native eval tables regenerated from local manifests. | verified by gate | `scripts/paper_extract_eval_tables.py`, `paper/generated/eval_tables.tex`, `npm.cmd run paper:check` | Tables 2/4/5 | Add publication-quality formatting after the target venue template is chosen | Experiments |
 | C11 | The paper has an explicit system and method story connecting Godot, Python runtime, Director, Event Skills, NPC arbitration, memory stores, debug traces, and eval artifacts. | verified design + partial runtime | `README.md`, `docs/agent_context.md`, `docs/current_status.md`, `paper/diagrams/*.mmd` | Figures 1/2 | Render diagrams as final vector assets and add one concrete exported trace walkthrough | System / Method |
+| C12 | The paper workflow now prioritizes skeleton-first drafting and Zotero-backed related-work intake to reduce early overclaiming. | verified workflow | `paper/claim_policy.md`, `paper/lit_review/zotero_intake_workflow.md`, Zotero local API status check | Workflow | Add browser-saved Zotero item keys for seed references | Workflow / Related Work |
 
 ## Support labels
 

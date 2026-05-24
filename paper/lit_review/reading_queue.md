@@ -1,5 +1,7 @@
 # Reading Queue
 
+Intake workflow: see `paper/lit_review/zotero_intake_workflow.md`.
+
 | Status | Priority | Paper | Year | Source | Zotero Key | BibTeX Key | Why it matters | Notes |
 |---|---:|---|---:|---|---|---|---|---|
 | selected | 1 | Generative Agents: Interactive Simulacra of Human Behavior | 2023 | arXiv / ACM UIST |  | `park2023generativeAgents` | Core comparison for believable social simulation, memory, reflection, and emergent town behavior. | https://arxiv.org/abs/2304.03442; https://doi.org/10.1145/3586183.3606763 |

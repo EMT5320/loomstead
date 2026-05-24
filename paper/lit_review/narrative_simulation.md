@@ -12,7 +12,7 @@ Loomstead uses a Director layer, Event Skills, and constrained interventions. Dr
 
 ## Notes to turn into prose
 
-- The paper should position Director as a constrained, traceable intervention layer rather than an omnipotent plot controller.
+- The paper should position Director as a constrained, traceable intervention layer with explicit limits on plot control.
 - Process Fidelity can be described as a measurable version of the old narrative-quality concern, grounded in event traces and memory causality.
 - Need later search for more recent interactive narrative evaluation work.
 

@@ -1,17 +1,17 @@
-\section{Current Evidence}
+\section{Evidence Skeleton}
 
-The current exported evidence includes a process-fidelity suite, 24-hour and 72-hour stability suites, and a cross-domain adapter suite. Generated paper tables live under \texttt{paper/generated/}. The latest verified archive check reports valid manifests and no drift across the latest suites.
+This section is intentionally kept as an evidence skeleton. The current exported evidence includes a process-fidelity suite, 24-hour and 72-hour stability suites, and a cross-domain adapter suite. Generated paper tables live under \texttt{paper/generated/}. These tables are build guards and claim placeholders until larger experiments, LLM-backed runs, and human process ratings are available.
 
 \subsection{Process-fidelity ablations}
 
-Table~\ref{tab:process-ablation} summarizes the latest local process suite. Full Motivational Delegation reaches the goal with full required-process coverage, no shortcut violations, no forced actions, full memory-causal use, and complete trace coverage in the current rule-level scenarios. Hard Delegation also reaches the final goal, yet it has high shortcut and forced-action rates and low process-believability score. The relationship and evidence-link ablations reduce goal success or trace coverage, which supports keeping relationship memory and source links as first-class eval targets.
+Table~\ref{tab:process-ablation} summarizes the latest local process suite. At this stage, the table is used to verify that the ablation columns, metric names, and evidence export path stay stable. It should not be read as final empirical support. The publication version needs repeated seeds, runtime-level ablations, and provider-backed runs before the text makes strong comparative claims.
 
 \subsection{Stability runs}
 
-Tables~\ref{tab:stability-24h} and~\ref{tab:stability-72h} report the latest rule-level stability windows. These runs exercise the runtime over longer simulated windows and track tick success, tool failures, interruptions, memory observations, and heuristic references. The current values are guardrails for regression detection, with LLM-backed windows and repeated seeds still pending.
+Tables~\ref{tab:stability-24h} and~\ref{tab:stability-72h} report the latest rule-level stability windows. These rows are regression guardrails for tick success, tool failures, interruptions, memory observations, and heuristic references. The publication version should refresh them with repeated seeds and LLM-backed windows.
 
 \subsection{Cross-domain adapter}
 
-Table~\ref{tab:domain-adapter} reports the latest cross-domain adapter dry-run. The adapter keeps Loomstead's town domain as the primary validation surface and checks whether the same GoalSpec, trace, and eval schema can also describe coding fixtures. The current coding results should be treated as interface evidence, since they use dry-run artifacts with limited task realism.
+Table~\ref{tab:domain-adapter} reports the latest cross-domain adapter dry-run. The adapter keeps Loomstead's town domain as the primary validation surface and checks whether the same GoalSpec, trace, and eval schema can also describe coding fixtures. The current coding results are interface evidence because they use dry-run artifacts with limited task realism.
 
 \input{../generated/eval_tables}
