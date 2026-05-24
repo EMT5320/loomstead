@@ -264,6 +264,84 @@ def run_stability_scenarios(
     return result
 
 
+def run_stability_determinism_check(
+    *,
+    hours: int = DEFAULT_STABILITY_HOURS,
+    repeats: int = 3,
+) -> dict[str, Any]:
+    """连续运行 stability suite，比较硬门禁不变量，并暴露 run-specific 计数漂移。"""
+    hours = max(1, int(hours))
+    repeats = max(2, int(repeats))
+    runs = [run_stability_scenarios(hours=hours) for _ in range(repeats)]
+    signatures = [_stability_invariant_signature(run) for run in runs]
+    expected_signature = signatures[0] if signatures else {}
+    mismatches = [
+        {
+            "runIndex": index,
+            "expected": expected_signature,
+            "actual": signature,
+        }
+        for index, signature in enumerate(signatures[1:], start=1)
+        if signature != expected_signature
+    ]
+    run_specific_evidence = [
+        _stability_run_specific_evidence(index, run)
+        for index, run in enumerate(runs)
+    ]
+    return {
+        "ok": all(bool(run.get("ok")) for run in runs) and not mismatches,
+        "suite": f"stability_{hours}h_determinism",
+        "baseline": _stability_baseline(hours),
+        "hours": hours,
+        "repeats": repeats,
+        "invariantSignature": expected_signature,
+        "mismatches": mismatches,
+        "runSpecificEvidence": run_specific_evidence,
+        "notes": [
+            "invariantSignature 是 stability 的硬门禁护栏。",
+            "runSpecificEvidence 记录受运行路径影响的计数证据，精确值以单次导出 artifact 为准。",
+        ],
+    }
+
+
+def _stability_invariant_signature(result: dict[str, Any]) -> dict[str, Any]:
+    """提取跨连续运行应保持一致的 stability 门禁字段。"""
+    evidence = result.get("evidence", {}) if isinstance(result.get("evidence"), dict) else {}
+    checks = result.get("checks", {}) if isinstance(result.get("checks"), dict) else {}
+    return {
+        "ok": bool(result.get("ok")),
+        "ticksCompleted": int(result.get("ticksCompleted") or 0),
+        "completedToolCount": int(evidence.get("completedToolCount") or 0),
+        "failedToolCount": int(evidence.get("failedToolCount") or 0),
+        "relationshipEdgeCount": int(evidence.get("relationshipEdgeCount") or 0),
+        "activeAgentIds": list(evidence.get("activeAgentIds") or []),
+        "checks": {key: bool(checks.get(key)) for key in sorted(checks)},
+    }
+
+
+def _stability_run_specific_evidence(index: int, result: dict[str, Any]) -> dict[str, Any]:
+    """汇总 stability 单次运行计数字段，便于审查非门禁型漂移。"""
+    evidence = result.get("evidence", {}) if isinstance(result.get("evidence"), dict) else {}
+    metrics = {
+        str(item.get("metric")): item.get("mean")
+        for item in result.get("metrics", [])
+        if isinstance(item, dict) and item.get("metric")
+    }
+    return {
+        "runIndex": index,
+        "ok": bool(result.get("ok")),
+        "ticksCompleted": int(result.get("ticksCompleted") or 0),
+        "interruptedToolCount": int(evidence.get("interruptedToolCount") or 0),
+        "memoryObservationCount": int(evidence.get("memoryObservationCount") or 0),
+        "subjectiveMemoryCount": int(evidence.get("subjectiveMemoryCount") or 0),
+        "heuristicCount": int(evidence.get("heuristicCount") or 0),
+        "motivationDecisionCount": int(evidence.get("motivationDecisionCount") or 0),
+        "heuristicDecisionCount": int(evidence.get("heuristicDecisionCount") or 0),
+        "heuristicDecisionRefRate": metrics.get("heuristic_decision_ref_rate"),
+        "toolInterruptionRate": metrics.get("tool_interruption_rate"),
+    }
+
+
 def _stability_baseline(hours: int) -> str:
     if int(hours) == DEFAULT_STABILITY_HOURS:
         return BASELINE_STABILITY_24H

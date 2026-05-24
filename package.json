@@ -15,6 +15,7 @@
                     "eval:process:export":  "python scripts/run_agent_eval.py --suite process --export-dir .run/eval-runs",
                     "eval:stability":  "python scripts/run_agent_eval.py --suite stability",
                     "eval:stability:long":  "python scripts/run_agent_eval.py --suite stability --hours 72",
+                    "eval:stability:determinism":  "python scripts/run_agent_eval.py --suite stability --hours 72 --determinism-check --repeats 3",
                     "eval:stability:export":  "python scripts/run_agent_eval.py --suite stability --export-dir .run/eval-runs",
                     "eval:stability:long:export":  "python scripts/run_agent_eval.py --suite stability --hours 72 --export-dir .run/eval-runs",
                     "eval:domain":  "python scripts/run_agent_eval.py --suite domain",

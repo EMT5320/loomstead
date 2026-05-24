@@ -198,7 +198,7 @@ UI 列表可以保留在 Debug 或辅助模式中，默认游玩路线应以地�
 
 ### 3.3 Gameplay Systems Layer
 
-首版最小玩法系统：
+首版最小玩法系统以 `world_entities.v1` typed schema 为统一数据契约，实体字段和工具空间详见 [`world_entity_model.md`](./world_entity_model.md)。
 
 1. **时间段系统**
    - `morning` / `noon` / `afternoon` / `evening` / `night`。
@@ -206,17 +206,18 @@ UI 列表可以保留在 Debug 或辅助模式中，默认游玩路线应以地�
    - 夜晚触发反思、记忆沉淀和次日摘要。
 
 2. **农场系统**
-   - 首版只需要少量田块。
+   - 当前 typed schema 覆盖 FarmPlot，首版只需要少量田块。
    - 作物阶段：空地、已播种、已浇水、可收获。
    - 首版可只做 1 种作物，例如 `starlight_turnip` 或 `farm_flower`。
 
 3. **背包和物品系统**
+   - 当前 typed schema 覆盖 Item、Inventory 和 Shop。
    - 物品来源：初始赠送、农场收获、事件奖励。
    - 物品用途：送礼、事件消耗、任务条件。
 
 4. **关系系统**
    - 关系变化来自聊天、送礼、事件选择和 NPC 主观反应。
-   - 关系变化必须写入事件流和记忆证据。
+   - 关系变化必须写入事件流、RelationshipEdge 和主观记忆证据。
 
 5. **任务 / 当前目标系统**
    - 用轻量目标引导玩家，例如“去广场认识居民”“准备一份作物礼物”“傍晚去酒馆看看”。

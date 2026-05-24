@@ -14,6 +14,7 @@ from app.eval import (  # noqa: E402
     run_cross_domain_adapter_scenarios,
     run_process_fidelity_scenarios,
     run_rule_scenarios,
+    run_stability_determinism_check,
     run_stability_scenarios,
 )
 
@@ -59,6 +60,20 @@ def _compact_stability_output(result: dict) -> dict:
     }
 
 
+def _compact_stability_determinism_output(result: dict) -> dict:
+    return {
+        "ok": result.get("ok"),
+        "suite": result.get("suite"),
+        "baseline": result.get("baseline"),
+        "hours": result.get("hours"),
+        "repeats": result.get("repeats"),
+        "invariantSignature": result.get("invariantSignature"),
+        "mismatches": result.get("mismatches"),
+        "runSpecificEvidence": result.get("runSpecificEvidence"),
+        "notes": result.get("notes"),
+    }
+
+
 def _compact_domain_output(result: dict) -> dict:
     return {
         "ok": result.get("ok"),
@@ -95,6 +110,8 @@ if __name__ == "__main__":
     parser.add_argument("--full", action="store_true", help="输出完整 scenario 明细。")
     parser.add_argument("--export-dir", type=Path, default=None, help="导出 Process Fidelity / stability / domain 数据集。")
     parser.add_argument("--hours", type=int, default=24, help="stability suite 推进的游戏小时数。")
+    parser.add_argument("--determinism-check", action="store_true", help="对 stability suite 连跑多次并比较硬门禁不变量。")
+    parser.add_argument("--repeats", type=int, default=3, help="stability determinism check 连续运行次数。")
     parser.add_argument("--provider", choices=("rule", "cloud", "mixed"), default="rule", help="process suite 的 provider 模式。")
     parser.add_argument("--scenario", action="append", default=[], help="只运行指定 Process GoalSpec id，可重复传入。")
     parser.add_argument("--seeds", type=int, default=1, help="process suite 每个 GoalSpec 的重复 seed 数。")
@@ -110,8 +127,12 @@ if __name__ == "__main__":
         )
         output = result if args.full else _compact_process_output(result)
     elif args.suite == "stability":
-        result = run_stability_scenarios(hours=args.hours, export_dir=args.export_dir)
-        output = result if args.full else _compact_stability_output(result)
+        if args.determinism_check:
+            result = run_stability_determinism_check(hours=args.hours, repeats=args.repeats)
+            output = result if args.full else _compact_stability_determinism_output(result)
+        else:
+            result = run_stability_scenarios(hours=args.hours, export_dir=args.export_dir)
+            output = result if args.full else _compact_stability_output(result)
     elif args.suite == "domain":
         result = run_cross_domain_adapter_scenarios(export_dir=args.export_dir)
         output = result if args.full else _compact_domain_output(result)

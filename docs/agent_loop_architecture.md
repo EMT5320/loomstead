@@ -1282,7 +1282,7 @@ Phase 1（"活着的世界"）已使用 `LifeActionExecutor` + `/api/world/tick`
 - `archive/architecture_blueprint.md` 中的 NPC 行为描述（早期单层 NPC 调度）
 - `archive/vertical_slice_spec.md` 中的"软日程"描述
 - `archive/core_map.md` 中的"动机系统"草稿（已升级为本文形态）
-- `gameplay_system_architecture.md` 第 2.4 节"软日程代替固定排班"（待该文档下次治理时改写）
+- `gameplay_system_architecture.md` 第 2.4 节已同步为 MotivationEngine 驱动的行为节奏，覆盖早期"软日程代替固定排班"描述
 
 ### 13.6 Eval 是 Phase 2 的硬验收线
 

@@ -667,7 +667,7 @@ Phase 2 启动时的迁移工作：
 - `archive/architecture_blueprint.md` 中的 World State 字段说明（早期粗略 schema）
 - `archive/vertical_slice_spec.md` 中的"Gameplay Systems Layer 农场系统"等章节
 - `archive/core_map.md` §2 的"世界实体设计"草稿（已升级为本文形态）
-- `gameplay_system_architecture.md` §3.3 的"农场系统 / 背包和物品系统 / 关系系统"等段（待该文档下次治理时改写为指向本文档）
+- `gameplay_system_architecture.md` §3.3 已同步为指向本文档的 Gameplay Systems Layer 摘要
 
 ## 10. Phase 2 验收标准
 
