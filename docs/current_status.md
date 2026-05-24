@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: project-status
-last_verified: 2026-05-24
+last_verified: 2026-05-25
 startup_load: after-agent-context
 source_of_truth: true
 scope: current implementation facts, verification state, and work constraints
@@ -9,7 +9,7 @@ scope: current implementation facts, verification state, and work constraints
 
 # 当前项目状态与开发前约束
 
-> 状态更新时间：2026-05-24（Phase 2 收紧 Round 1：跨文件依赖 / reviewer 分歧 coding scenario + counterfactual tool selection metric + Godot Observer 行交互与空/错误态 + 4 核心 NPC motivationProfile / capabilityPreferences 填充）
+> 状态更新时间：2026-05-25（Phase 2 收紧 Round 2：process eval cloud/mixed provider 接入 + Web Debug Phase 2 三卡片 + cross-domain test runner matrix + JavaScript fixture + step/auto 修复）
 > 本文只记录当前仓库中已核对、命令已检或明确标注人工未验收的事实。长期方向见 `docs/project_vision.md`，研究 framing 见 `docs/research_framing_motivational_delegation.md`，NPC agent loop 设计见 `docs/agent_loop_architecture.md`，世界实体 schema 见 `docs/world_entity_model.md`，Process Fidelity Eval 规格见 `docs/process_fidelity_eval_spec.md`，跨域 adapter 接口见 `docs/cross_domain_adapter.md`，多层 Agent 系统设计见 `docs/agentic_game_design.md`。
 
 ## 1. 当前阶段判断
@@ -36,10 +36,15 @@ scope: current implementation facts, verification state, and work constraints
 
 游戏内容剧本线的讨论、四层方案、当前实现与后续主线拆分已沉淀到 `docs/game_content_storyline.md`。
 
+- 2026-05-25 Round 2 收紧已落地三条线：
+  - Lane A · Process Eval cloud/mixed provider 接入：`scripts/run_agent_eval.py` 新增 `--provider {rule,cloud,mixed}` / `--scenario` / `--seeds` CLI；`backend/app/eval/runner.py` 按 provider_mode 派发 baseline，manifest 新增 `process_llm_evidence.v1` 块（含 `provider_usage_actual.v1` 逐次记录、totals、cloudCallCount、fallbackCount），cloud/mixed mode 缓存到 `.run/process-llm-evidence/latest.json` 供 rule 导出附加最近证据；`backend/app/runtime/agent_runtime.py::_maybe_apply_phase2_social_llm_decision` 在 cloud/mixed mode 让 social_strategic 候选走真实 LLM，profile / parsing 失败回落规则路径并记录 `fallbackReason`；`scripts/index_eval_runs.py` paper promotion 模板加 LLM evidence checklist 和 `externalModelVerifiedIfNeeded` 自动判定，`PROMOTION.md` 渲染 LLM evidence 块；`docs/process_fidelity_eval_spec.md` 同步 manifest.llmEvidence schema、手动 cloud 验证命令和 Phase 2 success criterion #7。真实 cloud LLM 链路验收为手动命令，不进默认 CI。
+  - Lane B · Web Debug Phase 2 三卡片：`frontend/app.js` 接入 `/api/debug.phase2`（全局 + per-agent），新增 Heuristic Library / Arbitration Trace / Rashomon Memory 三卡片；Heuristic Library 显示活跃 / 休眠分组、`effectiveConfidence` / `createdTick` / `updatedTick` / `activations`，按 NPC 过滤 + `worldTick` 标记；Arbitration Trace 列出最近 `motivation.decision_made`，展开候选工具 baseScore / need / capability / memory / heuristic / relationship bonus 并高亮 winner；Rashomon Memory 按 `sourceEventId` 分组横向多 NPC 视角对比 `perspective` / `valence` / `confidence` / `text`；前端 stepBtn / autoBtn 已修复同时驱动 `/api/world/tick` 与 `/api/step`，主人 Round 2 验收时确认在 tick 修复后三卡片渲染正常（boot 时 18 条 designer heuristic 可见）。
+  - Lane C · 跨域测试框架矩阵：`backend/app/domain/coding/adapter.py` 每个 fixture metadata 声明 `testRunner`（pytest / unittest / node_test），adapter 按 runner 路由 `commandTemplate`，test report 记录 `testRunner` / `command` / `durationMs` / `exitCode`；新增 `coding.skill_javascript_smoke_dryrun` 使用 `node --test` 与 JavaScript 源文件，复用现有 `prePatchTestReports` / `testReports` / `reviewReports` 证据流；coding scenario 从 6 → 7，`eval:domain` 10/10 通过；`docs/cross_domain_adapter.md` §1 / §5 / §6 同步 7-scenario inventory，reviewer 抽样人工复核移到 `eval:archive:promote` 阶段。
+- 2026-05-25 `eval:stability:long` 72h 已按 Round 2 NPC 数据刷新：`heuristic_count`=`56`、`heuristic_decision_ref_rate`=`0.634259`、`subjectiveMemoryCount`=`1044`、`relationshipEdgeCount`=`14`、`tool_failure_rate`=`0`、9 项 checks 全绿。
 - 2026-05-24 Round 1 收紧已落地三条线：
-  - Lane A · Eval 深化：`backend/app/domain/coding/adapter.py` 新增 `coding.skill_multifile_dependency_repair_dryrun`（含 import graph、双源文件 patch、single-file partial-patch failure replay）和 `coding.skill_reviewer_disagreement_dryrun`（process / risk 双 reviewer approve vs request_changes 冲突 + ArbitrationLayer contributing_sources + review trace ref）；coding fixture 从 4 个扩到 6 个，eval:domain 9/9 通过；`backend/app/eval/process_fidelity.py` 新增 `counterfactual_tool_selection_change_rate` 指标，`backend/app/eval/runner.py::_build_counterfactual_tool_selection_replay` 逐条移除 winner tool 引用的主观记忆并复算 24 个决策周期，比对 selectedToolId 是否变化（Full=`0.375`、Hard Delegation=`0.0`、No Subjective Memory=`0.0`）；`backend/app/eval/domain_adapter.py` 接入新的 `partialPatchTestReports` 证据流，`schema_registry.v1` 数量 18→19。
-  - Lane C · Godot Observer 打磨：`clients/godot/scripts/ui/observer_panel.gd` 加 `highlight_npcs_requested` / `retry_requested` 信号，trace 行可点击触发 NPC sprite 高亮和 details 弹层；五大区域具体空态文案；HTTP 失败显示 retry banner；快捷键覆盖 Esc 关闭 details 与 1-5 切 trace filter；`clients/godot/scripts/world/town_map.gd` 接入信号驱动 `flash_observer_highlight` 并在重试时清缓存；`clients/godot/scripts/world/npc_controller.gd` 新增高亮 tween；`clients/godot/scripts/api_client.gd` 微调支持 phase2 retry 路径。
-  - Lane D · NPC 数据填充：4 核心 NPC（kai/mira/bram/lena）的 `motivationProfile.needs` 已填实际 weight / decay_rate / threshold_trigger / threshold_critical（与 personality / fears / goals 对齐），`personalityModifiers` 与 `capabilityPreferences`（含 wildcard prefix 与 `enabled=false`）已填实际数据，`heuristicSeeds` 每人扩到 4 条（含 avoid_* 失败启发式 + 一条与 fears 对齐的正向 hook）；tomas / orren 保持 stub。`eval:stability` 24 小时：`heuristic_count` 24→`54`、`heuristic_decision_ref_rate` `0.534722`→`0.694444`、`relationshipEdgeCount` 9→`14`、`tool_failure_rate=0.0`、9 项 stability checks 全绿。
+  - Lane A · Eval 深化：`backend/app/domain/coding/adapter.py` 新增 `coding.skill_multifile_dependency_repair_dryrun` 与 `coding.skill_reviewer_disagreement_dryrun`；`backend/app/eval/process_fidelity.py` 新增 `counterfactual_tool_selection_change_rate` 指标；`backend/app/eval/runner.py::_build_counterfactual_tool_selection_replay` 逐条移除 winner tool 引用主观记忆并复算 24 个决策周期。
+  - Lane C · Godot Observer 打磨：trace 行可点击 + 高亮 NPC sprite + details 弹层；五大区域空态文案；HTTP 失败 retry banner；Esc / 1-5 快捷键。
+  - Lane D · NPC 数据填充：4 核心 NPC（kai/mira/bram/lena）的 `motivationProfile.needs` / `personalityModifiers` / `capabilityPreferences` 已填实际数据，`heuristicSeeds` 每人扩到 4 条；tomas / orren 保持 stub。
 - 2026-05-23 SubjectiveMemoryStore：tick 级 `effectiveSalience` 衰减、低显著性 / 低情绪强度归档、`activeCount` / `archivedCount` / `archivedItems` debug 视图，`subjective_memory_recall.v2` salience 证据。
 - 2026-05-23 WorldEntities 首批 typed schema：FarmPlot / Item / Inventory / Shop / Building / Time / Weather dataclass 提供统一 `world_entities.v1` Debug 快照，纳入 `schema_registry.v1`。
 
