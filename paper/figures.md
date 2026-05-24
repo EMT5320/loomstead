@@ -22,13 +22,13 @@
 
 - Goal: summarize goal achievement, process fidelity, autonomy, memory causality, traceability, side effects.
 - Source files: `docs/process_fidelity_eval_spec.md`.
-- Status: draftable now.
+- Status: drafted in `paper/latex/sections/04_process_fidelity_eval.tex`.
 
 ## Table 2: Process Fidelity ablation summary
 
 - Goal: compare Full, Hard Delegation, No Subjective Memory, No Relationship Edge, Shuffled Memory Owner, Evidence-Link Removal.
-- Source files: `paper/generated/ablation_table.csv`, `paper/generated/eval_summary_tables.md`.
-- Status: generated from current run.
+- Source files: `paper/generated/ablation_table.csv`, `paper/generated/eval_summary_tables.md`, `paper/generated/eval_tables.tex`.
+- Status: generated from current run and included by `paper/latex/sections/05_experiments.tex`.
 
 ## Table 3: Memory causality and trace coverage
 
@@ -39,17 +39,17 @@
 ## Table 4: Stability
 
 - Goal: 24h / 72h ticks, failures, interruptions, memory observations, heuristic references.
-- Source files: latest stability summaries.
-- Status: generated from current run.
+- Source files: latest stability summaries, `paper/generated/eval_tables.tex`.
+- Status: generated from current run and included by `paper/latex/sections/05_experiments.tex`.
 
 ## Table 5: Cross-domain adapter
 
 - Goal: town vs coding scenarios and shared metrics.
-- Source files: latest domain summary and manifest.
-- Status: generated from current run.
+- Source files: latest domain summary, manifest, `paper/generated/eval_tables.tex`.
+- Status: generated from current run and included by `paper/latex/sections/05_experiments.tex`.
 
 ## Table 6: Related-work positioning
 
 - Goal: compare Loomstead with Generative Agents, Concordia, drama management, AutoGen, MetaGPT, ChatDev, and AgentBench.
 - Source files: `paper/lit_review/source_index.md`, `paper/lit_review/*.md`, `paper/references.bib`.
-- Status: first seed pass complete; trace-debugging and human believability sources still pending.
+- Status: related-work prose drafted; trace-debugging and human believability sources still pending.

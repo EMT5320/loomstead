@@ -1,5 +1,26 @@
 \section{Process Fidelity Eval}
 
-Process Fidelity Eval measures whether goal progress follows a credible multi-agent process. The current metric families include goal success, shortcut violations, required process coverage, forced action rate, agent-initiated action ratio, intervention overreach, relationship-memory causal use, causal trace coverage, relationship consistency, and process believability.
+Process Fidelity Eval measures whether goal progress follows a credible multi-agent process. A run succeeds only when the desired outcome and the required evidence chain are both satisfied. For a relationship goal, that evidence chain may include shared events, subjective memories for both agents, relationship-edge source references, and a later decision that cites a relevant memory or relationship edge.
 
-The current baseline matrix includes Full Motivational Delegation, Hard Delegation, No Subjective Memory, No Relationship Edge, Shuffled Memory Owner, and Evidence-Link Removal. These baselines are currently rule-level scaffolding evidence and will be expanded with additional seeds and stronger runtime-level ablations.
+\begin{table}[t]
+\centering
+\small
+\caption{Process Fidelity metric families used by the current draft.}
+\label{tab:metric-families}
+\begin{tabular}{lll}
+\toprule
+Family & Example metrics & Question answered \\
+\midrule
+Outcome & goal success, milestones & Did the run satisfy the stated goal evidence? \\
+Process & process coverage, shortcuts & Did the required path occur without illegal jumps? \\
+Autonomy & forced action, agent initiation & Did NPC arbitration choose the relevant actions? \\
+Memory & causal use, ablation delta & Did remembered events affect later decisions? \\
+Trace & trace coverage, source links & Can the causal chain be replayed from artifacts? \\
+Side effects & spillover, overreach & Did intervention cause uncontrolled collateral change? \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The current baseline matrix includes Full Motivational Delegation, Hard Delegation, No Subjective Memory, No Relationship Edge, Shuffled Memory Owner, and Evidence-Link Removal. Hard Delegation represents the explicit worker-agent pattern: a Director decomposes the goal into assigned subtasks and gives them to specific NPCs. The memory and evidence-link ablations test whether relationship memory is causally useful, whether the correct owner of a memory matters, and whether traces still justify relationship changes after source links are removed.
+
+All current exported results should be read as scaffolding evidence. The metrics are already wired to manifests and generated paper tables, yet stronger research claims need repeated seeds, LLM-backed provider runs, runtime-level ablations, and human process-believability ratings.

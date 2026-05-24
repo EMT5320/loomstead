@@ -1,13 +1,18 @@
 \section{Introduction}
 
-Persistent multi-agent narrative systems need to handle goals whose success depends on visible intermediate processes. A relationship should improve because characters shared events, remembered them, and later acted differently. A festival should succeed through resource pressure, social participation, and divergent subjective memories. Loomstead frames this problem as process-constrained goal achievement.
+Persistent multi-agent narrative systems increasingly need to accept user goals while preserving the credibility of a living world. Many narrative goals have value only when the path to the outcome is visible. Two non-player characters should become close friends through shared events, subjective memories, and later behavior changes. A forgiveness arc should depend on remembered harm, observed repair, and relationship evidence. A festival should succeed through resources, social participation, and post-event memories. We call these \emph{process-constrained goals}: goals whose success requires both a desired outcome and evidence that the outcome emerged through an acceptable sequence of world events.
 
-The central mechanism is motivational delegation. A Director may bias motivations, expose information, create opportunities, load event pressure, shift resources, or inject constraints. NPCs still select actions through their own needs, memories, relationships, heuristics, and tool capabilities. The research question is whether this pattern can produce traceable progress toward user goals while preserving autonomy and process fidelity.
+Directly satisfying the final state of such goals can erase the narrative value that made the goal meaningful. Assigning explicit subtasks to characters can also create a brittle worker-style process where NPCs execute authorial commands with limited social side effects. Loomstead studies a third pattern, \emph{motivational delegation}. A Director shapes conditions through motivation bias, opportunity scheduling, information exposure, resource pressure, event constraints, and evaluation checkpoints. NPCs then select actions through their own needs, memories, relationships, heuristics, and tool capabilities. The research question is whether this pattern can produce traceable progress toward user goals while preserving agent-initiated action and process fidelity.
 
-This draft currently makes three scoped contributions:
+Loomstead implements this idea in a narrative-primary research environment: a Godot town slice backed by a Python Agent Server. The server owns authoritative world state, Director interventions, Event Skills, NPC arbitration, tool execution, subjective memory, relationship edges, schema-checked traces, and local evaluation exports. The town domain is intentionally small and social. Its goals make shortcut state edits easy to notice and make human process judgments intuitive.
+
+This draft reports a research-preview scaffold. Current results are local rule-level evidence with small sample counts, posterior ablations, and dry-run cross-domain fixtures. They are useful as an executable argument for the framing and tooling, while stronger claims require more seeds, LLM-backed runs, human ratings, and real observer-mode validation.
+
+The draft makes four scoped contributions:
 
 \begin{enumerate}
-  \item A runtime pattern for motivational delegation in a persistent narrative town slice.
-  \item A Process Fidelity Eval suite with shortcut, autonomy, memory-causality, and trace-coverage metrics.
-  \item A manifest-backed evidence workflow for connecting runtime traces, ablations, stability runs, and paper claims.
+  \item A runtime pattern for motivational delegation in persistent multi-agent narratives.
+  \item A Process Fidelity Eval suite with shortcut, autonomy, memory-causality, trace-coverage, and believability metrics.
+  \item A manifest-backed evidence workflow for connecting traces, ablations, stability runs, and paper claims.
+  \item A small cross-domain adapter prototype that tests whether the same GoalSpec, trace, and eval abstractions can leave the town domain.
 \end{enumerate}

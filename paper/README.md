@@ -20,6 +20,7 @@ paper/
 |-- figures.md
 |-- references.bib
 |-- generated/
+|   |-- eval_tables.tex
 |-- lit_review/
 `-- latex/
 ```
@@ -27,7 +28,7 @@ paper/
 ## Per-session loop
 
 1. Run new evals or identify the latest promoted run.
-2. Refresh `paper/generated/` with `python scripts/paper_extract_eval_tables.py`.
+2. Refresh `paper/generated/` with `python scripts/paper_extract_eval_tables.py`; this updates Markdown, CSV, JSON, and LaTeX table artifacts.
 3. Update `claim_evidence_matrix.md` so each claim has evidence and a missing-evidence note.
 4. Update `figures.md` so each planned figure has a source and status.
 5. Compile `paper/latex/main.tex` to keep the draft buildable.

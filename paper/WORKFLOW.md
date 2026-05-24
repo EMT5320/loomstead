@@ -22,6 +22,8 @@ npm.cmd run eval:archive:drift
 python scripts/paper_extract_eval_tables.py
 ```
 
+This refreshes `paper/generated/eval_summary_tables.md`, `paper/generated/ablation_table.csv`, `paper/generated/latest_runs.json`, `paper/generated/manifest_inventory.md`, and `paper/generated/eval_tables.tex`.
+
 When new evidence is needed:
 
 ```powershell
@@ -59,7 +61,7 @@ Minimal build command:
 latexmk -pdf -cd -interaction=nonstopmode -halt-on-error -outdir=build paper/latex/main.tex
 ```
 
-Build outputs live under `paper/latex/build/`; source files stay under `paper/latex/`.
+Build outputs live under `paper/latex/build/`; source files stay under `paper/latex/`. The draft currently inputs generated tables from `paper/generated/eval_tables.tex`.
 
 ## 6. Closeout checks
 
