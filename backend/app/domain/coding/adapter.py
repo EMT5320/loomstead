@@ -16,12 +16,16 @@ from app.eval.process_fidelity import build_process_metrics
 
 FAILING_TEST_REPAIR_GOAL_ID = "coding.skill_failing_test_repair_dryrun"
 MULTIFILE_REVIEW_GOAL_ID = "coding.skill_multifile_review_dryrun"
+MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID = "coding.skill_multifile_dependency_repair_dryrun"
+REVIEWER_DISAGREEMENT_GOAL_ID = "coding.skill_reviewer_disagreement_dryrun"
 
 CODING_GOAL_IDS = (
     "coding.skill_prototype_dryrun",
     "coding.skill_regression_fix_dryrun",
     FAILING_TEST_REPAIR_GOAL_ID,
     MULTIFILE_REVIEW_GOAL_ID,
+    MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID,
+    REVIEWER_DISAGREEMENT_GOAL_ID,
 )
 CODING_GOAL_TEXT = {
     "coding.skill_prototype_dryrun": "Develop a skill prototype through design, tests, and review.",
@@ -31,6 +35,12 @@ CODING_GOAL_TEXT = {
     ),
     MULTIFILE_REVIEW_GOAL_ID: (
         "Update a skill and its metadata through a multi-file patch, checkout tests, and rubric review."
+    ),
+    MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID: (
+        "Repair a cross-file dependency bug where tests pass only after coordinated source edits."
+    ),
+    REVIEWER_DISAGREEMENT_GOAL_ID: (
+        "Resolve conflicting rule-reviewer judgments through traceable arbitration."
     ),
 }
 
@@ -58,10 +68,13 @@ class CodingDomainAdapter:
                 "architect": {"role": "Architect", "state": "waiting"},
                 "implementer": {"role": "Implementer", "state": "waiting"},
                 "reviewer": {"role": "Reviewer", "state": "waiting"},
+                "process_reviewer": {"role": "Process Reviewer", "state": "waiting"},
+                "risk_reviewer": {"role": "Risk Reviewer", "state": "waiting"},
             },
             "constraints": [],
             "artifacts": {},
             "prePatchTestReports": {},
+            "partialPatchTestReports": {},
             "testReports": {},
             "reviewReports": {},
             "dependencies": dependencies,
@@ -102,7 +115,7 @@ class CodingDomainAdapter:
             {"id": "review_completed", "predicate": "reviewer records approval with source evidence"},
             {"id": "failure_pattern_memory", "predicate": "review cites a prior failure or constraint memory"},
         ]
-        if goal_id == FAILING_TEST_REPAIR_GOAL_ID:
+        if goal_id in (FAILING_TEST_REPAIR_GOAL_ID, MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID):
             required_process.insert(
                 3,
                 {
@@ -125,15 +138,63 @@ class CodingDomainAdapter:
                     "predicate": "implementation updates dependency metadata alongside skill content",
                 },
             )
+        if goal_id == MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID:
+            required_process.insert(
+                2,
+                {
+                    "id": "import_graph_recorded",
+                    "predicate": "fixture records source import graph before the patch",
+                },
+            )
+            required_process.insert(
+                5,
+                {
+                    "id": "patch_covers_multiple_source_files",
+                    "predicate": "patch changes at least two dependency-linked source files",
+                },
+            )
+            required_process.insert(
+                6,
+                {
+                    "id": "single_file_patch_still_fails",
+                    "predicate": "single-file partial patch replay still fails the repo tests",
+                },
+            )
+        if goal_id == REVIEWER_DISAGREEMENT_GOAL_ID:
+            required_process.insert(
+                5,
+                {
+                    "id": "reviewer_conflict_observed",
+                    "predicate": "two rule reviewers produce approve and request_changes judgments",
+                },
+            )
+            required_process.insert(
+                6,
+                {
+                    "id": "arbitration_contributing_sources",
+                    "predicate": "ArbitrationLayer records each reviewer scoring basis",
+                },
+            )
+            required_process.insert(
+                7,
+                {
+                    "id": "review_trace_ref_recorded",
+                    "predicate": "review report records conflict resolution path and final trace ref",
+                },
+            )
         desired_artifact = {
             "coding.skill_prototype_dryrun": "skill_prototype",
             "coding.skill_regression_fix_dryrun": "skill_regression_fix",
             FAILING_TEST_REPAIR_GOAL_ID: "skill_failing_test_repair",
             MULTIFILE_REVIEW_GOAL_ID: "skill_multifile_review",
+            MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID: "skill_multifile_dependency_repair",
+            REVIEWER_DISAGREEMENT_GOAL_ID: "skill_reviewer_disagreement",
         }[goal_id]
         success_evidence = ["design_event", "diff_event", "test_event", "review_event"]
-        if goal_id == FAILING_TEST_REPAIR_GOAL_ID:
+        if goal_id in (FAILING_TEST_REPAIR_GOAL_ID, MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID):
             success_evidence.insert(1, "pre_patch_test_event")
+        if goal_id == REVIEWER_DISAGREEMENT_GOAL_ID:
+            success_evidence.append("review_arbitration_trace")
         return DomainGoalSpec(
             goal_id=goal_id,
             natural_language_goal=CODING_GOAL_TEXT[goal_id],
@@ -147,7 +208,7 @@ class CodingDomainAdapter:
             required_process=required_process,
             allowed_interventions=["event_skill_load", "constraint_injection", "evaluation_checkpoint"],
             success_evidence=success_evidence,
-            max_steps=5 if goal_id == FAILING_TEST_REPAIR_GOAL_ID else 4,
+            max_steps=5 if goal_id in (FAILING_TEST_REPAIR_GOAL_ID, MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID) else 4,
         )
 
     def observe(self, world: dict[str, Any], goal: DomainGoalSpec) -> DomainObservation:
@@ -156,6 +217,7 @@ class CodingDomainAdapter:
             world_summary={
                 "artifactCount": float(len(world.get("artifacts", {}))),
                 "prePatchTestReportCount": float(len(world.get("prePatchTestReports", {}))),
+                "partialPatchTestReportCount": float(len(world.get("partialPatchTestReports", {}))),
                 "testReportCount": float(len(world.get("testReports", {}))),
                 "reviewReportCount": float(len(world.get("reviewReports", {}))),
                 "constraintCount": float(len(world.get("constraints", []))),
@@ -166,6 +228,9 @@ class CodingDomainAdapter:
                 "artifactRefs": sorted(str(key) for key in world.get("artifacts", {}).keys()),
                 "prePatchTestReportRefs": sorted(
                     str(key) for key in world.get("prePatchTestReports", {}).keys()
+                ),
+                "partialPatchTestReportRefs": sorted(
+                    str(key) for key in world.get("partialPatchTestReports", {}).keys()
                 ),
                 "testReportRefs": sorted(str(key) for key in world.get("testReports", {}).keys()),
                 "reviewReportRefs": sorted(str(key) for key in world.get("reviewReports", {}).keys()),
@@ -220,6 +285,9 @@ class CodingDomainAdapter:
         pre_patch_reports = (
             world.get("prePatchTestReports", {}) if isinstance(world.get("prePatchTestReports"), dict) else {}
         )
+        partial_patch_reports = (
+            world.get("partialPatchTestReports", {}) if isinstance(world.get("partialPatchTestReports"), dict) else {}
+        )
         test_reports = world.get("testReports", {}) if isinstance(world.get("testReports"), dict) else {}
         review_reports = world.get("reviewReports", {}) if isinstance(world.get("reviewReports"), dict) else {}
         repo_fixture = world.get("repoFixture", {}) if isinstance(world.get("repoFixture"), dict) else {}
@@ -236,6 +304,38 @@ class CodingDomainAdapter:
         ) else []
         metadata_path = str(repo_fixture.get("metadataPath") or "")
         review_rubric_path = str(repo_fixture.get("reviewRubricPath") or "")
+        import_graph = repo_fixture.get("importGraph", {}) if isinstance(repo_fixture.get("importGraph"), dict) else {}
+        dependency_evidence = artifact.get("dependencyEvidence", {}) if isinstance(artifact.get("dependencyEvidence"), dict) else {}
+        patch_coverage_file_count = int(artifact.get("patchCoverageFileCount") or 0)
+        source_changed_files = [
+            path
+            for path in changed_files
+            if path.startswith("src/") and path.endswith(".py")
+        ]
+        partial_reports = [
+            report for report in partial_patch_reports.values() if isinstance(report, dict)
+        ]
+        single_file_patch_still_fails = bool(partial_reports) and all(
+            bool(report.get("expectedFailure"))
+            and bool(report.get("failureObserved"))
+            and report.get("execution", {}).get("exitCode") not in (None, 0)
+            for report in partial_reports
+        )
+        reviewer_evaluations = (
+            review_report.get("reviewerEvaluations", [])
+            if isinstance(review_report.get("reviewerEvaluations"), list)
+            else []
+        )
+        reviewer_decisions = {
+            str(item.get("decision") or "")
+            for item in reviewer_evaluations
+            if isinstance(item, dict)
+        }
+        arbitration_layer = (
+            review_report.get("arbitrationLayer", {})
+            if isinstance(review_report.get("arbitrationLayer"), dict)
+            else {}
+        )
         pre_patch_cases = (
             pre_patch_report.get("caseResults", []) if isinstance(pre_patch_report.get("caseResults"), list) else []
         )
@@ -258,6 +358,11 @@ class CodingDomainAdapter:
             "metadata_dependency_updated": bool(metadata_path)
             and metadata_path in changed_files
             and bool(artifact.get("fileSha256", {}).get(metadata_path)),
+            "import_graph_recorded": bool(import_graph.get("nodes")) and bool(import_graph.get("edges")),
+            "patch_covers_multiple_source_files": patch_coverage_file_count >= 2
+            and len(source_changed_files) >= 2
+            and bool(dependency_evidence.get("importGraph")),
+            "single_file_patch_still_fails": single_file_patch_still_fails,
             "external_repo_checkout_tested": "coding.tests_executed" in event_types
             and bool(test_report.get("passed"))
             and test_report.get("testPhase") == "post_patch"
@@ -265,6 +370,12 @@ class CodingDomainAdapter:
             and test_report.get("execution", {}).get("testPhase") == "post_patch"
             and test_report.get("execution", {}).get("exitCode") == 0,
             "review_completed": bool(review_event) and review_report.get("status") == "approved",
+            "reviewer_conflict_observed": bool(review_report.get("conflict", {}).get("conflictDetected"))
+            and {"approve", "request_changes"}.issubset(reviewer_decisions),
+            "arbitration_contributing_sources": len(arbitration_layer.get("contributing_sources", [])) >= 2,
+            "review_trace_ref_recorded": bool(
+                review_report.get("finalDecisionTraceRef", {}).get("eventId")
+            ),
             "failure_pattern_memory": bool(review_event and review_event.get("payload", {}).get("citedMemoryIds")),
         }
         # Coding domain 用 review dependency trace 对齐通用 relationship_consistency 指标。
@@ -303,6 +414,7 @@ class CodingDomainAdapter:
             ("repoFixture", "coding_repo_fixture.json"),
             ("artifacts", "coding_artifacts.json"),
             ("prePatchTestReports", "coding_pre_patch_test_reports.json"),
+            ("partialPatchTestReports", "coding_partial_patch_test_reports.json"),
             ("testReports", "coding_test_reports.json"),
             ("reviewReports", "coding_review_reports.json"),
         ):
@@ -410,6 +522,7 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
         repo_fixture = world.get("repoFixture", {}) if isinstance(world.get("repoFixture"), dict) else {}
         patch_text, patched_files, changed_files = _build_skill_patch(repo_fixture)
         base_files = repo_fixture.get("files", {}) if isinstance(repo_fixture.get("files"), dict) else {}
+        dependency_evidence = _build_dependency_patch_evidence(repo_fixture, base_files, patched_files, changed_files)
         target_path = changed_files[0] if changed_files else str(
             repo_fixture.get("targetPath") or "skills/loomstead-debug/SKILL.md"
         )
@@ -422,6 +535,7 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
             "status": "created",
             "sourceEventIds": [_event_id(design_event)],
             "changedFiles": changed_files,
+            "patchCoverageFileCount": len(changed_files),
             "baseFileSha256": _stable_digest(str(base_files.get(target_path, ""))),
             "patchedFileSha256": _stable_digest(str(patched_files.get(target_path, ""))),
             "fileSha256": {
@@ -435,6 +549,8 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
             "patchedFiles": patched_files,
             "sha256": _stable_digest(patch_text),
         }
+        if dependency_evidence:
+            artifact["dependencyEvidence"] = dependency_evidence
         world.setdefault("artifacts", {})[artifact_id] = artifact
         emitted.append(
             _append_event(
@@ -446,6 +562,7 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
                     "sourceEventIds": artifact["sourceEventIds"],
                     "artifactSha256": artifact["sha256"],
                     "changedFiles": artifact["changedFiles"],
+                    "patchCoverageFileCount": artifact["patchCoverageFileCount"],
                 },
             )
         )
@@ -491,6 +608,30 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
                 },
             )
         )
+        if repo_fixture.get("requiresSingleFileFailureEvidence"):
+            partial_reports = _run_single_file_partial_patch_reports(artifact, repo_fixture)
+            world.setdefault("partialPatchTestReports", {}).update(partial_reports)
+            failing_report_ids = [
+                report_id
+                for report_id, report in partial_reports.items()
+                if isinstance(report, dict) and bool(report.get("failureObserved"))
+            ]
+            emitted.append(
+                _append_event(
+                    world,
+                    "coding.partial_patch_tests_failed",
+                    {
+                        "agentId": "reviewer",
+                        "partialPatchTestReportIds": sorted(failing_report_ids),
+                        "expectedFailure": True,
+                        "failureObserved": len(failing_report_ids) == len(partial_reports),
+                        "sourceArtifactId": artifact.get("artifactId", "skill_prototype.patch")
+                        if isinstance(artifact, dict)
+                        else "skill_prototype.patch",
+                        "sourceEventIds": [_event_id(diff_event)],
+                    },
+                )
+            )
     elif "coding.review_completed" not in event_types:
         test_event = _first_event(world, "coding.tests_executed")
         pre_patch_event = _first_event(world, "coding.pre_patch_tests_failed")
@@ -552,9 +693,42 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
                     and pre_patch_report.get("execution", {}).get("exitCode") not in (None, 0),
                 },
             )
+        if repo_fixture.get("requiresSingleFileFailureEvidence"):
+            partial_patch_reports = (
+                world.get("partialPatchTestReports", {})
+                if isinstance(world.get("partialPatchTestReports"), dict)
+                else {}
+            )
+            partial_failures = [
+                report
+                for report in partial_patch_reports.values()
+                if isinstance(report, dict) and bool(report.get("failureObserved"))
+            ]
+            checklist.insert(
+                3,
+                {
+                    "id": "single_file_patch_still_fails",
+                    "passed": bool(partial_failures)
+                    and len(partial_failures) == len(partial_patch_reports),
+                },
+            )
         cited_memory_ids = ["prior_failure.skip_tests"]
         if requires_pre_patch:
             cited_memory_ids.append("prior_failure.failing_test_first")
+        if repo_fixture.get("requiresReviewerDisagreement"):
+            cited_memory_ids.append("prior_review.conflict_resolution")
+        reviewer_evaluations = _build_rule_reviewer_evaluations(
+            repo_fixture=repo_fixture,
+            artifact=artifact if isinstance(artifact, dict) else {},
+            test_report=test_report if isinstance(test_report, dict) else {},
+            checklist=checklist,
+        )
+        arbitration_layer = _arbitrate_reviewer_disagreement(
+            reviewer_evaluations=reviewer_evaluations,
+            test_report=test_report if isinstance(test_report, dict) else {},
+            source_event_ids=source_event_ids,
+            review_report_id=review_report_id,
+        )
         review_report = {
             "reviewReportId": review_report_id,
             "status": "approved",
@@ -569,6 +743,42 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
             "citedMemoryIds": cited_memory_ids,
             "checklist": checklist,
         }
+        if reviewer_evaluations:
+            review_report["reviewerEvaluations"] = reviewer_evaluations
+            review_report["conflict"] = {
+                "conflictDetected": {"approve", "request_changes"}.issubset(
+                    {str(item.get("decision") or "") for item in reviewer_evaluations}
+                ),
+                "conflictingReviewerIds": [
+                    str(item.get("reviewerId") or "")
+                    for item in reviewer_evaluations
+                    if str(item.get("decision") or "") in {"approve", "request_changes"}
+                ],
+            }
+            review_report["arbitrationLayer"] = arbitration_layer
+            review_report["conflictResolutionPath"] = arbitration_layer.get("resolutionPath", [])
+            review_report["status"] = str(arbitration_layer.get("finalDecision") or "approved")
+            conflict_event = _append_event(
+                world,
+                "coding.review_conflict_arbitrated",
+                {
+                    "agentId": "reviewer",
+                    "reviewReportId": review_report_id,
+                    "traceId": arbitration_layer.get("traceId"),
+                    "finalDecision": review_report["status"],
+                    "contributing_sources": arbitration_layer.get("contributing_sources", []),
+                    "sourceEventIds": list(source_event_ids),
+                },
+            )
+            emitted.append(conflict_event)
+            source_event_ids.append(_event_id(conflict_event))
+            review_report["sourceEventIds"] = list(source_event_ids)
+            review_report["finalDecisionTraceRef"] = {
+                "type": "coding_review_arbitration",
+                "traceId": arbitration_layer.get("traceId"),
+                "eventId": _event_id(conflict_event),
+                "finalDecision": review_report["status"],
+            }
         review_report["sha256"] = _stable_digest(json.dumps(review_report, ensure_ascii=False, sort_keys=True))
         world.setdefault("reviewReports", {})[review_report_id] = review_report
         emitted.append(
@@ -599,9 +809,14 @@ def _requires_pre_patch_failure(world: dict[str, Any]) -> bool:
 def _build_repo_fixture(goal_id: str) -> dict[str, Any]:
     """构造可重复的外部仓库 fixture，模拟跨域 coding 输入。"""
     requires_pre_patch_failure = False
+    requires_single_file_failure_evidence = False
+    requires_reviewer_disagreement = False
     pre_patch_test_report_id = None
     metadata_path = None
     review_rubric_path = None
+    test_command = "python check_skill.py"
+    import_graph: dict[str, Any] = {}
+    reviewer_rubrics: list[dict[str, Any]] = []
     planned_file_updates: list[dict[str, Any]] = []
     if goal_id == FAILING_TEST_REPAIR_GOAL_ID:
         fixture_id = "loomstead-debug-failing-test-fixture.v1"
@@ -690,6 +905,93 @@ def _build_repo_fixture(goal_id: str) -> dict[str, Any]:
                 "value": "metadata qualityGates includes eval:domain",
             },
         ]
+    elif goal_id == MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID:
+        fixture_id = "loomstead-debug-multifile-dependency-fixture.v1"
+        artifact_id = "skill_multifile_dependency_repair.patch"
+        test_report_id = "skill_multifile_dependency_repair.tests"
+        pre_patch_test_report_id = "skill_multifile_dependency_repair.pre_patch_tests"
+        review_report_id = "skill_multifile_dependency_repair.review"
+        requires_pre_patch_failure = True
+        requires_single_file_failure_evidence = True
+        test_command = "python tests/test_workflow.py"
+        import_graph = {
+            "nodes": [
+                "src/formatter.py",
+                "src/workflow.py",
+                "tests/test_workflow.py",
+            ],
+            "edges": [
+                {"from": "src/workflow.py", "imports": "src/formatter.py", "symbols": ["display_name", "slugify"]},
+                {"from": "tests/test_workflow.py", "imports": "src/workflow.py", "symbols": ["build_ticket"]},
+            ],
+        }
+        planned_additions = []
+        planned_file_updates = [
+            {
+                "path": "src/formatter.py",
+                "replace": {
+                    "def slugify(name: str) -> str:\n    return name\n": (
+                        "def slugify(name: str) -> str:\n"
+                        "    return '-'.join(name.lower().split())\n"
+                    ),
+                },
+            },
+            {
+                "path": "src/workflow.py",
+                "replace": {
+                    '    return {"ok": True, "label": name, "slug": name}\n': (
+                        '    return {"ok": True, "label": name, "slug": slugify(name)}\n'
+                    ),
+                },
+            },
+        ]
+        test_expectations = []
+    elif goal_id == REVIEWER_DISAGREEMENT_GOAL_ID:
+        fixture_id = "loomstead-debug-reviewer-disagreement-fixture.v1"
+        artifact_id = "skill_reviewer_disagreement.patch"
+        test_report_id = "skill_reviewer_disagreement.tests"
+        review_report_id = "skill_reviewer_disagreement.review"
+        requires_reviewer_disagreement = True
+        planned_additions = [
+            "Record test-backed reviewer disagreements before approval.",
+            "Attach arbitration trace refs when reviewers disagree.",
+        ]
+        reviewer_rubrics = [
+            {
+                "reviewerId": "process_reviewer",
+                "focus": "process_fidelity",
+                "decision": "approve",
+                "score": 0.92,
+                "grounds": [
+                    "external checkout tests passed",
+                    "patch keeps design-before-diff process evidence",
+                ],
+            },
+            {
+                "reviewerId": "risk_reviewer",
+                "focus": "risk_control",
+                "decision": "request_changes",
+                "score": 0.58,
+                "grounds": [
+                    "rollback note is absent",
+                    "risk reviewer weights operational safety above test pass",
+                ],
+            },
+        ]
+        test_expectations = [
+            {"caseId": "loads_skill_md", "type": "startswith", "value": "# Loomstead Debug Skill"},
+            {
+                "caseId": "records_reviewer_disagreement",
+                "type": "contains",
+                "value": "reviewer disagreements",
+            },
+            {
+                "caseId": "records_arbitration_trace_refs",
+                "type": "contains",
+                "value": "arbitration trace refs",
+            },
+            {"caseId": "keeps_existing_doc_guidance", "type": "contains", "value": "Use project docs"},
+        ]
     elif goal_id == "coding.skill_regression_fix_dryrun":
         fixture_id = "loomstead-debug-regression-fixture.v1"
         artifact_id = "skill_regression_fix.patch"
@@ -749,6 +1051,8 @@ def _build_repo_fixture(goal_id: str) -> dict[str, Any]:
         ),
         "check_skill.py": _repo_fixture_test_script(test_expectations),
     }
+    if goal_id == MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID:
+        files = _dependency_repair_fixture_files()
     return {
         "fixtureId": fixture_id,
         "repoName": "fixture/loomstead-debug-skill",
@@ -768,13 +1072,77 @@ def _build_repo_fixture(goal_id: str) -> dict[str, Any]:
         "reviewReportId": review_report_id,
         "metadataPath": metadata_path,
         "reviewRubricPath": review_rubric_path,
-        "testCommand": "python check_skill.py",
+        "testCommand": test_command,
         "testCommandSource": "repo_fixture",
+        "importGraph": import_graph,
+        "reviewerRubrics": reviewer_rubrics,
         "plannedAdditions": planned_additions,
         "plannedFileUpdates": planned_file_updates,
         "testExpectations": test_expectations,
         "requiresPrePatchFailure": requires_pre_patch_failure,
+        "requiresSingleFileFailureEvidence": requires_single_file_failure_evidence,
+        "requiresReviewerDisagreement": requires_reviewer_disagreement,
         "sourceRepoKind": "deterministic_local_git_repository",
+    }
+
+
+def _dependency_repair_fixture_files() -> dict[str, str]:
+    """构造包含真实 import 链和测试入口的跨文件依赖修复 fixture。"""
+    return {
+        "README.md": "# Dependency Repair Fixture\n\nA tiny Python repo with cross-file imports.\n",
+        "src/__init__.py": "",
+        "src/formatter.py": "\n".join(
+            [
+                "from __future__ import annotations",
+                "",
+                "",
+                "def display_name(raw: str) -> str:",
+                "    return ' '.join(raw.strip().split())",
+                "",
+                "",
+                "def slugify(name: str) -> str:",
+                "    return name",
+                "",
+            ]
+        ),
+        "src/workflow.py": "\n".join(
+            [
+                "from __future__ import annotations",
+                "",
+                "from src.formatter import display_name, slugify",
+                "",
+                "",
+                "def build_ticket(raw_name: str) -> dict[str, object]:",
+                "    name = display_name(raw_name)",
+                "    if not name:",
+                "        return {'ok': False, 'label': '', 'slug': ''}",
+                "    return {\"ok\": True, \"label\": name, \"slug\": name}",
+                "",
+            ]
+        ),
+        "tests/test_workflow.py": "\n".join(
+            [
+                "from __future__ import annotations",
+                "",
+                "import json",
+                "from pathlib import Path",
+                "import sys",
+                "",
+                "repo_root = Path(__file__).resolve().parents[1]",
+                "sys.path.insert(0, str(repo_root))",
+                "",
+                "from src.workflow import build_ticket",
+                "",
+                "cases = []",
+                "ticket = build_ticket('  Mira Bloom  ')",
+                "cases.append({'caseId': 'slug_uses_formatter_dependency', 'passed': ticket == {'ok': True, 'label': 'Mira Bloom', 'slug': 'mira-bloom'}})",
+                "blank = build_ticket('   ')",
+                "cases.append({'caseId': 'blank_name_stays_invalid', 'passed': blank == {'ok': False, 'label': '', 'slug': ''}})",
+                "print(json.dumps({'caseResults': cases}, ensure_ascii=False))",
+                "raise SystemExit(0 if all(item['passed'] for item in cases) else 1)",
+                "",
+            ]
+        ),
     }
 
 
@@ -811,7 +1179,13 @@ def _build_skill_patch(repo_fixture: dict[str, Any]) -> tuple[str, dict[str, str
 
 
 def _apply_fixture_file_update(original: str, update: dict[str, Any]) -> str:
-    """按 fixture 描述生成单文件补丁结果，支持文本追加和简单 JSON 合并。"""
+    """按 fixture 描述生成单文件补丁结果，支持替换、文本追加和简单 JSON 合并。"""
+    if isinstance(update.get("replace"), dict):
+        patched = original
+        for old_text, new_text in update["replace"].items():
+            patched = patched.replace(str(old_text), str(new_text), 1)
+        return patched
+
     if isinstance(update.get("jsonMerge"), dict):
         try:
             payload = json.loads(original or "{}")
@@ -838,6 +1212,164 @@ def _build_patch_section(target_path: str, original: str, patched: str) -> list[
             lineterm="",
         )
     )
+
+
+def _build_dependency_patch_evidence(
+    repo_fixture: dict[str, Any],
+    base_files: dict[str, Any],
+    patched_files: dict[str, str],
+    changed_files: list[str],
+) -> dict[str, Any]:
+    """记录跨文件依赖修复所需的全文件 hash、import 图和补丁覆盖范围。"""
+    import_graph = repo_fixture.get("importGraph", {}) if isinstance(repo_fixture.get("importGraph"), dict) else {}
+    if not import_graph:
+        return {}
+    return {
+        "baseFileHashes": {
+            str(path): _stable_digest(str(content)) for path, content in sorted(base_files.items())
+        },
+        "patchedFileHashes": {
+            str(path): _stable_digest(str(content)) for path, content in sorted(patched_files.items())
+        },
+        "importGraph": import_graph,
+        "patchCoverageFileCount": len(changed_files),
+        "changedFiles": list(changed_files),
+        "changedSourceFiles": [
+            path for path in changed_files if path.startswith("src/") and path.endswith(".py")
+        ],
+    }
+
+
+def _run_single_file_partial_patch_reports(
+    artifact: dict[str, Any],
+    repo_fixture: dict[str, Any],
+) -> dict[str, dict[str, Any]]:
+    """逐个只应用一个源文件补丁并运行测试，证明依赖修复需要多文件同时覆盖。"""
+    repo_files = repo_fixture.get("files", {}) if isinstance(repo_fixture.get("files"), dict) else {}
+    patched_files = artifact.get("patchedFiles", {}) if isinstance(artifact.get("patchedFiles"), dict) else {}
+    changed_files = [
+        str(path)
+        for path in artifact.get("changedFiles", [])
+        if str(path).startswith("src/") and str(path).endswith(".py")
+    ] if isinstance(artifact.get("changedFiles"), list) else []
+    reports: dict[str, dict[str, Any]] = {}
+    for changed_file in changed_files:
+        partial_files = {str(path): str(content) for path, content in repo_files.items()}
+        partial_files[changed_file] = str(patched_files.get(changed_file, partial_files.get(changed_file, "")))
+        partial_artifact = {
+            "artifactId": f"{artifact.get('artifactId', 'repo_patch')}:single_file:{changed_file}",
+            "patchedFiles": partial_files,
+        }
+        test_cases, execution = _run_external_checkout_fixture_tests(
+            partial_artifact,
+            repo_fixture,
+            test_phase="single_file_patch",
+        )
+        failing_case_ids = [
+            str(item.get("caseId") or "unknown_case")
+            for item in test_cases
+            if isinstance(item, dict) and not bool(item.get("passed"))
+        ]
+        report_id = (
+            f"{repo_fixture.get('artifactId', 'repo_patch')}.single_file."
+            f"{_safe_report_id_part(changed_file)}.tests"
+        )
+        report = {
+            "testReportId": report_id,
+            "command": execution.get("command", "python check_skill.py"),
+            "testPhase": "single_file_patch",
+            "patchedFile": changed_file,
+            "passed": False,
+            "expectedFailure": True,
+            "failureObserved": execution.get("exitCode") not in (None, 0) and bool(failing_case_ids),
+            "failingCaseIds": failing_case_ids,
+            "caseResults": test_cases,
+            "execution": execution,
+            "sourceArtifactId": artifact.get("artifactId", "repo_patch"),
+        }
+        report["sha256"] = _stable_digest(json.dumps(report, ensure_ascii=False, sort_keys=True))
+        reports[report_id] = report
+    return reports
+
+
+def _build_rule_reviewer_evaluations(
+    *,
+    repo_fixture: dict[str, Any],
+    artifact: dict[str, Any],
+    test_report: dict[str, Any],
+    checklist: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """生成规则版双 reviewer 评分，用于构造可复核的分歧样例。"""
+    rubrics = repo_fixture.get("reviewerRubrics", [])
+    if not isinstance(rubrics, list) or not rubrics:
+        return []
+    checklist_pass_rate = _safe_ratio(
+        sum(1 for item in checklist if isinstance(item, dict) and bool(item.get("passed"))),
+        max(1, len(checklist)),
+    )
+    evaluations: list[dict[str, Any]] = []
+    for rubric in rubrics:
+        if not isinstance(rubric, dict):
+            continue
+        evaluations.append(
+            {
+                "reviewerId": str(rubric.get("reviewerId") or "reviewer"),
+                "focus": str(rubric.get("focus") or "general"),
+                "decision": str(rubric.get("decision") or "approve"),
+                "score": float(rubric.get("score") or 0.0),
+                "grounds": [str(item) for item in rubric.get("grounds", []) if str(item)]
+                if isinstance(rubric.get("grounds"), list)
+                else [],
+                "scoringBasis": {
+                    "testPassed": bool(test_report.get("passed")),
+                    "changedFileCount": len(artifact.get("changedFiles", []))
+                    if isinstance(artifact.get("changedFiles"), list)
+                    else 0,
+                    "checklistPassRate": round(checklist_pass_rate, 6),
+                },
+            }
+        )
+    return evaluations
+
+
+def _arbitrate_reviewer_disagreement(
+    *,
+    reviewer_evaluations: list[dict[str, Any]],
+    test_report: dict[str, Any],
+    source_event_ids: list[str],
+    review_report_id: str,
+) -> dict[str, Any]:
+    """用确定性 ArbitrationLayer 记录 reviewer 分歧来源和最终决策路径。"""
+    if not reviewer_evaluations:
+        return {}
+    approve_votes = [item for item in reviewer_evaluations if item.get("decision") == "approve"]
+    request_change_votes = [item for item in reviewer_evaluations if item.get("decision") == "request_changes"]
+    final_decision = "approved" if bool(test_report.get("passed")) and approve_votes else "request_changes"
+    return {
+        "layer": "ArbitrationLayer",
+        "traceId": f"trace.review_arbitration.{_safe_report_id_part(review_report_id)}",
+        "conflictDetected": bool(approve_votes and request_change_votes),
+        "finalDecision": final_decision,
+        "resolutionPath": [
+            "collect_rule_reviewer_scores",
+            "detect_approve_vs_request_changes_conflict",
+            "prioritize_test_backed_process_evidence",
+            "record_followup_for_risk_reviewer_concern",
+            f"final_decision:{final_decision}",
+        ],
+        "contributing_sources": [
+            {
+                "type": "reviewer_score",
+                "reviewerId": item.get("reviewerId"),
+                "decision": item.get("decision"),
+                "score": item.get("score"),
+                "grounds": item.get("grounds", []),
+                "scoringBasis": item.get("scoringBasis", {}),
+            }
+            for item in reviewer_evaluations
+        ],
+        "sourceEventIds": list(source_event_ids),
+    }
 
 
 def _run_external_checkout_fixture_tests(
@@ -1023,9 +1555,14 @@ def _run_git_command(command: list[str], *, cwd: Path, check: bool) -> dict[str,
 
 def _repo_test_command(command_template: str) -> list[str]:
     """把 repo fixture 的测试命令转换为无 shell 的 subprocess 参数。"""
-    if command_template != "python check_skill.py":
+    script_by_command = {
+        "python check_skill.py": "check_skill.py",
+        "python tests/test_workflow.py": "tests/test_workflow.py",
+    }
+    script_path = script_by_command.get(command_template)
+    if script_path is None:
         raise ValueError(f"不支持的 repo fixture 测试命令：{command_template}")
-    return [sys.executable, "check_skill.py"]
+    return [sys.executable, script_path]
 
 
 def _sanitize_temp_paths(value: str) -> str:
@@ -1080,6 +1617,14 @@ def _first_event(world: dict[str, Any], event_type: str) -> dict[str, Any] | Non
 
 def _event_id(event: dict[str, Any] | None) -> str:
     return str(event.get("id") if isinstance(event, dict) else "")
+
+
+def _safe_ratio(numerator: int | float, denominator: int | float) -> float:
+    return float(numerator) / float(denominator) if float(denominator) else 0.0
+
+
+def _safe_report_id_part(value: str) -> str:
+    return "".join(char if char.isalnum() or char in {"-", "_", "."} else "_" for char in value)
 
 
 def _stable_digest(value: str) -> str:

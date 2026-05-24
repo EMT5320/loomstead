@@ -124,6 +124,7 @@ def _extract_domain_evidence(world: Any) -> dict[str, Any]:
         "repoFixture",
         "artifacts",
         "prePatchTestReports",
+        "partialPatchTestReports",
         "testReports",
         "reviewReports",
         "dependencies",
@@ -343,6 +344,7 @@ def _write_domain_evidence_files(run_dir: Path, item: dict[str, Any]) -> list[di
 
     for report_key, filename_prefix, kind in (
         ("prePatchTestReports", "pre_patch_test_report", "domain_evidence_pre_patch_test_report_json"),
+        ("partialPatchTestReports", "partial_patch_test_report", "domain_evidence_partial_patch_test_report_json"),
         ("testReports", "test_report", "domain_evidence_test_report_json"),
         ("reviewReports", "review_report", "domain_evidence_review_report_json"),
     ):

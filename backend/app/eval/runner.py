@@ -4,6 +4,7 @@ import hashlib
 import json
 import subprocess
 from collections import Counter
+from copy import deepcopy
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -42,6 +43,7 @@ RELATIONSHIP_ABLATION_SHUFFLED_OWNER = "shuffled_memory_owner"
 RELATIONSHIP_ABLATION_EVIDENCE_LINK_REMOVAL = "evidence_link_removal"
 BASELINE_STABILITY_24H = "rule_24h_stability"
 DEFAULT_STABILITY_HOURS = 24
+COUNTERFACTUAL_REPLAY_DECISION_CYCLES = 24
 STABILITY_TRACE_TYPES = {
     "motivation.decision_made",
     "tool.execution_completed",
@@ -567,6 +569,15 @@ def _run_runtime_process_scenario(
         subjective_memory_records=[],
         heuristics=[],
     )
+    tool_selection_replay = _build_counterfactual_tool_selection_replay(
+        runtime=runtime,
+        scenario=scenario,
+        baseline_decision=decision_with_relationship_memory,
+        relationship_edges=relationship_edges_for_decision,
+        subjective_memory_records=subjective_memories_for_decision,
+        heuristics=heuristics_for_decision,
+        cycles=COUNTERFACTUAL_REPLAY_DECISION_CYCLES,
+    )
     counterfactual_replay = _build_counterfactual_replay(
         scenario=scenario,
         decision_with_relationship_memory=decision_with_relationship_memory,
@@ -575,6 +586,7 @@ def _run_runtime_process_scenario(
         relationship_source_ids=relationship_source_ids,
         subjective_memory_source_ids=memory_source_ids,
         heuristic_source_ids=heuristic_source_ids,
+        tool_selection_replay=tool_selection_replay,
     )
     process_checks = {
         "goal_relevant_tool_event": bool(goal_tool_events),
@@ -582,6 +594,7 @@ def _run_runtime_process_scenario(
         "relationship_edge_trace": bool(goal_event_ids & relationship_source_ids),
         "causal_trace": bool(memory_trace_links),
         "future_behavior_reference": bool(counterfactual_replay["effect"]),
+        "counterfactual_tool_selection_change": bool(counterfactual_replay["toolSelectionChanged"]),
         "preexisting_harm_memory": _has_preexisting_harm_memory(subjective_items),
         "subjective_memory_causal_effect": bool(counterfactual_replay["subjectiveMemoryEffect"]),
     }
@@ -599,6 +612,9 @@ def _run_runtime_process_scenario(
         state_changes_with_source=state_changes_with_source,
         relationship_relevant_decisions=1,
         decisions_with_relationship_memory=1 if counterfactual_replay["relationshipEffect"] else 0,
+        counterfactual_tool_selection_change_rate=float(
+            counterfactual_replay.get("counterfactualToolSelectionChangeRate", 0.0)
+        ),
     )
     return {
         "scenario": scenario.to_dict(),
@@ -644,8 +660,8 @@ def _seed_process_goal_runtime(runtime: AgentRuntime, scenario: ProcessGoalSpec)
         source_event_id=str(harm_event.get("id") or ""),
         perspective="subjective",
         text="布兰娜记得玩家曾经失信；如果要修复关系，她需要亲眼确认补偿并重新谈一次。 social.chat_with",
-        emotional_valence=-0.62,
-        confidence=0.93,
+        emotional_valence=-0.8,
+        confidence=0.95,
         tags=("tool_result", "social.chat_with", "forgiveness_harm", "player_broken_promise"),
         created_tick=world_tick,
     )
@@ -873,6 +889,7 @@ def _build_counterfactual_replay(
     relationship_source_ids: set[str],
     subjective_memory_source_ids: set[str],
     heuristic_source_ids: set[str],
+    tool_selection_replay: dict[str, Any],
 ) -> dict[str, Any]:
     with_decision = _decision_payload(decision_with_relationship_memory)
     without_relationship_decision = _decision_payload(decision_without_relationship_edges)
@@ -920,6 +937,7 @@ def _build_counterfactual_replay(
     )
     decision_effect = bool(selected_with) and bool(selected_without) and (selected_with != selected_without or score_effect)
     relationship_decision_effect = bool(selected_with) and bool(selected_without_relationship) and selected_with != selected_without_relationship
+    tool_selection_changed = bool(tool_selection_replay.get("changedDecisionCount", 0))
     # 关系记忆的因果使用必须有目标关系引用，并且关系 bonus 在只移除关系边的反事实中发生变化；
     # 这样避免把主观记忆或启发式引起的分数变化误计为关系记忆贡献。
     relationship_effect = bool(relevant_refs) and relationship_score_effect
@@ -937,6 +955,10 @@ def _build_counterfactual_replay(
         "relationshipDecisionEffect": relationship_decision_effect,
         "subjectiveMemoryScoreEffect": subjective_memory_score_effect,
         "heuristicScoreEffect": heuristic_score_effect,
+        "subjectiveMemoryToolSelectionEffect": bool(relevant_subjective_memory_refs) and tool_selection_changed,
+        "toolSelectionChanged": tool_selection_changed,
+        "counterfactualToolSelectionChangeRate": tool_selection_replay.get("changeRate", 0.0),
+        "toolSelectionReplay": tool_selection_replay,
         "relationshipEdgeRefs": relationship_refs,
         "relevantRelationshipEdgeRefs": relevant_refs,
         "subjectiveMemoryRefs": subjective_memory_refs,
@@ -950,6 +972,102 @@ def _build_counterfactual_replay(
         "reasonWithoutRelationshipEdges": without_relationship_decision.get("reason"),
         "reasonWithoutRelationshipMemory": without_decision.get("reason"),
     }
+
+
+def _build_counterfactual_tool_selection_replay(
+    *,
+    runtime: AgentRuntime,
+    scenario: ProcessGoalSpec,
+    baseline_decision: dict[str, Any],
+    relationship_edges: list[dict[str, Any]],
+    subjective_memory_records: list[dict[str, Any]],
+    heuristics: list[dict[str, Any]],
+    cycles: int,
+) -> dict[str, Any]:
+    """逐条移除主观记忆，复算后续 24 个决策周期的 selectedToolId 变化。"""
+    decision_payload = _decision_payload(baseline_decision)
+    selected_ref_ids = {
+        str(ref.get("recordId") or "")
+        for ref in decision_payload.get("subjectiveMemoryRefs", [])
+        if isinstance(ref, dict) and str(ref.get("recordId") or "")
+    }
+    candidate_records = [
+        dict(record)
+        for record in subjective_memory_records
+        if str(record.get("recordId") or "") in selected_ref_ids
+    ]
+    if not candidate_records:
+        candidate_records = [dict(record) for record in subjective_memory_records]
+
+    cycle_count = max(1, int(cycles))
+    comparisons: list[dict[str, Any]] = []
+    changed_count = 0
+    total_count = 0
+    for cycle_index in range(1, cycle_count + 1):
+        cycle_world = _counterfactual_cycle_world(runtime.world, cycle_index)
+        base_decision = runtime.motivation_engine.evaluate_npc(
+            cycle_world,
+            scenario.npc_id,
+            delta_minutes=20.0,
+            relationship_edges=relationship_edges,
+            subjective_memory_records=subjective_memory_records,
+            heuristics=heuristics,
+        )
+        base_payload = _decision_payload(base_decision)
+        selected_with_memory = str(base_payload.get("selectedToolId") or "")
+        for record in candidate_records:
+            removed_record_id = str(record.get("recordId") or "")
+            ablated_records = [
+                memory
+                for memory in subjective_memory_records
+                if str(memory.get("recordId") or "") != removed_record_id
+            ]
+            ablated_decision = runtime.motivation_engine.evaluate_npc(
+                cycle_world,
+                scenario.npc_id,
+                delta_minutes=20.0,
+                relationship_edges=relationship_edges,
+                subjective_memory_records=ablated_records,
+                heuristics=heuristics,
+            )
+            ablated_payload = _decision_payload(ablated_decision)
+            selected_without_memory = str(ablated_payload.get("selectedToolId") or "")
+            changed = bool(selected_with_memory) and bool(selected_without_memory) and (
+                selected_with_memory != selected_without_memory
+            )
+            changed_count += 1 if changed else 0
+            total_count += 1
+            comparisons.append(
+                {
+                    "cycleIndex": cycle_index,
+                    "npcId": scenario.npc_id,
+                    "removedSubjectiveMemoryRecordId": removed_record_id,
+                    "selectedWithMemory": selected_with_memory or None,
+                    "selectedWithoutMemory": selected_without_memory or None,
+                    "changed": changed,
+                }
+            )
+
+    return {
+        "cycleCount": cycle_count,
+        "npcIdsConsidered": [scenario.npc_id],
+        "removedSubjectiveMemoryRecordIds": [
+            str(record.get("recordId") or "") for record in candidate_records if str(record.get("recordId") or "")
+        ],
+        "comparisonCount": total_count,
+        "changedDecisionCount": changed_count,
+        "changeRate": round(_safe_ratio(changed_count, total_count), 6),
+        "comparisons": comparisons,
+    }
+
+
+def _counterfactual_cycle_world(world: dict[str, Any], cycle_index: int) -> dict[str, Any]:
+    """复制 world 并推进 tick，保留原始运行证据不被 replay 污染。"""
+    cycle_world = deepcopy(world)
+    clock = dict(cycle_world.get("clock", {})) if isinstance(cycle_world.get("clock"), dict) else {}
+    clock["tick"] = int(clock.get("tick", 0)) + max(0, int(cycle_index))
+    cycle_world["clock"] = clock
+    return cycle_world
 
 
 def _decision_payload(decision: dict[str, Any]) -> dict[str, Any]:
@@ -1033,6 +1151,7 @@ def _build_process_ablation_comparison(runs: dict[str, dict[str, Any]]) -> dict[
         "process_believability_score",
         "causal_trace_coverage",
         "relationship_memory_causal_use_rate",
+        "counterfactual_tool_selection_change_rate",
         "shortcut_violation_rate",
     )
     comparison: dict[str, Any] = {

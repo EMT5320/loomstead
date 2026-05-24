@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: eval
-last_verified: 2026-05-23
+last_verified: 2026-05-24
 startup_load: on-demand
 source_of_truth: true
 scope: process fidelity metrics, hard delegation baseline, ablation protocol, dataset outputs
@@ -157,6 +157,22 @@ Agent 是否行动由 MotivationEngine + ArbitrationLayer 决定。
 
 ## 4. Metric 公式
 
+### 4.0 指标表
+
+| metric_id | 判据 |
+| --- | --- |
+| `goal_success_rate` | success evidence 是否全部满足。 |
+| `shortcut_violation_rate` | 目标相关状态变化里 shortcut 事件占比。 |
+| `required_process_coverage` | 过程约束满足比例。 |
+| `forced_action_rate` | Director 显式指定动作占比。 |
+| `agent_initiated_action_ratio` | ArbitrationLayer 自主选中动作占比。 |
+| `intervention_overreach_rate` | 干预越权占比。 |
+| `relationship_memory_causal_use_rate` | 关系/记忆证据对 winner tool 产生分数贡献的比例。 |
+| `counterfactual_tool_selection_change_rate` | 移除单条 subjective memory 后，24 个后续决策周期内 `selectedToolId` 发生变化的 replay 比例。 |
+| `causal_trace_coverage` | 目标相关状态变化带 source_event_ids / trace_refs 的比例。 |
+| `relationship_consistency` | 关系边变化是否具备可追溯证据。 |
+| `process_believability_score` | 自动过程可信度加权均值。 |
+
 ### 4.1 Goal Success
 
 ```python
@@ -225,7 +241,15 @@ relationship_memory_causal_use_rate = decisions_with_relationship_memory_contrib
 
 仅仅“检索到了记忆”不算 causal use。必须证明如果去掉该记忆，winner 会变化或分数差距显著缩小。
 
-### 4.8 Memory Ablation Delta
+### 4.8 Counterfactual Tool Selection Change Rate
+
+```python
+counterfactual_tool_selection_change_rate = changed_selected_tool_replays / total_single_memory_replays
+```
+
+判据：对 winner tool 引用到的每条 subjective memory，逐条移除并重放后续 24 个决策周期；只要至少一个 NPC 的 `selectedToolId` 发生变化，该记忆才算 trace-level 行为因果证据。若 ablation 后 `selectedToolId` 完全不变，则该记忆的 `counterfactual_tool_selection_change_rate = 0`，标记为“未真正影响行为”，即便 bonus 分数曾发生变化。
+
+### 4.9 Memory Ablation Delta
 
 ```python
 memory_ablation_delta = metric_full - metric_no_relationship_memory
@@ -238,8 +262,9 @@ memory_ablation_delta = metric_full - metric_no_relationship_memory
 - `relationship_consistency`
 - `process_believability_score`
 - `relationship_memory_causal_use_rate`
+- `counterfactual_tool_selection_change_rate`
 
-### 4.9 Causal Trace Coverage
+### 4.10 Causal Trace Coverage
 
 ```python
 causal_trace_coverage = state_changes_with_source_event_ids / goal_relevant_state_changes
@@ -251,7 +276,7 @@ causal_trace_coverage = state_changes_with_source_event_ids / goal_relevant_stat
 intervention -> event -> subjective_memory -> relationship_edge/heuristic -> later_decision -> outcome
 ```
 
-### 4.10 Process Believability Score
+### 4.11 Process Believability Score
 
 自动指标 + 少量人工评分。
 

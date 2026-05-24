@@ -12,6 +12,7 @@ PROCESS_METRIC_IDS = (
     "agent_initiated_action_ratio",
     "intervention_overreach_rate",
     "relationship_memory_causal_use_rate",
+    "counterfactual_tool_selection_change_rate",
     "causal_trace_coverage",
     "relationship_consistency",
     "process_believability_score",
@@ -55,6 +56,7 @@ def build_process_metrics(
     state_changes_with_source: int,
     relationship_relevant_decisions: int,
     decisions_with_relationship_memory: int,
+    counterfactual_tool_selection_change_rate: float | None = None,
     goal_success_override: bool | None = None,
 ) -> dict[str, float]:
     """根据规则级过程证据计算 Process Fidelity 指标。"""
@@ -72,6 +74,7 @@ def build_process_metrics(
     intervention_overreach_rate = _safe_ratio(overreaching_interventions, intervention_total)
     causal_trace_coverage = _safe_ratio(state_changes_with_source, state_change_total)
     relationship_memory_causal_use_rate = _safe_ratio(decisions_with_relationship_memory, relationship_decision_total)
+    trace_level_change_rate = _bounded_rate(counterfactual_tool_selection_change_rate)
     relationship_consistency = 1.0 if process_checks.get("relationship_edge_trace", False) else 0.0
     goal_success = (
         bool(goal_success_override)
@@ -96,6 +99,7 @@ def build_process_metrics(
         "agent_initiated_action_ratio": round(agent_initiated_action_ratio, 6),
         "intervention_overreach_rate": round(intervention_overreach_rate, 6),
         "relationship_memory_causal_use_rate": round(relationship_memory_causal_use_rate, 6),
+        "counterfactual_tool_selection_change_rate": round(trace_level_change_rate, 6),
         "causal_trace_coverage": round(causal_trace_coverage, 6),
         "relationship_consistency": round(relationship_consistency, 6),
         "process_believability_score": round(process_believability_score, 6),
@@ -104,6 +108,13 @@ def build_process_metrics(
 
 def _safe_ratio(numerator: int | float, denominator: int | float) -> float:
     return float(numerator) / float(denominator) if float(denominator) else 0.0
+
+
+def _bounded_rate(value: float | None) -> float:
+    """把可选反事实比例收敛到 0..1，兼容暂未接入该指标的 domain。"""
+    if value is None:
+        return 0.0
+    return max(0.0, min(1.0, float(value)))
 
 
 def _weighted_mean(values: list[float]) -> float:
