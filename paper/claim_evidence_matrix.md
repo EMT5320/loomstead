@@ -15,6 +15,7 @@
 | C11 | The paper has an explicit system and method story connecting Godot, Python runtime, Director, Event Skills, NPC arbitration, memory stores, debug traces, and eval artifacts. | verified design + partial runtime | `README.md`, `docs/agent_context.md`, `docs/current_status.md`, `paper/diagrams/*.mmd` | Figures 1/2 | Render diagrams as final vector assets and add one concrete exported trace walkthrough | System / Method |
 | C12 | The paper workflow now prioritizes skeleton-first drafting and Zotero-backed related-work intake to reduce early overclaiming. | verified workflow | `paper/claim_policy.md`, `paper/lit_review/zotero_intake_workflow.md`, Zotero local API status check | Workflow | Add browser-saved Zotero item keys for seed references | Workflow / Related Work |
 | C13 | Prior local related-work surveys can accelerate Loomstead source discovery without widening the current claim surface. | verified workflow | `paper/lit_review/prior_related_work_inventory.md`, prior local literature matrices | Workflow | Re-verify candidate sources and import only relevant Zotero items | Related Work |
+| C14 | The second related-work seed pass identifies trace, provenance, attribution, and factual-support anchors for Process Fidelity Eval. | verified literature seed | `paper/lit_review/trace_provenance_attribution.md`, `paper/lit_review/source_index.md`, primary source pages | Table 6 | Import to Zotero, add PDF skim notes, and decide which candidate papers become cited prose | Related Work / Eval |
 
 ## Support labels
 

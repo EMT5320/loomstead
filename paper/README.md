@@ -26,6 +26,7 @@ paper/
 |   |-- eval_tables.tex
 |-- lit_review/
 |   |-- prior_related_work_inventory.md
+|   |-- trace_provenance_attribution.md
 `-- latex/
 ```
 

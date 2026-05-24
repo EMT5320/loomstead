@@ -54,6 +54,7 @@ Keep claim strength aligned with `paper/claim_policy.md`. Early sections should 
 - Use Zotero as the formal citation library.
 - Use `paper/lit_review/zotero_intake_workflow.md` as the browser + Zotero intake checklist.
 - Check `paper/lit_review/prior_related_work_inventory.md` before starting a fresh search; it routes to prior local literature matrices from related projects.
+- Check `paper/lit_review/trace_provenance_attribution.md` before writing Process Fidelity Eval related-work prose.
 - Keep `paper/references.bib` and `paper/latex/references.bib` limited to cited or actively planned references; keep them in sync until a Zotero export helper is added.
 - Use `scripts/paper_search.py` for metadata discovery and reading-queue updates.
 - Use `paper/lit_review/*.md` for short notes, contrast points, and citation placement.
