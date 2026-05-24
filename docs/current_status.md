@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: project-status
-last_verified: 2026-05-23
+last_verified: 2026-05-24
 startup_load: after-agent-context
 source_of_truth: true
 scope: current implementation facts, verification state, and work constraints
@@ -9,7 +9,7 @@ scope: current implementation facts, verification state, and work constraints
 
 # 当前项目状态与开发前约束
 
-> 状态更新时间：2026-05-23（真实 LLM smoke 配置清理 + Phase 2 Eval/domain export + Web Debug 总览 + designer heuristic seed）
+> 状态更新时间：2026-05-24（Phase 2 收紧 Round 1：跨文件依赖 / reviewer 分歧 coding scenario + counterfactual tool selection metric + Godot Observer 行交互与空/错误态 + 4 核心 NPC motivationProfile / capabilityPreferences 填充）
 > 本文只记录当前仓库中已核对、命令已检或明确标注人工未验收的事实。长期方向见 `docs/project_vision.md`，研究 framing 见 `docs/research_framing_motivational_delegation.md`，NPC agent loop 设计见 `docs/agent_loop_architecture.md`，世界实体 schema 见 `docs/world_entity_model.md`，Process Fidelity Eval 规格见 `docs/process_fidelity_eval_spec.md`，跨域 adapter 接口见 `docs/cross_domain_adapter.md`，多层 Agent 系统设计见 `docs/agentic_game_design.md`。
 
 ## 1. 当前阶段判断
@@ -36,8 +36,12 @@ scope: current implementation facts, verification state, and work constraints
 
 游戏内容剧本线的讨论、四层方案、当前实现与后续主线拆分已沉淀到 `docs/game_content_storyline.md`。
 
-- 2026-05-23 本轮继续收紧 SubjectiveMemoryStore：已接入 tick 级 `effectiveSalience` 衰减、低显著性 / 低情绪强度归档、`activeCount` / `archivedCount` / `archivedItems` debug 视图，并把 recall salience 证据升级到 `subjective_memory_recall.v2`。
-- 2026-05-23 本轮补齐 WorldEntities 首批 typed schema：FarmPlot / Item / Inventory / Shop / Building / Time / Weather dataclass 已提供统一 `world_entities.v1` Debug 快照，并纳入 `schema_registry.v1`。
+- 2026-05-24 Round 1 收紧已落地三条线：
+  - Lane A · Eval 深化：`backend/app/domain/coding/adapter.py` 新增 `coding.skill_multifile_dependency_repair_dryrun`（含 import graph、双源文件 patch、single-file partial-patch failure replay）和 `coding.skill_reviewer_disagreement_dryrun`（process / risk 双 reviewer approve vs request_changes 冲突 + ArbitrationLayer contributing_sources + review trace ref）；coding fixture 从 4 个扩到 6 个，eval:domain 9/9 通过；`backend/app/eval/process_fidelity.py` 新增 `counterfactual_tool_selection_change_rate` 指标，`backend/app/eval/runner.py::_build_counterfactual_tool_selection_replay` 逐条移除 winner tool 引用的主观记忆并复算 24 个决策周期，比对 selectedToolId 是否变化（Full=`0.375`、Hard Delegation=`0.0`、No Subjective Memory=`0.0`）；`backend/app/eval/domain_adapter.py` 接入新的 `partialPatchTestReports` 证据流，`schema_registry.v1` 数量 18→19。
+  - Lane C · Godot Observer 打磨：`clients/godot/scripts/ui/observer_panel.gd` 加 `highlight_npcs_requested` / `retry_requested` 信号，trace 行可点击触发 NPC sprite 高亮和 details 弹层；五大区域具体空态文案；HTTP 失败显示 retry banner；快捷键覆盖 Esc 关闭 details 与 1-5 切 trace filter；`clients/godot/scripts/world/town_map.gd` 接入信号驱动 `flash_observer_highlight` 并在重试时清缓存；`clients/godot/scripts/world/npc_controller.gd` 新增高亮 tween；`clients/godot/scripts/api_client.gd` 微调支持 phase2 retry 路径。
+  - Lane D · NPC 数据填充：4 核心 NPC（kai/mira/bram/lena）的 `motivationProfile.needs` 已填实际 weight / decay_rate / threshold_trigger / threshold_critical（与 personality / fears / goals 对齐），`personalityModifiers` 与 `capabilityPreferences`（含 wildcard prefix 与 `enabled=false`）已填实际数据，`heuristicSeeds` 每人扩到 4 条（含 avoid_* 失败启发式 + 一条与 fears 对齐的正向 hook）；tomas / orren 保持 stub。`eval:stability` 24 小时：`heuristic_count` 24→`54`、`heuristic_decision_ref_rate` `0.534722`→`0.694444`、`relationshipEdgeCount` 9→`14`、`tool_failure_rate=0.0`、9 项 stability checks 全绿。
+- 2026-05-23 SubjectiveMemoryStore：tick 级 `effectiveSalience` 衰减、低显著性 / 低情绪强度归档、`activeCount` / `archivedCount` / `archivedItems` debug 视图，`subjective_memory_recall.v2` salience 证据。
+- 2026-05-23 WorldEntities 首批 typed schema：FarmPlot / Item / Inventory / Shop / Building / Time / Weather dataclass 提供统一 `world_entities.v1` Debug 快照，纳入 `schema_registry.v1`。
 
 | 开发线 | 当前状态 | 已验证事实 | 仍需验证或实现 |
 | --- | --- | --- | --- |
