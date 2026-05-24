@@ -80,14 +80,72 @@ func _request_json(method: String, path: String, payload: Dictionary) -> Diction
 	var raw_body: PackedByteArray = result[3]
 
 	if request_result != HTTPRequest.RESULT_SUCCESS:
-		return {"ok": false, "error": "HTTP 请求失败：%s" % request_result}
+		return {
+			"ok": false,
+			"error": "HTTP 请求失败：%s" % _http_request_result_reason(request_result),
+			"requestResult": request_result,
+		}
 
 	var text := raw_body.get_string_from_utf8()
 	var parsed = JSON.parse_string(text)
 	if typeof(parsed) != TYPE_DICTIONARY:
-		return {"ok": false, "error": "响应需为 JSON 对象", "raw": text}
+		return {"ok": false, "error": "响应需为 JSON 对象", "httpCode": response_code, "raw": text}
 
 	if response_code < 200 or response_code >= 300:
-		return {"ok": false, "error": "后端返回状态码：%s" % response_code, "data": parsed}
+		return {
+			"ok": false,
+			"error": "HTTP %d %s" % [response_code, _http_status_reason(response_code)],
+			"httpCode": response_code,
+			"data": parsed,
+		}
 
 	return {"ok": true, "data": parsed}
+
+
+func _http_request_result_reason(result_code: int) -> String:
+	# 把 Godot 原始请求结果转为可读文案，ObserverPanel 错误态会直接展示。
+	match result_code:
+		HTTPRequest.RESULT_CANT_CONNECT:
+			return "无法连接后端 (%d)" % result_code
+		HTTPRequest.RESULT_CANT_RESOLVE:
+			return "无法解析后端地址 (%d)" % result_code
+		HTTPRequest.RESULT_CONNECTION_ERROR:
+			return "连接中断 (%d)" % result_code
+		HTTPRequest.RESULT_TLS_HANDSHAKE_ERROR:
+			return "TLS 握手失败 (%d)" % result_code
+		HTTPRequest.RESULT_NO_RESPONSE:
+			return "后端无响应 (%d)" % result_code
+		HTTPRequest.RESULT_REQUEST_FAILED:
+			return "请求失败 (%d)" % result_code
+		HTTPRequest.RESULT_REDIRECT_LIMIT_REACHED:
+			return "重定向次数过多 (%d)" % result_code
+		HTTPRequest.RESULT_TIMEOUT:
+			return "请求超时 (%d)" % result_code
+		_:
+			return "结果码 %d" % result_code
+
+
+func _http_status_reason(response_code: int) -> String:
+	match response_code:
+		400:
+			return "Bad Request"
+		401:
+			return "Unauthorized"
+		403:
+			return "Forbidden"
+		404:
+			return "Not Found"
+		408:
+			return "Request Timeout"
+		429:
+			return "Too Many Requests"
+		500:
+			return "Internal Server Error"
+		502:
+			return "Bad Gateway"
+		503:
+			return "Service Unavailable"
+		504:
+			return "Gateway Timeout"
+		_:
+			return "状态码异常"

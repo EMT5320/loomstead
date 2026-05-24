@@ -13,6 +13,7 @@ const PLAYER_INTERACT_RADIUS := 128.0
 const OBSERVER_NPC_CLICK_RADIUS := 72.0
 const OBSERVER_PHASE2_CACHE_MSEC := 12000
 const OBSERVER_PHASE2_REQUEST_INTERVAL_MSEC := 800
+const OBSERVER_TRACE_HIGHLIGHT_MSEC := 2600
 const ROUTE_LINE_VISIBLE_MSEC := 2200
 const PULSE_PANEL_MAX_LINES := 6
 const STAGE_ORDER := ["farm", "plaza", "tavern"]
@@ -426,6 +427,52 @@ func _build_observer_panel() -> void:
 	_observer_panel = ObserverPanelScript.new()
 	_observer_panel.name = "ObserverPanel"
 	add_child(_observer_panel)
+	# ObserverPanel 只发出 UI 意图，世界节点负责真实 NPC 高亮和重新拉取。
+	if not _observer_panel.highlight_npcs_requested.is_connected(_on_observer_panel_highlight_npcs_requested):
+		_observer_panel.highlight_npcs_requested.connect(_on_observer_panel_highlight_npcs_requested)
+	if not _observer_panel.retry_requested.is_connected(_on_observer_panel_retry_requested):
+		_observer_panel.retry_requested.connect(_on_observer_panel_retry_requested)
+
+
+func _on_observer_panel_highlight_npcs_requested(npc_ids) -> void:
+	var highlighted: Array[String] = []
+	for id_value in _normalize_observer_npc_ids(npc_ids):
+		var npc_id := str(id_value)
+		var controller := _npc_nodes.get(npc_id, null) as NpcController
+		if controller == null:
+			continue
+		controller.flash_observer_highlight(OBSERVER_TRACE_HIGHLIGHT_MSEC)
+		highlighted.append(npc_id)
+	if highlighted.is_empty():
+		return
+	_event_label.text = "Observer trace highlight: %s" % ", ".join(highlighted)
+
+
+func _on_observer_panel_retry_requested(npc_id: String) -> void:
+	var trimmed_id := npc_id.strip_edges()
+	if trimmed_id == "":
+		return
+	if bool(_observer_phase2_in_flight.get(trimmed_id, false)):
+		return
+	# 人工点击重试需要绕过短间隔节流和旧缓存，确保错误态能立即恢复。
+	_observer_phase2_cache.erase(trimmed_id)
+	_observer_phase2_request_msec.erase(trimmed_id)
+	_request_phase2_debug_for_observer(trimmed_id)
+
+
+func _normalize_observer_npc_ids(value) -> Array[String]:
+	var ids: Array[String] = []
+	if value is Array:
+		var values := value as Array
+		for item in values:
+			var npc_id := str(item).strip_edges()
+			if npc_id != "" and not ids.has(npc_id):
+				ids.append(npc_id)
+		return ids
+	var single_id := str(value).strip_edges()
+	if single_id != "":
+		ids.append(single_id)
+	return ids
 
 
 func _toggle_observer_panel() -> void:
@@ -585,6 +632,7 @@ func _build_phase2_observer_summary(payload: Dictionary) -> Dictionary:
 		"heuristics": _summarize_phase2_heuristics(payload.get("heuristics", {})),
 		"recentTraceEvents": _summarize_phase2_recent_trace(payload.get("recentTraceEvents", [])),
 		"recentTraceEventGroups": _build_phase2_trace_filter_summaries(payload.get("recentTraceEvents", [])),
+		"recentTraceEventRows": _build_phase2_trace_event_groups(payload.get("recentTraceEvents", [])),
 		"recentTraceDetailGroups": _build_phase2_trace_detail_groups(payload.get("recentTraceEvents", [])),
 		"recentTraceCopyDetailGroups": _build_phase2_trace_copy_detail_groups(payload.get("recentTraceEvents", [])),
 		"recentTraceDetails": _summarize_phase2_trace_details(payload.get("recentTraceEvents", [])),
@@ -594,7 +642,7 @@ func _build_phase2_observer_summary(payload: Dictionary) -> Dictionary:
 func _summarize_phase2_motivation(section) -> String:
 	var items := _phase2_items(section)
 	if items.is_empty():
-		return "无 motivation 记录"
+		return "暂无 motivation：后端没有返回该 NPC 的决策记录，等待下一次世界 tick。"
 	var focus = items[0]
 	if not (focus is Dictionary):
 		return "motivation 数据不可读"
@@ -612,7 +660,7 @@ func _summarize_phase2_motivation(section) -> String:
 func _summarize_phase2_subjective_memory(section) -> String:
 	var items := _phase2_items(section)
 	if items.is_empty():
-		return "无 subjective memory"
+		return "暂无 subjectiveMemory：该 NPC 尚未写入主观记忆。"
 	var latest = items[items.size() - 1]
 	if not (latest is Dictionary):
 		return "subjective memory 数据不可读"
@@ -625,7 +673,7 @@ func _summarize_phase2_subjective_memory(section) -> String:
 func _summarize_phase2_relationship_edges(section) -> String:
 	var items := _phase2_items(section)
 	if items.is_empty():
-		return "无 relationship edge"
+		return "暂无 relationshipEdges：该 NPC 暂无可解释关系边。"
 	var strongest: Dictionary = {}
 	var strongest_strength := -1.0
 	for item in items:
@@ -650,7 +698,7 @@ func _summarize_phase2_relationship_edges(section) -> String:
 func _summarize_phase2_heuristics(section) -> String:
 	var items := _phase2_items(section)
 	if items.is_empty():
-		return "无 heuristic"
+		return "暂无 heuristics：该 NPC 暂无启发式学习记录。"
 	var top = items[0]
 	if not (top is Dictionary):
 		return "heuristic 数据不可读"
@@ -676,6 +724,17 @@ func _build_phase2_trace_filter_summaries(section) -> Dictionary:
 	}
 
 
+func _build_phase2_trace_event_groups(section) -> Dictionary:
+	# 面板点击需要原始 trace envelope；这里只裁剪到可见的最近 4 条。
+	return {
+		"all": _phase2_trace_events_for_filter(section, "all"),
+		"decision": _phase2_trace_events_for_filter(section, "decision"),
+		"tool": _phase2_trace_events_for_filter(section, "tool"),
+		"interrupt": _phase2_trace_events_for_filter(section, "interrupt"),
+		"memory": _phase2_trace_events_for_filter(section, "memory"),
+	}
+
+
 func _build_phase2_trace_detail_groups(section) -> Dictionary:
 	return {
 		"all": _phase2_trace_details_for_filter(section, "all"),
@@ -696,10 +755,30 @@ func _build_phase2_trace_copy_detail_groups(section) -> Dictionary:
 	}
 
 
+func _phase2_trace_events_for_filter(section, filter_id: String) -> Array:
+	var items := _phase2_items(section)
+	var rows: Array = []
+	if items.is_empty():
+		return rows
+	var filtered_items: Array = []
+	for item in items:
+		if not (item is Dictionary):
+			continue
+		var entry := item as Dictionary
+		var event_type := str(entry.get("eventType", entry.get("type", "trace")))
+		if _phase2_trace_filter_matches(event_type, filter_id):
+			filtered_items.append(entry)
+	var start_index = max(0, filtered_items.size() - 4)
+	for index in range(start_index, filtered_items.size()):
+		var entry := filtered_items[index] as Dictionary
+		rows.append(entry.duplicate(true))
+	return rows
+
+
 func _summarize_phase2_recent_trace_for_filter(section, filter_id: String) -> String:
 	var items := _phase2_items(section)
 	if items.is_empty():
-		return "无 recent trace"
+		return "暂无 recentTraceEvents：该 NPC 尚未产生可解释 trace。"
 	var filtered_items: Array = []
 	for item in items:
 		if not (item is Dictionary):
@@ -709,7 +788,7 @@ func _summarize_phase2_recent_trace_for_filter(section, filter_id: String) -> St
 		if _phase2_trace_filter_matches(event_type, filter_id):
 			filtered_items.append(entry)
 	if filtered_items.is_empty():
-		return "无 %s trace" % filter_id
+		return "暂无 %s trace：当前筛选器没有匹配记录。" % filter_id
 	var lines: Array[String] = []
 	var start_index = max(0, filtered_items.size() - 4)
 	for index in range(start_index, filtered_items.size()):
@@ -755,7 +834,7 @@ func _phase2_trace_details_for_filter(section, filter_id: String, full_detail: b
 func _summarize_phase2_trace_details(section) -> String:
 	var items := _phase2_items(section)
 	if items.is_empty():
-		return "无 trace detail"
+		return "暂无 traceDetails：先等待 trace 产生，再查看明细。"
 	var latest = items[items.size() - 1]
 	if not (latest is Dictionary):
 		return "trace detail 数据不可读"

@@ -9,6 +9,7 @@ enum NpcState {
 
 const MOVE_EPSILON := 2.0
 const SPRITE_SCALE := 1.35
+const OBSERVER_HIGHLIGHT_PULSE_SPEED := 7.5
 
 @export var npc_id: String = ""
 @export var move_speed_pixels: float = 120.0
@@ -22,9 +23,13 @@ var move_target: Vector2 = Vector2.ZERO
 
 var _display_name: String = ""
 var _accent_color: Color = Color(1.0, 1.0, 1.0, 1.0)
+var _base_visual_modulate: Color = Color(1.0, 1.0, 1.0, 1.0)
+var _observer_highlight_until_msec := 0
+var _observer_highlight_color: Color = Color(1.0, 0.92, 0.28, 1.0)
 var _crowd_offset: Vector2 = Vector2.ZERO
 var _pending_texture: Texture2D
 var _visual_root: Node2D
+var _observer_highlight: ColorRect
 var _sprite: Sprite2D
 var _shadow: ColorRect
 var _fallback_body: ColorRect
@@ -39,6 +44,15 @@ func _ready() -> void:
 	_visual_root = Node2D.new()
 	_visual_root.name = "VisualRoot"
 	add_child(_visual_root)
+
+	_observer_highlight = ColorRect.new()
+	_observer_highlight.name = "ObserverHighlight"
+	_observer_highlight.color = Color(1.0, 0.92, 0.28, 0.0)
+	_observer_highlight.size = Vector2(78.0, 92.0)
+	_observer_highlight.position = Vector2(-39.0, -88.0)
+	_observer_highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_observer_highlight.visible = false
+	_visual_root.add_child(_observer_highlight)
 
 	_shadow = ColorRect.new()
 	_shadow.name = "GroundShadow"
@@ -74,6 +88,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	_update_observer_highlight()
 	_update_idle_bobbing()
 	if current_state != NpcState.WALKING:
 		return
@@ -125,6 +140,15 @@ func set_action_status(text: String) -> void:
 	if trimmed == "":
 		return
 	_action_label.text = _short_label_text(trimmed, 32)
+
+
+func flash_observer_highlight(duration_msec: int = 2200, highlight_color: Color = Color(1.0, 0.92, 0.28, 1.0)) -> void:
+	# ObserverPanel trace 点击会短暂点亮对应 NPC，帮助人工核对 agentId / observerScope。
+	_observer_highlight_color = highlight_color
+	_observer_highlight_until_msec = Time.get_ticks_msec() + duration_msec
+	if _observer_highlight != null:
+		_observer_highlight.visible = true
+	_apply_visual_modulate()
 
 
 func apply_tick_event(event_payload: Dictionary) -> void:
@@ -244,10 +268,34 @@ func _enter_state(next_state: NpcState, label_text: String) -> void:
 
 
 func _set_visual_modulate(color: Color) -> void:
+	_base_visual_modulate = color
+	_apply_visual_modulate()
+
+
+func _apply_visual_modulate() -> void:
+	var final_color := _base_visual_modulate
+	if _observer_highlight_until_msec > Time.get_ticks_msec():
+		final_color = final_color.lerp(_observer_highlight_color, 0.36)
 	if _sprite != null:
-		_sprite.modulate = color
+		_sprite.modulate = final_color
 	if _fallback_body != null:
-		_fallback_body.color = _accent_color * color
+		_fallback_body.color = _accent_color * final_color
+
+
+func _update_observer_highlight() -> void:
+	if _observer_highlight == null:
+		return
+	var now := Time.get_ticks_msec()
+	if _observer_highlight_until_msec <= now:
+		if _observer_highlight.visible:
+			_observer_highlight.visible = false
+			_apply_visual_modulate()
+		return
+	var seconds := float(now) / 1000.0
+	var pulse := 0.44 + sin(seconds * OBSERVER_HIGHLIGHT_PULSE_SPEED + float(abs(npc_id.hash() % 17))) * 0.16
+	var color := _observer_highlight_color
+	color.a = clampf(pulse, 0.24, 0.72)
+	_observer_highlight.color = color
 
 
 func _update_idle_bobbing() -> void:
