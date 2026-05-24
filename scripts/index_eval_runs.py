@@ -54,12 +54,14 @@ PROMOTION_PURPOSE_TEMPLATES = {
         "requiredNotes": [
             "说明该 run 支撑的研究问题或表格编号。",
             "记录 baseline / ablation 与主要指标解读。",
+            "补充 llmEvidence：provider_usage_actual.v1 记录、token / latency / cost / fallback 与 final selectedToolId。",
             "说明 drift policy、git dirty 和人工窗口验收状态。",
         ],
         "extraChecklist": [
             "确认 schema 与论文方法描述一致。",
             "确认导出 artifact 可复现。",
             "确认真实模型或人工窗口证据已单独记录。",
+            "确认 llmEvidence 中的真实模型调用和 fallback_reason 已人工复核。",
         ],
     },
     "portfolio": {
@@ -245,6 +247,7 @@ def _read_manifest_record(manifest_path: Path) -> tuple[dict[str, Any], list[str
             "metricIds": list(manifest.get("metricIds", [])) if isinstance(manifest.get("metricIds"), list) else [],
             "baselines": list(manifest.get("baselines", [])) if isinstance(manifest.get("baselines"), list) else [],
             "scenarioIds": list(manifest.get("scenarioIds", [])) if isinstance(manifest.get("scenarioIds"), list) else [],
+            "llmEvidence": _compact_llm_evidence(manifest.get("llmEvidence", {})),
             "artifactCount": len(artifact_records),
             "artifacts": artifact_records,
             "valid": not errors,
@@ -329,6 +332,7 @@ def _build_promotion_record(
     manual_items: list[str] = []
     purpose_template = _promotion_template_for(purpose)
     git = record.get("git", {}) if isinstance(record.get("git"), dict) else {}
+    llm_evidence = record.get("llmEvidence", {}) if isinstance(record.get("llmEvidence"), dict) else {}
     if not note.strip():
         manual_items.append(f"promotion note 为空；请按 {purpose_template['purposeLabel']} 模板补充人工备注。")
     if bool(git.get("dirty")):
@@ -366,6 +370,7 @@ def _build_promotion_record(
         "metricIds": record.get("metricIds", []),
         "baselines": record.get("baselines", []),
         "scenarioIds": record.get("scenarioIds", []),
+        "llmEvidence": llm_evidence,
         "artifactCount": record.get("artifactCount"),
         "archiveChecks": {
             "archiveIndexVersion": index.get("indexVersion"),
@@ -383,7 +388,7 @@ def _build_promotion_record(
             "driftExplained": drift_for_suite is not None and not bool(drift_for_suite.get("requiresManualReview")),
             "driftPolicyBlocking": bool(drift_for_suite and drift_for_suite.get("blocksPromotion")),
             "manualWindowVerified": False,
-            "externalModelVerifiedIfNeeded": False,
+            "externalModelVerifiedIfNeeded": bool(llm_evidence.get("recordCount")) and llm_evidence.get("providerUsageSchemaVersion") == "provider_usage_actual.v1",
         },
     }
 
@@ -413,6 +418,8 @@ def _promotion_markdown(record: dict[str, Any]) -> str:
     extra_checklist = template.get("extraChecklist", []) if isinstance(template.get("extraChecklist"), list) else []
     required_note_text = "\n".join(f"- {item}" for item in required_notes) or "- 未配置。"
     extra_checklist_text = "\n".join(f"- [ ] {item}" for item in extra_checklist) or "- [ ] 未配置。"
+    llm_evidence = record.get("llmEvidence", {}) if isinstance(record.get("llmEvidence"), dict) else {}
+    llm_evidence_text = json.dumps(llm_evidence or {"placeholder": "补充 llmEvidence"}, ensure_ascii=False, indent=2)
     return (
         "# Eval Run Promotion\n\n"
         f"- status: `{record.get('promotionStatus')}`\n"
@@ -429,6 +436,10 @@ def _promotion_markdown(record: dict[str, Any]) -> str:
         f"{manual_text}\n\n"
         "## Paper-grade checklist\n\n"
         f"{checklist_text}\n\n"
+        "## LLM evidence\n\n"
+        "```json\n"
+        f"{llm_evidence_text}\n"
+        "```\n\n"
         "## Purpose checklist\n\n"
         f"{extra_checklist_text}\n"
     )
@@ -755,6 +766,54 @@ def _schema_registry_version(schema_registry: Any) -> str | None:
     if not isinstance(schema_registry, dict):
         return None
     return schema_registry.get("registryVersion")
+
+
+def _compact_llm_evidence(llm_evidence: Any) -> dict[str, Any]:
+    """压缩 manifest 中的 LLM evidence，供 promotion record 快速复核。"""
+    if not isinstance(llm_evidence, dict):
+        return {
+            "schemaVersion": None,
+            "providerUsageSchemaVersion": None,
+            "recordCount": 0,
+            "cloudCallCount": 0,
+            "fallbackCount": 0,
+            "totals": {},
+            "records": [],
+        }
+    records = llm_evidence.get("records", []) if isinstance(llm_evidence.get("records"), list) else []
+    return {
+        "schemaVersion": llm_evidence.get("schemaVersion"),
+        "providerUsageSchemaVersion": llm_evidence.get("providerUsageSchemaVersion"),
+        "source": llm_evidence.get("source"),
+        "providerMode": llm_evidence.get("providerMode"),
+        "seedCount": llm_evidence.get("seedCount"),
+        "recordCount": int(llm_evidence.get("recordCount") or len(records)),
+        "cloudCallCount": int(llm_evidence.get("cloudCallCount") or 0),
+        "fallbackCount": int(llm_evidence.get("fallbackCount") or 0),
+        "totals": dict(llm_evidence.get("totals", {})) if isinstance(llm_evidence.get("totals"), dict) else {},
+        "records": [
+            {
+                "scenarioId": record.get("scenarioId"),
+                "baseline": record.get("baseline"),
+                "seedIndex": record.get("seedIndex"),
+                "provider": record.get("provider"),
+                "providerMode": record.get("providerMode"),
+                "model": record.get("model"),
+                "tokens": record.get("tokens"),
+                "latencyMs": record.get("latencyMs"),
+                "cost": record.get("cost"),
+                "fallbackReason": record.get("fallbackReason"),
+                "finalSelectedToolId": record.get("finalSelectedToolId"),
+                "providerUsageVersion": (
+                    record.get("providerUsageRecord", {}).get("version")
+                    if isinstance(record.get("providerUsageRecord"), dict)
+                    else record.get("providerUsageSchemaVersion")
+                ),
+            }
+            for record in records[:12]
+            if isinstance(record, dict)
+        ],
+    }
 
 
 def _jsonl_row_count(path: Path) -> int:

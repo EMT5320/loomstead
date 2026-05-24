@@ -82,6 +82,7 @@ Stability suite 导出结构：
 - Git 快照：`commit`、`shortCommit`、`branch`、`dirty`、`statusShort`。
 - `schemaRegistry` 快照，当前由 `backend/app/runtime/schema_registry.py` 生成。
 - `metricIds`、`baselines`、`scenarioIds`。
+- `llmEvidence`：当手动运行 cloud / mixed process eval 时，记录 `process_llm_evidence.v1` 汇总和逐次 `provider_usage_actual.v1` 证据，包括 token、latency、cost、fallbackReason 与 final selectedToolId；规则导出可附带最近一次 `.run/process-llm-evidence/latest.json` 的手动 cloud 证据，字段 `source=latest_cache`。
 - `artifacts[]`：每个导出文件的相对 `path`、`kind`、`bytes`、`sha256`；JSONL 文件额外记录 `rowCount`。
 
 ### 2.3 本地导出索引与归档
@@ -324,6 +325,15 @@ Phase 2 alpha：每 scenario 每 baseline 至少 5 个 seed。
 
 Phase 3 研究报告：每 scenario 每 baseline 至少 10 个 seed。若使用 cloud LLM，记录 provider、model、temperature、cost、latency。
 
+手动 cloud 验证不进入默认 `check`。当前最小验收命令：
+
+```powershell
+npm.cmd run eval:process -- --provider cloud --scenario pf.branna_forgiveness_requires_memory --seeds 5
+npm.cmd run eval:process:export
+```
+
+第一条命令会把真实 provider usage 缓存在 `.run/process-llm-evidence/latest.json`；第二条命令导出的 process manifest 会写入 `llmEvidence`，并额外产出 `llm_evidence.json` artifact。
+
 ### 5.3 统计输出
 
 `summary.json` 至少包含：
@@ -443,4 +453,5 @@ Phase 2 不达成以下条件，不进入 Phase 3：
 4. Eval 输出包含 mean/std/n，而不只是 pass/fail。
 5. 至少 1 张 ablation_comparison.json 能展示 Full vs Hard Delegation vs No Subjective Memory / No Relationship Edge 的差异。
 6. 所有关键状态变化都有 source_event_ids 或 trace_refs。
+7. 至少 1 个 GoalSpec 能在手动 cloud provider 下跑通，并在 manifest.llmEvidence 中保留 `provider_usage_actual.v1` 记录。
 ```

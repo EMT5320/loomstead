@@ -282,7 +282,13 @@ class AgentRuntime:
             "legacyLifeActionExecutorActive": False,
         }
 
-    def _phase2_decisions(self, npc_ids: list[str], delta_minutes: float = 20.0) -> list[dict[str, Any]]:
+    def _phase2_decisions(
+        self,
+        npc_ids: list[str],
+        delta_minutes: float = 20.0,
+        *,
+        allow_provider_calls: bool = False,
+    ) -> list[dict[str, Any]]:
         decisions: list[dict[str, Any]] = []
         for npc_id in npc_ids:
             relationship_edges = [
@@ -297,17 +303,315 @@ class AgentRuntime:
                 subjective_memory_records=subjective_memory_records,
                 heuristics=heuristics,
             )
+            decision = self.motivation_engine.evaluate_npc(
+                self.world,
+                npc_id,
+                delta_minutes=delta_minutes,
+                relationship_edges=relationship_edges,
+                subjective_memory_records=subjective_memory_records,
+                heuristics=heuristics,
+            )
             decisions.append(
-                self.motivation_engine.evaluate_npc(
-                    self.world,
-                    npc_id,
-                    delta_minutes=delta_minutes,
+                self._maybe_apply_phase2_social_llm_decision(
+                    decision,
                     relationship_edges=relationship_edges,
                     subjective_memory_records=subjective_memory_records,
                     heuristics=heuristics,
+                    allow_provider_calls=allow_provider_calls,
                 )
             )
         return decisions
+
+    def _maybe_apply_phase2_social_llm_decision(
+        self,
+        decision: dict[str, Any],
+        *,
+        relationship_edges: list[dict[str, Any]],
+        subjective_memory_records: list[dict[str, Any]],
+        heuristics: list[dict[str, Any]],
+        allow_provider_calls: bool,
+    ) -> dict[str, Any]:
+        """在真实推进 tick 时让 social_strategic 层可选择云端 LLM，读路径保持零副作用。"""
+        if not allow_provider_calls or self.provider_mode not in {"cloud", "mixed"}:
+            return decision
+        npc_id = str(decision.get("npcId") or "")
+        if not self._phase2_llm_focus_allows(npc_id):
+            return decision
+        social_candidates = self._phase2_social_llm_candidates(decision)
+        if not social_candidates:
+            return decision
+
+        agent = self.world.get("agents", {}).get(npc_id)
+        if not isinstance(agent, dict):
+            return decision
+        profile = self.model_config.resolve_profile(agent_id=npc_id, feature="agent_decision")
+        if profile.get("provider") != "cloud":
+            return self._phase2_attach_llm_fallback(decision, "profile_provider_rule")
+
+        messages = self._phase2_social_llm_messages(
+            decision,
+            social_candidates=social_candidates,
+            relationship_edges=relationship_edges,
+            subjective_memory_records=subjective_memory_records,
+            heuristics=heuristics,
+        )
+        context = {
+            "agent": self._phase2_llm_agent_context(agent),
+            "clock": dict(self.world.get("clock", {})) if isinstance(self.world.get("clock"), dict) else {},
+            "activeFocus": dict(self.world.get("activeFocus", {})) if isinstance(self.world.get("activeFocus"), dict) else {},
+            "candidateToolIds": [item["toolId"] for item in social_candidates],
+        }
+        rule_selected_tool_id = str(decision.get("decision", {}).get("selectedToolId") or "")
+        try:
+            result = self.cloud_provider.decide(
+                context,
+                messages,
+                profile,
+                output_parser=self._parse_phase2_social_llm_response,
+            )
+            parsed = result.get("parsed") if isinstance(result.get("parsed"), dict) else {}
+            selected_tool_id = str(parsed.get("selectedToolId") or "").strip()
+            candidate_tool_ids = {str(item["toolId"]) for item in social_candidates}
+            fallback_reason = None
+            if selected_tool_id not in candidate_tool_ids:
+                selected_tool_id = rule_selected_tool_id
+                fallback_reason = "llm_selected_tool_not_allowed"
+            return self._phase2_apply_llm_decision(
+                decision,
+                profile=profile,
+                messages=messages,
+                result=result,
+                parsed=parsed,
+                selected_tool_id=selected_tool_id,
+                rule_selected_tool_id=rule_selected_tool_id,
+                fallback_reason=fallback_reason,
+                agent=agent,
+                social_candidates=social_candidates,
+            )
+        except Exception as error:  # noqa: BLE001 - Eval 云链路失败要沉淀证据并退回规则决策。
+            fallback_reason = self._safe_error_message(error, profile=profile)
+            self.event_store.append(
+                "provider.fallback",
+                {
+                    "agentId": npc_id,
+                    "agentName": agent.get("name"),
+                    "feature": "agent_decision",
+                    "providerMode": self.provider_mode,
+                    "profileName": profile.get("profileName"),
+                    "error": fallback_reason,
+                    "fallbackProfile": self.model_config.fallback_profile().get("profileName"),
+                },
+            )
+            usage = {
+                "tokens": 0,
+                "promptTokens": 0,
+                "completionTokens": 0,
+                "cost": 0,
+                "latencyMs": 0,
+                "model": profile.get("model"),
+                "profileName": profile.get("profileName"),
+            }
+            result = {"provider": "RuleBasedProvider", "rawText": "", "parsed": {}, "usage": usage}
+            return self._phase2_apply_llm_decision(
+                decision,
+                profile=profile,
+                messages=messages,
+                result=result,
+                parsed={},
+                selected_tool_id=rule_selected_tool_id,
+                rule_selected_tool_id=rule_selected_tool_id,
+                fallback_reason=fallback_reason,
+                agent=agent,
+                social_candidates=social_candidates,
+            )
+
+    def _phase2_llm_focus_allows(self, npc_id: str) -> bool:
+        """Process Eval 用 activeFocus 限定真实 LLM 只服务当前目标 NPC，避免无关 NPC 产生额外成本。"""
+        active_focus = self.world.get("activeFocus") if isinstance(self.world.get("activeFocus"), dict) else {}
+        target_agents = {str(item) for item in active_focus.get("targetAgents", []) if str(item)}
+        return not target_agents or npc_id in target_agents
+
+    def _phase2_social_llm_candidates(self, decision: dict[str, Any]) -> list[dict[str, Any]]:
+        """提取通过规则层过滤且具备 LLM 资格的 social_strategic 候选工具。"""
+        candidates = decision.get("capabilities", []) if isinstance(decision.get("capabilities"), list) else []
+        candidate_scores = decision.get("decision", {}).get("candidateScores", []) if isinstance(decision.get("decision"), dict) else []
+        scores_by_tool = {
+            str(item.get("toolId") or ""): dict(item)
+            for item in candidate_scores
+            if isinstance(item, dict) and item.get("toolId")
+        }
+        social_candidates: list[dict[str, Any]] = []
+        for tool in candidates:
+            if not isinstance(tool, dict):
+                continue
+            if tool.get("tier") != "social_strategic" or not bool(tool.get("llmEligible")):
+                continue
+            tool_id = str(tool.get("toolId") or "")
+            social_candidates.append(
+                {
+                    "toolId": tool_id,
+                    "tier": tool.get("tier"),
+                    "durationSeconds": tool.get("durationSeconds"),
+                    "observerVisibility": tool.get("observerVisibility"),
+                    "score": scores_by_tool.get(tool_id, {}),
+                }
+            )
+        return social_candidates
+
+    def _phase2_social_llm_messages(
+        self,
+        decision: dict[str, Any],
+        *,
+        social_candidates: list[dict[str, Any]],
+        relationship_edges: list[dict[str, Any]],
+        subjective_memory_records: list[dict[str, Any]],
+        heuristics: list[dict[str, Any]],
+    ) -> list[dict[str, str]]:
+        """构造只要求选工具的短 Prompt，保证 LLM 不直接改世界状态。"""
+        decision_payload = decision.get("decision", {}) if isinstance(decision.get("decision"), dict) else {}
+        prompt_payload = {
+            "schema": "phase2.social_strategic_tool_choice.v1",
+            "instruction": "只在 candidateToolIds 内选择一个 selectedToolId；输出 JSON 对象。",
+            "npcId": decision.get("npcId"),
+            "npcName": decision.get("npcName"),
+            "evalSeed": self.world.get("processEvalSeed"),
+            "scenarioId": self.world.get("processEvalScenarioId"),
+            "primaryNeed": decision.get("primaryNeed"),
+            "ruleSelectedToolId": decision_payload.get("selectedToolId"),
+            "candidateToolIds": [item["toolId"] for item in social_candidates],
+            "candidateScores": [item.get("score", {}) for item in social_candidates],
+            "relationshipEdges": relationship_edges[:4],
+            "subjectiveMemories": subjective_memory_records[:4],
+            "heuristics": heuristics[:4],
+            "activeFocus": self.world.get("activeFocus", {}),
+            "responseContract": {
+                "selectedToolId": "必须是 candidateToolIds 之一",
+                "rationale": "一句话说明选择依据",
+                "confidence": "0 到 1 之间的数字",
+            },
+        }
+        return [
+            {
+                "role": "system",
+                "content": "你是 Loomstead 的 social_strategic 仲裁层，只能选择工具，不允许直接修改世界状态。",
+            },
+            {"role": "user", "content": json.dumps(prompt_payload, ensure_ascii=False)},
+        ]
+
+    def _parse_phase2_social_llm_response(self, raw_text: str) -> dict[str, Any] | None:
+        """容错解析 social_strategic 工具选择 JSON。"""
+        text = str(raw_text or "").strip()
+        if not text:
+            return None
+        if text.startswith("```"):
+            text = text.strip("`").strip()
+            if text.lower().startswith("json"):
+                text = text[4:].strip()
+        try:
+            payload = json.loads(text)
+        except json.JSONDecodeError:
+            start = text.find("{")
+            end = text.rfind("}")
+            if start < 0 or end <= start:
+                return None
+            try:
+                payload = json.loads(text[start : end + 1])
+            except json.JSONDecodeError:
+                return None
+        return payload if isinstance(payload, dict) else None
+
+    def _phase2_apply_llm_decision(
+        self,
+        decision: dict[str, Any],
+        *,
+        profile: dict[str, Any],
+        messages: list[dict[str, str]],
+        result: dict[str, Any],
+        parsed: dict[str, Any],
+        selected_tool_id: str,
+        rule_selected_tool_id: str,
+        fallback_reason: str | None,
+        agent: dict[str, Any],
+        social_candidates: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """把 LLM 仲裁结果写回 Motivation 决策，并同步生成 provider_usage_actual.v1 证据。"""
+        npc_id = str(decision.get("npcId") or agent.get("id") or "")
+        executed = {
+            "layer": "social_strategic",
+            "selectedToolId": selected_tool_id,
+            "ruleSelectedToolId": rule_selected_tool_id,
+            "candidateToolIds": [item["toolId"] for item in social_candidates],
+        }
+        debug = self._build_provider_debug(
+            feature="agent_decision",
+            profile=profile,
+            messages=messages,
+            result=result,
+            parsed=parsed,
+            fallback_reason=fallback_reason,
+            executed=executed,
+            agent_id=npc_id,
+            extra={
+                "arbitrationLayer": "social_strategic",
+                "ruleSelectedToolId": rule_selected_tool_id,
+                "selectedToolId": selected_tool_id,
+                "candidateToolIds": executed["candidateToolIds"],
+                "evalSeed": self.world.get("processEvalSeed"),
+                "scenarioId": self.world.get("processEvalScenarioId"),
+            },
+        )
+        agent.setdefault("decisionHistory", []).append(debug)
+        agent["decisionHistory"] = agent["decisionHistory"][-10:]
+        self.event_store.append("debug.decision", {"agentId": npc_id, "agentName": agent.get("name", npc_id), "debug": debug})
+
+        enriched = dict(decision)
+        decision_payload = dict(enriched.get("decision") or {})
+        decision_payload["selectedToolId"] = selected_tool_id
+        decision_payload["reason"] = "llm_social_strategic_layer" if not fallback_reason else "llm_social_strategic_fallback"
+        decision_payload["llmArbitration"] = {
+            "layer": "social_strategic",
+            "providerUsageSchemaVersion": require_schema_version("provider_usage_actual"),
+            "providerUsageRecord": debug.get("providerUsageRecord"),
+            "fallbackReason": fallback_reason,
+            "ruleSelectedToolId": rule_selected_tool_id,
+            "selectedToolId": selected_tool_id,
+        }
+        decision_payload["contributingSources"] = [
+            *[dict(item) for item in decision_payload.get("contributingSources", []) if isinstance(item, dict)],
+            {
+                "type": "llm_social_strategic_layer",
+                "providerUsageVersion": require_schema_version("provider_usage_actual"),
+                "fallbackReason": fallback_reason,
+                "selectedToolId": selected_tool_id,
+            },
+        ]
+        enriched["decision"] = decision_payload
+        return enriched
+
+    def _phase2_attach_llm_fallback(self, decision: dict[str, Any], fallback_reason: str) -> dict[str, Any]:
+        """在 profile 不允许云调用时保留显式 fallback 线索。"""
+        enriched = dict(decision)
+        decision_payload = dict(enriched.get("decision") or {})
+        decision_payload["llmArbitration"] = {
+            "layer": "social_strategic",
+            "providerUsageSchemaVersion": require_schema_version("provider_usage_actual"),
+            "fallbackReason": fallback_reason,
+            "selectedToolId": decision_payload.get("selectedToolId"),
+        }
+        enriched["decision"] = decision_payload
+        return enriched
+
+    def _phase2_llm_agent_context(self, agent: dict[str, Any]) -> dict[str, Any]:
+        """压缩 NPC 上下文，避免把完整 deepCard 塞进真实云调用。"""
+        status = agent.get("status", {}) if isinstance(agent.get("status"), dict) else {}
+        return {
+            "id": agent.get("id"),
+            "name": agent.get("name"),
+            "job": agent.get("job"),
+            "locationId": agent.get("locationId"),
+            "anchorId": agent.get("anchorId"),
+            "status": {key: status.get(key) for key in ("energy", "money", "social", "mood", "stress", "health")},
+        }
 
     def _phase2_eval_ablation_inputs(
         self,
@@ -1100,7 +1404,7 @@ class AgentRuntime:
 
         tick_events: list[dict[str, Any]] = []
         decisions = self._record_phase2_decision_events(
-            self._phase2_decisions(list(DAY1_NPC_IDS), delta_minutes=20.0),
+            self._phase2_decisions(list(DAY1_NPC_IDS), delta_minutes=20.0, allow_provider_calls=True),
             tick_events=tick_events,
         )
         execution = self.tool_executor.tick(

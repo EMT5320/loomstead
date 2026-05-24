@@ -44,6 +44,9 @@ RELATIONSHIP_ABLATION_EVIDENCE_LINK_REMOVAL = "evidence_link_removal"
 BASELINE_STABILITY_24H = "rule_24h_stability"
 DEFAULT_STABILITY_HOURS = 24
 COUNTERFACTUAL_REPLAY_DECISION_CYCLES = 24
+PROCESS_PROVIDER_MODES = ("rule", "cloud", "mixed")
+PROCESS_LLM_EVIDENCE_VERSION = "process_llm_evidence.v1"
+PROCESS_LLM_EVIDENCE_CACHE_PATH = Path(".run") / "process-llm-evidence" / "latest.json"
 STABILITY_TRACE_TYPES = {
     "motivation.decision_made",
     "tool.execution_completed",
@@ -89,27 +92,45 @@ def run_process_fidelity_scenarios(
     scenarios: tuple[ProcessGoalSpec, ...] = DEFAULT_PROCESS_GOALS,
     *,
     export_dir: str | Path | None = None,
+    provider_mode: str = "rule",
+    seed_count: int = 1,
+    attach_latest_llm_evidence: bool = False,
 ) -> dict[str, Any]:
     """运行 Phase 2 Process Fidelity 规则级评估。"""
+    provider_mode = _normalize_process_provider_mode(provider_mode)
+    seed_count = max(1, int(seed_count))
     runs = {
-        BASELINE_FULL: _run_process_baseline(scenarios, baseline=BASELINE_FULL),
-        BASELINE_HARD_DELEGATION: _run_process_baseline(scenarios, baseline=BASELINE_HARD_DELEGATION),
-        ABLATION_NO_SUBJECTIVE_MEMORY: _run_process_baseline(scenarios, baseline=ABLATION_NO_SUBJECTIVE_MEMORY),
-        ABLATION_NO_RELATIONSHIP_EDGE: _run_process_baseline(scenarios, baseline=ABLATION_NO_RELATIONSHIP_EDGE),
-        ABLATION_SHUFFLED_MEMORY_OWNER: _run_process_baseline(scenarios, baseline=ABLATION_SHUFFLED_MEMORY_OWNER),
-        ABLATION_EVIDENCE_LINK_REMOVAL: _run_process_baseline(scenarios, baseline=ABLATION_EVIDENCE_LINK_REMOVAL),
+        BASELINE_FULL: _run_process_baseline(scenarios, baseline=BASELINE_FULL, provider_mode=provider_mode, seed_count=seed_count),
+        BASELINE_HARD_DELEGATION: _run_process_baseline(scenarios, baseline=BASELINE_HARD_DELEGATION, provider_mode="rule", seed_count=seed_count),
+        ABLATION_NO_SUBJECTIVE_MEMORY: _run_process_baseline(scenarios, baseline=ABLATION_NO_SUBJECTIVE_MEMORY, provider_mode=provider_mode, seed_count=seed_count),
+        ABLATION_NO_RELATIONSHIP_EDGE: _run_process_baseline(scenarios, baseline=ABLATION_NO_RELATIONSHIP_EDGE, provider_mode=provider_mode, seed_count=seed_count),
+        ABLATION_SHUFFLED_MEMORY_OWNER: _run_process_baseline(scenarios, baseline=ABLATION_SHUFFLED_MEMORY_OWNER, provider_mode=provider_mode, seed_count=seed_count),
+        ABLATION_EVIDENCE_LINK_REMOVAL: _run_process_baseline(scenarios, baseline=ABLATION_EVIDENCE_LINK_REMOVAL, provider_mode=provider_mode, seed_count=seed_count),
     }
     comparison = _build_process_ablation_comparison(runs)
     metrics = [metric for baseline in PROCESS_BASELINES for metric in runs[baseline]["metrics"]]
+    llm_evidence = _build_process_llm_evidence(
+        runs,
+        provider_mode=provider_mode,
+        seed_count=seed_count,
+        source="current_run",
+    )
+    if provider_mode in {"cloud", "mixed"}:
+        _cache_latest_process_llm_evidence(llm_evidence)
+    elif attach_latest_llm_evidence and not llm_evidence.get("recordCount"):
+        llm_evidence = _load_cached_process_llm_evidence() or llm_evidence
     result = {
         "ok": bool(runs[BASELINE_FULL]["ok"]),
         "suite": "process_fidelity",
         "baseline": BASELINE_FULL,
+        "providerMode": provider_mode,
+        "seedCount": seed_count,
         "passed": runs[BASELINE_FULL]["passed"],
-        "total": len(scenarios),
+        "total": len(scenarios) * seed_count,
         "metrics": metrics,
         "baselines": runs,
         "ablation_comparison": comparison,
+        "llmEvidence": llm_evidence,
     }
     if export_dir is not None:
         result["export"] = _export_process_eval(result, Path(export_dir))
@@ -437,25 +458,39 @@ def _metric_triplet(metric: dict[str, Any]) -> dict[str, Any]:
     return {"mean": metric["mean"], "std": metric["std"], "n": metric["n"]}
 
 
-def _run_process_baseline(scenarios: tuple[ProcessGoalSpec, ...], *, baseline: str) -> dict[str, Any]:
+def _run_process_baseline(
+    scenarios: tuple[ProcessGoalSpec, ...],
+    *,
+    baseline: str,
+    provider_mode: str,
+    seed_count: int,
+) -> dict[str, Any]:
     items: list[dict[str, Any]] = []
-    for scenario in scenarios:
-        if baseline == BASELINE_HARD_DELEGATION:
-            item = _run_hard_delegation_process_scenario(scenario)
-        else:
-            item = _run_runtime_process_scenario(
-                scenario,
-                baseline=baseline,
-                subjective_memory_ablation=_subjective_memory_ablation_for_baseline(baseline),
-                relationship_ablation=_relationship_ablation_for_baseline(baseline),
-            )
-        items.append(item)
+    for seed_index in range(1, max(1, int(seed_count)) + 1):
+        for scenario in scenarios:
+            if baseline == BASELINE_HARD_DELEGATION:
+                item = _run_hard_delegation_process_scenario(scenario)
+            else:
+                item = _run_runtime_process_scenario(
+                    scenario,
+                    baseline=baseline,
+                    subjective_memory_ablation=_subjective_memory_ablation_for_baseline(baseline),
+                    relationship_ablation=_relationship_ablation_for_baseline(baseline),
+                    provider_mode=provider_mode,
+                    seed_index=seed_index,
+                    seed_count=seed_count,
+                )
+            if seed_count > 1 or provider_mode in {"cloud", "mixed"}:
+                item["seed"] = _process_seed_payload(scenario, baseline=baseline, seed_index=seed_index)
+            items.append(item)
     metrics = process_metric_summaries(items, baseline=baseline)
     passed = sum(1 for item in items if item.get("ok"))
     return {
-        "ok": passed == len(scenarios),
+        "ok": passed == len(items),
         "passed": passed,
-        "total": len(scenarios),
+        "total": len(items),
+        "providerMode": provider_mode,
+        "seedCount": max(1, int(seed_count)),
         "metrics": metrics,
         "items": items,
     }
@@ -475,14 +510,37 @@ def _subjective_memory_ablation_for_baseline(baseline: str) -> str:
     }.get(baseline, SUBJECTIVE_MEMORY_ABLATION_NONE)
 
 
+def _normalize_process_provider_mode(provider_mode: str) -> str:
+    mode = str(provider_mode or "rule").strip().lower()
+    if mode not in PROCESS_PROVIDER_MODES:
+        raise ValueError(f"process provider 只支持 {', '.join(PROCESS_PROVIDER_MODES)}：{provider_mode}")
+    return mode
+
+
+def _process_seed_payload(scenario: ProcessGoalSpec, *, baseline: str, seed_index: int) -> dict[str, Any]:
+    """生成可复核的 Eval seed 标识；真实云模型不强制支持供应商 seed 参数。"""
+    seed_id = f"{scenario.scenario_id}:{baseline}:seed_{int(seed_index):02d}"
+    digest = hashlib.sha256(seed_id.encode("utf-8")).hexdigest()[:16]
+    return {
+        "seedIndex": int(seed_index),
+        "seedId": seed_id,
+        "deterministicHash": digest,
+    }
+
+
 def _run_runtime_process_scenario(
     scenario: ProcessGoalSpec,
     *,
     baseline: str,
     subjective_memory_ablation: str = SUBJECTIVE_MEMORY_ABLATION_NONE,
     relationship_ablation: str = RELATIONSHIP_ABLATION_NONE,
+    provider_mode: str = "rule",
+    seed_index: int = 1,
+    seed_count: int = 1,
 ) -> dict[str, Any]:
-    runtime = AgentRuntime(provider_mode="rule")
+    runtime = AgentRuntime(provider_mode=provider_mode)
+    runtime.world["processEvalSeed"] = _process_seed_payload(scenario, baseline=baseline, seed_index=seed_index)
+    runtime.world["processEvalScenarioId"] = scenario.scenario_id
     apply_process_goal_setup(runtime.world, scenario)
     setup_evidence = _seed_process_goal_runtime(runtime, scenario)
     runtime_ablation = _apply_runtime_process_ablation(
@@ -492,6 +550,14 @@ def _run_runtime_process_scenario(
         relationship_ablation=relationship_ablation,
     )
     runtime.tick(float(scenario.max_game_hours) * 3600.0, speed=1.0)
+    llm_decision_evidence = _collect_process_llm_decision_evidence(
+        runtime,
+        scenario=scenario,
+        baseline=baseline,
+        provider_mode=provider_mode,
+        seed_index=seed_index,
+        seed_count=seed_count,
+    )
     snapshot = runtime.get_phase2_debug_snapshot({"agentId": scenario.npc_id, "limit": 50})
     recent_trace_events = snapshot.get("recentTraceEvents", []) if isinstance(snapshot.get("recentTraceEvents"), list) else []
     subjective_items = _debug_items(snapshot.get("subjectiveMemory", {}))
@@ -634,8 +700,175 @@ def _run_runtime_process_scenario(
             "subjectiveMemoryAblation": ablated_subjective_memory["evidence"],
             "relationshipAblation": ablated_relationships["evidence"],
             "traceSchemaVersion": snapshot.get("traceSchemaVersion"),
+            "llmDecisionEvidence": llm_decision_evidence,
         },
     }
+
+
+def _collect_process_llm_decision_evidence(
+    runtime: AgentRuntime,
+    *,
+    scenario: ProcessGoalSpec,
+    baseline: str,
+    provider_mode: str,
+    seed_index: int,
+    seed_count: int,
+) -> dict[str, Any]:
+    """从 runtime 事件流提取真实 LLM 仲裁证据，保持 manifest 可直接追溯 provider_usage_actual.v1。"""
+    records: list[dict[str, Any]] = []
+    for event in runtime.event_store.list():
+        if event.get("type") != "debug.decision":
+            continue
+        payload = event.get("payload", {}) if isinstance(event.get("payload"), dict) else {}
+        debug = payload.get("debug", {}) if isinstance(payload.get("debug"), dict) else {}
+        if debug.get("arbitrationLayer") != "social_strategic":
+            continue
+        usage_record = debug.get("providerUsageRecord", {}) if isinstance(debug.get("providerUsageRecord"), dict) else {}
+        executed = debug.get("executed", {}) if isinstance(debug.get("executed"), dict) else {}
+        records.append(
+            {
+                "schemaVersion": PROCESS_LLM_EVIDENCE_VERSION,
+                "providerUsageSchemaVersion": require_schema_version("provider_usage_actual"),
+                "scenarioId": scenario.scenario_id,
+                "baseline": baseline,
+                "seedIndex": int(seed_index),
+                "seedCount": int(seed_count),
+                "eventId": event.get("id"),
+                "npcId": usage_record.get("npcId") or scenario.npc_id,
+                "feature": usage_record.get("feature") or debug.get("feature"),
+                "channel": usage_record.get("channel"),
+                "provider": usage_record.get("provider") or debug.get("provider"),
+                "providerMode": usage_record.get("providerMode") or provider_mode,
+                "profileName": usage_record.get("profileName") or debug.get("profileName"),
+                "model": usage_record.get("model"),
+                "tokens": int(usage_record.get("tokens") or 0),
+                "promptTokens": int(usage_record.get("promptTokens") or 0),
+                "completionTokens": int(usage_record.get("completionTokens") or 0),
+                "cost": float(usage_record.get("cost") or 0.0),
+                "currency": usage_record.get("currency"),
+                "latencyMs": int(usage_record.get("latencyMs") or 0),
+                "fallbackReason": usage_record.get("fallbackReason") or debug.get("fallbackReason"),
+                "finalSelectedToolId": executed.get("selectedToolId") or debug.get("selectedToolId"),
+                "ruleSelectedToolId": executed.get("ruleSelectedToolId") or debug.get("ruleSelectedToolId"),
+                "candidateToolIds": list(executed.get("candidateToolIds", []))
+                if isinstance(executed.get("candidateToolIds"), list)
+                else list(debug.get("candidateToolIds", [])) if isinstance(debug.get("candidateToolIds"), list) else [],
+                "providerUsageRecord": usage_record,
+            }
+        )
+    budget_snapshot = runtime.decision_budget.debug_snapshot(runtime.world, npc_ids=[scenario.npc_id])
+    return {
+        "schemaVersion": PROCESS_LLM_EVIDENCE_VERSION,
+        "providerUsageSchemaVersion": require_schema_version("provider_usage_actual"),
+        "providerMode": provider_mode,
+        "scenarioId": scenario.scenario_id,
+        "baseline": baseline,
+        "seedIndex": int(seed_index),
+        "seedCount": int(seed_count),
+        "recordCount": len(records),
+        "records": records,
+        "providerActuals": budget_snapshot.get("providerActuals", {}),
+    }
+
+
+def _build_process_llm_evidence(
+    runs: dict[str, dict[str, Any]],
+    *,
+    provider_mode: str,
+    seed_count: int,
+    source: str,
+) -> dict[str, Any]:
+    records: list[dict[str, Any]] = []
+    for run in runs.values():
+        for item in run.get("items", []) if isinstance(run, dict) else []:
+            evidence = item.get("evidence", {}) if isinstance(item, dict) and isinstance(item.get("evidence"), dict) else {}
+            llm_evidence = evidence.get("llmDecisionEvidence", {}) if isinstance(evidence.get("llmDecisionEvidence"), dict) else {}
+            records.extend(
+                dict(record)
+                for record in llm_evidence.get("records", [])
+                if isinstance(record, dict)
+            )
+    return {
+        "schemaVersion": PROCESS_LLM_EVIDENCE_VERSION,
+        "providerUsageSchemaVersion": require_schema_version("provider_usage_actual"),
+        "source": source,
+        "providerMode": provider_mode,
+        "seedCount": int(seed_count),
+        "recordCount": len(records),
+        "cloudCallCount": sum(1 for record in records if record.get("provider") == "CloudApiProvider"),
+        "fallbackCount": sum(1 for record in records if record.get("fallbackReason")),
+        "totals": _llm_record_totals(records),
+        "byScenario": _llm_records_by_field(records, "scenarioId"),
+        "byBaseline": _llm_records_by_field(records, "baseline"),
+        "records": records,
+    }
+
+
+def _llm_record_totals(records: list[dict[str, Any]]) -> dict[str, Any]:
+    """汇总 token、latency 和 cost，供 manifest / PROMOTION 快速引用。"""
+    totals = {
+        "calls": len(records),
+        "tokens": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "latencyTotalMs": 0,
+        "latencyAvgMs": 0.0,
+        "cost": 0.0,
+        "currency": None,
+    }
+    for record in records:
+        totals["tokens"] += int(record.get("tokens") or 0)
+        totals["promptTokens"] += int(record.get("promptTokens") or 0)
+        totals["completionTokens"] += int(record.get("completionTokens") or 0)
+        totals["latencyTotalMs"] += int(record.get("latencyMs") or 0)
+        totals["cost"] = round(float(totals["cost"]) + float(record.get("cost") or 0.0), 8)
+        totals["currency"] = _merge_currency(totals["currency"], record.get("currency"))
+    totals["latencyAvgMs"] = round(float(totals["latencyTotalMs"]) / max(1, len(records)), 2)
+    return totals
+
+
+def _llm_records_by_field(records: list[dict[str, Any]], field: str) -> dict[str, dict[str, Any]]:
+    groups: dict[str, list[dict[str, Any]]] = {}
+    for record in records:
+        groups.setdefault(str(record.get(field) or "unknown"), []).append(record)
+    return {key: _llm_record_totals(items) for key, items in sorted(groups.items())}
+
+
+def _merge_currency(current: Any, incoming: Any) -> str | None:
+    current_text = str(current or "")
+    incoming_text = str(incoming or "")
+    if not current_text:
+        return incoming_text or None
+    if not incoming_text or incoming_text == current_text:
+        return current_text
+    return "mixed"
+
+
+def _cache_latest_process_llm_evidence(llm_evidence: dict[str, Any]) -> None:
+    """把手动 cloud eval 的证据缓存到 .run，便于随后 export manifest 引用同一批实际调用。"""
+    if not int(llm_evidence.get("recordCount") or 0):
+        return
+    PROCESS_LLM_EVIDENCE_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    _write_json(PROCESS_LLM_EVIDENCE_CACHE_PATH, llm_evidence)
+
+
+def _load_cached_process_llm_evidence() -> dict[str, Any] | None:
+    """读取最近一次手动 cloud process 证据；缓存路径位于 .run，不进入版本控制。"""
+    if not PROCESS_LLM_EVIDENCE_CACHE_PATH.exists():
+        return None
+    try:
+        cached = json.loads(PROCESS_LLM_EVIDENCE_CACHE_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(cached, dict) or not int(cached.get("recordCount") or 0):
+        return None
+    evidence = dict(cached)
+    evidence["source"] = "latest_cache"
+    evidence["cache"] = {
+        "loadedFrom": PROCESS_LLM_EVIDENCE_CACHE_PATH.as_posix(),
+        "originalSource": cached.get("source"),
+    }
+    return evidence
 
 
 def _seed_process_goal_runtime(runtime: AgentRuntime, scenario: ProcessGoalSpec) -> dict[str, Any]:
@@ -1198,7 +1431,8 @@ def _export_process_eval(result: dict[str, Any], base_dir: Path) -> dict[str, An
     for baseline, run in result["baselines"].items():
         for item in run["items"]:
             scenario_id = item["scenario"]["scenarioId"]
-            scenario_path = per_scenario_dir / f"{scenario_id}_{baseline}.json"
+            seed_suffix = _artifact_seed_suffix(item)
+            scenario_path = per_scenario_dir / f"{scenario_id}_{baseline}{seed_suffix}.json"
             _write_json(scenario_path, item)
             artifacts.append(
                 _artifact_record(
@@ -1242,6 +1476,12 @@ def _export_process_eval(result: dict[str, Any], base_dir: Path) -> dict[str, An
         artifacts.append(
             _artifact_record(trace_path, run_dir, kind=kind, row_count=len(items), baseline=baseline)
         )
+
+    llm_evidence = result.get("llmEvidence", {}) if isinstance(result.get("llmEvidence"), dict) else {}
+    if int(llm_evidence.get("recordCount") or 0):
+        llm_evidence_path = run_dir / "llm_evidence.json"
+        _write_json(llm_evidence_path, llm_evidence)
+        artifacts.append(_artifact_record(llm_evidence_path, run_dir, kind="llm_evidence_json"))
 
     manifest_path = _write_eval_manifest(
         run_dir=run_dir,
@@ -1303,7 +1543,7 @@ def _summary_only(result: dict[str, Any]) -> dict[str, Any]:
         "metrics": result.get("metrics"),
         "ablation_comparison": result.get("ablation_comparison"),
     }
-    for key in ("hours", "ticksCompleted", "checks", "evidence", "domains"):
+    for key in ("providerMode", "seedCount", "llmEvidence", "hours", "ticksCompleted", "checks", "evidence", "domains"):
         if key in result:
             summary[key] = result.get(key)
     return summary
@@ -1324,6 +1564,7 @@ def _counterfactual_replay_items(result: dict[str, Any], baseline: str) -> list[
                 {
                     "scenarioId": scenario.get("scenarioId"),
                     "baseline": item.get("baseline"),
+                    "seed": item.get("seed"),
                     "counterfactualReplay": replay,
                 }
             )
@@ -1346,6 +1587,7 @@ def _memory_ablation_trace_items(result: dict[str, Any]) -> list[dict[str, Any]]
                 {
                     "scenarioId": scenario.get("scenarioId"),
                     "baseline": baseline,
+                    "seed": item.get("seed"),
                     "processChecks": item.get("processChecks", {}),
                     "metrics": item.get("metrics", {}),
                     "scenarioSetup": evidence.get("scenarioSetup", {}),
@@ -1356,6 +1598,15 @@ def _memory_ablation_trace_items(result: dict[str, Any]) -> list[dict[str, Any]]
                 }
             )
     return items
+
+
+def _artifact_seed_suffix(item: dict[str, Any]) -> str:
+    """多 seed 导出时在文件名里追加 seed，避免同一 scenario/baseline 覆盖。"""
+    seed = item.get("seed") if isinstance(item.get("seed"), dict) else {}
+    seed_index = seed.get("seedIndex")
+    if seed_index is None:
+        return ""
+    return f"_seed{int(seed_index):02d}"
 
 
 def _write_eval_manifest(
@@ -1373,6 +1624,8 @@ def _write_eval_manifest(
         "createdAt": created_at,
         "suite": result.get("suite"),
         "baseline": result.get("baseline"),
+        "providerMode": result.get("providerMode"),
+        "seedCount": result.get("seedCount"),
         "ok": result.get("ok"),
         "runDirName": run_dir.name,
         "git": _git_snapshot(),
@@ -1380,6 +1633,7 @@ def _write_eval_manifest(
         "metricIds": _metric_ids(result.get("metrics")),
         "baselines": _baseline_names(result),
         "scenarioIds": _scenario_ids(result),
+        "llmEvidence": result.get("llmEvidence", {}),
         "artifacts": artifacts,
         "verification": {
             "summary": "每个 artifact 提供 bytes / sha256；JSONL artifact 额外提供 rowCount，便于后续复核导出完整性。",
