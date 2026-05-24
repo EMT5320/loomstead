@@ -28,10 +28,26 @@
     "fears": ["被人当成破坏节日的恶人", "供货链一夜崩盘", "因为自己的强硬错过和好的窗口"]
   },
   "motivationProfile": {
-    "needs": {},
-    "personalityModifiers": {}
+    "needs": {
+      "energy": {"weight": 1.05, "decay_rate": 0.038, "threshold_trigger": 0.7, "threshold_critical": 0.9},
+      "money_anxiety": {"weight": 1.75, "decay_rate": 0.032, "threshold_trigger": 0.5, "threshold_critical": 0.84},
+      "affiliation": {"weight": 0.7, "decay_rate": 0.022, "threshold_trigger": 0.62, "threshold_critical": 0.9},
+      "recognition": {"weight": 1.2, "decay_rate": 0.024, "threshold_trigger": 0.58, "threshold_critical": 0.82}
+    },
+    "personalityModifiers": {
+      "extroversion": 0.82,
+      "risk_appetite": 1.08,
+      "conscientiousness": 1.2,
+      "conflict_sensitivity": 0.9
+    }
   },
-  "capabilityPreferences": {},
+  "capabilityPreferences": {
+    "farm.till_soil": {"weight": 1.65, "enabled": true, "reason": "农场基础劳动符合她用行动压住焦虑的习惯。"},
+    "farm.water_crop": {"weight": 1.75, "enabled": true, "reason": "浇水直接关联供货稳定，是她当前最可靠的职业动作。"},
+    "farm.harvest_crop": {"weight": 1.7, "enabled": true, "reason": "收成能回应供货链和账目压力。"},
+    "farm.*": {"weight": 1.6, "enabled": true, "reason": "泛农场行动保持高偏好，让布兰娜优先守住供应链。"},
+    "social.chat_with": {"weight": 0.75, "enabled": true, "reason": "她会沟通，但强硬性格让社交修复优先级偏低。"}
+  },
   "heuristicSeeds": [
     {
       "heuristic_id": "designer_prefer_crop_care_money_anxiety",
@@ -39,6 +55,27 @@
       "adjustment": {"toolId": "farm.water_crop", "weightDelta": 0.06},
       "confidence": 0.58,
       "narrative": "布兰娜担心账目和供货时，会优先把农作照料放在前面。"
+    },
+    {
+      "heuristic_id": "avoid_bram_public_hardline_spiral",
+      "trigger_pattern": {"needId": "recognition", "toolId": "strategic.spread_rumor", "fearId": "seen_as_festival_villain"},
+      "adjustment": {"toolId": "strategic.spread_rumor", "weightDelta": -0.12},
+      "confidence": 0.61,
+      "narrative": "当她担心被看成破坏节日的人时，会避开继续公开放大冲突的做法。"
+    },
+    {
+      "heuristic_id": "prefer_bram_crop_care_supply_break",
+      "trigger_pattern": {"needId": "money_anxiety", "toolId": "farm.water_crop", "fearId": "supply_chain_collapse"},
+      "adjustment": {"toolId": "farm.water_crop", "weightDelta": 0.08},
+      "confidence": 0.63,
+      "narrative": "供货链可能断裂时，布兰娜会把农作照料视为最先要做的止损。"
+    },
+    {
+      "heuristic_id": "avoid_bram_force_chat_when_angry",
+      "trigger_pattern": {"needId": "affiliation", "toolId": "social.chat_with", "fearId": "miss_reconciliation_window"},
+      "adjustment": {"toolId": "social.chat_with", "weightDelta": -0.05},
+      "confidence": 0.52,
+      "narrative": "怒气还没降下来时，布兰娜会避免强行谈和，免得把和好的窗口再一次撞碎。"
     }
   ],
   "secrets": [

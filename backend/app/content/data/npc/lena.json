@@ -28,10 +28,26 @@
     "fears": ["错过早期的危险信号", "节日热闹掩盖了健康风险", "倒在病人之前先倒下"]
   },
   "motivationProfile": {
-    "needs": {},
-    "personalityModifiers": {}
+    "needs": {
+      "energy": {"weight": 1.55, "decay_rate": 0.045, "threshold_trigger": 0.62, "threshold_critical": 0.86},
+      "money_anxiety": {"weight": 0.8, "decay_rate": 0.02, "threshold_trigger": 0.65, "threshold_critical": 0.9},
+      "affiliation": {"weight": 1.15, "decay_rate": 0.026, "threshold_trigger": 0.55, "threshold_critical": 0.84},
+      "recognition": {"weight": 1.65, "decay_rate": 0.03, "threshold_trigger": 0.5, "threshold_critical": 0.82}
+    },
+    "personalityModifiers": {
+      "extroversion": 0.88,
+      "risk_appetite": 0.82,
+      "conscientiousness": 1.2,
+      "caregiving_bias": 1.18
+    }
   },
-  "capabilityPreferences": {},
+  "capabilityPreferences": {
+    "craft.repair_stall": {"weight": 1.65, "enabled": true, "reason": "她会优先处理看得见、能降低公共风险的修补任务。"},
+    "craft.repair_building": {"weight": 1.7, "enabled": true, "reason": "公共设施修复符合她降低镇民风险的长期目标。"},
+    "social.chat_with": {"weight": 1.45, "enabled": true, "reason": "理性沟通能让她传达健康提醒并获得信任。"},
+    "life.rest": {"weight": 1.3, "enabled": true, "reason": "高疲劳风险下，休息是她避免先倒下的必要行为。"},
+    "strategic.spread_rumor": {"weight": 0.5, "enabled": false, "reason": "医疗信息需要克制处理，她会避免把健康风险变成八卦。"}
+  },
   "heuristicSeeds": [
     {
       "heuristic_id": "designer_prefer_repair_when_recognition_rises",
@@ -39,6 +55,27 @@
       "adjustment": {"toolId": "craft.repair_stall", "weightDelta": 0.05},
       "confidence": 0.53,
       "narrative": "莉娜想证明自己可靠时，会倾向先处理看得见的修补任务。"
+    },
+    {
+      "heuristic_id": "avoid_lena_health_risk_noise",
+      "trigger_pattern": {"needId": "recognition", "toolId": "strategic.spread_rumor", "fearId": "festival_masks_health_risk"},
+      "adjustment": {"toolId": "strategic.spread_rumor", "weightDelta": -0.12},
+      "confidence": 0.62,
+      "narrative": "当节日热闹可能遮住健康风险时，莉娜会避免用流言制造更多噪声。"
+    },
+    {
+      "heuristic_id": "prefer_lena_rest_before_collapse",
+      "trigger_pattern": {"needId": "energy", "toolId": "life.rest", "fearId": "collapse_before_patient"},
+      "adjustment": {"toolId": "life.rest", "weightDelta": 0.09},
+      "confidence": 0.6,
+      "narrative": "一旦疲劳接近影响判断，莉娜会把短暂休息视为保护病人的前置动作。"
+    },
+    {
+      "heuristic_id": "prefer_lena_chat_for_early_warning",
+      "trigger_pattern": {"needId": "affiliation", "toolId": "social.chat_with", "fearId": "miss_early_danger_signal"},
+      "adjustment": {"toolId": "social.chat_with", "weightDelta": 0.06},
+      "confidence": 0.55,
+      "narrative": "担心错过早期危险信号时，莉娜会通过简短交谈主动收集镇民状态。"
     }
   ],
   "secrets": [

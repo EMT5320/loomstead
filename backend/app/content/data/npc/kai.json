@@ -28,10 +28,26 @@
     "fears": ["节日冷场", "被布兰娜当众指责欠账", "失去酒馆驻场资格"]
   },
   "motivationProfile": {
-    "needs": {},
-    "personalityModifiers": {}
+    "needs": {
+      "energy": {"weight": 0.9, "decay_rate": 0.04, "threshold_trigger": 0.72, "threshold_critical": 0.92},
+      "money_anxiety": {"weight": 1.8, "decay_rate": 0.035, "threshold_trigger": 0.5, "threshold_critical": 0.82},
+      "affiliation": {"weight": 1.55, "decay_rate": 0.03, "threshold_trigger": 0.48, "threshold_critical": 0.86},
+      "recognition": {"weight": 1.2, "decay_rate": 0.025, "threshold_trigger": 0.55, "threshold_critical": 0.84}
+    },
+    "personalityModifiers": {
+      "extroversion": 1.18,
+      "risk_appetite": 1.12,
+      "conscientiousness": 0.88,
+      "conflict_sensitivity": 1.15
+    }
   },
-  "capabilityPreferences": {},
+  "capabilityPreferences": {
+    "social.chat_with": {"weight": 1.75, "enabled": true, "reason": "外向乐手会优先用聊天稳住节日前的现场气氛。"},
+    "social.give_gift": {"weight": 1.55, "enabled": true, "reason": "她擅长用节日小礼物修补关系和制造舞台温度。"},
+    "shop.open_shop": {"weight": 1.15, "enabled": true, "reason": "欠账压力高时，她会临时帮酒馆撑营业节奏。"},
+    "farm.water_crop": {"weight": 0.65, "enabled": true, "reason": "农活能缓解供货压力，但不符合她的职业和性格优势。"},
+    "farm.*": {"weight": 0.6, "enabled": true, "reason": "泛农场行动对凯娅保持低偏好，避免她长期离开酒馆舞台。"}
+  },
   "heuristicSeeds": [
     {
       "heuristic_id": "designer_prefer_social_chat_affiliation",
@@ -39,6 +55,27 @@
       "adjustment": {"toolId": "social.chat_with", "weightDelta": 0.07},
       "confidence": 0.56,
       "narrative": "节日前压力升高时，凯娅会先用聊天稳住现场气氛。"
+    },
+    {
+      "heuristic_id": "avoid_kai_public_debt_spiral",
+      "trigger_pattern": {"needId": "money_anxiety", "toolId": "shop.open_shop", "fearId": "public_debt_accusation"},
+      "adjustment": {"toolId": "shop.open_shop", "weightDelta": -0.08},
+      "confidence": 0.54,
+      "narrative": "当欠账压力来自当众指责时，凯娅会避开让自己继续成为账本焦点的营业动作。"
+    },
+    {
+      "heuristic_id": "avoid_kai_empty_stage_panic",
+      "trigger_pattern": {"needId": "recognition", "toolId": "strategic.spread_rumor", "fearId": "festival_cold_open"},
+      "adjustment": {"toolId": "strategic.spread_rumor", "weightDelta": -0.1},
+      "confidence": 0.53,
+      "narrative": "害怕冷场时，凯娅会避免用传话和造势替代表演准备，因为那会放大失败感。"
+    },
+    {
+      "heuristic_id": "prefer_kai_gift_music_affiliation",
+      "trigger_pattern": {"needId": "affiliation", "toolId": "social.give_gift", "comfortId": "music_or_festival_gift"},
+      "adjustment": {"toolId": "social.give_gift", "weightDelta": 0.06},
+      "confidence": 0.52,
+      "narrative": "当她想重新靠近别人时，带有音乐或节日意味的小礼物比硬谈欠账更容易打开局面。"
     }
   ],
   "secrets": [

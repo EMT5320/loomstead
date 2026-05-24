@@ -28,10 +28,26 @@
     "fears": ["店面亏到不能再供货", "妮娜的小毛病拖出大问题", "和邻居因为价格起冲突"]
   },
   "motivationProfile": {
-    "needs": {},
-    "personalityModifiers": {}
+    "needs": {
+      "energy": {"weight": 0.95, "decay_rate": 0.04, "threshold_trigger": 0.68, "threshold_critical": 0.9},
+      "money_anxiety": {"weight": 1.25, "decay_rate": 0.03, "threshold_trigger": 0.55, "threshold_critical": 0.82},
+      "affiliation": {"weight": 1.2, "decay_rate": 0.028, "threshold_trigger": 0.52, "threshold_critical": 0.84},
+      "recognition": {"weight": 1.25, "decay_rate": 0.024, "threshold_trigger": 0.55, "threshold_critical": 0.82}
+    },
+    "personalityModifiers": {
+      "extroversion": 1.02,
+      "risk_appetite": 0.85,
+      "conscientiousness": 1.18,
+      "caregiving_bias": 1.16
+    }
   },
-  "capabilityPreferences": {},
+  "capabilityPreferences": {
+    "shop.open_shop": {"weight": 1.7, "enabled": true, "reason": "店主本职会优先稳定摊位、备货和顾客动线。"},
+    "shop.sell_item": {"weight": 1.65, "enabled": true, "reason": "销售与补货是她处理金钱焦虑的自然出口。"},
+    "social.chat_with": {"weight": 1.2, "enabled": true, "reason": "她会用温和交谈确认顾客和家人的状态。"},
+    "craft.repair_stall": {"weight": 0.85, "enabled": true, "reason": "修摊位可辅助营业，但她会先考虑账本和照顾责任。"},
+    "strategic.spread_rumor": {"weight": 0.5, "enabled": false, "reason": "她害怕价格冲突和邻里误会升级，避免主动传播流言。"}
+  },
   "heuristicSeeds": [
     {
       "heuristic_id": "designer_prefer_chat_when_recognition_rises",
@@ -39,6 +55,27 @@
       "adjustment": {"toolId": "social.chat_with", "weightDelta": 0.05},
       "confidence": 0.52,
       "narrative": "米拉想确认自己被看见时，常通过轻声交谈寻找反馈。"
+    },
+    {
+      "heuristic_id": "avoid_mira_price_conflict_rumor",
+      "trigger_pattern": {"needId": "money_anxiety", "toolId": "strategic.spread_rumor", "fearId": "neighbor_price_conflict"},
+      "adjustment": {"toolId": "strategic.spread_rumor", "weightDelta": -0.12},
+      "confidence": 0.6,
+      "narrative": "只要价格压力可能演变成邻里冲突，米拉会避免用流言推动局势。"
+    },
+    {
+      "heuristic_id": "prefer_mira_shop_when_ledger_anxious",
+      "trigger_pattern": {"needId": "money_anxiety", "toolId": "shop.open_shop", "fearId": "shop_loss_supply_cutoff"},
+      "adjustment": {"needId": "money_anxiety", "weightDelta": 0.07},
+      "confidence": 0.58,
+      "narrative": "担心店面亏损时，米拉会先把营业和备货秩序拉回可控范围。"
+    },
+    {
+      "heuristic_id": "prefer_mira_check_family_before_overwork",
+      "trigger_pattern": {"needId": "energy", "toolId": "life.rest", "fearId": "nina_health_delay"},
+      "adjustment": {"needId": "energy", "weightDelta": 0.06},
+      "confidence": 0.54,
+      "narrative": "妮娜健康让她焦虑时，米拉会更早承认疲惫，避免把照顾责任拖到失控。"
     }
   ],
   "secrets": [
