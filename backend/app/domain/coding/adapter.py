@@ -3,6 +3,8 @@ from __future__ import annotations
 import difflib
 import hashlib
 import json
+import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -18,6 +20,13 @@ FAILING_TEST_REPAIR_GOAL_ID = "coding.skill_failing_test_repair_dryrun"
 MULTIFILE_REVIEW_GOAL_ID = "coding.skill_multifile_review_dryrun"
 MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID = "coding.skill_multifile_dependency_repair_dryrun"
 REVIEWER_DISAGREEMENT_GOAL_ID = "coding.skill_reviewer_disagreement_dryrun"
+JAVASCRIPT_SMOKE_GOAL_ID = "coding.skill_javascript_smoke_dryrun"
+
+TEST_RUNNER_COMMAND_TEMPLATES = {
+    "pytest": "python -m pytest tests/test_skill.py -q",
+    "unittest": "python -m unittest discover -s tests -p test_skill.py -q",
+    "node_test": "node --test tests/skill_summary.test.mjs",
+}
 
 CODING_GOAL_IDS = (
     "coding.skill_prototype_dryrun",
@@ -26,6 +35,7 @@ CODING_GOAL_IDS = (
     MULTIFILE_REVIEW_GOAL_ID,
     MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID,
     REVIEWER_DISAGREEMENT_GOAL_ID,
+    JAVASCRIPT_SMOKE_GOAL_ID,
 )
 CODING_GOAL_TEXT = {
     "coding.skill_prototype_dryrun": "Develop a skill prototype through design, tests, and review.",
@@ -42,6 +52,9 @@ CODING_GOAL_TEXT = {
     REVIEWER_DISAGREEMENT_GOAL_ID: (
         "Resolve conflicting rule-reviewer judgments through traceable arbitration."
     ),
+    JAVASCRIPT_SMOKE_GOAL_ID: (
+        "Validate a non-Python skill fixture through Node's built-in test runner."
+    ),
 }
 
 
@@ -54,10 +67,14 @@ class CodingDomainAdapter:
     def build_initial_world(self, scenario_id: str, seed: int) -> dict[str, Any]:
         goal = self.parse_goal(scenario_id)
         repo_fixture = _build_repo_fixture(goal.goal_id)
+        fixture_metadata = (
+            repo_fixture.get("metadata", {}) if isinstance(repo_fixture.get("metadata"), dict) else {}
+        )
         dependencies = {"repoFixtureId": repo_fixture.get("fixtureId", "")}
         for key in ("metadataPath", "reviewRubricPath"):
             if repo_fixture.get(key):
                 dependencies[key] = repo_fixture[key]
+        dependencies["testRunner"] = str(fixture_metadata.get("testRunner") or "")
         return {
             "tick": 0,
             "seed": seed,
@@ -93,6 +110,8 @@ class CodingDomainAdapter:
                         "metadataPath": repo_fixture.get("metadataPath"),
                         "reviewRubricPath": repo_fixture.get("reviewRubricPath"),
                         "testCommand": repo_fixture.get("testCommand"),
+                        "testRunner": fixture_metadata.get("testRunner"),
+                        "commandTemplate": fixture_metadata.get("commandTemplate"),
                     },
                 },
             ],
@@ -182,6 +201,14 @@ class CodingDomainAdapter:
                     "predicate": "review report records conflict resolution path and final trace ref",
                 },
             )
+        if goal_id == JAVASCRIPT_SMOKE_GOAL_ID:
+            required_process.insert(
+                2,
+                {
+                    "id": "non_python_fixture_loaded",
+                    "predicate": "fixture metadata selects a non-Python runner and JavaScript source files",
+                },
+            )
         desired_artifact = {
             "coding.skill_prototype_dryrun": "skill_prototype",
             "coding.skill_regression_fix_dryrun": "skill_regression_fix",
@@ -189,6 +216,7 @@ class CodingDomainAdapter:
             MULTIFILE_REVIEW_GOAL_ID: "skill_multifile_review",
             MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID: "skill_multifile_dependency_repair",
             REVIEWER_DISAGREEMENT_GOAL_ID: "skill_reviewer_disagreement",
+            JAVASCRIPT_SMOKE_GOAL_ID: "skill_javascript_smoke",
         }[goal_id]
         success_evidence = ["design_event", "diff_event", "test_event", "review_event"]
         if goal_id in (FAILING_TEST_REPAIR_GOAL_ID, MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID):
@@ -222,6 +250,13 @@ class CodingDomainAdapter:
                 "reviewReportCount": float(len(world.get("reviewReports", {}))),
                 "constraintCount": float(len(world.get("constraints", []))),
                 "repoFixtureId": str(world.get("repoFixture", {}).get("fixtureId", "")),
+                "testRunner": str(
+                    (
+                        world.get("repoFixture", {}).get("metadata", {})
+                        if isinstance(world.get("repoFixture", {}).get("metadata"), dict)
+                        else {}
+                    ).get("testRunner", "")
+                ),
                 "repoFileRefs": sorted(str(key) for key in world.get("repoFixture", {}).get("files", {}).keys())
                 if isinstance(world.get("repoFixture"), dict)
                 else [],
@@ -291,6 +326,10 @@ class CodingDomainAdapter:
         test_reports = world.get("testReports", {}) if isinstance(world.get("testReports"), dict) else {}
         review_reports = world.get("reviewReports", {}) if isinstance(world.get("reviewReports"), dict) else {}
         repo_fixture = world.get("repoFixture", {}) if isinstance(world.get("repoFixture"), dict) else {}
+        fixture_metadata = (
+            repo_fixture.get("metadata", {}) if isinstance(repo_fixture.get("metadata"), dict) else {}
+        )
+        repo_files = repo_fixture.get("files", {}) if isinstance(repo_fixture.get("files"), dict) else {}
         artifact_id = str(repo_fixture.get("artifactId") or "skill_prototype.patch")
         pre_patch_test_report_id = str(repo_fixture.get("prePatchTestReportId") or "skill_prototype.pre_patch_tests")
         test_report_id = str(repo_fixture.get("testReportId") or "skill_prototype.tests")
@@ -348,6 +387,8 @@ class CodingDomainAdapter:
         )
         process_checks = {
             "repo_fixture_loaded": "coding.repo_fixture_loaded" in event_types and bool(repo_fixture.get("files")),
+            "non_python_fixture_loaded": fixture_metadata.get("testRunner") == "node_test"
+            and any(str(path).endswith((".js", ".mjs", ".cjs")) for path in repo_files.keys()),
             "design_review_loaded": "coding.design_review_loaded" in event_types,
             "review_rubric_loaded": "coding.review_rubric_loaded" in event_types
             and bool(review_rubric_path)
@@ -485,6 +526,9 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
         pre_patch_report = {
             "testReportId": pre_patch_test_report_id,
             "command": execution.get("command", "python check_fixture.py <worktree>"),
+            "testRunner": execution.get("testRunner"),
+            "durationMs": execution.get("durationMs"),
+            "exitCode": execution.get("exitCode"),
             "testPhase": "pre_patch",
             "passed": False,
             "expectedFailure": True,
@@ -510,6 +554,8 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
                     "failureObserved": failure_observed,
                     "failingCaseIds": failing_case_ids,
                     "exitCode": execution.get("exitCode"),
+                    "testRunner": execution.get("testRunner"),
+                    "command": execution.get("command"),
                     "workspaceKind": execution.get("workspaceKind"),
                     "sourceEventIds": pre_patch_report["sourceEventIds"],
                     "testReportSha256": pre_patch_report["sha256"],
@@ -581,6 +627,9 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
         test_report = {
             "testReportId": test_report_id,
             "command": execution.get("command", "python check_fixture.py <worktree>"),
+            "testRunner": execution.get("testRunner"),
+            "durationMs": execution.get("durationMs"),
+            "exitCode": execution.get("exitCode"),
             "testPhase": "post_patch",
             "passed": execution.get("exitCode") == 0
             and bool(test_cases)
@@ -601,6 +650,8 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
                     "testReportId": test_report["testReportId"],
                     "passed": bool(test_report["passed"]),
                     "exitCode": execution.get("exitCode"),
+                    "testRunner": execution.get("testRunner"),
+                    "command": execution.get("command"),
                     "workspaceKind": execution.get("workspaceKind"),
                     "sourceArtifactId": test_report["sourceArtifactId"],
                     "sourceEventIds": test_report["sourceEventIds"],
@@ -625,6 +676,8 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
                         "partialPatchTestReportIds": sorted(failing_report_ids),
                         "expectedFailure": True,
                         "failureObserved": len(failing_report_ids) == len(partial_reports),
+                        "testRunner": _fixture_test_runner(repo_fixture),
+                        "command": _command_template_for_runner(_fixture_test_runner(repo_fixture)),
                         "sourceArtifactId": artifact.get("artifactId", "skill_prototype.patch")
                         if isinstance(artifact, dict)
                         else "skill_prototype.patch",
@@ -814,7 +867,8 @@ def _build_repo_fixture(goal_id: str) -> dict[str, Any]:
     pre_patch_test_report_id = None
     metadata_path = None
     review_rubric_path = None
-    test_command = "python check_skill.py"
+    test_runner = "pytest"
+    target_path = "skills/loomstead-debug/SKILL.md"
     import_graph: dict[str, Any] = {}
     reviewer_rubrics: list[dict[str, Any]] = []
     planned_file_updates: list[dict[str, Any]] = []
@@ -840,6 +894,7 @@ def _build_repo_fixture(goal_id: str) -> dict[str, Any]:
             {"caseId": "requires_eval_domain_after_repair", "type": "contains", "value": "eval:domain"},
         ]
     elif goal_id == MULTIFILE_REVIEW_GOAL_ID:
+        test_runner = "unittest"
         fixture_id = "loomstead-debug-multifile-fixture.v1"
         artifact_id = "skill_multifile_review.patch"
         test_report_id = "skill_multifile_review.tests"
@@ -913,16 +968,16 @@ def _build_repo_fixture(goal_id: str) -> dict[str, Any]:
         review_report_id = "skill_multifile_dependency_repair.review"
         requires_pre_patch_failure = True
         requires_single_file_failure_evidence = True
-        test_command = "python tests/test_workflow.py"
+        target_path = "src/formatter.py"
         import_graph = {
             "nodes": [
                 "src/formatter.py",
                 "src/workflow.py",
-                "tests/test_workflow.py",
+                "tests/test_skill.py",
             ],
             "edges": [
                 {"from": "src/workflow.py", "imports": "src/formatter.py", "symbols": ["display_name", "slugify"]},
-                {"from": "tests/test_workflow.py", "imports": "src/workflow.py", "symbols": ["build_ticket"]},
+                {"from": "tests/test_skill.py", "imports": "src/workflow.py", "symbols": ["build_ticket"]},
             ],
         }
         planned_additions = []
@@ -947,6 +1002,7 @@ def _build_repo_fixture(goal_id: str) -> dict[str, Any]:
         ]
         test_expectations = []
     elif goal_id == REVIEWER_DISAGREEMENT_GOAL_ID:
+        test_runner = "unittest"
         fixture_id = "loomstead-debug-reviewer-disagreement-fixture.v1"
         artifact_id = "skill_reviewer_disagreement.patch"
         test_report_id = "skill_reviewer_disagreement.tests"
@@ -992,7 +1048,37 @@ def _build_repo_fixture(goal_id: str) -> dict[str, Any]:
             },
             {"caseId": "keeps_existing_doc_guidance", "type": "contains", "value": "Use project docs"},
         ]
+    elif goal_id == JAVASCRIPT_SMOKE_GOAL_ID:
+        test_runner = "node_test"
+        target_path = "src/skill_summary.mjs"
+        fixture_id = "loomstead-debug-javascript-fixture.v1"
+        artifact_id = "skill_javascript_smoke.patch"
+        test_report_id = "skill_javascript_smoke.tests"
+        review_report_id = "skill_javascript_smoke.review"
+        planned_additions = []
+        planned_file_updates = [
+            {
+                "path": target_path,
+                "replace": {
+                    (
+                        "export function summarizeSkillChange(input = {}) {\n"
+                        "  const title = String(input.title ?? '').trim();\n"
+                        "  return { title, evidenceCount: 0, readyForReview: false };\n"
+                        "}\n"
+                    ): (
+                        "export function summarizeSkillChange(input = {}) {\n"
+                        "  const title = String(input.title ?? '').trim();\n"
+                        "  const evidence = Array.isArray(input.evidence) ? input.evidence.filter(Boolean) : [];\n"
+                        "  const risk = String(input.risk ?? 'low').toLowerCase();\n"
+                        "  return { title, evidenceCount: evidence.length, readyForReview: evidence.length > 0 && risk !== 'high' };\n"
+                        "}\n"
+                    ),
+                },
+            }
+        ]
+        test_expectations = []
     elif goal_id == "coding.skill_regression_fix_dryrun":
+        test_runner = "unittest"
         fixture_id = "loomstead-debug-regression-fixture.v1"
         artifact_id = "skill_regression_fix.patch"
         test_report_id = "skill_regression_fix.tests"
@@ -1027,7 +1113,60 @@ def _build_repo_fixture(goal_id: str) -> dict[str, Any]:
             {"caseId": "keeps_existing_doc_guidance", "type": "contains", "value": "Use project docs"},
         ]
 
-    files = {
+    command_template = _command_template_for_runner(test_runner)
+    if goal_id == MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID:
+        files = _dependency_repair_fixture_files()
+    elif goal_id == JAVASCRIPT_SMOKE_GOAL_ID:
+        files = _javascript_smoke_fixture_files()
+    else:
+        files = _skill_fixture_files(test_expectations, test_runner)
+    return {
+        "fixtureId": fixture_id,
+        "repoName": "fixture/loomstead-debug-skill",
+        "defaultBranch": "main",
+        "files": files,
+        "fileHashes": {path: _stable_digest(content) for path, content in files.items()},
+        "targetPath": target_path,
+        "targetPaths": [
+            str(update.get("path"))
+            for update in planned_file_updates
+            if isinstance(update, dict) and update.get("path")
+        ]
+        or ["skills/loomstead-debug/SKILL.md"],
+        "artifactId": artifact_id,
+        "prePatchTestReportId": pre_patch_test_report_id,
+        "testReportId": test_report_id,
+        "reviewReportId": review_report_id,
+        "metadataPath": metadata_path,
+        "reviewRubricPath": review_rubric_path,
+        "metadata": {
+            "testRunner": test_runner,
+            "commandTemplate": command_template,
+            "language": "javascript" if test_runner == "node_test" else "python",
+        },
+        "testCommand": command_template,
+        "commandTemplate": command_template,
+        "testCommandSource": "metadata.testRunner",
+        "importGraph": import_graph,
+        "reviewerRubrics": reviewer_rubrics,
+        "plannedAdditions": planned_additions,
+        "plannedFileUpdates": planned_file_updates,
+        "testExpectations": test_expectations,
+        "requiresPrePatchFailure": requires_pre_patch_failure,
+        "requiresSingleFileFailureEvidence": requires_single_file_failure_evidence,
+        "requiresReviewerDisagreement": requires_reviewer_disagreement,
+        "sourceRepoKind": "deterministic_local_git_repository",
+    }
+
+
+def _skill_fixture_files(expectations: list[dict[str, Any]], test_runner: str) -> dict[str, str]:
+    """构造 Python skill fixture，并按 runner 放入真实测试框架入口。"""
+    test_script = (
+        _repo_fixture_pytest_script(expectations)
+        if test_runner == "pytest"
+        else _repo_fixture_unittest_script(expectations)
+    )
+    return {
         "README.md": "# Skill Fixture\n\nThis fixture represents a tiny external skill repository.\n",
         "skills/loomstead-debug/SKILL.md": (
             "# Loomstead Debug Skill\n\n"
@@ -1049,40 +1188,7 @@ def _build_repo_fixture(goal_id: str) -> dict[str, Any]:
             "# Review Rubric\n\n"
             "- Confirm existing doc guidance remains intact.\n"
         ),
-        "check_skill.py": _repo_fixture_test_script(test_expectations),
-    }
-    if goal_id == MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID:
-        files = _dependency_repair_fixture_files()
-    return {
-        "fixtureId": fixture_id,
-        "repoName": "fixture/loomstead-debug-skill",
-        "defaultBranch": "main",
-        "files": files,
-        "fileHashes": {path: _stable_digest(content) for path, content in files.items()},
-        "targetPath": "skills/loomstead-debug/SKILL.md",
-        "targetPaths": [
-            str(update.get("path"))
-            for update in planned_file_updates
-            if isinstance(update, dict) and update.get("path")
-        ]
-        or ["skills/loomstead-debug/SKILL.md"],
-        "artifactId": artifact_id,
-        "prePatchTestReportId": pre_patch_test_report_id,
-        "testReportId": test_report_id,
-        "reviewReportId": review_report_id,
-        "metadataPath": metadata_path,
-        "reviewRubricPath": review_rubric_path,
-        "testCommand": test_command,
-        "testCommandSource": "repo_fixture",
-        "importGraph": import_graph,
-        "reviewerRubrics": reviewer_rubrics,
-        "plannedAdditions": planned_additions,
-        "plannedFileUpdates": planned_file_updates,
-        "testExpectations": test_expectations,
-        "requiresPrePatchFailure": requires_pre_patch_failure,
-        "requiresSingleFileFailureEvidence": requires_single_file_failure_evidence,
-        "requiresReviewerDisagreement": requires_reviewer_disagreement,
-        "sourceRepoKind": "deterministic_local_git_repository",
+        "tests/test_skill.py": test_script,
     }
 
 
@@ -1120,11 +1226,10 @@ def _dependency_repair_fixture_files() -> dict[str, str]:
                 "",
             ]
         ),
-        "tests/test_workflow.py": "\n".join(
+        "tests/test_skill.py": "\n".join(
             [
                 "from __future__ import annotations",
                 "",
-                "import json",
                 "from pathlib import Path",
                 "import sys",
                 "",
@@ -1133,17 +1238,74 @@ def _dependency_repair_fixture_files() -> dict[str, str]:
                 "",
                 "from src.workflow import build_ticket",
                 "",
-                "cases = []",
-                "ticket = build_ticket('  Mira Bloom  ')",
-                "cases.append({'caseId': 'slug_uses_formatter_dependency', 'passed': ticket == {'ok': True, 'label': 'Mira Bloom', 'slug': 'mira-bloom'}})",
-                "blank = build_ticket('   ')",
-                "cases.append({'caseId': 'blank_name_stays_invalid', 'passed': blank == {'ok': False, 'label': '', 'slug': ''}})",
-                "print(json.dumps({'caseResults': cases}, ensure_ascii=False))",
-                "raise SystemExit(0 if all(item['passed'] for item in cases) else 1)",
+                "",
+                "def test_slug_uses_formatter_dependency():",
+                "    ticket = build_ticket('  Mira Bloom  ')",
+                "    assert ticket == {'ok': True, 'label': 'Mira Bloom', 'slug': 'mira-bloom'}",
+                "",
+                "",
+                "def test_blank_name_stays_invalid():",
+                "    blank = build_ticket('   ')",
+                "    assert blank == {'ok': False, 'label': '', 'slug': ''}",
                 "",
             ]
         ),
     }
+
+
+def _javascript_smoke_fixture_files() -> dict[str, str]:
+    """构造 Node.js 内置 test runner 的最小非 Python fixture。"""
+    return {
+        "README.md": "# JavaScript Fixture\n\nA tiny ESM repo verified with node --test.\n",
+        "package.json": json.dumps(
+            {
+                "name": "loomstead-javascript-smoke-fixture",
+                "private": True,
+                "type": "module",
+            },
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        "src/skill_summary.mjs": "\n".join(
+            [
+                "export function summarizeSkillChange(input = {}) {",
+                "  const title = String(input.title ?? '').trim();",
+                "  return { title, evidenceCount: 0, readyForReview: false };",
+                "}",
+                "",
+            ]
+        ),
+        "tests/skill_summary.test.mjs": "\n".join(
+            [
+                "import test from 'node:test';",
+                "import assert from 'node:assert/strict';",
+                "",
+                "import { summarizeSkillChange } from '../src/skill_summary.mjs';",
+                "",
+                "test('summarizeSkillChange counts evidence before review', () => {",
+                "  const result = summarizeSkillChange({",
+                "    title: '  Debug adapter  ',",
+                "    evidence: ['patch', 'test-report'],",
+                "    risk: 'low',",
+                "  });",
+                "  assert.deepEqual(result, {",
+                "    title: 'Debug adapter',",
+                "    evidenceCount: 2,",
+                "    readyForReview: true,",
+                "  });",
+                "});",
+                "",
+                "test('summarizeSkillChange blocks high-risk review readiness', () => {",
+                "  const result = summarizeSkillChange({ title: 'Risky', evidence: ['patch'], risk: 'high' });",
+                "  assert.equal(result.readyForReview, false);",
+                "});",
+                "",
+            ]
+        ),
+    }
+
 
 
 def _build_skill_patch(repo_fixture: dict[str, Any]) -> tuple[str, dict[str, str], list[str]]:
@@ -1277,6 +1439,9 @@ def _run_single_file_partial_patch_reports(
         report = {
             "testReportId": report_id,
             "command": execution.get("command", "python check_skill.py"),
+            "testRunner": execution.get("testRunner"),
+            "durationMs": execution.get("durationMs"),
+            "exitCode": execution.get("exitCode"),
             "testPhase": "single_file_patch",
             "patchedFile": changed_file,
             "passed": False,
@@ -1379,7 +1544,8 @@ def _run_external_checkout_fixture_tests(
     repo_files = repo_fixture.get("files", {}) if isinstance(repo_fixture.get("files"), dict) else {}
     patched_files = artifact.get("patchedFiles", {}) if isinstance(artifact.get("patchedFiles"), dict) else {}
     workspace_files = repo_files if test_phase == "pre_patch" else patched_files
-    command_template = str(repo_fixture.get("testCommand") or "python check_skill.py")
+    test_runner = _fixture_test_runner(repo_fixture)
+    command_template = _command_template_for_runner(test_runner)
     checkout_steps: list[dict[str, Any]] = []
     started = time.perf_counter()
     try:
@@ -1399,20 +1565,26 @@ def _run_external_checkout_fixture_tests(
             checkout_head = _run_git_command(["rev-parse", "HEAD"], cwd=checkout, check=True)["stdout"].strip()
             _write_fixture_worktree(checkout, workspace_files)
             checkout_status = _run_git_command(["status", "--short"], cwd=checkout, check=True)["stdout"].splitlines()
-            command = _repo_test_command(command_template)
+            command = _repo_test_command(test_runner)
             completed = subprocess.run(command, cwd=checkout, capture_output=True, text=True, encoding="utf-8", check=False)
             duration_ms = round((time.perf_counter() - started) * 1000.0, 3)
-            parsed_cases = _parse_fixture_test_cases(completed.stdout)
+            parsed_cases = _parse_fixture_test_cases(
+                completed.stdout,
+                completed.stderr,
+                exit_code=completed.returncode,
+                test_runner=test_runner,
+            )
             execution = {
                 "executed": True,
                 "testPhase": test_phase,
+                "testRunner": test_runner,
                 "workspaceKind": "git_external_repo_checkout",
                 "sourceRepoKind": repo_fixture.get("sourceRepoKind", "deterministic_local_git_repository"),
                 "checkoutMethod": "git clone",
                 "command": command_template,
                 "commandTemplate": command_template,
                 "testCommandSource": repo_fixture.get("testCommandSource", "repo_fixture"),
-                "pythonExecutable": Path(sys.executable).name,
+                "pythonExecutable": Path(sys.executable).name if test_runner in {"pytest", "unittest"} else None,
                 "exitCode": completed.returncode,
                 "durationMs": duration_ms,
                 "stdout": completed.stdout,
@@ -1438,13 +1610,14 @@ def _run_external_checkout_fixture_tests(
             {
                 "executed": False,
                 "testPhase": test_phase,
+                "testRunner": test_runner,
                 "workspaceKind": "git_external_repo_checkout",
                 "sourceRepoKind": repo_fixture.get("sourceRepoKind", "deterministic_local_git_repository"),
                 "checkoutMethod": "git clone",
                 "command": command_template,
                 "commandTemplate": command_template,
                 "testCommandSource": repo_fixture.get("testCommandSource", "repo_fixture"),
-                "pythonExecutable": Path(sys.executable).name,
+                "pythonExecutable": Path(sys.executable).name if test_runner in {"pytest", "unittest"} else None,
                 "exitCode": None,
                 "durationMs": duration_ms,
                 "stdout": "",
@@ -1471,60 +1644,93 @@ def _write_fixture_worktree(worktree: Path, files: dict[str, Any]) -> None:
         path.write_text(str(content), encoding="utf-8")
 
 
-def _repo_fixture_test_script(expectations: list[dict[str, Any]]) -> str:
-    """返回仓库自带测试脚本源码，随外部 fixture repo 一起 checkout。"""
+def _repo_fixture_expectation_helpers(expectations: list[dict[str, Any]]) -> list[str]:
+    """返回 fixture expectation 的共享测试辅助源码片段。"""
     expectation_json = json.dumps(expectations, ensure_ascii=False, sort_keys=True)
-    return "\n".join(
+    return [
+        "from __future__ import annotations",
+        "import json",
+        "from pathlib import Path",
+        "",
+        f"EXPECTATIONS = {expectation_json!r}",
+        "expectations = json.loads(EXPECTATIONS)",
+        "repo_root = Path(__file__).resolve().parents[1]",
+        "",
+        "def read_text(rel_path):",
+        "    path = repo_root / rel_path",
+        "    return path.read_text(encoding='utf-8') if path.exists() else ''",
+        "",
+        "def read_json(rel_path):",
+        "    text = read_text(rel_path)",
+        "    return json.loads(text) if text else None",
+        "",
+        "def get_field(payload, dotted):",
+        "    current = payload",
+        "    for part in str(dotted).split('.'):",
+        "        if not isinstance(current, dict) or part not in current:",
+        "            return None",
+        "        current = current[part]",
+        "    return current",
+        "",
+        "def evaluate_expectation(item):",
+        "    value = str(item.get('value', ''))",
+        "    check_type = item.get('type')",
+        "    rel_path = Path(str(item.get('path') or 'skills/loomstead-debug/SKILL.md'))",
+        "    file_text = read_text(rel_path)",
+        "    if check_type == 'startswith':",
+        "        return file_text.startswith(value)",
+        "    if check_type == 'contains':",
+        "        return value in file_text",
+        "    if check_type == 'json_field_equals':",
+        "        payload = read_json(rel_path)",
+        "        return get_field(payload, item.get('field')) == item.get('value')",
+        "    if check_type == 'json_array_contains':",
+        "        payload = read_json(rel_path)",
+        "        actual = get_field(payload, item.get('field'))",
+        "        return isinstance(actual, list) and item.get('value') in actual",
+        "    return False",
+        "",
+    ]
+
+
+def _repo_fixture_pytest_script(expectations: list[dict[str, Any]]) -> str:
+    """返回 pytest 测试源码，确保 fixture 走真实 pytest runner。"""
+    lines = _repo_fixture_expectation_helpers(expectations)
+    lines.extend(
         [
-            "from __future__ import annotations",
-            "import json",
-            "from pathlib import Path",
+            "import pytest",
             "",
-            f"EXPECTATIONS = {expectation_json!r}",
-            "expectations = json.loads(EXPECTATIONS)",
-            "repo_root = Path(__file__).resolve().parent",
             "",
-            "def read_text(rel_path):",
-            "    path = repo_root / rel_path",
-            "    return path.read_text(encoding='utf-8') if path.exists() else ''",
-            "",
-            "def read_json(rel_path):",
-            "    text = read_text(rel_path)",
-            "    return json.loads(text) if text else None",
-            "",
-            "def get_field(payload, dotted):",
-            "    current = payload",
-            "    for part in str(dotted).split('.'):",
-            "        if not isinstance(current, dict) or part not in current:",
-            "            return None",
-            "        current = current[part]",
-            "    return current",
-            "",
-            "cases = []",
-            "for item in expectations:",
-            "    value = str(item.get('value', ''))",
-            "    check_type = item.get('type')",
-            "    rel_path = Path(str(item.get('path') or 'skills/loomstead-debug/SKILL.md'))",
-            "    file_text = read_text(rel_path)",
-            "    if check_type == 'startswith':",
-            "        passed = file_text.startswith(value)",
-            "    elif check_type == 'contains':",
-            "        passed = value in file_text",
-            "    elif check_type == 'json_field_equals':",
-            "        payload = read_json(rel_path)",
-            "        passed = get_field(payload, item.get('field')) == item.get('value')",
-            "    elif check_type == 'json_array_contains':",
-            "        payload = read_json(rel_path)",
-            "        actual = get_field(payload, item.get('field'))",
-            "        passed = isinstance(actual, list) and item.get('value') in actual",
-            "    else:",
-            "        passed = False",
-            "    cases.append({'caseId': item.get('caseId', 'unknown_case'), 'passed': passed})",
-            "print(json.dumps({'caseResults': cases}, ensure_ascii=False))",
-            "raise SystemExit(0 if all(item['passed'] for item in cases) else 1)",
+            "@pytest.mark.parametrize('item', expectations, ids=lambda item: item.get('caseId', 'unknown_case'))",
+            "def test_fixture_expectation(item):",
+            "    assert evaluate_expectation(item)",
             "",
         ]
     )
+    return "\n".join(lines)
+
+
+def _repo_fixture_unittest_script(expectations: list[dict[str, Any]]) -> str:
+    """返回 unittest 测试源码，确保 fixture 走真实 unittest runner。"""
+    lines = _repo_fixture_expectation_helpers(expectations)
+    lines.extend(
+        [
+            "import unittest",
+            "",
+            "",
+            "class FixtureExpectationTests(unittest.TestCase):",
+            "    def test_fixture_expectations(self):",
+            "        for item in expectations:",
+            "            with self.subTest(caseId=item.get('caseId', 'unknown_case')):",
+            "                self.assertTrue(evaluate_expectation(item))",
+            "",
+            "",
+            "if __name__ == '__main__':",
+            "    unittest.main()",
+            "",
+        ]
+    )
+    return "\n".join(lines)
 
 
 def _initialise_git_repo(repo_dir: Path) -> list[dict[str, Any]]:
@@ -1553,16 +1759,33 @@ def _run_git_command(command: list[str], *, cwd: Path, check: bool) -> dict[str,
     return result
 
 
-def _repo_test_command(command_template: str) -> list[str]:
-    """把 repo fixture 的测试命令转换为无 shell 的 subprocess 参数。"""
-    script_by_command = {
-        "python check_skill.py": "check_skill.py",
-        "python tests/test_workflow.py": "tests/test_workflow.py",
-    }
-    script_path = script_by_command.get(command_template)
-    if script_path is None:
-        raise ValueError(f"不支持的 repo fixture 测试命令：{command_template}")
-    return [sys.executable, script_path]
+def _fixture_test_runner(repo_fixture: dict[str, Any]) -> str:
+    """从 fixture metadata 读取 testRunner，并做集中校验。"""
+    metadata = repo_fixture.get("metadata", {}) if isinstance(repo_fixture.get("metadata"), dict) else {}
+    test_runner = str(metadata.get("testRunner") or repo_fixture.get("testRunner") or "pytest")
+    if test_runner not in TEST_RUNNER_COMMAND_TEMPLATES:
+        raise ValueError(f"不支持的 repo fixture testRunner：{test_runner}")
+    return test_runner
+
+
+def _command_template_for_runner(test_runner: str) -> str:
+    """由 adapter 统一把 runner 映射为命令模板，fixture 只声明 runner 类型。"""
+    try:
+        return TEST_RUNNER_COMMAND_TEMPLATES[test_runner]
+    except KeyError as exc:
+        raise ValueError(f"不支持的 repo fixture testRunner：{test_runner}") from exc
+
+
+def _repo_test_command(test_runner: str) -> list[str]:
+    """把 runner 类型转换为无 shell 的 subprocess 参数。"""
+    if test_runner == "pytest":
+        return [sys.executable, "-m", "pytest", "tests/test_skill.py", "-q"]
+    if test_runner == "unittest":
+        return [sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_skill.py", "-q"]
+    if test_runner == "node_test":
+        node_executable = shutil.which("node") or shutil.which("node.exe") or "node"
+        return [node_executable, "--test", "tests/skill_summary.test.mjs"]
+    raise ValueError(f"不支持的 repo fixture testRunner：{test_runner}")
 
 
 def _sanitize_temp_paths(value: str) -> str:
@@ -1579,21 +1802,73 @@ def _display_command_part(value: str) -> str:
     return f"<{name}>"
 
 
-def _parse_fixture_test_cases(stdout: str) -> list[dict[str, Any]]:
-    """解析真实命令输出；解析失败时返回单个失败 case 便于 Eval 定位。"""
+def _parse_fixture_test_cases(
+    stdout: str,
+    stderr: str = "",
+    *,
+    exit_code: int | None = None,
+    test_runner: str = "pytest",
+) -> list[dict[str, Any]]:
+    """解析真实测试框架输出；无法逐项解析时保留 suite 级 case 便于 Eval 定位。"""
     try:
         payload = json.loads(stdout.strip() or "{}")
     except json.JSONDecodeError as exc:
-        return [{"caseId": "parse_fixture_test_output", "passed": False, "error": repr(exc)}]
+        output = (stdout + "\n" + stderr).strip()
+        return [_framework_suite_case(test_runner, exit_code=exit_code, output=output, error=repr(exc))]
     cases = payload.get("caseResults", [])
+    output = (stdout + "\n" + stderr).strip()
     if not isinstance(cases, list):
-        return [{"caseId": "parse_fixture_test_output", "passed": False, "error": "caseResults_not_list"}]
+        return [_framework_suite_case(test_runner, exit_code=exit_code, output=output, error="caseResults_not_list")]
     parsed_cases = [dict(item) for item in cases if isinstance(item, dict)]
     if len(parsed_cases) != len(cases):
-        return [{"caseId": "parse_fixture_test_output", "passed": False, "error": "caseResult_not_object"}]
+        return [_framework_suite_case(test_runner, exit_code=exit_code, output=output, error="caseResult_not_object")]
     if not parsed_cases:
-        return [{"caseId": "parse_fixture_test_output", "passed": False, "error": "caseResults_empty"}]
+        return [_framework_suite_case(test_runner, exit_code=exit_code, output=output, error="caseResults_empty")]
     return parsed_cases
+
+
+def _framework_suite_case(
+    test_runner: str,
+    *,
+    exit_code: int | None,
+    output: str,
+    error: str | None = None,
+) -> dict[str, Any]:
+    """把 pytest / unittest / node:test 的原生命令输出压缩成稳定 suite case。"""
+    passed = exit_code == 0
+    case = {
+        "caseId": f"{test_runner}_suite",
+        "passed": passed,
+        "runner": test_runner,
+        "exitCode": exit_code,
+        "passedCount": _extract_runner_count(output, "passed")
+        + _extract_runner_count(output, "pass"),
+        "failedCount": _extract_runner_count(output, "failed")
+        + _extract_runner_count(output, "fail"),
+    }
+    summary = _first_nonempty_output_line(output)
+    if summary:
+        case["summary"] = summary
+    if error and not passed:
+        case["parseNote"] = error
+    return case
+
+
+def _extract_runner_count(output: str, label: str) -> int:
+    """从常见框架 summary 中提取 passed / failed / pass / fail 计数。"""
+    total = 0
+    for match in re.finditer(rf"(?:#\s*)?(\d+)\s+{re.escape(label)}\b", output, flags=re.IGNORECASE):
+        total += int(match.group(1))
+    return total
+
+
+def _first_nonempty_output_line(output: str) -> str:
+    """保留首条非空输出用于人工复核，避免写入过长 stdout 副本。"""
+    for line in output.splitlines():
+        stripped = line.strip()
+        if stripped:
+            return stripped[:200]
+    return ""
 
 
 def _append_event(world: dict[str, Any], event_type: str, payload: dict[str, Any]) -> dict[str, Any]:
