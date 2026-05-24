@@ -35,6 +35,10 @@
                     "client:run:check":  "powershell -ExecutionPolicy Bypass -File scripts/open_godot_project.ps1 -Run -DryRun",
                     "client:run:legacy:check":  "powershell -ExecutionPolicy Bypass -File scripts/open_godot_project.ps1 -Run -Scene res://scenes/main.tscn -DryRun",
                     "asset:check":  "python scripts/check_asset_manifest.py",
+                    "paper:tooling":  "python scripts/check_paper_tooling.py --json",
+                    "paper:tables":  "python scripts/paper_extract_eval_tables.py",
+                    "paper:build":  "latexmk -pdf -cd -interaction=nonstopmode -halt-on-error -outdir=build paper/latex/main.tex",
+                    "paper:check":  "python scripts/check_paper_tooling.py --json && python scripts/paper_extract_eval_tables.py && latexmk -pdf -cd -interaction=nonstopmode -halt-on-error -outdir=build paper/latex/main.tex",
                     "context:brief":  "python scripts/build_agent_context.py",
                     "context:check":  "python scripts/build_agent_context.py --check",
                     "context:docs":  "python scripts/build_agent_context.py --docs"

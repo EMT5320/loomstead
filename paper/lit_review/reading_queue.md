@@ -1,0 +1,13 @@
+# Reading Queue
+
+| Status | Priority | Paper | Year | Source | Zotero Key | BibTeX Key | Why it matters | Notes |
+|---|---:|---|---:|---|---|---|---|---|
+| selected | 1 | Generative Agents: Interactive Simulacra of Human Behavior | 2023 | arXiv / ACM UIST |  | `park2023generativeAgents` | Core comparison for believable social simulation, memory, reflection, and emergent town behavior. | https://arxiv.org/abs/2304.03442; https://doi.org/10.1145/3586183.3606763 |
+| selected | 1 | Generative agent-based modeling with actions grounded in physical, social, or digital space using Concordia | 2023 | arXiv |  | `vezhnevets2023concordia` | Closest environment-level comparison for generative agent-based simulations and a Game Master style environment mediator. | https://arxiv.org/abs/2312.03664 |
+| selected | 1 | A Survey and Qualitative Analysis of Recent Advances in Drama Management | 2008 | author PDF |  | `roberts2008dramaManagementSurvey` | Historical anchor for drama managers, authorial control, player autonomy, and narrative quality. | https://www.cs.uky.edu/~sgware/reading/papers/roberts2008survey.pdf |
+| selected | 1 | AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation | 2023 | arXiv |  | `wu2023autogen` | Task-delegation / multi-agent conversation framework baseline. | https://arxiv.org/abs/2308.08155 |
+| selected | 1 | MetaGPT: Meta Programming for A Multi-Agent Collaborative Framework | 2024 | ICLR |  | `hong2024metagpt` | SOP-driven multi-agent software workflow baseline. | https://proceedings.iclr.cc/paper_files/paper/2024/hash/6507b115562bb0a305f1958ccc87355a-Abstract-Conference.html |
+| selected | 1 | ChatDev: Communicative Agents for Software Development | 2024 | ACL / arXiv |  | `qian2024chatdev` | Communicative software-development agents; useful contrast for explicit role chains. | https://arxiv.org/abs/2307.07924; https://doi.org/10.18653/v1/2024.acl-long.810 |
+| selected | 1 | AgentBench: Evaluating LLMs as Agents | 2024 | ICLR / arXiv |  | `liu2024agentbench` | Agent benchmark anchor for interactive environments and final-performance evaluation. | https://arxiv.org/abs/2308.03688 |
+| todo | 2 | Trace reasoning / agent trace debugging benchmark papers | 2025 | search pending |  |  | Needed for the trace-analysis side of Process Fidelity Eval. | Search targeted terms: agent trace reasoning, trajectory debugging, OpenTelemetry agent traces. |
+| todo | 2 | Human believability scoring for interactive narrative / social simulation |  | search pending |  |  | Needed for the human-rated process believability section. | Search targeted terms: interactive narrative believability evaluation, social simulation believability metrics. |

@@ -1,0 +1,5 @@
+\section{System Overview}
+
+Loomstead uses a Godot client for the playable town slice and a Python Agent Server for authoritative world state. The server owns Director beats, Event Skills, NPC motivation, capability filtering, arbitration, tool execution, subjective memory, relationship edges, heuristic learning, and debug traces.
+
+The current Phase 2 runtime exposes a trace path from \texttt{motivation.decision\_made} to tool completion, failure, interruption, and memory observation events. Schema versions are centralized through \texttt{schema\_registry.v1}, allowing exported eval artifacts and debug snapshots to be checked against a common contract.
