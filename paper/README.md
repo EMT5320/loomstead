@@ -25,6 +25,7 @@ paper/
 |-- generated/
 |   |-- eval_tables.tex
 |-- lit_review/
+|   |-- prior_related_work_inventory.md
 `-- latex/
 ```
 
