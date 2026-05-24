@@ -1,0 +1,29 @@
+%% Loomstead Figure 2 draft source.
+%% The loop emphasizes indirect intervention plus autonomous NPC arbitration.
+flowchart TD
+  Goal["Process-constrained GoalSpec\noutcome + forbidden shortcuts\nrequired process + evidence"]
+  Digest["WorldDigest\ncurrent state, tensions,\nrelationship context"]
+  Director["Director\nselects indirect intervention"]
+  Intervention["Allowed intervention\nmotivation bias / opportunity\ninformation / resource / constraint\nEvent Skill / checkpoint"]
+  Context["Changed action context\nsalience, availability,\npressure, visibility"]
+  NPC["NPC Agent Loop\nneeds, memory, relationships,\nheuristics, capabilities"]
+  Action["Arbitration-selected tool action"]
+  Event["Objective event log\ntool completion, failure,\ninterruption"]
+  Subjective["Subjective memory + relationship evidence"]
+  Reuse["Later decision reuses\nmemory / edge / heuristic"]
+  Eval["Process Fidelity Eval\ngoal, process, autonomy,\nmemory causality, trace"]
+
+  Goal --> Digest
+  Digest --> Director
+  Goal --> Director
+  Director --> Intervention
+  Intervention --> Context
+  Context --> NPC
+  NPC --> Action
+  Action --> Event
+  Event --> Subjective
+  Subjective --> Reuse
+  Reuse --> NPC
+  Subjective --> Eval
+  Event --> Eval
+  Eval --> Director

@@ -19,6 +19,7 @@ paper/
 |-- claim_evidence_matrix.md
 |-- figures.md
 |-- references.bib
+|-- diagrams/
 |-- generated/
 |   |-- eval_tables.tex
 |-- lit_review/

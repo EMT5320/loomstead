@@ -1,0 +1,36 @@
+%% Loomstead Figure 1 draft source.
+%% Render later with Mermaid CLI or a venue-specific figure pipeline.
+flowchart LR
+  User["Player / Researcher"]
+  Godot["Godot Client\nTown slice, VN feedback,\nObserverPanel"]
+
+  subgraph Server["Python Agent Server"]
+    API["World + Debug APIs"]
+    World["World / Simulation\nAuthoritative state"]
+    Director["Director v0\nWorldDigest, beats,\nvalidation queue"]
+    Skill["Event Skill\nStarlight Festival shortage"]
+    Loop["NPC Agent Loop\nNeed -> capability -> arbitration"]
+    Tools["ToolExecutor\ncompletion, failure,\ninterrupt, rollback"]
+    Memory["Memory Layer\nsubjective memories,\nrelationship edges,\nheuristics"]
+    Provider["Provider Router\nrule fallback + cloud profiles"]
+    Schema["Schema Registry\nphase2 trace contracts"]
+    Eval["Eval / Debug Export\nmanifests, metrics,\npaper tables"]
+  end
+
+  User --> Godot
+  Godot <--> API
+  API --> World
+  World --> Director
+  Director --> Skill
+  Director --> Loop
+  Skill --> Loop
+  Loop --> Provider
+  Loop --> Tools
+  Tools --> World
+  Tools --> Memory
+  Memory --> Loop
+  World --> Schema
+  Memory --> Schema
+  Tools --> Schema
+  Schema --> Eval
+  Eval --> Godot

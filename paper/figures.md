@@ -4,13 +4,17 @@
 
 - Goal: show Godot Client, Python Agent Server, Director, Event Skill, NPC loop, ToolExecutor, memory stores, Debug / Eval export.
 - Source files: `docs/agent_loop_architecture.md`, `README.md`, `backend/app/runtime/`, `backend/app/memory/`.
-- Status: planned.
+- Draft source: `paper/diagrams/system_overview.mmd`.
+- LaTeX status: boxed placeholder included in `paper/latex/sections/03_system.tex`.
+- Status: draft source ready; rendered PDF/SVG asset pending.
 
 ## Figure 2: Motivational Delegation loop
 
 - Goal: show user goal -> GoalSpec -> indirect intervention -> NPC arbitration -> tool execution -> observation -> eval checkpoint.
 - Source files: `docs/research_framing_motivational_delegation.md`, `docs/cross_domain_adapter.md`.
-- Status: planned.
+- Draft source: `paper/diagrams/motivational_delegation_loop.mmd`.
+- LaTeX status: boxed placeholder included in `paper/latex/sections/04_motivational_delegation.tex`.
+- Status: draft source ready; rendered PDF/SVG asset pending.
 
 ## Figure 3: Trace evidence chain
 

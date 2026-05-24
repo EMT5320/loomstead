@@ -1,5 +1,34 @@
 \section{System Overview}
 
-Loomstead uses a Godot client for the playable town slice and a Python Agent Server for authoritative world state. The server owns Director beats, Event Skills, NPC motivation, capability filtering, arbitration, tool execution, subjective memory, relationship edges, heuristic learning, and debug traces.
+Loomstead uses a Godot client for the playable town slice and a Python Agent Server for authoritative world state. The client presents player movement, visual-novel feedback, NPC map state, event visualization, and the Phase 2 observer panel. The server owns world simulation, legal tool execution, Director beats, Event Skills, NPC motivation, capability filtering, arbitration, subjective memory, relationship edges, heuristic learning, provider routing, debug traces, and eval export.
 
-The current Phase 2 runtime exposes a trace path from \texttt{motivation.decision\_made} to tool completion, failure, interruption, and memory observation events. Schema versions are centralized through \texttt{schema\_registry.v1}, allowing exported eval artifacts and debug snapshots to be checked against a common contract.
+\begin{figure}[t]
+\centering
+\fbox{\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Figure source:} \texttt{paper/diagrams/system\_overview.mmd}.\\[0.4em]
+\textbf{Client:} Godot town slice, visual feedback, observer panel.\\
+\textbf{Server:} Director / Event Skill, NPC loop, ToolExecutor, memory stores, schema registry.\\
+\textbf{Evidence path:} trace events and manifests flow into Debug UI, Process Fidelity Eval, and paper tables.
+\end{minipage}}
+\caption{Loomstead runtime overview. The committed Mermaid source is the editable figure draft; this boxed version keeps the LaTeX scaffold self-contained until rendered assets are produced.}
+\label{fig:system-overview}
+\end{figure}
+
+Figure~\ref{fig:system-overview} summarizes the current runtime boundary. The Godot client reads state through server APIs and submits legal player actions. The Python Agent Server remains the only authoritative writer for world state. LLM or rule-provider outputs enter visible gameplay through parsing, validation, fallback, tool execution, event recording, and trace export.
+
+\subsection{Authoritative world and tool execution}
+
+World state updates pass through runtime tools and avoid ad hoc state edits. The ToolDefinition registry and CapabilityRegistry filter available tools by need relevance, preconditions, NPC profile, event scope, and budget policy. ToolExecutor records sustained action state, transaction snapshots, completion events, failure events, rollback evidence, and interruption traces. This path gives the eval layer a stable place to detect illegal shortcuts and forced actions.
+
+\subsection{NPC decision loop}
+
+At each tick, NeedAccumulator computes candidate needs from NPC status and content data. CapabilityRegistry resolves legal candidate tools. ArbitrationLayer scores candidates using motivation, relationship edges, recalled subjective memories, and active heuristics. The selected action is therefore tied to a traceable set of contributing sources. The current Phase 2 runtime exposes this path through \texttt{motivation.decision\_made}, then follows the selected tool through completion, failure, interruption, and observation events.
+
+\subsection{Memory, relationship, and heuristic stores}
+
+The memory layer separates objective events from subjective observations. ResultObserver and BiasFilter convert visible tool results into per-NPC subjective memories. RelationshipEdgeStore tracks relationship deltas with source references. HeuristicLibrary records learned or designer-seeded preferences such as successful tools, interrupted tools, and social-affiliation rules. These stores feed later arbitration, giving the paper a concrete mechanism for claims about memory causality and relationship-conditioned behavior.
+
+\subsection{Debug and eval contract}
+
+Schema versions are centralized through \texttt{schema\_registry.v1}. The debug endpoint exposes decision, tool, interruption, memory, observer, and budget snapshots. Eval exports include manifests with artifact hashes, Git state, schema snapshots, metric ids, baselines, and scenario ids. The paper workflow reads those manifests into generated Markdown, CSV, JSON, and LaTeX tables, keeping prose claims linked to repository evidence.

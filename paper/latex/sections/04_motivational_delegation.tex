@@ -1,0 +1,51 @@
+\section{Motivational Delegation}
+
+Motivational delegation is the paper's proposed runtime pattern for process-constrained narrative goals. A user or designer supplies a GoalSpec with a desired outcome, forbidden shortcuts, required process predicates, allowed interventions, and success evidence. The Director then selects interventions that change the action distribution of the world while leaving final action choice to NPC arbitration.
+
+\begin{figure}[t]
+\centering
+\fbox{\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Figure source:} \texttt{paper/diagrams/motivational\_delegation\_loop.mmd}.\\[0.4em]
+GoalSpec $\rightarrow$ Director intervention $\rightarrow$ NPC motivation / opportunity / information / constraint context $\rightarrow$ arbitration-selected tool $\rightarrow$ objective event $\rightarrow$ subjective memory and relationship evidence $\rightarrow$ eval checkpoint.
+\end{minipage}}
+\caption{Motivational Delegation loop. The Director changes conditions and checkpoints progress; NPCs choose concrete actions through the normal runtime loop.}
+\label{fig:motivational-delegation}
+\end{figure}
+
+Figure~\ref{fig:motivational-delegation} shows the loop. The Director may apply motivation bias, event-skill loading, opportunity scheduling, resource shifts, information exposure, constraint injection, and evaluation checkpoints. These interventions are explicit, traceable, and time-bounded. Prohibited intervention fields include direct final relationship state updates, concrete action assignments to specific NPCs, unobserved subjective memory injection, and ToolExecutor bypasses.
+
+\subsection{GoalSpec}
+
+A process-constrained GoalSpec contains five groups of data:
+
+\begin{enumerate}
+  \item \textbf{Desired outcome}: the final state or evidence condition that should hold.
+  \item \textbf{Forbidden shortcuts}: state changes that would make the outcome unearned.
+  \item \textbf{Required process}: predicates over shared events, memories, relationship evidence, and later decisions.
+  \item \textbf{Allowed interventions}: the Director actions permitted for this goal.
+  \item \textbf{Success evidence}: trace artifacts required before the run counts as successful.
+\end{enumerate}
+
+For example, a close-friend goal can require at least two positive shared events, subjective memories for both agents, relationship-edge source references, and a future behavior that references one of those memories. The same final relationship score without these artifacts should fail Process Fidelity Eval.
+
+\subsection{Director intervention boundary}
+
+The intervention boundary is the main design choice. The Director is allowed to alter world conditions that make certain actions more likely or more salient. It can schedule a gathering, expose a rumor to one NPC, raise the salience of a social need, constrain access to a shortcut, or load an Event Skill that creates localized pressure. The NPC loop still decides whether an NPC acts, what tool it uses, and how it reacts to success, failure, or interruption.
+
+This boundary also makes Hard Delegation a meaningful baseline. In Hard Delegation, the Director translates the goal into assigned tasks for specific NPCs. In Full Motivational Delegation, the Director manipulates motivation and opportunity while the NPC's normal arbitration path remains active. Comparing these settings lets the paper measure whether final goal success came with forced actions, shortcut violations, weak process coverage, or missing memory evidence.
+
+\subsection{Evidence lifecycle}
+
+Each intervention should move through an evidence lifecycle:
+
+\begin{enumerate}
+  \item \textbf{Proposed}: the Director creates an intervention from the GoalSpec and world digest.
+  \item \textbf{Applied}: validation checks the intervention type, scope, and allowed fields.
+  \item \textbf{Observed}: NPC actions and tool outcomes create objective events.
+  \item \textbf{Internalized}: eligible agents store subjective memories or relationship updates.
+  \item \textbf{Reused}: later arbitration cites memories, relationship edges, or heuristics.
+  \item \textbf{Evaluated}: Process Fidelity Eval checks goal success, process predicates, autonomy, and trace coverage.
+\end{enumerate}
+
+The lifecycle is deliberately audit-oriented. It gives the debug UI and paper tables a shared explanation path from intervention to outcome.

@@ -35,6 +35,7 @@ Persistent multi-agent narratives often involve goals whose value lies in the pa
 - NPC agent loop: needs, capability filtering, arbitration, tool execution.
 - Memory layer: objective events, subjective memories, relationship edges, heuristics.
 - Debug trace and schema registry.
+- Current draft includes Figure 1 source in `paper/diagrams/system_overview.mmd`.
 
 ## 4. Motivational Delegation
 
@@ -43,6 +44,7 @@ Persistent multi-agent narratives often involve goals whose value lies in the pa
 - Intervention lifecycle: proposed, applied, observed, evaluated, expired.
 - Autonomy boundary: final action selected by ArbitrationLayer.
 - Example trace: close friend or repair trust scenario.
+- Current draft includes Figure 2 source in `paper/diagrams/motivational_delegation_loop.mmd`.
 
 ## 5. Process Fidelity Eval
 
