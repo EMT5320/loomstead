@@ -10,10 +10,12 @@ from typing import Any
 
 from app.eval.process_fidelity import build_process_metrics, metric_summary, process_metric_summaries
 from app.eval.scenarios import DEFAULT_L1_SCENARIOS, DEFAULT_PROCESS_GOALS, EvalScenario, ProcessGoalSpec
+from app.memory.subjective_memory import SubjectiveMemoryRecord
 from app.runtime.agent_runtime import AgentRuntime
 from app.runtime.motivation_engine import MotivationEngine
 from app.runtime.schema_registry import require_schema_version, schema_registry_snapshot
-from app.world.world_state import create_initial_world
+from app.world.seed_data import DAY1_NPC_IDS
+from app.world.world_state import create_initial_world, relation_key
 
 
 BASELINE_FULL = "full_motivational_delegation"
@@ -261,17 +263,52 @@ def apply_scenario_setup(world: dict[str, Any], scenario: EvalScenario) -> None:
 
 def apply_process_goal_setup(world: dict[str, Any], scenario: ProcessGoalSpec) -> None:
     """让目标 NPC 和目标对象处在同一可见场景，保证规则 Eval 可复现。"""
+    if scenario.target_npc_id == "player":
+        _ensure_player_eval_agent(world, location_id=scenario.location_id, anchor_id=scenario.anchor_id)
     for npc_id in (scenario.npc_id, scenario.target_npc_id):
         agent = world["agents"][npc_id]
         agent["locationId"] = scenario.location_id
         agent["anchorId"] = scenario.anchor_id
+    for npc_id in DAY1_NPC_IDS:
+        if npc_id in {scenario.npc_id, scenario.target_npc_id}:
+            continue
+        agent = world["agents"].get(npc_id)
+        if isinstance(agent, dict):
+            # Process Eval 固定社交目标，避免同地点默认扫描让目标对象随初始站位漂移。
+            agent["locationId"] = "farm" if scenario.location_id != "farm" else "plaza"
+            agent["anchorId"] = "farm_house_door" if scenario.location_id != "farm" else "plaza_fountain"
     agent = world["agents"][scenario.npc_id]
     for field, value in scenario.status_overrides.items():
         agent["status"][field] = value
-    world["activeFocus"] = {
+    world.setdefault("relations", {})[relation_key(scenario.npc_id, scenario.target_npc_id)] = {
+        "affection": 28,
+        "trust": 24,
+        "conflict": 42 if scenario.setup_kind == "forgiveness_memory" else 8,
+        "kind": "strained" if scenario.setup_kind == "forgiveness_memory" else "goal_fixture",
+    }
+    active_focus = {
         "targetAgents": [scenario.npc_id],
         "brief": f"Process Fidelity Eval: {scenario.scenario_id}",
+        "preferredSocialTargets": {scenario.npc_id: scenario.target_npc_id},
     }
+    if scenario.setup_kind == "forgiveness_memory":
+        # 修复失信关系的 fixture 固定为一次确认谈话，避免礼物动作遮蔽“谈清楚”的过程证据。
+        active_focus["allowedToolIds"] = ["social.chat_with"]
+    world["activeFocus"] = active_focus
+
+
+def _ensure_player_eval_agent(world: dict[str, Any], *, location_id: str, anchor_id: str) -> None:
+    """把玩家临时投影成可被 NPC 工具引用的 eval 目标，不让玩家进入 NPC tick 队列。"""
+    player = dict(world.get("player", {})) if isinstance(world.get("player"), dict) else {"id": "player", "name": "玩家"}
+    player.setdefault("id", "player")
+    player.setdefault("name", "新来的农场主")
+    player["locationId"] = location_id
+    player["anchorId"] = anchor_id
+    player.setdefault("status", {"energy": 80, "money": 80, "social": 60, "mood": 50, "stress": 10, "health": 90})
+    player.setdefault("inventory", list(world.get("player", {}).get("inventory", [])) if isinstance(world.get("player"), dict) else [])
+    player.setdefault("deepCard", {})
+    player.setdefault("alive", True)
+    world.setdefault("agents", {})["player"] = player
 
 
 def _run_baseline_with_engine(
@@ -445,6 +482,13 @@ def _run_runtime_process_scenario(
 ) -> dict[str, Any]:
     runtime = AgentRuntime(provider_mode="rule")
     apply_process_goal_setup(runtime.world, scenario)
+    setup_evidence = _seed_process_goal_runtime(runtime, scenario)
+    runtime_ablation = _apply_runtime_process_ablation(
+        runtime,
+        scenario=scenario,
+        subjective_memory_ablation=subjective_memory_ablation,
+        relationship_ablation=relationship_ablation,
+    )
     runtime.tick(float(scenario.max_game_hours) * 3600.0, speed=1.0)
     snapshot = runtime.get_phase2_debug_snapshot({"agentId": scenario.npc_id, "limit": 50})
     recent_trace_events = snapshot.get("recentTraceEvents", []) if isinstance(snapshot.get("recentTraceEvents"), list) else []
@@ -538,6 +582,8 @@ def _run_runtime_process_scenario(
         "relationship_edge_trace": bool(goal_event_ids & relationship_source_ids),
         "causal_trace": bool(memory_trace_links),
         "future_behavior_reference": bool(counterfactual_replay["effect"]),
+        "preexisting_harm_memory": _has_preexisting_harm_memory(subjective_items),
+        "subjective_memory_causal_effect": bool(counterfactual_replay["subjectiveMemoryEffect"]),
     }
     goal_relevant_state_changes = max(1, len(relationship_items))
     state_changes_with_source = sum(1 for edge in relationship_items if edge.get("sourceEventIds"))
@@ -567,11 +613,84 @@ def _run_runtime_process_scenario(
             "heuristicSourceIds": sorted(heuristic_source_ids),
             "memoryTraceLinks": memory_trace_links,
             "counterfactualReplay": counterfactual_replay,
+            "scenarioSetup": setup_evidence,
+            "runtimeAblation": runtime_ablation,
             "subjectiveMemoryAblation": ablated_subjective_memory["evidence"],
             "relationshipAblation": ablated_relationships["evidence"],
             "traceSchemaVersion": snapshot.get("traceSchemaVersion"),
         },
     }
+
+
+def _seed_process_goal_runtime(runtime: AgentRuntime, scenario: ProcessGoalSpec) -> dict[str, Any]:
+    """按 scenario 注入最小前史证据，让规则级 eval 能覆盖真实叙事前置条件。"""
+    if scenario.setup_kind != "forgiveness_memory":
+        return {"kind": scenario.setup_kind, "seeded": False}
+
+    harm_event = runtime.event_store.append(
+        "eval.precondition.harm_memory",
+        {
+            "scenarioId": scenario.scenario_id,
+            "agentId": scenario.npc_id,
+            "targetAgentId": scenario.target_npc_id,
+            "summary": "玩家曾答应给布兰娜补交节前作物，却在约定时间失信。",
+            "processTag": "forgiveness_harm",
+        },
+    )
+    world_tick = int(runtime.world.get("clock", {}).get("tick", 0)) if isinstance(runtime.world.get("clock"), dict) else 0
+    memory = SubjectiveMemoryRecord(
+        record_id=f"{harm_event['id']}:{scenario.npc_id}:harm",
+        agent_id=scenario.npc_id,
+        source_event_id=str(harm_event.get("id") or ""),
+        perspective="subjective",
+        text="布兰娜记得玩家曾经失信；如果要修复关系，她需要亲眼确认补偿并重新谈一次。 social.chat_with",
+        emotional_valence=-0.62,
+        confidence=0.93,
+        tags=("tool_result", "social.chat_with", "forgiveness_harm", "player_broken_promise"),
+        created_tick=world_tick,
+    )
+    runtime.subjective_memory_store.add(memory, world_tick=world_tick)
+    runtime.relationship_edge_store.upsert(
+        source_agent_id=scenario.npc_id,
+        target_agent_id=scenario.target_npc_id,
+        edge_type="suspicion",
+        delta=0.12,
+        tick=world_tick,
+        source_event_id=str(harm_event.get("id") or ""),
+        trace_refs=[{"type": "eval_precondition", "scenarioId": scenario.scenario_id}],
+    )
+    return {
+        "kind": scenario.setup_kind,
+        "seeded": True,
+        "harmEventId": harm_event.get("id"),
+        "subjectiveMemoryRecordId": memory.record_id,
+        "targetAgentId": scenario.target_npc_id,
+    }
+
+
+def _apply_runtime_process_ablation(
+    runtime: AgentRuntime,
+    *,
+    scenario: ProcessGoalSpec,
+    subjective_memory_ablation: str,
+    relationship_ablation: str,
+) -> dict[str, Any]:
+    """把 ablation 条件写入 world，使 AgentRuntime.tick 内部的决策输入同步受控。"""
+    runtime.world["processEvalAblation"] = {
+        "agentId": scenario.npc_id,
+        "targetAgentId": scenario.target_npc_id,
+        "subjectiveMemory": subjective_memory_ablation,
+        "relationshipEdges": relationship_ablation,
+    }
+    return dict(runtime.world["processEvalAblation"])
+
+
+def _has_preexisting_harm_memory(subjective_items: list[dict[str, Any]]) -> bool:
+    for item in subjective_items:
+        tags = item.get("tags", []) if isinstance(item.get("tags"), list) else []
+        if "forgiveness_harm" in {str(tag) for tag in tags}:
+            return True
+    return False
 
 
 def _run_hard_delegation_process_scenario(scenario: ProcessGoalSpec) -> dict[str, Any]:
@@ -1110,6 +1229,8 @@ def _memory_ablation_trace_items(result: dict[str, Any]) -> list[dict[str, Any]]
                     "baseline": baseline,
                     "processChecks": item.get("processChecks", {}),
                     "metrics": item.get("metrics", {}),
+                    "scenarioSetup": evidence.get("scenarioSetup", {}),
+                    "runtimeAblation": evidence.get("runtimeAblation", {}),
                     "subjectiveMemoryAblation": evidence.get("subjectiveMemoryAblation", {}),
                     "relationshipAblation": evidence.get("relationshipAblation", {}),
                     "counterfactualEffect": replay.get("effect") if isinstance(replay, dict) else None,

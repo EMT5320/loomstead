@@ -285,20 +285,90 @@ class AgentRuntime:
     def _phase2_decisions(self, npc_ids: list[str], delta_minutes: float = 20.0) -> list[dict[str, Any]]:
         decisions: list[dict[str, Any]] = []
         for npc_id in npc_ids:
+            relationship_edges = [
+                edge.to_dict()
+                for edge in self.relationship_edge_store.list(agent_id=npc_id, limit=12)
+            ]
+            subjective_memory_records = self._phase2_subjective_memory_recall(npc_id)
+            heuristics = self._phase2_heuristic_recall(npc_id)
+            relationship_edges, subjective_memory_records, heuristics = self._phase2_eval_ablation_inputs(
+                npc_id=npc_id,
+                relationship_edges=relationship_edges,
+                subjective_memory_records=subjective_memory_records,
+                heuristics=heuristics,
+            )
             decisions.append(
                 self.motivation_engine.evaluate_npc(
                     self.world,
                     npc_id,
                     delta_minutes=delta_minutes,
-                    relationship_edges=[
-                        edge.to_dict()
-                        for edge in self.relationship_edge_store.list(agent_id=npc_id, limit=12)
-                    ],
-                    subjective_memory_records=self._phase2_subjective_memory_recall(npc_id),
-                    heuristics=self._phase2_heuristic_recall(npc_id),
+                    relationship_edges=relationship_edges,
+                    subjective_memory_records=subjective_memory_records,
+                    heuristics=heuristics,
                 )
             )
         return decisions
+
+    def _phase2_eval_ablation_inputs(
+        self,
+        *,
+        npc_id: str,
+        relationship_edges: list[dict[str, Any]],
+        subjective_memory_records: list[dict[str, Any]],
+        heuristics: list[dict[str, Any]],
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+        """把 Process Eval ablation 前移到决策输入层，保证 tick 主路径也使用同一实验条件。"""
+        ablation = self.world.get("processEvalAblation") if isinstance(self.world.get("processEvalAblation"), dict) else {}
+        if str(ablation.get("agentId") or "") != npc_id:
+            return relationship_edges, subjective_memory_records, heuristics
+
+        subjective_mode = str(ablation.get("subjectiveMemory") or "none")
+        relationship_mode = str(ablation.get("relationshipEdges") or "none")
+        target_id = str(ablation.get("targetAgentId") or "")
+
+        if subjective_mode == "no_subjective_memory":
+            subjective_memory_records = []
+
+        if relationship_mode == "no_relationship_edge":
+            relationship_edges = [
+                edge
+                for edge in relationship_edges
+                if not self._phase2_eval_edge_matches_target(edge, npc_id, target_id)
+            ]
+        elif relationship_mode == "shuffled_memory_owner":
+            relationship_edges = [
+                self._phase2_eval_shuffle_edge(edge, npc_id=npc_id, target_id=target_id)
+                for edge in relationship_edges
+            ]
+        elif relationship_mode == "evidence_link_removal":
+            relationship_edges = [
+                self._phase2_eval_strip_edge_evidence(edge, npc_id=npc_id, target_id=target_id)
+                for edge in relationship_edges
+            ]
+
+        return relationship_edges, subjective_memory_records, heuristics
+
+    def _phase2_eval_edge_matches_target(self, edge: dict[str, Any], npc_id: str, target_id: str) -> bool:
+        if not target_id:
+            return str(edge.get("sourceAgentId") or "") == npc_id or str(edge.get("targetAgentId") or "") == npc_id
+        return {str(edge.get("sourceAgentId") or ""), str(edge.get("targetAgentId") or "")} == {npc_id, target_id}
+
+    def _phase2_eval_shuffle_edge(self, edge: dict[str, Any], *, npc_id: str, target_id: str) -> dict[str, Any]:
+        if not self._phase2_eval_edge_matches_target(edge, npc_id, target_id):
+            return dict(edge)
+        shuffled = dict(edge)
+        shuffled["sourceAgentId"] = "eval_wrong_owner"
+        shuffled["targetAgentId"] = target_id or str(edge.get("targetAgentId") or "")
+        shuffled["edgeId"] = f"eval_wrong_owner::{shuffled['targetAgentId']}::{shuffled.get('edgeType') or 'edge'}"
+        return shuffled
+
+    def _phase2_eval_strip_edge_evidence(self, edge: dict[str, Any], *, npc_id: str, target_id: str) -> dict[str, Any]:
+        if not self._phase2_eval_edge_matches_target(edge, npc_id, target_id):
+            return dict(edge)
+        stripped = dict(edge)
+        stripped["sourceEventIds"] = []
+        stripped["traceRefs"] = []
+        return stripped
 
     def _phase2_subjective_memory_recall(self, npc_id: str, limit: int = 8) -> list[dict[str, Any]]:
         world_tick = int(self.world.get("clock", {}).get("tick", 0)) if isinstance(self.world.get("clock"), dict) else 0

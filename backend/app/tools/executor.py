@@ -591,6 +591,9 @@ class ToolExecutor:
         return current_anchor if current_anchor in world.get("anchors", {}) else "plaza_fountain"
 
     def _default_social_target(self, world: dict[str, Any], npc_id: str) -> str | None:
+        preferred_id = self._preferred_social_target(world, npc_id)
+        if preferred_id:
+            return preferred_id
         agent = world.get("agents", {}).get(npc_id)
         location_id = str(agent.get("locationId") or "") if isinstance(agent, dict) else ""
         for candidate_id in DAY1_NPC_IDS:
@@ -600,6 +603,18 @@ class ToolExecutor:
             if isinstance(candidate, dict) and str(candidate.get("locationId") or "") == location_id:
                 return candidate_id
         return next((candidate_id for candidate_id in DAY1_NPC_IDS if candidate_id != npc_id), None)
+
+    def _preferred_social_target(self, world: dict[str, Any], npc_id: str) -> str | None:
+        """Eval / Event Skill 可通过 activeFocus 固定社交目标，避免默认同地点扫描漂移。"""
+        active_focus = world.get("activeFocus") if isinstance(world.get("activeFocus"), dict) else {}
+        preferred_targets = active_focus.get("preferredSocialTargets")
+        if not isinstance(preferred_targets, dict):
+            return None
+        target_id = str(preferred_targets.get(npc_id) or "")
+        if not target_id or target_id == npc_id:
+            return None
+        target = world.get("agents", {}).get(target_id)
+        return target_id if isinstance(target, dict) else None
 
     def _target_npc_id(self, completion: dict[str, Any]) -> str | None:
         tool_input = completion.get("input") if isinstance(completion.get("input"), dict) else {}

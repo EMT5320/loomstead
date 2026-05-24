@@ -46,6 +46,7 @@ class ProcessGoalSpec:
     location_id: str = "plaza"
     anchor_id: str = "plaza_fountain"
     max_game_hours: int = 1
+    setup_kind: str = "default"
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -59,6 +60,7 @@ class ProcessGoalSpec:
             "locationId": self.location_id,
             "anchorId": self.anchor_id,
             "maxGameHours": self.max_game_hours,
+            "setupKind": self.setup_kind,
         }
 
 
@@ -133,6 +135,12 @@ DEFAULT_REQUIRED_PROCESS_IDS = (
     "future_behavior_reference",
 )
 
+FORGIVENESS_REQUIRED_PROCESS_IDS = (
+    *DEFAULT_REQUIRED_PROCESS_IDS,
+    "preexisting_harm_memory",
+    "subjective_memory_causal_effect",
+)
+
 
 DEFAULT_PROCESS_GOALS = (
     ProcessGoalSpec(
@@ -161,5 +169,15 @@ DEFAULT_PROCESS_GOALS = (
         expected_tool_prefixes=("social.",),
         required_process_ids=DEFAULT_REQUIRED_PROCESS_IDS,
         status_overrides={"energy": 90, "money": 90, "social": 5},
+    ),
+    ProcessGoalSpec(
+        scenario_id="pf.branna_forgiveness_requires_memory",
+        description="布兰娜面对玩家先前失信后的修复谈话，必须保留伤害记忆、补偿观察和主观记忆因果证据。",
+        npc_id="bram",
+        target_npc_id="player",
+        expected_tool_prefixes=("social.",),
+        required_process_ids=FORGIVENESS_REQUIRED_PROCESS_IDS,
+        status_overrides={"energy": 90, "money": 90, "social": 5},
+        setup_kind="forgiveness_memory",
     ),
 )

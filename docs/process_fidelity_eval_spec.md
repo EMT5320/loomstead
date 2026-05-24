@@ -333,6 +333,8 @@ Branna 是否原谅，必须取决于：
 3. 她是否能把两个事件连接成 repair narrative。
 ```
 
+当前实现状态（2026-05-24）：`pf.branna_forgiveness_requires_memory` 已把玩家临时投影为可被 NPC 工具引用的 eval 目标，预置 Branna 的失信主观记忆和 suspicion 关系边，随后要求一次 `social.chat_with` 修复谈话产生补偿观察、主观记忆引用、关系边 trace 与 `subjective_memory_causal_effect`。No Subjective Memory / relationship-edge 系列 ablation 已在 `AgentRuntime.tick` 决策输入层生效，导出中仍保留后验 process coverage 证据。
+
 ### 6.2 Shuffled Memory Owner
 
 将 Branna 的失信记忆转移给 Kai，保留事件总量不变。
