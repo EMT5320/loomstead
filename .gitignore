@@ -17,6 +17,8 @@ CLAUDE.local.md
 .claude/*
 !.claude/rules/
 !.claude/rules/**
+!.claude/workflows/
+!.claude/workflows/**
 .claude/settings.local.json
 
 config/models.json
