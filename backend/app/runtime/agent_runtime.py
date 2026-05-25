@@ -197,7 +197,8 @@ class AgentRuntime:
         npc_id = self._str_filter(filters, "agentId") or self._str_filter(filters, "agent_id")
         npc_ids = [npc_id] if npc_id else list(DAY1_NPC_IDS)
         world_tick = int(self.world.get("clock", {}).get("tick", 0)) if isinstance(self.world.get("clock"), dict) else 0
-        return {
+        recent_trace_events, trace_focus = self._phase2_recent_trace_events_with_focus(filters)
+        snapshot = {
             "traceSchemaVersion": TRACE_SCHEMA_VERSION,
             "schemaRegistry": schema_registry_snapshot(),
             "tools": self.capability_registry.tool_registry.to_debug_payload(),
@@ -209,8 +210,11 @@ class AgentRuntime:
             "subjectiveMemory": self.subjective_memory_store.debug_snapshot(agent_id=npc_id, limit=20, world_tick=world_tick),
             "relationshipEdges": self.relationship_edge_store.debug_snapshot(agent_id=npc_id, limit=30),
             "heuristics": self.heuristic_library.debug_snapshot(agent_id=npc_id, limit=20, world_tick=world_tick),
-            "recentTraceEvents": self._phase2_recent_trace_events(filters),
+            "recentTraceEvents": recent_trace_events,
         }
+        if trace_focus is not None:
+            snapshot["traceFocus"] = trace_focus
+        return snapshot
 
     def _phase2_motivation_plan_snapshot(self, npc_ids: list[str] | None = None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         npc_ids = npc_ids or list(DAY1_NPC_IDS)
@@ -717,9 +721,53 @@ class AgentRuntime:
         return {"version": require_schema_version("tool_runtime"), "items": items}
 
     def _phase2_recent_trace_events(self, filters: dict[str, Any]) -> list[dict[str, Any]]:
+        recent_trace_events, _trace_focus = self._phase2_recent_trace_events_with_focus(filters)
+        return recent_trace_events
+
+    def _phase2_recent_trace_events_with_focus(self, filters: dict[str, Any]) -> tuple[list[dict[str, Any]], dict[str, Any] | None]:
+        """返回可跳转的 trace 行，并在 focus 查询时补充直接来源与下游观察摘要。"""
         limit = self._int_filter(filters, "limit", 20)
         agent_id_filter = self._str_filter(filters, "agentId") or self._str_filter(filters, "agent_id")
         event_type_filter = self._str_filter(filters, "eventType") or self._str_filter(filters, "event_type")
+        focus_event_id = self._str_filter(filters, "focusEventId") or self._str_filter(filters, "focus_event_id")
+        focus_trace_id = self._str_filter(filters, "focusTraceId") or self._str_filter(filters, "focus_trace_id")
+        snapshots = self._phase2_all_trace_snapshots()
+        event_index = {str(item.get("eventId") or ""): item for item in snapshots if str(item.get("eventId") or "")}
+        trace_index = {str(item.get("traceId") or ""): item for item in snapshots if str(item.get("traceId") or "")}
+        for snapshot in snapshots:
+            snapshot["sourceLinks"] = self._phase2_source_links(snapshot, event_index)
+
+        focused = event_index.get(focus_event_id) if focus_event_id else None
+        if focused is None and focus_trace_id:
+            focused = trace_index.get(focus_trace_id)
+
+        filtered: list[dict[str, Any]] = []
+        for snapshot in snapshots:
+            event_type = str(snapshot.get("eventType") or "")
+            if event_type_filter and event_type != event_type_filter:
+                continue
+            if agent_id_filter and not self._phase2_trace_matches_agent(snapshot, agent_id_filter):
+                continue
+            filtered.append(snapshot)
+
+        rows = filtered[-limit:]
+        if focused is not None and not any(str(item.get("eventId") or "") == str(focused.get("eventId") or "") for item in rows):
+            rows.append(focused)
+            if len(rows) > limit:
+                rows = rows[-limit:]
+
+        trace_focus = None
+        if focus_event_id or focus_trace_id:
+            trace_focus = self._phase2_trace_focus_payload(
+                focused=focused,
+                requested_event_id=focus_event_id,
+                requested_trace_id=focus_trace_id,
+                snapshots=snapshots,
+            )
+        return [dict(item) for item in rows], trace_focus
+
+    def _phase2_all_trace_snapshots(self) -> list[dict[str, Any]]:
+        """从 EventStore 提取所有仍保留的 Phase 2 trace 快照。"""
         trace_types = {
             "tool.execution_completed",
             "tool.execution_failed",
@@ -731,16 +779,136 @@ class AgentRuntime:
         items: list[dict[str, Any]] = []
         for event in self.event_store.list():
             event_type = str(event.get("type") or "")
-            if event_type_filter and event_type != event_type_filter:
-                continue
             payload = event.get("payload", {}) if isinstance(event.get("payload"), dict) else {}
             if event_type not in trace_types and not payload.get("traceSchemaVersion"):
                 continue
             snapshot = trace_event_snapshot(event)
-            if agent_id_filter and str(snapshot.get("agentId") or "") != agent_id_filter and agent_id_filter not in snapshot.get("targetIds", []):
-                continue
             items.append(snapshot)
-        return items[-limit:]
+        return items
+
+    def _phase2_trace_matches_agent(self, snapshot: dict[str, Any], agent_id: str) -> bool:
+        if str(snapshot.get("agentId") or "") == agent_id:
+            return True
+        target_ids = snapshot.get("targetIds", [])
+        return isinstance(target_ids, list) and agent_id in {str(item) for item in target_ids}
+
+    def _phase2_source_links(self, snapshot: dict[str, Any], event_index: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+        """把 sourceEventId / traceRefs / contributingSources 解析成可点击来源。"""
+        source_refs: list[tuple[str, str]] = []
+        self._append_source_ref(source_refs, "sourceEventId", snapshot.get("sourceEventId"))
+        details = snapshot.get("details", {}) if isinstance(snapshot.get("details"), dict) else {}
+        self._append_source_ref(source_refs, "details.sourceEventId", details.get("sourceEventId"))
+        for source_id in details.get("sourceEventIds", []) if isinstance(details.get("sourceEventIds"), list) else []:
+            self._append_source_ref(source_refs, "details.sourceEventIds", source_id)
+        for trace_ref in details.get("traceRefs", []) if isinstance(details.get("traceRefs"), list) else []:
+            if isinstance(trace_ref, dict):
+                self._append_source_ref(source_refs, str(trace_ref.get("type") or "traceRef"), trace_ref.get("eventId"))
+        for source in details.get("contributingSources", []) if isinstance(details.get("contributingSources"), list) else []:
+            if isinstance(source, dict):
+                self._append_source_ref(source_refs, str(source.get("type") or "contributingSource"), source.get("eventId"))
+
+        links: list[dict[str, Any]] = []
+        seen_ids: set[str] = set()
+        for role, event_id in source_refs:
+            if not event_id or event_id in seen_ids:
+                continue
+            seen_ids.add(event_id)
+            source_snapshot = event_index.get(event_id)
+            if source_snapshot is None:
+                links.append(
+                    {
+                        "role": role,
+                        "eventId": event_id,
+                        "traceId": "",
+                        "eventType": "missing",
+                        "summary": "source event 已不在当前 EventStore 窗口",
+                        "agentId": "",
+                        "targetIds": [],
+                        "matched": False,
+                    }
+                )
+                continue
+            links.append(
+                {
+                    "role": role,
+                    "eventId": source_snapshot.get("eventId"),
+                    "traceId": source_snapshot.get("traceId"),
+                    "eventType": source_snapshot.get("eventType"),
+                    "summary": source_snapshot.get("summary"),
+                    "agentId": source_snapshot.get("agentId"),
+                    "targetIds": list(source_snapshot.get("targetIds", [])) if isinstance(source_snapshot.get("targetIds"), list) else [],
+                    "matched": True,
+                }
+            )
+        return links
+
+    def _append_source_ref(self, refs: list[tuple[str, str]], role: str, value: Any) -> None:
+        event_id = str(value or "").strip()
+        if event_id:
+            refs.append((role, event_id))
+
+    def _phase2_trace_focus_payload(
+        self,
+        *,
+        focused: dict[str, Any] | None,
+        requested_event_id: str,
+        requested_trace_id: str,
+        snapshots: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        requested = {"eventId": requested_event_id or None, "traceId": requested_trace_id or None}
+        if focused is None:
+            return {
+                "requested": requested,
+                "matched": False,
+                "status": "missing",
+                "sourceLinks": [],
+                "downstreamObservedCount": 0,
+                "downstreamEventCount": 0,
+                "downstreamEventIds": [],
+            }
+        focused_event_id = str(focused.get("eventId") or "")
+        downstream = [
+            item
+            for item in snapshots
+            if focused_event_id and focused_event_id in self._phase2_source_event_ids(item)
+        ]
+        observed = [item for item in downstream if str(item.get("eventType") or "") == "memory.result_observed"]
+        return {
+            "requested": requested,
+            "matched": True,
+            "status": "matched",
+            "eventId": focused.get("eventId"),
+            "traceId": focused.get("traceId"),
+            "eventType": focused.get("eventType"),
+            "summary": focused.get("summary"),
+            "agentId": focused.get("agentId"),
+            "targetIds": list(focused.get("targetIds", [])) if isinstance(focused.get("targetIds"), list) else [],
+            "sourceLinks": list(focused.get("sourceLinks", [])) if isinstance(focused.get("sourceLinks"), list) else [],
+            "downstreamObservedCount": len(observed),
+            "downstreamEventCount": len(downstream),
+            "downstreamEventIds": [str(item.get("eventId") or "") for item in downstream[:8]],
+        }
+
+    def _phase2_source_event_ids(self, snapshot: dict[str, Any]) -> set[str]:
+        source_ids: set[str] = set()
+        source_id = str(snapshot.get("sourceEventId") or "")
+        if source_id:
+            source_ids.add(source_id)
+        details = snapshot.get("details", {}) if isinstance(snapshot.get("details"), dict) else {}
+        direct_source = str(details.get("sourceEventId") or "")
+        if direct_source:
+            source_ids.add(direct_source)
+        for item in details.get("sourceEventIds", []) if isinstance(details.get("sourceEventIds"), list) else []:
+            item_id = str(item or "")
+            if item_id:
+                source_ids.add(item_id)
+        for trace_ref in details.get("traceRefs", []) if isinstance(details.get("traceRefs"), list) else []:
+            if isinstance(trace_ref, dict) and str(trace_ref.get("eventId") or ""):
+                source_ids.add(str(trace_ref.get("eventId")))
+        for source in details.get("contributingSources", []) if isinstance(details.get("contributingSources"), list) else []:
+            if isinstance(source, dict) and str(source.get("eventId") or ""):
+                source_ids.add(str(source.get("eventId")))
+        return source_ids
 
     def get_director_debug_snapshot(self, filters: dict[str, Any] | None = None) -> dict[str, Any]:
         """输出 Director Digest、Beat 队列和生命周期事件。"""

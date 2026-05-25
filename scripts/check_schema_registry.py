@@ -208,6 +208,127 @@ def _check_phase2_debug_contract(
     elif probe_event.get("eventType") == "schema.contract_probe" and probe_event.get("details") != {}:
         errors.append("/api/debug.phase2.recentTraceEvents.details 对未知事件应回退为空对象")
 
+    _check_phase2_trace_focus_contract(
+        app=app,
+        runtime=runtime,
+        versions=versions,
+        build_trace_envelope_fn=build_trace_envelope_fn,
+        with_trace_payload_fn=with_trace_payload_fn,
+        world_time_payload_fn=world_time_payload_fn,
+        errors=errors,
+    )
+
+
+def _check_phase2_trace_focus_contract(
+    *,
+    app: Any,
+    runtime: Any,
+    versions: dict[str, str],
+    build_trace_envelope_fn: Any,
+    with_trace_payload_fn: Any,
+    world_time_payload_fn: Any,
+    errors: list[str],
+) -> None:
+    """校验 trace sourceLinks / traceFocus 的跳转契约。"""
+    decision_trace = build_trace_envelope_fn(
+        event_type="motivation.decision_made",
+        summary="trace focus decision",
+        world_time=world_time_payload_fn(runtime.world),
+        agent_id="kai",
+        target_ids=["mira"],
+    )
+    decision_event = runtime.event_store.append(
+        "motivation.decision_made",
+        with_trace_payload_fn(
+            {
+                "npcId": "kai",
+                "selectedToolId": "social.chat_with",
+                "decisionReason": "trace focus check",
+                "candidateScores": [{"toolId": "social.chat_with", "score": 1.0}],
+            },
+            decision_trace,
+        ),
+    )
+    tool_trace = build_trace_envelope_fn(
+        event_type="tool.execution_completed",
+        summary="trace focus tool completed",
+        world_time=world_time_payload_fn(runtime.world),
+        source_event_id=str(decision_event.get("id") or ""),
+        agent_id="kai",
+        target_ids=["mira"],
+    )
+    tool_event = runtime.event_store.append(
+        "tool.execution_completed",
+        with_trace_payload_fn(
+            {
+                "npcId": "kai",
+                "toolId": "social.chat_with",
+                "targetNpcId": "mira",
+                "sourceEventIds": [decision_event.get("id")],
+                "traceRefs": [
+                    {
+                        "type": "motivation_decision_trace",
+                        "eventId": decision_event.get("id"),
+                        "traceId": decision_trace.get("traceId"),
+                    }
+                ],
+            },
+            tool_trace,
+        ),
+    )
+    memory_trace = build_trace_envelope_fn(
+        event_type="memory.result_observed",
+        summary="trace focus memory observed",
+        world_time=world_time_payload_fn(runtime.world),
+        source_event_id=str(tool_event.get("id") or ""),
+        agent_id="kai",
+        target_ids=["kai", "mira"],
+    )
+    memory_event = runtime.event_store.append(
+        "memory.result_observed",
+        with_trace_payload_fn(
+            {
+                "sourceEventId": tool_event.get("id"),
+                "observerVisibility": "participants_only",
+                "observerCount": 2,
+                "observerScope": {"observers": ["kai", "mira"], "observerIds": ["kai", "mira"]},
+                "observers": ["kai", "mira"],
+                "memories": [{"recordId": "memory.trace_focus"}],
+            },
+            memory_trace,
+        ),
+    )
+
+    focus = app.debug_phase2({"focusEventId": str(memory_event.get("id") or ""), "agentId": "mira", "limit": "8"})
+    focus_items = focus.get("recentTraceEvents") if isinstance(focus, dict) else None
+    if not isinstance(focus_items, list) or not focus_items:
+        errors.append("/api/debug.phase2 focus 查询应返回 recentTraceEvents")
+        return
+    memory_snapshot = next((item for item in focus_items if isinstance(item, dict) and item.get("eventId") == memory_event.get("id")), None)
+    if not isinstance(memory_snapshot, dict):
+        errors.append("/api/debug.phase2 focusEventId 应把聚焦事件注入 recentTraceEvents")
+        return
+    source_links = memory_snapshot.get("sourceLinks")
+    if not isinstance(source_links, list) or not source_links:
+        errors.append("/api/debug.phase2.recentTraceEvents.sourceLinks 应返回直接来源")
+    elif not any(isinstance(link, dict) and link.get("eventId") == tool_event.get("id") and link.get("eventType") == "tool.execution_completed" for link in source_links):
+        errors.append("/api/debug.phase2.recentTraceEvents.sourceLinks 应解析 memory -> tool 来源")
+    trace_focus = focus.get("traceFocus")
+    if not isinstance(trace_focus, dict) or not trace_focus.get("matched"):
+        errors.append("/api/debug.phase2.traceFocus 应标记 focusEventId 命中")
+    elif trace_focus.get("eventId") != memory_event.get("id"):
+        errors.append("/api/debug.phase2.traceFocus.eventId 应等于请求的 focusEventId")
+
+    tool_focus = app.debug_phase2({"focusEventId": str(tool_event.get("id") or ""), "agentId": "mira", "limit": "8"})
+    tool_focus_payload = tool_focus.get("traceFocus") if isinstance(tool_focus, dict) else None
+    if not isinstance(tool_focus_payload, dict) or int(tool_focus_payload.get("downstreamObservedCount") or 0) < 1:
+        errors.append("/api/debug.phase2.traceFocus.downstreamObservedCount 应统计直接下游观察记忆")
+
+    missing_focus = app.debug_phase2({"focusEventId": "evt_missing_trace_focus", "limit": "3"})
+    missing_payload = missing_focus.get("traceFocus") if isinstance(missing_focus, dict) else None
+    if not isinstance(missing_payload, dict) or missing_payload.get("matched") is not False or missing_payload.get("status") != "missing":
+        errors.append("/api/debug.phase2.traceFocus 对未知 focusEventId 应稳定返回 missing")
+
 
 def _check_source_usage(definitions: dict[str, Any], errors: list[str], warnings: list[str]) -> None:
     """扫描源码中的 schema 使用，禁止生产者绕过 registry 写版本字面量。"""

@@ -22,6 +22,7 @@ const ResearchThemeScript := preload("res://scripts/ui/research_theme.gd")
 signal highlight_npcs_requested(npc_ids)
 signal retry_requested(npc_id)
 signal select_npc_requested(npc_id)
+signal trace_source_requested(npc_id, event_id, trace_id)
 
 const TRACE_FILTER_IDS := ["all", "decision", "tool", "interrupt", "memory"]
 const TRACE_FILTER_LABELS := {
@@ -101,6 +102,7 @@ var _world_pulse_data: Dictionary = {}
 var _recent_trace_event_groups: Dictionary = _empty_filter_dict()
 var _recent_trace_copy_detail_groups: Dictionary = _empty_filter_dict()
 var _recent_trace_summaries: Dictionary = _empty_summary_dict()
+var _current_trace_focus: Dictionary = {}
 var _current_trace_filter := "all"
 var _current_trace_detail_index := 0
 
@@ -229,7 +231,8 @@ func set_phase2_debug_summary(summary: Dictionary) -> void:
 	_recent_trace_event_groups = _trace_event_group_dict(summary)
 	_recent_trace_copy_detail_groups = _trace_copy_detail_group_dict(summary)
 	_recent_trace_summaries = _trace_summary_dict(summary)
-	_select_latest_trace_detail()
+	_current_trace_focus = _trace_focus_dict(summary)
+	_select_trace_focus_or_latest(true)
 	_update_recent_trace_view()
 
 
@@ -953,7 +956,7 @@ func _build_trace_tab() -> Control:
 	_trace_summary_label = Label.new()
 	_trace_summary_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	ResearchThemeScript.apply_label_style(_trace_summary_label, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_MUTED)
-	_trace_summary_label.text = "点击 trace 行：decision 高亮 NPC；memory 高亮观察者；其它弹 details。"
+	_trace_summary_label.text = "点击 trace 行：decision 高亮 NPC；memory 高亮观察者；带 [源] 的行可在证据链里跳转来源。"
 	rows_card.body.add_child(_trace_summary_label)
 	_trace_rows_box = VBoxContainer.new()
 	_trace_rows_box.add_theme_constant_override("separation", 4)
@@ -981,7 +984,7 @@ func _select_trace_filter_by_index(index: int) -> void:
 	if index < 0 or index >= TRACE_FILTER_IDS.size():
 		return
 	_current_trace_filter = str(TRACE_FILTER_IDS[index])
-	_select_latest_trace_detail()
+	_select_trace_focus_or_latest(false)
 	_update_recent_trace_view()
 
 
@@ -1003,6 +1006,7 @@ func _reset_recent_trace_view() -> void:
 	_recent_trace_event_groups = _empty_filter_dict()
 	_recent_trace_copy_detail_groups = _empty_filter_dict()
 	_recent_trace_summaries = _empty_summary_dict()
+	_current_trace_focus = {}
 	_current_trace_detail_index = 0
 	_current_trace_filter = "all"
 	_hide_trace_details_popup()
@@ -1018,7 +1022,7 @@ func _update_recent_trace_view() -> void:
 		if rows.is_empty():
 			_trace_summary_label.text = _trace_summary_text_for_filter()
 		else:
-			_trace_summary_label.text = "点击 trace 行：decision 高亮 NPC；memory 高亮观察者；其它弹 details。"
+			_trace_summary_label.text = "点击 trace 行：decision 高亮 NPC；memory 高亮观察者；带 [源] 的行可在证据链里跳转来源。"
 	if _trace_prev_button != null:
 		_trace_prev_button.disabled = rows.is_empty()
 	if _trace_next_button != null:
@@ -1046,8 +1050,9 @@ func _build_trace_row_button(entry: Dictionary, row_index: int) -> Button:
 	var tick_text := _trace_tick_text(entry)
 	var summary := _truncate_text(str(entry.get("summary", "")), 64)
 	var hint := _trace_detail_hint(entry.get("details", {}))
+	var source_badge := _trace_source_badge(entry)
 	var color := ResearchThemeScript.trace_type_color(event_type)
-	var label_text := "%s  %s%s · %s" % [tick_text, _pretty_trace_type(event_type), hint, summary]
+	var label_text := "%s  %s%s%s · %s" % [tick_text, _pretty_trace_type(event_type), hint, source_badge, summary]
 
 	var button := Button.new()
 	button.focus_mode = Control.FOCUS_NONE
@@ -1105,6 +1110,8 @@ func _update_recent_trace_detail_view() -> void:
 	var summary := str(entry.get("summary", ""))
 	if summary != "":
 		_trace_details_box.add_child(_make_detail_kv("summary", summary))
+	# 证据链放在 details 前面，避免被较长 key-value 列表挤到视野外。
+	_append_trace_source_links_section(entry)
 	# details 折叠为多行 key-value
 	var details = entry.get("details", {})
 	if details is Dictionary:
@@ -1141,6 +1148,47 @@ func _make_detail_kv(key: String, value_text: String) -> Control:
 	return row
 
 
+func _append_trace_source_links_section(entry: Dictionary) -> void:
+	var title := Label.new()
+	title.text = "证据链"
+	ResearchThemeScript.apply_label_style(title, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_ACCENT)
+	_trace_details_box.add_child(title)
+	var links = entry.get("sourceLinks", [])
+	if not (links is Array) or (links as Array).is_empty():
+		var empty := Label.new()
+		empty.text = "无直接来源事件"
+		ResearchThemeScript.apply_label_style(empty, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_MUTED)
+		_trace_details_box.add_child(empty)
+		return
+	var hint := Label.new()
+	hint.text = "点击下方按钮跳转到直接来源事件"
+	ResearchThemeScript.apply_label_style(hint, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_MUTED)
+	_trace_details_box.add_child(hint)
+	var current_row := HBoxContainer.new()
+	current_row.add_theme_constant_override("separation", 6)
+	_trace_details_box.add_child(current_row)
+	var row_chip_count := 0
+	for index in range((links as Array).size()):
+		var item = (links as Array)[index]
+		if not (item is Dictionary):
+			continue
+		var link := item as Dictionary
+		var event_id := str(link.get("eventId", ""))
+		var label := "跳转来源 · %s" % _pretty_trace_type(str(link.get("eventType", "trace")))
+		if event_id != "":
+			label = "%s · %s" % [label, event_id.substr(0, min(10, event_id.length()))]
+		var chip := _make_chip_button(label, ResearchThemeScript.trace_type_color(str(link.get("eventType", ""))))
+		chip.tooltip_text = "%s\n%s" % [str(link.get("summary", "")), event_id]
+		chip.pressed.connect(_on_trace_source_link_pressed.bind(link))
+		current_row.add_child(chip)
+		row_chip_count += 1
+		if row_chip_count >= 2 and index < (links as Array).size() - 1:
+			current_row = HBoxContainer.new()
+			current_row.add_theme_constant_override("separation", 6)
+			_trace_details_box.add_child(current_row)
+			row_chip_count = 0
+
+
 func _value_to_text(value) -> String:
 	if value == null:
 		return "null"
@@ -1152,6 +1200,61 @@ func _value_to_text(value) -> String:
 func _select_latest_trace_detail() -> void:
 	var rows := _trace_events_for_filter()
 	_current_trace_detail_index = max(0, rows.size() - 1)
+
+
+func _select_trace_focus_or_latest(allow_filter_switch: bool = false) -> void:
+	var rows := _trace_events_for_filter()
+	if rows.is_empty():
+		_current_trace_detail_index = 0
+	var focus_event_id := str(_current_trace_focus.get("eventId", ""))
+	var focus_trace_id := str(_current_trace_focus.get("traceId", ""))
+	var requested = _current_trace_focus.get("requested", {})
+	if requested is Dictionary:
+		var requested_dict := requested as Dictionary
+		if focus_event_id == "":
+			focus_event_id = str(requested_dict.get("eventId", ""))
+		if focus_trace_id == "":
+			focus_trace_id = str(requested_dict.get("traceId", ""))
+	if allow_filter_switch and (focus_event_id != "" or focus_trace_id != ""):
+		var all_rows = _recent_trace_event_groups.get("all", [])
+		if all_rows is Array:
+			for item in all_rows as Array:
+				if not (item is Dictionary):
+					continue
+				var focus_entry := item as Dictionary
+				var entry_event_id := str(focus_entry.get("eventId", ""))
+				var entry_trace_id := str(focus_entry.get("traceId", ""))
+				if (focus_event_id != "" and entry_event_id == focus_event_id) or (focus_trace_id != "" and entry_trace_id == focus_trace_id):
+					_current_trace_filter = _trace_filter_for_event_type(_trace_event_type(focus_entry))
+					rows = _trace_events_for_filter()
+					break
+	if rows.is_empty():
+		_current_trace_detail_index = 0
+		return
+	if focus_event_id != "" or focus_trace_id != "":
+		for i in range(rows.size()):
+			if not (rows[i] is Dictionary):
+				continue
+			var entry := rows[i] as Dictionary
+			if focus_event_id != "" and str(entry.get("eventId", "")) == focus_event_id:
+				_current_trace_detail_index = i
+				return
+			if focus_trace_id != "" and str(entry.get("traceId", "")) == focus_trace_id:
+				_current_trace_detail_index = i
+				return
+	_select_latest_trace_detail()
+
+
+func _trace_copy_payload_for_current() -> Dictionary:
+	var rows := _trace_events_for_filter()
+	if rows.is_empty() or _current_trace_detail_index >= rows.size():
+		return {}
+	if not (rows[_current_trace_detail_index] is Dictionary):
+		return {}
+	var payload := (rows[_current_trace_detail_index] as Dictionary).duplicate(true)
+	if not _current_trace_focus.is_empty():
+		payload["traceFocus"] = _current_trace_focus.duplicate(true)
+	return payload
 
 
 func _update_trace_index_label(item_count: int) -> void:
@@ -1180,19 +1283,14 @@ func _on_trace_next_pressed() -> void:
 
 
 func _on_trace_copy_pressed() -> void:
-	var copy_details := _trace_copy_details_for_filter()
-	var rows := _trace_events_for_filter()
-	if copy_details.is_empty() and rows.is_empty():
+	var copy_payload := _trace_copy_payload_for_current()
+	if copy_payload.is_empty():
 		return
-	var copy_text := ""
-	if _current_trace_detail_index < copy_details.size():
-		copy_text = str(copy_details[_current_trace_detail_index])
-	elif _current_trace_detail_index < rows.size() and rows[_current_trace_detail_index] is Dictionary:
-		copy_text = JSON.stringify(rows[_current_trace_detail_index], "\t")
+	var copy_text := JSON.stringify(copy_payload, "\t")
 	if copy_text == "":
 		return
 	DisplayServer.clipboard_set(copy_text)
-	_set_phase2_status("已复制 trace detail")
+	_set_phase2_status("已复制当前 trace JSON")
 
 
 func _on_trace_row_pressed(entry: Dictionary, row_index: int) -> void:
@@ -1207,8 +1305,24 @@ func _on_trace_row_pressed(entry: Dictionary, row_index: int) -> void:
 		_hide_trace_details_popup()
 		_emit_highlight(_memory_observer_ids(entry), "memory observers")
 		return
+	if event_type in ["tool.execution_completed", "tool.execution_failed", "tool.execution_interrupted"]:
+		_hide_trace_details_popup()
+		_emit_highlight(_decision_trace_agent_ids(entry), "tool trace")
+		return
 	# 其它类型直接展开完整 JSON 弹层
 	_show_trace_details_popup(entry)
+
+
+func _on_trace_source_link_pressed(link: Dictionary) -> void:
+	var event_id := str(link.get("eventId", ""))
+	var trace_id := str(link.get("traceId", ""))
+	if event_id == "" and trace_id == "":
+		_set_phase2_status("source link 缺少 eventId / traceId")
+		return
+	_hide_trace_details_popup()
+	_emit_highlight(_source_link_agent_ids(link), "source trace")
+	trace_source_requested.emit(_current_npc_id, event_id, trace_id)
+	_set_phase2_status("跳转 source：%s" % (event_id if event_id != "" else trace_id))
 
 
 func _on_retry_pressed() -> void:
@@ -1437,6 +1551,13 @@ func _trace_copy_detail_group_dict(summary: Dictionary) -> Dictionary:
 	return _empty_filter_dict()
 
 
+func _trace_focus_dict(summary: Dictionary) -> Dictionary:
+	var focus = summary.get("traceFocus", {})
+	if focus is Dictionary:
+		return (focus as Dictionary).duplicate(true)
+	return {}
+
+
 func _trace_events_for_filter() -> Array:
 	var rows = _recent_trace_event_groups.get(_current_trace_filter, _recent_trace_event_groups.get("all", []))
 	if rows is Array:
@@ -1515,6 +1636,27 @@ func _trace_detail_hint(details) -> String:
 	return ""
 
 
+func _trace_source_badge(entry: Dictionary) -> String:
+	var links = entry.get("sourceLinks", [])
+	if links is Array and not (links as Array).is_empty():
+		return " [源]"
+	return ""
+
+
+func _trace_filter_for_event_type(event_type: String) -> String:
+	match event_type:
+		"motivation.decision_made":
+			return "decision"
+		"tool.execution_completed", "tool.execution_failed":
+			return "tool"
+		"tool.execution_interrupted":
+			return "interrupt"
+		"memory.result_observed":
+			return "memory"
+		_:
+			return "all"
+
+
 func _pretty_trace_type(event_type: String) -> String:
 	match event_type:
 		"motivation.decision_made":
@@ -1556,6 +1698,13 @@ func _memory_observer_ids(entry: Dictionary) -> Array:
 		_append_ids_from_value(ids, detail_dict.get("observers", null))
 	if ids.is_empty():
 		_append_ids_from_value(ids, entry.get("targetIds", null))
+	return _unique_ids(ids)
+
+
+func _source_link_agent_ids(link: Dictionary) -> Array:
+	var ids: Array = []
+	_append_ids_from_value(ids, link.get("agentId", null))
+	_append_ids_from_value(ids, link.get("targetIds", null))
 	return _unique_ids(ids)
 
 

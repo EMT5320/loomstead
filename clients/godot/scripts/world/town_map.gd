@@ -407,6 +407,9 @@ func _build_observer_panel() -> void:
 	if _observer_panel.has_signal("select_npc_requested"):
 		if not _observer_panel.select_npc_requested.is_connected(_on_observer_panel_select_npc_requested):
 			_observer_panel.select_npc_requested.connect(_on_observer_panel_select_npc_requested)
+	if _observer_panel.has_signal("trace_source_requested"):
+		if not _observer_panel.trace_source_requested.is_connected(_on_observer_panel_trace_source_requested):
+			_observer_panel.trace_source_requested.connect(_on_observer_panel_trace_source_requested)
 
 
 func _build_top_banner() -> void:
@@ -428,6 +431,15 @@ func _on_observer_panel_select_npc_requested(npc_id) -> void:
 	if trimmed == "":
 		return
 	_select_observer_npc(trimmed)
+
+
+func _on_observer_panel_trace_source_requested(npc_id, event_id, trace_id) -> void:
+	var trimmed_npc_id := str(npc_id).strip_edges()
+	if trimmed_npc_id == "":
+		trimmed_npc_id = _selected_observer_npc_id
+	if trimmed_npc_id == "":
+		return
+	_request_phase2_debug_for_observer(trimmed_npc_id, str(event_id).strip_edges(), str(trace_id).strip_edges())
 
 
 func _on_observer_panel_highlight_npcs_requested(npc_ids) -> void:
@@ -571,19 +583,20 @@ func _apply_cached_phase2_debug(npc_id: String) -> void:
 		_observer_panel.set_phase2_debug_summary(summary)
 
 
-func _request_phase2_debug_for_observer(npc_id: String) -> void:
+func _request_phase2_debug_for_observer(npc_id: String, focus_event_id: String = "", focus_trace_id: String = "") -> void:
 	if _observer_panel == null or _api_client == null:
 		return
 	if npc_id == "":
 		return
 	if bool(_observer_phase2_in_flight.get(npc_id, false)):
 		return
+	var has_focus := focus_event_id.strip_edges() != "" or focus_trace_id.strip_edges() != ""
 	var now_msec := Time.get_ticks_msec()
 	var last_request_msec := int(_observer_phase2_request_msec.get(npc_id, 0))
-	if now_msec - last_request_msec < OBSERVER_PHASE2_REQUEST_INTERVAL_MSEC:
+	if not has_focus and now_msec - last_request_msec < OBSERVER_PHASE2_REQUEST_INTERVAL_MSEC:
 		return
 	var cached = _observer_phase2_cache.get(npc_id, null)
-	if cached is Dictionary:
+	if not has_focus and cached is Dictionary:
 		var cached_dict := cached as Dictionary
 		var fetched_at := int(cached_dict.get("fetchedAtMsec", 0))
 		if fetched_at > 0 and now_msec - fetched_at <= OBSERVER_PHASE2_CACHE_MSEC:
@@ -592,15 +605,15 @@ func _request_phase2_debug_for_observer(npc_id: String) -> void:
 	_observer_phase2_in_flight[npc_id] = true
 	if _selected_observer_npc_id == npc_id and bool(_observer_panel.is_panel_visible()):
 		_observer_panel.show_phase2_loading()
-	call_deferred("_fetch_phase2_debug_for_observer", npc_id)
+	call_deferred("_fetch_phase2_debug_for_observer", npc_id, focus_event_id, focus_trace_id)
 
 
-func _fetch_phase2_debug_for_observer(npc_id: String) -> void:
-	await _fetch_phase2_debug_for_observer_async(npc_id)
+func _fetch_phase2_debug_for_observer(npc_id: String, focus_event_id: String = "", focus_trace_id: String = "") -> void:
+	await _fetch_phase2_debug_for_observer_async(npc_id, focus_event_id, focus_trace_id)
 
 
-func _fetch_phase2_debug_for_observer_async(npc_id: String) -> void:
-	var response := await _api_client.get_phase2_debug(npc_id)
+func _fetch_phase2_debug_for_observer_async(npc_id: String, focus_event_id: String = "", focus_trace_id: String = "") -> void:
+	var response := await _api_client.get_phase2_debug(npc_id, focus_event_id, focus_trace_id)
 	_observer_phase2_in_flight.erase(npc_id)
 	if not bool(response.get("ok", false)):
 		if _selected_observer_npc_id == npc_id and _observer_panel != null and bool(_observer_panel.is_panel_visible()):
@@ -612,10 +625,11 @@ func _fetch_phase2_debug_for_observer_async(npc_id: String) -> void:
 			_observer_panel.show_phase2_error("phase2 调试响应格式错误")
 		return
 	var summary := _build_phase2_observer_summary(payload as Dictionary)
-	_observer_phase2_cache[npc_id] = {
-		"fetchedAtMsec": Time.get_ticks_msec(),
-		"summary": summary,
-	}
+	if focus_event_id.strip_edges() == "" and focus_trace_id.strip_edges() == "":
+		_observer_phase2_cache[npc_id] = {
+			"fetchedAtMsec": Time.get_ticks_msec(),
+			"summary": summary,
+		}
 	if _selected_observer_npc_id == npc_id and _observer_panel != null and bool(_observer_panel.is_panel_visible()):
 		_observer_panel.set_phase2_debug_summary(summary)
 
@@ -636,6 +650,7 @@ func _build_phase2_observer_summary(payload: Dictionary) -> Dictionary:
 		"recentTraceDetailGroups": _build_phase2_trace_detail_groups(payload.get("recentTraceEvents", [])),
 		"recentTraceCopyDetailGroups": _build_phase2_trace_copy_detail_groups(payload.get("recentTraceEvents", [])),
 		"recentTraceDetails": _summarize_phase2_trace_details(payload.get("recentTraceEvents", [])),
+		"traceFocus": payload.get("traceFocus", {}),
 	}
 
 
