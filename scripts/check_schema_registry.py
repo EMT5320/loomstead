@@ -29,6 +29,7 @@ REQUIRED_DEFINITION_FIELDS = {
 
 def main() -> None:
     sys.path.insert(0, str(ROOT / "backend"))
+    from app.main import create_town_app  # noqa: PLC0415
     from app.runtime.schema_registry import (  # noqa: PLC0415
         SCHEMA_DEFINITIONS,
         SCHEMA_REGISTRY_VERSION,
@@ -36,6 +37,7 @@ def main() -> None:
         schema_registry_snapshot,
         schema_version_map,
     )
+    from app.runtime.trace_schema import build_trace_envelope, with_trace_payload, world_time_payload  # noqa: PLC0415
 
     errors: list[str] = []
     warnings: list[str] = []
@@ -49,6 +51,16 @@ def main() -> None:
         errors,
     )
     _check_source_usage(SCHEMA_DEFINITIONS, errors, warnings)
+    _check_phase2_debug_contract(
+        app=create_town_app(provider_mode="rule"),
+        definitions=SCHEMA_DEFINITIONS,
+        registry_version=SCHEMA_REGISTRY_VERSION,
+        versions=schema_version_map(),
+        build_trace_envelope_fn=build_trace_envelope,
+        with_trace_payload_fn=with_trace_payload,
+        world_time_payload_fn=world_time_payload,
+        errors=errors,
+    )
 
     result = {
         "ok": not errors,
@@ -115,10 +127,86 @@ def _check_snapshot_schema(index: int, schema: Any, errors: list[str]) -> None:
     missing = sorted(REQUIRED_DEFINITION_FIELDS - set(schema))
     if missing:
         errors.append(f"schemas[{index}] 缺少字段：{missing}")
+    if not isinstance(schema.get("id"), str) or not schema.get("id"):
+        errors.append(f"schemas[{index}].id 应为非空字符串")
+    if not isinstance(schema.get("version"), str) or not schema.get("version"):
+        errors.append(f"schemas[{index}].version 应为非空字符串")
+    if not isinstance(schema.get("description"), str) or not schema.get("description"):
+        errors.append(f"schemas[{index}].description 应为非空字符串")
     if not isinstance(schema.get("requiredFields"), list) or not schema.get("requiredFields"):
         errors.append(f"schemas[{index}].requiredFields 应为非空数组")
+    elif not all(isinstance(field, str) and field for field in schema.get("requiredFields", [])):
+        errors.append(f"schemas[{index}].requiredFields 只能包含非空字符串")
     if not isinstance(schema.get("notes"), list):
         errors.append(f"schemas[{index}].notes 应为数组")
+
+
+def _check_phase2_debug_contract(
+    *,
+    app: Any,
+    definitions: dict[str, Any],
+    registry_version: str,
+    versions: dict[str, str],
+    build_trace_envelope_fn: Any,
+    with_trace_payload_fn: Any,
+    world_time_payload_fn: Any,
+    errors: list[str],
+) -> None:
+    """验证 /api/debug.phase2 与 schema registry 的实时对齐，防止 Debug 输出契约漂移。"""
+    runtime = getattr(app, "runtime", None)
+    if runtime is None:
+        errors.append("create_town_app 未返回可用 runtime，无法校验 /api/debug.phase2")
+        return
+
+    probe_trace = build_trace_envelope_fn(
+        event_type="schema.contract_probe",
+        summary="schema registry contract probe",
+        world_time=world_time_payload_fn(runtime.world),
+        agent_id="kai",
+    )
+    probe_payload = with_trace_payload_fn({"reason": "schema registry contract probe"}, probe_trace)
+    runtime.event_store.append("schema.contract_probe", probe_payload)
+
+    phase2 = app.debug_phase2({"eventType": "schema.contract_probe", "limit": "5"})
+    if not isinstance(phase2, dict):
+        errors.append("/api/debug.phase2 应返回对象")
+        return
+
+    for field in ("traceSchemaVersion", "schemaRegistry", "recentTraceEvents"):
+        if field not in phase2:
+            errors.append(f"/api/debug.phase2 缺少字段：{field}")
+    if phase2.get("traceSchemaVersion") != versions.get("phase2_trace"):
+        errors.append("/api/debug.phase2.traceSchemaVersion 与 schema registry 不一致")
+
+    live_registry = phase2.get("schemaRegistry")
+    if not isinstance(live_registry, dict):
+        errors.append("/api/debug.phase2.schemaRegistry 应为对象")
+    else:
+        if live_registry.get("registryVersion") != registry_version:
+            errors.append("/api/debug.phase2.schemaRegistry.registryVersion 与 SCHEMA_REGISTRY_VERSION 不一致")
+        if live_registry.get("versions") != versions:
+            errors.append("/api/debug.phase2.schemaRegistry.versions 与 schema_version_map 不一致")
+
+    trace_events = phase2.get("recentTraceEvents")
+    if not isinstance(trace_events, list) or not trace_events:
+        errors.append("/api/debug.phase2.recentTraceEvents 应返回至少一条 trace 事件")
+        return
+    probe_event = trace_events[-1] if isinstance(trace_events[-1], dict) else None
+    if not isinstance(probe_event, dict):
+        errors.append("/api/debug.phase2.recentTraceEvents 条目应为对象")
+        return
+
+    definition = definitions.get("phase2_trace")
+    required_fields = list(getattr(definition, "required_fields", ()))
+    missing_fields = [field for field in required_fields if field not in probe_event]
+    if missing_fields:
+        errors.append(f"/api/debug.phase2.recentTraceEvents 条目缺少 phase2_trace 字段：{missing_fields}")
+    if probe_event.get("traceSchemaVersion") != versions.get("phase2_trace"):
+        errors.append("/api/debug.phase2.recentTraceEvents.traceSchemaVersion 与 schema registry 不一致")
+    if not isinstance(probe_event.get("details"), dict):
+        errors.append("/api/debug.phase2.recentTraceEvents.details 应稳定返回对象")
+    elif probe_event.get("eventType") == "schema.contract_probe" and probe_event.get("details") != {}:
+        errors.append("/api/debug.phase2.recentTraceEvents.details 对未知事件应回退为空对象")
 
 
 def _check_source_usage(definitions: dict[str, Any], errors: list[str], warnings: list[str]) -> None:

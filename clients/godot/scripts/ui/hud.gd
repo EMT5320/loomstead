@@ -30,22 +30,22 @@ func _ready() -> void:
 func _build_panel() -> void:
 	var panel := PanelContainer.new()
 	panel.name = "HudPanel"
-	panel.offset_left = 16.0
-	panel.offset_top = 16.0
-	panel.offset_right = 296.0
-	panel.offset_bottom = 168.0
+	panel.offset_left = ResearchThemeScript.scale_px(16.0)
+	panel.offset_top = ResearchThemeScript.scale_px(16.0)
+	panel.offset_right = ResearchThemeScript.scale_px(332.0)
+	panel.offset_bottom = ResearchThemeScript.scale_px(194.0)
 	panel.add_theme_stylebox_override("panel", ResearchThemeScript.make_panel_style())
 	add_child(panel)
 
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 14)
-	margin.add_theme_constant_override("margin_right", 14)
-	margin.add_theme_constant_override("margin_top", 10)
-	margin.add_theme_constant_override("margin_bottom", 12)
+	margin.add_theme_constant_override("margin_left", int(round(ResearchThemeScript.scale_px(14.0))))
+	margin.add_theme_constant_override("margin_right", int(round(ResearchThemeScript.scale_px(14.0))))
+	margin.add_theme_constant_override("margin_top", int(round(ResearchThemeScript.scale_px(10.0))))
+	margin.add_theme_constant_override("margin_bottom", int(round(ResearchThemeScript.scale_px(12.0))))
 	panel.add_child(margin)
 
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 6)
+	column.add_theme_constant_override("separation", int(round(ResearchThemeScript.scale_px(6.0))))
 	margin.add_child(column)
 
 	_clock_label = Label.new()
@@ -69,11 +69,11 @@ func _build_panel() -> void:
 	column.add_child(ResearchThemeScript.make_separator())
 
 	var status_row := HBoxContainer.new()
-	status_row.add_theme_constant_override("separation", 8)
+	status_row.add_theme_constant_override("separation", int(round(ResearchThemeScript.scale_px(8.0))))
 	column.add_child(status_row)
 	_status_dot = ColorRect.new()
 	_status_dot.color = ResearchThemeScript.COLOR_STATUS_OK
-	_status_dot.custom_minimum_size = Vector2(10, 10)
+	_status_dot.custom_minimum_size = Vector2(ResearchThemeScript.scale_px(10.0), ResearchThemeScript.scale_px(10.0))
 	_status_dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	status_row.add_child(_status_dot)
 	_status_label = Label.new()
@@ -87,7 +87,7 @@ func _build_panel() -> void:
 	status_row.add_child(_status_label)
 
 	var control_row := HBoxContainer.new()
-	control_row.add_theme_constant_override("separation", 6)
+	control_row.add_theme_constant_override("separation", int(round(ResearchThemeScript.scale_px(6.0))))
 	column.add_child(control_row)
 
 	_pause_button = Button.new()

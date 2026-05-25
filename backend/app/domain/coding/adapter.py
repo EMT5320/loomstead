@@ -179,6 +179,13 @@ class CodingDomainAdapter:
                     "predicate": "single-file partial patch replay still fails the repo tests",
                 },
             )
+            required_process.insert(
+                7,
+                {
+                    "id": "dependency_evidence_chain_confirmed",
+                    "predicate": "review report links pre/partial/post test evidence with command and exitCode",
+                },
+            )
         if goal_id == REVIEWER_DISAGREEMENT_GOAL_ID:
             required_process.insert(
                 5,
@@ -360,6 +367,46 @@ class CodingDomainAdapter:
             and report.get("execution", {}).get("exitCode") not in (None, 0)
             for report in partial_reports
         )
+        dependency_evidence_chain = (
+            review_report.get("dependencyEvidenceChain", {})
+            if isinstance(review_report.get("dependencyEvidenceChain"), dict)
+            else {}
+        )
+        dependency_chain_pre = (
+            dependency_evidence_chain.get("prePatch", {})
+            if isinstance(dependency_evidence_chain.get("prePatch"), dict)
+            else {}
+        )
+        dependency_chain_post = (
+            dependency_evidence_chain.get("postPatch", {})
+            if isinstance(dependency_evidence_chain.get("postPatch"), dict)
+            else {}
+        )
+        dependency_chain_partials = (
+            dependency_evidence_chain.get("partialPatchFailures", [])
+            if isinstance(dependency_evidence_chain.get("partialPatchFailures"), list)
+            else []
+        )
+        dependency_chain_confirmed = bool(dependency_evidence_chain) and all(
+            (
+                bool(dependency_chain_pre.get("testRunner")),
+                bool(dependency_chain_pre.get("command")),
+                dependency_chain_pre.get("exitCode") not in (None, 0),
+                bool(dependency_chain_post.get("testRunner")),
+                bool(dependency_chain_post.get("command")),
+                dependency_chain_post.get("exitCode") == 0,
+                bool(dependency_chain_partials),
+                all(
+                    isinstance(item, dict)
+                    and bool(item.get("testRunner"))
+                    and bool(item.get("command"))
+                    and item.get("exitCode") not in (None, 0)
+                    for item in dependency_chain_partials
+                ),
+                bool(dependency_evidence_chain.get("allExpectedFailuresObserved")),
+                bool(dependency_evidence_chain.get("consistentRunner")),
+            )
+        )
         reviewer_evaluations = (
             review_report.get("reviewerEvaluations", [])
             if isinstance(review_report.get("reviewerEvaluations"), list)
@@ -404,6 +451,7 @@ class CodingDomainAdapter:
             and len(source_changed_files) >= 2
             and bool(dependency_evidence.get("importGraph")),
             "single_file_patch_still_fails": single_file_patch_still_fails,
+            "dependency_evidence_chain_confirmed": dependency_chain_confirmed,
             "external_repo_checkout_tested": "coding.tests_executed" in event_types
             and bool(test_report.get("passed"))
             and test_report.get("testPhase") == "post_patch"
@@ -661,6 +709,12 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
         )
         if repo_fixture.get("requiresSingleFileFailureEvidence"):
             partial_reports = _run_single_file_partial_patch_reports(artifact, repo_fixture)
+            for report in partial_reports.values():
+                if isinstance(report, dict):
+                    report["sourceEventIds"] = [_event_id(diff_event)]
+                    report["sourcePostPatchTestReportId"] = test_report["testReportId"]
+                    report["sourcePrePatchTestReportId"] = repo_fixture.get("prePatchTestReportId")
+                    report["sha256"] = _stable_digest(json.dumps(report, ensure_ascii=False, sort_keys=True))
             world.setdefault("partialPatchTestReports", {}).update(partial_reports)
             failing_report_ids = [
                 report_id
@@ -765,6 +819,23 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
                     and len(partial_failures) == len(partial_patch_reports),
                 },
             )
+            dependency_chain = _build_dependency_evidence_chain(
+                pre_patch_report=pre_patch_report if isinstance(pre_patch_report, dict) else {},
+                post_patch_report=test_report if isinstance(test_report, dict) else {},
+                partial_patch_reports=partial_patch_reports,
+            )
+            checklist.insert(
+                4,
+                {
+                    "id": "dependency_evidence_chain_confirmed",
+                    "passed": bool(dependency_chain.get("allExpectedFailuresObserved"))
+                    and bool(dependency_chain.get("consistentRunner"))
+                    and dependency_chain.get("prePatch", {}).get("exitCode") not in (None, 0)
+                    and dependency_chain.get("postPatch", {}).get("exitCode") == 0,
+                },
+            )
+        else:
+            dependency_chain = {}
         cited_memory_ids = ["prior_failure.skip_tests"]
         if requires_pre_patch:
             cited_memory_ids.append("prior_failure.failing_test_first")
@@ -832,6 +903,8 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
                 "eventId": _event_id(conflict_event),
                 "finalDecision": review_report["status"],
             }
+        if dependency_chain:
+            review_report["dependencyEvidenceChain"] = dependency_chain
         review_report["sha256"] = _stable_digest(json.dumps(review_report, ensure_ascii=False, sort_keys=True))
         world.setdefault("reviewReports", {})[review_report_id] = review_report
         emitted.append(
@@ -1455,6 +1528,55 @@ def _run_single_file_partial_patch_reports(
         report["sha256"] = _stable_digest(json.dumps(report, ensure_ascii=False, sort_keys=True))
         reports[report_id] = report
     return reports
+
+
+def _build_dependency_evidence_chain(
+    *,
+    pre_patch_report: dict[str, Any],
+    post_patch_report: dict[str, Any],
+    partial_patch_reports: dict[str, Any],
+) -> dict[str, Any]:
+    """聚合依赖修复场景的 pre/partial/post 证据链，便于 review 一次性复核关键字段。"""
+    partial_rows: list[dict[str, Any]] = []
+    for report_id, report in sorted(partial_patch_reports.items()):
+        if not isinstance(report, dict):
+            continue
+        partial_rows.append(
+            {
+                "testReportId": report_id,
+                "patchedFile": report.get("patchedFile"),
+                "testRunner": report.get("testRunner"),
+                "command": report.get("command"),
+                "exitCode": report.get("exitCode"),
+                "failureObserved": bool(report.get("failureObserved")),
+                "sha256": report.get("sha256"),
+            }
+        )
+    evidence = {
+        "prePatch": {
+            "testReportId": pre_patch_report.get("testReportId"),
+            "testRunner": pre_patch_report.get("testRunner"),
+            "command": pre_patch_report.get("command"),
+            "exitCode": pre_patch_report.get("exitCode"),
+            "sha256": pre_patch_report.get("sha256"),
+        },
+        "postPatch": {
+            "testReportId": post_patch_report.get("testReportId"),
+            "testRunner": post_patch_report.get("testRunner"),
+            "command": post_patch_report.get("command"),
+            "exitCode": post_patch_report.get("exitCode"),
+            "sha256": post_patch_report.get("sha256"),
+        },
+        "partialPatchFailures": partial_rows,
+    }
+    all_reports = [evidence["prePatch"], evidence["postPatch"], *partial_rows]
+    runners = {str(item.get("testRunner") or "") for item in all_reports if isinstance(item, dict)}
+    evidence["consistentRunner"] = len(runners) == 1 and bool(next(iter(runners), ""))
+    evidence["allExpectedFailuresObserved"] = bool(partial_rows) and all(
+        bool(item.get("failureObserved")) and item.get("exitCode") not in (None, 0)
+        for item in partial_rows
+    )
+    return evidence
 
 
 def _build_rule_reviewer_evaluations(

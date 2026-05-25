@@ -36,6 +36,8 @@ const FONT_SIZE_SUBTITLE := 15
 const FONT_SIZE_BODY := 13
 const FONT_SIZE_SMALL := 11
 const FONT_SIZE_CHIP := 11
+const FONT_SCALE := 1.18
+const LAYOUT_SCALE := 1.08
 
 const PANEL_CORNER_RADIUS := 14
 const CARD_CORNER_RADIUS := 10
@@ -43,6 +45,14 @@ const CHIP_CORNER_RADIUS := 8
 
 # 系统字体缓存，跨实例复用避免重复创建。
 static var _system_font_cache: Font = null
+
+
+static func scale_px(value: float) -> float:
+	return value * LAYOUT_SCALE
+
+
+static func scaled_size(value: int) -> int:
+	return max(10, int(round(float(value) * FONT_SCALE)))
 
 
 static func get_system_font() -> Font:
@@ -78,11 +88,11 @@ static func make_panel_style(
 	style.set_border_width_all(border_width)
 	style.set_corner_radius_all(corner)
 	style.shadow_color = Color(0.0, 0.0, 0.0, 0.45)
-	style.shadow_size = 10
-	style.content_margin_left = 12
-	style.content_margin_right = 12
-	style.content_margin_top = 10
-	style.content_margin_bottom = 10
+	style.shadow_size = int(round(scale_px(10.0)))
+	style.content_margin_left = int(round(scale_px(12.0)))
+	style.content_margin_right = int(round(scale_px(12.0)))
+	style.content_margin_top = int(round(scale_px(10.0)))
+	style.content_margin_bottom = int(round(scale_px(10.0)))
 	return style
 
 
@@ -92,10 +102,10 @@ static func make_card_style(accent_color: Color = COLOR_BORDER_SOFT) -> StyleBox
 	style.border_color = accent_color
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(CARD_CORNER_RADIUS)
-	style.content_margin_left = 12
-	style.content_margin_right = 12
-	style.content_margin_top = 10
-	style.content_margin_bottom = 10
+	style.content_margin_left = int(round(scale_px(12.0)))
+	style.content_margin_right = int(round(scale_px(12.0)))
+	style.content_margin_top = int(round(scale_px(10.0)))
+	style.content_margin_bottom = int(round(scale_px(10.0)))
 	return style
 
 
@@ -105,10 +115,10 @@ static func make_chip_style(accent_color: Color = COLOR_BORDER_SOFT) -> StyleBox
 	style.border_color = accent_color
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(CHIP_CORNER_RADIUS)
-	style.content_margin_left = 8
-	style.content_margin_right = 8
-	style.content_margin_top = 3
-	style.content_margin_bottom = 3
+	style.content_margin_left = int(round(scale_px(8.0)))
+	style.content_margin_right = int(round(scale_px(8.0)))
+	style.content_margin_top = int(round(scale_px(3.0)))
+	style.content_margin_bottom = int(round(scale_px(3.0)))
 	return style
 
 
@@ -123,10 +133,10 @@ static func make_tab_style(active: bool) -> StyleBoxFlat:
 	style.set_border_width_all(1)
 	style.border_width_bottom = 2 if active else 1
 	style.set_corner_radius_all(8)
-	style.content_margin_left = 10
-	style.content_margin_right = 10
-	style.content_margin_top = 5
-	style.content_margin_bottom = 5
+	style.content_margin_left = int(round(scale_px(10.0)))
+	style.content_margin_right = int(round(scale_px(10.0)))
+	style.content_margin_top = int(round(scale_px(5.0)))
+	style.content_margin_bottom = int(round(scale_px(5.0)))
 	return style
 
 
@@ -137,7 +147,7 @@ static func apply_label_style(
 	shadow: bool = false
 ) -> void:
 	label.add_theme_font_override("font", get_system_font())
-	label.add_theme_font_size_override("font_size", font_size)
+	label.add_theme_font_size_override("font_size", scaled_size(font_size))
 	label.add_theme_color_override("font_color", color)
 	if shadow:
 		label.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.88))
@@ -147,7 +157,7 @@ static func apply_label_style(
 
 static func apply_button_style(button: BaseButton, font_size: int = FONT_SIZE_BODY) -> void:
 	button.add_theme_font_override("font", get_system_font())
-	button.add_theme_font_size_override("font_size", font_size)
+	button.add_theme_font_size_override("font_size", scaled_size(font_size))
 	button.add_theme_color_override("font_color", COLOR_TEXT_PRIMARY)
 	button.add_theme_color_override("font_hover_color", COLOR_ACCENT)
 	button.add_theme_color_override("font_pressed_color", COLOR_ACCENT)
@@ -173,10 +183,10 @@ static func _make_button_box(pressed: bool) -> StyleBoxFlat:
 	box.border_color = COLOR_ACCENT if pressed else COLOR_BORDER_SOFT
 	box.set_border_width_all(1)
 	box.set_corner_radius_all(8)
-	box.content_margin_left = 10
-	box.content_margin_right = 10
-	box.content_margin_top = 4
-	box.content_margin_bottom = 4
+	box.content_margin_left = int(round(scale_px(10.0)))
+	box.content_margin_right = int(round(scale_px(10.0)))
+	box.content_margin_top = int(round(scale_px(4.0)))
+	box.content_margin_bottom = int(round(scale_px(4.0)))
 	return box
 
 
@@ -217,7 +227,7 @@ static func contributing_source_color(source_type: String) -> Color:
 static func make_separator(color: Color = COLOR_BORDER_SOFT, height: int = 1) -> Control:
 	var rect := ColorRect.new()
 	rect.color = color
-	rect.custom_minimum_size = Vector2(0, height)
+	rect.custom_minimum_size = Vector2(0, max(1, int(round(scale_px(float(height))))))
 	rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return rect

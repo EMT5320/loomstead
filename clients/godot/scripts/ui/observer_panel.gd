@@ -44,6 +44,9 @@ const TAB_PULSE := 0
 const TAB_INSPECTOR := 1
 const TAB_TRACE := 2
 const MEMORY_CARD_TOP_N := 4
+const TAB_SCROLL_BOTTOM_PADDING := 40.0
+const PULSE_NPC_ROW_MIN_HEIGHT := 84.0
+const PULSE_NPC_NAME_MIN_WIDTH := 134.0
 
 var _panel: PanelContainer
 var _tab_buttons: Array[Button] = []
@@ -248,23 +251,27 @@ func _build_panel() -> void:
 	_panel.anchor_top = 0.0
 	_panel.anchor_right = 1.0
 	_panel.anchor_bottom = 1.0
-	_panel.offset_left = -476.0
+	_panel.offset_left = -520.0
 	_panel.offset_top = 16.0
 	_panel.offset_right = -16.0
-	_panel.offset_bottom = -260.0
+	_panel.offset_bottom = -236.0
 	_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	_panel.add_theme_stylebox_override("panel", ResearchThemeScript.make_panel_style())
 	add_child(_panel)
 
 	var root_margin := MarginContainer.new()
-	root_margin.add_theme_constant_override("margin_left", 14)
-	root_margin.add_theme_constant_override("margin_right", 14)
-	root_margin.add_theme_constant_override("margin_top", 12)
-	root_margin.add_theme_constant_override("margin_bottom", 12)
+	root_margin.add_theme_constant_override("margin_left", int(round(ResearchThemeScript.scale_px(14.0))))
+	root_margin.add_theme_constant_override("margin_right", int(round(ResearchThemeScript.scale_px(14.0))))
+	root_margin.add_theme_constant_override("margin_top", int(round(ResearchThemeScript.scale_px(12.0))))
+	root_margin.add_theme_constant_override("margin_bottom", int(round(ResearchThemeScript.scale_px(12.0))))
+	root_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	root_margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_panel.add_child(root_margin)
 
 	var root_vbox := VBoxContainer.new()
-	root_vbox.add_theme_constant_override("separation", 10)
+	root_vbox.add_theme_constant_override("separation", int(round(ResearchThemeScript.scale_px(10.0))))
+	root_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	root_vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root_margin.add_child(root_vbox)
 
 	_build_header(root_vbox)
@@ -272,6 +279,23 @@ func _build_panel() -> void:
 	_build_tab_pages(root_vbox)
 	_build_trace_detail_popup()
 	_switch_tab(TAB_PULSE)
+
+
+func _setup_tab_scroll(scroll: ScrollContainer, content: VBoxContainer) -> void:
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.add_child(content)
+
+
+func _append_tab_bottom_padding(content: VBoxContainer) -> void:
+	var spacer := Control.new()
+	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	spacer.custom_minimum_size = Vector2(0.0, ResearchThemeScript.scale_px(TAB_SCROLL_BOTTOM_PADDING))
+	content.add_child(spacer)
 
 
 func _build_header(parent: VBoxContainer) -> void:
@@ -338,11 +362,9 @@ func _build_tab_pages(parent: VBoxContainer) -> void:
 
 func _build_pulse_tab() -> Control:
 	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var page_vbox := VBoxContainer.new()
 	page_vbox.add_theme_constant_override("separation", 10)
-	page_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(page_vbox)
+	_setup_tab_scroll(scroll, page_vbox)
 
 	# 时钟卡
 	var clock_card := _make_card("世界时钟")
@@ -363,10 +385,11 @@ func _build_pulse_tab() -> Control:
 	# NPC 一览卡
 	var npc_card := _make_card("NPC 一览（点击切到 Inspector）")
 	_pulse_npc_list = VBoxContainer.new()
-	_pulse_npc_list.add_theme_constant_override("separation", 5)
+	_pulse_npc_list.add_theme_constant_override("separation", 8)
 	npc_card.body.add_child(_pulse_npc_list)
 	page_vbox.add_child(npc_card.root)
 
+	_append_tab_bottom_padding(page_vbox)
 	return scroll
 
 
@@ -455,12 +478,14 @@ func _build_pulse_npc_row(entry: Dictionary) -> Button:
 	var button := Button.new()
 	button.focus_mode = Control.FOCUS_NONE
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.custom_minimum_size = Vector2(0.0, ResearchThemeScript.scale_px(PULSE_NPC_ROW_MIN_HEIGHT))
 	button.toggle_mode = false
 	button.text = ""
 	ResearchThemeScript.apply_button_style(button, ResearchThemeScript.FONT_SIZE_BODY)
-	# 自定义内部 HBox 让 Button 显示富文本布局。
-	var inner := HBoxContainer.new()
-	inner.add_theme_constant_override("separation", 8)
+
+	# 双层布局：第一行显示 NPC 与地点，第二行显示状态，非全屏也能完整阅读 6 个 NPC。
+	var inner := VBoxContainer.new()
+	inner.add_theme_constant_override("separation", 4)
 	inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	inner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.add_child(inner)
@@ -469,26 +494,36 @@ func _build_pulse_npc_row(entry: Dictionary) -> Button:
 	inner.anchor_top = 0.0
 	inner.anchor_right = 1.0
 	inner.anchor_bottom = 1.0
-	inner.offset_left = 6
-	inner.offset_right = -6
-	inner.offset_top = 2
-	inner.offset_bottom = -2
+	inner.offset_left = 8
+	inner.offset_right = -8
+	inner.offset_top = 6
+	inner.offset_bottom = -6
+	var head_row := HBoxContainer.new()
+	head_row.add_theme_constant_override("separation", 8)
+	inner.add_child(head_row)
 	var dot := _make_dot(accent_color, 10)
-	inner.add_child(dot)
+	head_row.add_child(dot)
 	var name_label := Label.new()
 	name_label.text = npc_name
-	name_label.custom_minimum_size = Vector2(110, 0)
+	name_label.custom_minimum_size = Vector2(ResearchThemeScript.scale_px(PULSE_NPC_NAME_MIN_WIDTH), 0)
+	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	ResearchThemeScript.apply_label_style(name_label, ResearchThemeScript.FONT_SIZE_BODY, ResearchThemeScript.COLOR_TEXT_PRIMARY)
-	inner.add_child(name_label)
-	var status_label := Label.new()
-	status_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	status_label.text = status if status != "" else "—"
-	status_label.clip_text = true
-	ResearchThemeScript.apply_label_style(status_label, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_MUTED)
-	inner.add_child(status_label)
+	head_row.add_child(name_label)
+	var filler := Control.new()
+	filler.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	filler.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	head_row.add_child(filler)
 	if location != "":
 		var loc_chip := _make_chip(_pretty_location(location), ResearchThemeScript.COLOR_BORDER_SOFT)
-		inner.add_child(loc_chip)
+		head_row.add_child(loc_chip)
+	var status_label := Label.new()
+	status_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	status_label.text = status if status != "" else "—"
+	status_label.max_lines_visible = 3
+	ResearchThemeScript.apply_label_style(status_label, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_MUTED)
+	inner.add_child(status_label)
 	if npc_id != "":
 		button.pressed.connect(func(): select_npc_requested.emit(npc_id))
 	return button
@@ -500,11 +535,9 @@ func _build_pulse_npc_row(entry: Dictionary) -> Button:
 
 func _build_inspector_tab() -> Control:
 	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 10)
-	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(vbox)
+	_setup_tab_scroll(scroll, vbox)
 
 	# 身份卡
 	var identity_card := _make_card("身份")
@@ -607,6 +640,7 @@ func _build_inspector_tab() -> Control:
 	heuristic_card.body.add_child(_heuristic_list)
 	vbox.add_child(heuristic_card.root)
 
+	_append_tab_bottom_padding(vbox)
 	return scroll
 
 
@@ -863,11 +897,9 @@ func _build_heuristic_row(entry: Dictionary) -> Control:
 
 func _build_trace_tab() -> Control:
 	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 10)
-	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(vbox)
+	_setup_tab_scroll(scroll, vbox)
 
 	# 过滤 + 分页 + 复制条
 	var control_card := _make_card("traceFilter（1-5 切换）")
@@ -941,6 +973,7 @@ func _build_trace_tab() -> Control:
 	vbox.add_child(details_card.root)
 
 	_update_trace_filter_button_states()
+	_append_tab_bottom_padding(vbox)
 	return scroll
 
 
@@ -1025,7 +1058,7 @@ func _build_trace_row_button(entry: Dictionary, row_index: int) -> Button:
 	button.add_theme_color_override("font_color", color)
 	button.add_theme_color_override("font_hover_color", color)
 	button.add_theme_font_override("font", ResearchThemeScript.get_system_font())
-	button.add_theme_font_size_override("font_size", ResearchThemeScript.FONT_SIZE_BODY)
+	button.add_theme_font_size_override("font_size", ResearchThemeScript.scaled_size(ResearchThemeScript.FONT_SIZE_BODY))
 	# Trace 行使用极简 stylebox，避免按钮厚边压挤行高。
 	var row_box := StyleBoxFlat.new()
 	row_box.bg_color = Color(0.0, 0.0, 0.0, 0.12) if row_index != _current_trace_detail_index else Color(color.r, color.g, color.b, 0.20)
@@ -1295,20 +1328,20 @@ func _make_card(title_text: String) -> Dictionary:
 	var card := PanelContainer.new()
 	card.add_theme_stylebox_override("panel", ResearchThemeScript.make_card_style())
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 12)
-	margin.add_theme_constant_override("margin_right", 12)
-	margin.add_theme_constant_override("margin_top", 10)
-	margin.add_theme_constant_override("margin_bottom", 10)
+	margin.add_theme_constant_override("margin_left", int(round(ResearchThemeScript.scale_px(12.0))))
+	margin.add_theme_constant_override("margin_right", int(round(ResearchThemeScript.scale_px(12.0))))
+	margin.add_theme_constant_override("margin_top", int(round(ResearchThemeScript.scale_px(10.0))))
+	margin.add_theme_constant_override("margin_bottom", int(round(ResearchThemeScript.scale_px(10.0))))
 	card.add_child(margin)
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 6)
+	column.add_theme_constant_override("separation", int(round(ResearchThemeScript.scale_px(6.0))))
 	margin.add_child(column)
 	var title := Label.new()
 	title.text = title_text
 	ResearchThemeScript.apply_label_style(title, ResearchThemeScript.FONT_SIZE_SUBTITLE, ResearchThemeScript.COLOR_TEXT_TITLE)
 	column.add_child(title)
 	var body := VBoxContainer.new()
-	body.add_theme_constant_override("separation", 6)
+	body.add_theme_constant_override("separation", int(round(ResearchThemeScript.scale_px(6.0))))
 	column.add_child(body)
 	return {"root": card, "body": body}
 
@@ -1328,7 +1361,7 @@ func _make_chip_button(text: String, accent: Color) -> Button:
 	button.text = text
 	button.focus_mode = Control.FOCUS_NONE
 	button.add_theme_font_override("font", ResearchThemeScript.get_system_font())
-	button.add_theme_font_size_override("font_size", ResearchThemeScript.FONT_SIZE_CHIP)
+	button.add_theme_font_size_override("font_size", ResearchThemeScript.scaled_size(ResearchThemeScript.FONT_SIZE_CHIP))
 	button.add_theme_color_override("font_color", accent)
 	button.add_theme_color_override("font_hover_color", ResearchThemeScript.COLOR_TEXT_PRIMARY)
 	var style := ResearchThemeScript.make_chip_style(accent)

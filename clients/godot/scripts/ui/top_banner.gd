@@ -57,29 +57,29 @@ func _build_panel() -> void:
 	_panel.anchor_top = 0.0
 	_panel.anchor_right = 0.5
 	_panel.anchor_bottom = 0.0
-	_panel.offset_left = -490.0
-	_panel.offset_top = 16.0
-	_panel.offset_right = 490.0
-	_panel.offset_bottom = 70.0
+	_panel.offset_left = -ResearchThemeScript.scale_px(540.0)
+	_panel.offset_top = ResearchThemeScript.scale_px(16.0)
+	_panel.offset_right = ResearchThemeScript.scale_px(540.0)
+	_panel.offset_bottom = ResearchThemeScript.scale_px(78.0)
 	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_panel.add_theme_stylebox_override("panel", ResearchThemeScript.make_panel_style())
 	add_child(_panel)
 
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 16)
-	margin.add_theme_constant_override("margin_right", 16)
-	margin.add_theme_constant_override("margin_top", 6)
-	margin.add_theme_constant_override("margin_bottom", 6)
+	margin.add_theme_constant_override("margin_left", int(round(ResearchThemeScript.scale_px(16.0))))
+	margin.add_theme_constant_override("margin_right", int(round(ResearchThemeScript.scale_px(16.0))))
+	margin.add_theme_constant_override("margin_top", int(round(ResearchThemeScript.scale_px(6.0))))
+	margin.add_theme_constant_override("margin_bottom", int(round(ResearchThemeScript.scale_px(6.0))))
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_panel.add_child(margin)
 
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
+	row.add_theme_constant_override("separation", int(round(ResearchThemeScript.scale_px(12.0))))
 	row.alignment = BoxContainer.ALIGNMENT_BEGIN
 	margin.add_child(row)
 
 	_stage_label = Label.new()
-	_stage_label.custom_minimum_size = Vector2(180, 0)
+	_stage_label.custom_minimum_size = Vector2(ResearchThemeScript.scale_px(210.0), 0)
 	ResearchThemeScript.apply_label_style(
 		_stage_label,
 		ResearchThemeScript.FONT_SIZE_SUBTITLE,
@@ -104,7 +104,7 @@ func _build_panel() -> void:
 	row.add_child(_remote_separator)
 
 	_remote_event_label = Label.new()
-	_remote_event_label.custom_minimum_size = Vector2(260, 0)
+	_remote_event_label.custom_minimum_size = Vector2(ResearchThemeScript.scale_px(300.0), 0)
 	_remote_event_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_remote_event_label.clip_text = true
 	ResearchThemeScript.apply_label_style(
@@ -118,6 +118,6 @@ func _build_panel() -> void:
 func _make_vertical_separator() -> Control:
 	var separator := ColorRect.new()
 	separator.color = ResearchThemeScript.COLOR_BORDER_SOFT
-	separator.custom_minimum_size = Vector2(1, 26)
+	separator.custom_minimum_size = Vector2(1, ResearchThemeScript.scale_px(28.0))
 	separator.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return separator
