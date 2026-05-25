@@ -77,12 +77,59 @@ docs/workflows.md
 - 命令失败后判断下一步查哪里。
 - 区分离线验证与真实 LLM / Godot 人工验收。
 
-## P1：明天或后续补齐
+## P1：已落地，按需使用
 
-- `branch-review`：当前分支 / PR 前综合审查，包装 `review-branch`、`code-review` 或 `bughunt-lite`。
-- `bug-sweep`：高风险 runtime / eval / schema / trace 变更后的 bug sweep。
-- `schema-drift`：专门检查 schema registry、trace schema、debug API、eval manifest 是否同步。
-- `consistency-sweep`：检查 backend → frontend Web Debug → Godot → docs 的字段和事实一致性。
+### `branch-review`
+
+位置：`.claude/workflows/branch-review.md`
+
+用途：在合并、开 PR 或交接前综合审查当前分支 / PR，选择合适的 diff review、`code-review`、`review-branch`、`bughunt-lite` 或 `bughunt` 深度。
+
+适用场景：
+
+- 多文件实现完成后准备交接。
+- 高风险分支进入 PR 前。
+- 更新 `docs/current_status.md` 前确认事实和证据等级。
+- 需要明确 ship / blocked / caveat 结论时。
+
+### `bug-sweep`
+
+位置：`.claude/workflows/bug-sweep.md`
+
+用途：对 runtime、eval、schema、trace、provider 或跨 lane 变更做有界 bug sweep，优先发现高置信正确性问题。
+
+适用场景：
+
+- 修改 `MotivationEngine -> ToolExecutor -> ResultObserver` 主链路后。
+- 修改 eval baseline、ablation、manifest、archive 或 drift 逻辑后。
+- 修改 schema registry、trace、Debug API 或直接消费者后。
+- 需要判断 `bughunt-lite` 是否足够，或是否升级到 full `bughunt` 时。
+
+### `schema-drift`
+
+位置：`.claude/workflows/schema-drift.md`
+
+用途：检查 schema registry、Phase 2 trace、Debug API、eval manifest / export / archive 与 Web Debug / Godot 消费侧是否同步。
+
+适用场景：
+
+- 新增或改动 schema id / version / payload 字段。
+- 修改 `/api/debug.phase2`、trace details、eval export 或 promotion schema。
+- Debug UI 或 Godot Research Dock 读取字段发生变化。
+- 文档记录 schema 数量、版本或验证事实前。
+
+### `consistency-sweep`
+
+位置：`.claude/workflows/consistency-sweep.md`
+
+用途：检查 backend -> Web Debug -> Godot -> docs 的字段、事件、schema 和验证事实一致性。
+
+适用场景：
+
+- 跨 lane 改动后准备 handoff。
+- UI / Debug trace / eval 证据链同时触达实现和文档。
+- 状态文档更新后需要防止 stale field、stale count 或过强结论。
+- 需要明确 code integrated、command checked、artifact backed、manual verified、manual unverified 边界。
 
 ## P2：后续自动化候选
 
@@ -92,7 +139,7 @@ docs/workflows.md
 
 ## 建议执行节奏
 
-今晚优先完成 P0 workflow 文档化。后续在公司环境 smoke 后，再把高频 workflow 转成可执行 JS workflow 或 npm script。
+今晚优先完成 P0 / P1 workflow 文档化。后续在公司环境 smoke 后，再把高频 workflow 转成可执行 JS workflow 或 npm script。
 
 推荐顺序：
 
