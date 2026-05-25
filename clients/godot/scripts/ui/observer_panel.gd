@@ -1,59 +1,108 @@
 class_name ObserverPanel
 extends CanvasLayer
 
+# Research Dock：取代旧 ObserverPanel + WorldPulsePanel 的右侧重排版本。
+# 三 Tab：
+#   1. 全景 Pulse        - 世界时钟 / 活跃事件 / 6 个 NPC 行动一览（取代旧 WorldPulsePanel）
+#   2. 选中 NPC          - 身份 / Motivation / 主观记忆 / 关系边 / 启发式 五张卡
+#   3. Trace 时间线       - 分类过滤 + trace 行 + key-value details + 复制完整
+#
+# 保留对外 API：
+#   - signal highlight_npcs_requested / retry_requested
+#   - signal select_npc_requested （新增，供 Tab 1 行点击切到 Tab 2）
+#   - func toggle_panel_visible / set_panel_visible / is_panel_visible
+#   - func show_empty_selection / set_selected_npc
+#   - func show_phase2_loading / show_phase2_error / set_phase2_debug_summary
+#   - func set_world_pulse_data （新增，由 TownMap 推数据进来）
+#
+# 设计目标：研究 / 可解释性主面板，深色半透明卡片 + 滚动 + 类型染色。
+
+const ResearchThemeScript := preload("res://scripts/ui/research_theme.gd")
+
 signal highlight_npcs_requested(npc_ids)
 signal retry_requested(npc_id)
+signal select_npc_requested(npc_id)
 
 const TRACE_FILTER_IDS := ["all", "decision", "tool", "interrupt", "memory"]
+const TRACE_FILTER_LABELS := {
+	"all": "全部",
+	"decision": "决策",
+	"tool": "工具",
+	"interrupt": "中断",
+	"memory": "记忆",
+}
 const DETAIL_POPUP_MAX_CHARS := 12000
 const SECTION_EMPTY_TEXT := {
-	"motivation": "暂无 motivation：后端没有返回该 NPC 的决策记录，等待下一次世界 tick。",
+	"motivation": "暂无 motivation：等待下一次世界 tick。",
 	"subjectiveMemory": "暂无 subjectiveMemory：该 NPC 尚未写入主观记忆。",
 	"relationshipEdges": "暂无 relationshipEdges：该 NPC 暂无可解释关系边。",
 	"heuristics": "暂无 heuristics：该 NPC 暂无启发式学习记录。",
 	"recentTraceEvents": "暂无 recentTraceEvents：该 NPC 尚未产生可解释 trace。",
 	"traceDetails": "暂无 traceDetails：先等待 trace 产生，再查看明细。",
 }
+const TAB_PULSE := 0
+const TAB_INSPECTOR := 1
+const TAB_TRACE := 2
+const MEMORY_CARD_TOP_N := 4
 
 var _panel: PanelContainer
-var _npc_id_value: Label
-var _npc_name_value: Label
-var _location_value: Label
-var _anchor_value: Label
-var _phase2_status_value: Label
+var _tab_buttons: Array[Button] = []
+var _tab_pages: Array[Control] = []
+var _current_tab: int = TAB_PULSE
+
+# Tab 1 · Pulse
+var _pulse_clock_label: Label
+var _pulse_event_list: VBoxContainer
+var _pulse_npc_list: VBoxContainer
+
+# Tab 2 · Inspector
+var _inspector_status_value: Label
 var _phase2_retry_button: Button
-var _motivation_value: Label
-var _subjective_memory_value: Label
-var _relationship_edges_value: Label
-var _heuristics_value: Label
-var _recent_trace_filter: OptionButton
+var _identity_name_label: Label
+var _identity_id_label: Label
+var _identity_location_label: Label
+var _identity_anchor_label: Label
+var _motivation_need_label: Label
+var _motivation_need_bar: ProgressBar
+var _motivation_decision_label: Label
+var _motivation_sources_box: HBoxContainer
+var _memory_list: VBoxContainer
+var _memory_summary_label: Label
+var _relationship_list: VBoxContainer
+var _relationship_summary_label: Label
+var _heuristic_list: VBoxContainer
+var _heuristic_summary_label: Label
+
+# Tab 3 · Trace
+var _trace_filter_buttons: Array[Button] = []
+var _trace_index_label: Label
 var _trace_prev_button: Button
 var _trace_next_button: Button
 var _trace_copy_button: Button
-var _trace_index_value: Label
-var _recent_trace_value: Label
-var _recent_trace_rows: VBoxContainer
-var _recent_trace_detail_value: Label
+var _trace_rows_box: VBoxContainer
+var _trace_summary_label: Label
+var _trace_details_box: VBoxContainer
+var _trace_details_status_label: Label
+
+# Trace 弹层（保留旧版"巨幅 details popup"路径，方便 paper 截图复制完整 JSON）
 var _trace_detail_popup: PanelContainer
 var _trace_detail_popup_title: Label
 var _trace_detail_scroll: ScrollContainer
 var _trace_detail_popup_value: Label
-var _trace_detail_close_button: Button
-var _recent_trace_summaries: Dictionary = {}
-var _recent_trace_event_groups: Dictionary = {}
-var _recent_trace_detail_groups: Dictionary = {}
-var _recent_trace_copy_detail_groups: Dictionary = {}
-var _recent_trace_details := "-"
-var _current_trace_detail_index := 0
-var _current_trace_filter := "all"
+
+# 缓存与状态
 var _panel_visible := false
 var _current_npc_id := ""
-var _normal_status_color := Color(0.92, 0.96, 1.0, 0.98)
-var _error_status_color := Color(1.0, 0.64, 0.54, 1.0)
+var _current_payload: Dictionary = {}
+var _world_pulse_data: Dictionary = {}
+var _recent_trace_event_groups: Dictionary = _empty_filter_dict()
+var _recent_trace_copy_detail_groups: Dictionary = _empty_filter_dict()
+var _recent_trace_summaries: Dictionary = _empty_summary_dict()
+var _current_trace_filter := "all"
+var _current_trace_detail_index := 0
 
 
 func _ready() -> void:
-	# Phase 2 观察者面板默认隐藏，通过 Tab 展示。
 	layer = 20
 	_build_panel()
 	set_panel_visible(false)
@@ -72,11 +121,17 @@ func _unhandled_input(event: InputEvent) -> void:
 		_hide_trace_details_popup()
 		get_viewport().set_input_as_handled()
 		return
+	# 1-5：切换 trace 过滤；自动跳 Tab 3，便于排查决策链。
 	var filter_index := _trace_filter_index_for_key(key_event.keycode)
 	if filter_index >= 0:
+		_switch_tab(TAB_TRACE)
 		_select_trace_filter_by_index(filter_index)
 		get_viewport().set_input_as_handled()
 
+
+# ---------------------------------------------------------------------------
+# Public API（与旧 ObserverPanel 一致，新增 select_npc_requested / world pulse）
+# ---------------------------------------------------------------------------
 
 func toggle_panel_visible() -> bool:
 	set_panel_visible(not _panel_visible)
@@ -97,16 +152,17 @@ func is_panel_visible() -> bool:
 
 func show_empty_selection() -> void:
 	_current_npc_id = ""
-	_npc_id_value.text = "-"
-	_npc_name_value.text = "未选择"
-	_location_value.text = "-"
-	_anchor_value.text = "-"
-	_set_phase2_status("状态：等待选择 NPC")
+	_current_payload = {}
+	_identity_id_label.text = "-"
+	_identity_name_label.text = "未选择"
+	_identity_location_label.text = "-"
+	_identity_anchor_label.text = "-"
+	_set_phase2_status("等待选择 NPC")
 	_set_retry_visible(false)
-	_motivation_value.text = "请选择 NPC 后查看 motivation。"
-	_subjective_memory_value.text = "请选择 NPC 后查看 subjectiveMemory。"
-	_relationship_edges_value.text = "请选择 NPC 后查看 relationshipEdges。"
-	_heuristics_value.text = "请选择 NPC 后查看 heuristics。"
+	_render_empty_motivation()
+	_render_empty_memory()
+	_render_empty_relationships()
+	_render_empty_heuristics()
 	_reset_recent_trace_view()
 
 
@@ -117,23 +173,25 @@ func set_selected_npc(snapshot: Dictionary) -> void:
 	var anchor_id := str(snapshot.get("anchor", ""))
 	var switched_npc := npc_id != _current_npc_id
 	_current_npc_id = npc_id
-
-	_npc_id_value.text = npc_id if npc_id != "" else "-"
-	_npc_name_value.text = npc_name if npc_name != "" else "未命名"
-	_location_value.text = location_id if location_id != "" else "-"
-	_anchor_value.text = anchor_id if anchor_id != "" else "-"
+	_identity_id_label.text = npc_id if npc_id != "" else "-"
+	_identity_name_label.text = npc_name if npc_name != "" else "未命名"
+	_identity_location_label.text = _pretty_location(location_id)
+	_identity_anchor_label.text = _pretty_anchor(anchor_id)
 	if switched_npc:
-		_set_phase2_status("状态：等待加载 Phase 2 Debug")
+		_set_phase2_status("等待加载 Phase 2 Debug")
 		_set_retry_visible(false)
-		_motivation_value.text = "等待后端返回 motivation 数据..."
-		_subjective_memory_value.text = "等待后端返回 subjectiveMemory 数据..."
-		_relationship_edges_value.text = "等待后端返回 relationshipEdges 数据..."
-		_heuristics_value.text = "等待后端返回 heuristics 数据..."
+		_render_empty_motivation()
+		_render_empty_memory()
+		_render_empty_relationships()
+		_render_empty_heuristics()
 		_reset_recent_trace_view()
+	# 选中 NPC 时自动跳到 Inspector Tab，方便人工核对当前决策。
+	if switched_npc and _current_tab == TAB_PULSE:
+		_switch_tab(TAB_INSPECTOR)
 
 
 func show_phase2_loading() -> void:
-	_set_phase2_status("状态：加载中...")
+	_set_phase2_status("加载中…")
 	_set_retry_visible(false)
 
 
@@ -143,433 +201,937 @@ func show_phase2_error(error_message: String) -> void:
 		text = "unknown error"
 	_set_phase2_status("错误：%s" % text, true)
 	_set_retry_visible(_current_npc_id != "")
-	_motivation_value.text = "加载失败后保留空态：点击重试重新拉取 motivation。"
-	_subjective_memory_value.text = "加载失败后保留空态：点击重试重新拉取 subjectiveMemory。"
-	_relationship_edges_value.text = "加载失败后保留空态：点击重试重新拉取 relationshipEdges。"
-	_heuristics_value.text = "加载失败后保留空态：点击重试重新拉取 heuristics。"
+	_render_empty_motivation()
+	_render_empty_memory()
+	_render_empty_relationships()
+	_render_empty_heuristics()
 	_reset_recent_trace_view()
 
 
 func set_phase2_debug_summary(summary: Dictionary) -> void:
-	var previous_count := _trace_item_count()
-	var was_following_latest := previous_count == 0 or _current_trace_detail_index >= previous_count - 1
-	var previous_index := _current_trace_detail_index
-	_set_phase2_status("状态：已同步")
+	# summary 仍兼容旧 text 字段（供 check_godot_project 校验）；新版面板从 `payload`
+	# 拿原始 phase2 debug 字典进行卡片渲染。
+	_current_payload = summary.duplicate(true)
+	_set_phase2_status("已同步")
 	_set_retry_visible(false)
-	_motivation_value.text = _section_text(summary, "motivation")
-	_subjective_memory_value.text = _section_text(summary, "subjectiveMemory")
-	_relationship_edges_value.text = _section_text(summary, "relationshipEdges")
-	_heuristics_value.text = _section_text(summary, "heuristics")
-	_recent_trace_summaries = _trace_summary_dict(summary)
+	var payload = summary.get("payload", {})
+	if not (payload is Dictionary):
+		payload = {}
+	_render_motivation(payload as Dictionary, summary)
+	_render_memory(payload as Dictionary, summary)
+	_render_relationships(payload as Dictionary, summary)
+	_render_heuristics(payload as Dictionary, summary)
+
+	# trace 数据已由 TownMap 预处理，直接消费。
 	_recent_trace_event_groups = _trace_event_group_dict(summary)
-	_recent_trace_detail_groups = _trace_detail_group_dict(summary)
 	_recent_trace_copy_detail_groups = _trace_copy_detail_group_dict(summary)
-	_recent_trace_details = _text_or_placeholder(summary.get("recentTraceDetails", ""), "traceDetails")
-	if was_following_latest:
-		_select_latest_trace_detail()
-	else:
-		_current_trace_detail_index = int(clamp(previous_index, 0, max(0, _trace_item_count() - 1)))
+	_recent_trace_summaries = _trace_summary_dict(summary)
+	_select_latest_trace_detail()
 	_update_recent_trace_view()
 
+
+func set_world_pulse_data(data: Dictionary) -> void:
+	# TownMap 把世界 pulse 拼好后整体推到面板：clock / events / npcRows。
+	_world_pulse_data = data.duplicate(true)
+	_refresh_pulse_tab()
+
+
+# ---------------------------------------------------------------------------
+# 主面板布局
+# ---------------------------------------------------------------------------
 
 func _build_panel() -> void:
 	_panel = PanelContainer.new()
 	_panel.name = "ObserverPanelRoot"
+	# Research Dock：右侧固定宽度 460px，顶到底（避开 VN 面板高度）。
 	_panel.anchor_left = 1.0
 	_panel.anchor_top = 0.0
 	_panel.anchor_right = 1.0
-	_panel.anchor_bottom = 0.0
-	_panel.offset_left = -420.0
-	_panel.offset_top = 288.0
-	_panel.offset_right = -18.0
-	_panel.offset_bottom = 790.0
+	_panel.anchor_bottom = 1.0
+	_panel.offset_left = -476.0
+	_panel.offset_top = 16.0
+	_panel.offset_right = -16.0
+	_panel.offset_bottom = -260.0
 	_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	_panel.add_theme_stylebox_override("panel", ResearchThemeScript.make_panel_style())
 	add_child(_panel)
 
-	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 14)
-	margin.add_theme_constant_override("margin_right", 14)
-	margin.add_theme_constant_override("margin_top", 12)
-	margin.add_theme_constant_override("margin_bottom", 12)
-	_panel.add_child(margin)
+	var root_margin := MarginContainer.new()
+	root_margin.add_theme_constant_override("margin_left", 14)
+	root_margin.add_theme_constant_override("margin_right", 14)
+	root_margin.add_theme_constant_override("margin_top", 12)
+	root_margin.add_theme_constant_override("margin_bottom", 12)
+	_panel.add_child(root_margin)
 
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 8)
-	margin.add_child(vbox)
+	var root_vbox := VBoxContainer.new()
+	root_vbox.add_theme_constant_override("separation", 10)
+	root_margin.add_child(root_vbox)
 
-	var title := Label.new()
-	title.text = "Observer Panel [Tab]"
-	title.add_theme_font_size_override("font_size", 18)
-	vbox.add_child(title)
-
-	var rows := GridContainer.new()
-	rows.columns = 2
-	rows.add_theme_constant_override("h_separation", 12)
-	rows.add_theme_constant_override("v_separation", 6)
-	vbox.add_child(rows)
-
-	_add_row(rows, "npcId")
-	_npc_id_value = _add_value(rows)
-	_add_row(rows, "名称")
-	_npc_name_value = _add_value(rows)
-	_add_row(rows, "location")
-	_location_value = _add_value(rows)
-	_add_row(rows, "anchor")
-	_anchor_value = _add_value(rows)
-
-	_build_phase2_status(vbox)
-	_motivation_value = _build_section_value(vbox, "motivation")
-	_subjective_memory_value = _build_section_value(vbox, "subjectiveMemory")
-	_relationship_edges_value = _build_section_value(vbox, "relationshipEdges")
-	_heuristics_value = _build_section_value(vbox, "heuristics")
-	_build_recent_trace_filter(vbox)
-	_recent_trace_value = _build_section_value(vbox, "recentTraceEvents")
-	_build_recent_trace_rows(vbox)
-	_recent_trace_detail_value = _build_section_value(vbox, "traceDetails")
+	_build_header(root_vbox)
+	_build_tab_bar(root_vbox)
+	_build_tab_pages(root_vbox)
 	_build_trace_detail_popup()
+	_switch_tab(TAB_PULSE)
 
 
-func _build_phase2_status(parent: VBoxContainer) -> void:
+func _build_header(parent: VBoxContainer) -> void:
+	var header := HBoxContainer.new()
+	header.add_theme_constant_override("separation", 8)
+	parent.add_child(header)
+
 	var title := Label.new()
-	title.text = "Phase2 状态:"
-	title.add_theme_font_size_override("font_size", 13)
-	parent.add_child(title)
+	title.text = "Loomstead Observer"
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ResearchThemeScript.apply_label_style(title, ResearchThemeScript.FONT_SIZE_TITLE, ResearchThemeScript.COLOR_TEXT_TITLE)
+	header.add_child(title)
 
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	parent.add_child(row)
+	var hint := Label.new()
+	hint.text = "[Tab]"
+	ResearchThemeScript.apply_label_style(hint, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_MUTED)
+	header.add_child(hint)
 
-	_phase2_status_value = Label.new()
-	_phase2_status_value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_phase2_status_value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_phase2_status_value.add_theme_font_size_override("font_size", 12)
-	_phase2_status_value.add_theme_color_override("font_color", _normal_status_color)
-	row.add_child(_phase2_status_value)
 
+func _build_tab_bar(parent: VBoxContainer) -> void:
+	var tab_row := HBoxContainer.new()
+	tab_row.add_theme_constant_override("separation", 6)
+	parent.add_child(tab_row)
+
+	_tab_buttons.clear()
+	var tab_titles := ["小镇全景", "选中 NPC", "Trace 时间线"]
+	for i in range(tab_titles.size()):
+		var button := Button.new()
+		button.text = str(tab_titles[i])
+		button.focus_mode = Control.FOCUS_NONE
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.toggle_mode = true
+		ResearchThemeScript.apply_button_style(button, ResearchThemeScript.FONT_SIZE_BODY)
+		button.pressed.connect(_switch_tab.bind(i))
+		tab_row.add_child(button)
+		_tab_buttons.append(button)
+
+
+func _build_tab_pages(parent: VBoxContainer) -> void:
+	var stack := Control.new()
+	stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	parent.add_child(stack)
+
+	_tab_pages.clear()
+	_tab_pages.append(_build_pulse_tab())
+	_tab_pages.append(_build_inspector_tab())
+	_tab_pages.append(_build_trace_tab())
+	for page in _tab_pages:
+		page.anchor_left = 0.0
+		page.anchor_top = 0.0
+		page.anchor_right = 1.0
+		page.anchor_bottom = 1.0
+		page.offset_left = 0
+		page.offset_right = 0
+		page.offset_top = 0
+		page.offset_bottom = 0
+		stack.add_child(page)
+
+
+# ---------------------------------------------------------------------------
+# Tab 1 · 全景 Pulse
+# ---------------------------------------------------------------------------
+
+func _build_pulse_tab() -> Control:
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var page_vbox := VBoxContainer.new()
+	page_vbox.add_theme_constant_override("separation", 10)
+	page_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(page_vbox)
+
+	# 时钟卡
+	var clock_card := _make_card("世界时钟")
+	_pulse_clock_label = Label.new()
+	_pulse_clock_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ResearchThemeScript.apply_label_style(_pulse_clock_label, ResearchThemeScript.FONT_SIZE_BODY, ResearchThemeScript.COLOR_TEXT_PRIMARY)
+	_pulse_clock_label.text = "等待 tick…"
+	clock_card.body.add_child(_pulse_clock_label)
+	page_vbox.add_child(clock_card.root)
+
+	# 活跃事件卡
+	var event_card := _make_card("活跃事件")
+	_pulse_event_list = VBoxContainer.new()
+	_pulse_event_list.add_theme_constant_override("separation", 4)
+	event_card.body.add_child(_pulse_event_list)
+	page_vbox.add_child(event_card.root)
+
+	# NPC 一览卡
+	var npc_card := _make_card("NPC 一览（点击切到 Inspector）")
+	_pulse_npc_list = VBoxContainer.new()
+	_pulse_npc_list.add_theme_constant_override("separation", 5)
+	npc_card.body.add_child(_pulse_npc_list)
+	page_vbox.add_child(npc_card.root)
+
+	return scroll
+
+
+func _refresh_pulse_tab() -> void:
+	if _pulse_clock_label == null:
+		return
+	_pulse_clock_label.text = _format_pulse_clock_text()
+	_refresh_pulse_event_list()
+	_refresh_pulse_npc_list()
+
+
+func _format_pulse_clock_text() -> String:
+	var clock = _world_pulse_data.get("clock", {})
+	if not (clock is Dictionary) or (clock as Dictionary).is_empty():
+		return "等待 tick…"
+	var clock_dict := clock as Dictionary
+	var day := int(clock_dict.get("day", 1))
+	var hour := int(clock_dict.get("hour", 0))
+	var minute := int(clock_dict.get("minute", 0))
+	var phase := str(clock_dict.get("phase", "unknown"))
+	var tick := int(clock_dict.get("tick", 0))
+	return "Day %d · %02d:%02d · %s · tick %d" % [day, hour, minute, phase, tick]
+
+
+func _refresh_pulse_event_list() -> void:
+	if _pulse_event_list == null:
+		return
+	for child in _pulse_event_list.get_children():
+		child.queue_free()
+	var events = _world_pulse_data.get("activeEvents", [])
+	if not (events is Array) or (events as Array).is_empty():
+		var empty := Label.new()
+		empty.text = "暂无活跃事件"
+		empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		ResearchThemeScript.apply_label_style(empty, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_MUTED)
+		_pulse_event_list.add_child(empty)
+		return
+	for item in events as Array:
+		if not (item is Dictionary):
+			continue
+		var event_dict := item as Dictionary
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 6)
+		var bullet := _make_dot(ResearchThemeScript.COLOR_TYPE_INTERRUPT, 8)
+		row.add_child(bullet)
+		var text_label := Label.new()
+		text_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		text_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var title := str(event_dict.get("title", event_dict.get("id", "event")))
+		var location := _pretty_location(str(event_dict.get("locationId", "")))
+		var phase := str(event_dict.get("phase", ""))
+		text_label.text = "%s · %s%s" % [title, location, (" · " + phase) if phase != "" else ""]
+		ResearchThemeScript.apply_label_style(text_label, ResearchThemeScript.FONT_SIZE_BODY, ResearchThemeScript.COLOR_TEXT_PRIMARY)
+		row.add_child(text_label)
+		_pulse_event_list.add_child(row)
+
+
+func _refresh_pulse_npc_list() -> void:
+	if _pulse_npc_list == null:
+		return
+	for child in _pulse_npc_list.get_children():
+		child.queue_free()
+	var rows = _world_pulse_data.get("npcRows", [])
+	if not (rows is Array) or (rows as Array).is_empty():
+		var empty := Label.new()
+		empty.text = "等待 /api/world/state 返回 NPC 计划…"
+		empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		ResearchThemeScript.apply_label_style(empty, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_MUTED)
+		_pulse_npc_list.add_child(empty)
+		return
+	for item in rows as Array:
+		if not (item is Dictionary):
+			continue
+		var entry := item as Dictionary
+		_pulse_npc_list.add_child(_build_pulse_npc_row(entry))
+
+
+func _build_pulse_npc_row(entry: Dictionary) -> Button:
+	var npc_id := str(entry.get("npcId", ""))
+	var npc_name := str(entry.get("name", npc_id))
+	var status := str(entry.get("status", ""))
+	var location := str(entry.get("location", ""))
+	var accent_color := ResearchThemeScript.COLOR_ACCENT
+	if entry.has("color") and entry["color"] is Color:
+		accent_color = entry["color"]
+	var button := Button.new()
+	button.focus_mode = Control.FOCUS_NONE
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.toggle_mode = false
+	button.text = ""
+	ResearchThemeScript.apply_button_style(button, ResearchThemeScript.FONT_SIZE_BODY)
+	# 自定义内部 HBox 让 Button 显示富文本布局。
+	var inner := HBoxContainer.new()
+	inner.add_theme_constant_override("separation", 8)
+	inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	inner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.add_child(inner)
+	# 把 inner 居中显示在 Button 内部。
+	inner.anchor_left = 0.0
+	inner.anchor_top = 0.0
+	inner.anchor_right = 1.0
+	inner.anchor_bottom = 1.0
+	inner.offset_left = 6
+	inner.offset_right = -6
+	inner.offset_top = 2
+	inner.offset_bottom = -2
+	var dot := _make_dot(accent_color, 10)
+	inner.add_child(dot)
+	var name_label := Label.new()
+	name_label.text = npc_name
+	name_label.custom_minimum_size = Vector2(110, 0)
+	ResearchThemeScript.apply_label_style(name_label, ResearchThemeScript.FONT_SIZE_BODY, ResearchThemeScript.COLOR_TEXT_PRIMARY)
+	inner.add_child(name_label)
+	var status_label := Label.new()
+	status_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	status_label.text = status if status != "" else "—"
+	status_label.clip_text = true
+	ResearchThemeScript.apply_label_style(status_label, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_MUTED)
+	inner.add_child(status_label)
+	if location != "":
+		var loc_chip := _make_chip(_pretty_location(location), ResearchThemeScript.COLOR_BORDER_SOFT)
+		inner.add_child(loc_chip)
+	if npc_id != "":
+		button.pressed.connect(func(): select_npc_requested.emit(npc_id))
+	return button
+
+
+# ---------------------------------------------------------------------------
+# Tab 2 · 选中 NPC（Inspector）
+# ---------------------------------------------------------------------------
+
+func _build_inspector_tab() -> Control:
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(vbox)
+
+	# 身份卡
+	var identity_card := _make_card("身份")
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 14)
+	grid.add_theme_constant_override("v_separation", 4)
+	identity_card.body.add_child(grid)
+	_identity_name_label = _add_identity_row(grid, "名称", "未选择")
+	_identity_id_label = _add_identity_row(grid, "npcId", "-")
+	_identity_location_label = _add_identity_row(grid, "location", "-")
+	_identity_anchor_label = _add_identity_row(grid, "anchor", "-")
+	var status_row := HBoxContainer.new()
+	status_row.add_theme_constant_override("separation", 8)
+	identity_card.body.add_child(status_row)
+	_inspector_status_value = Label.new()
+	_inspector_status_value.text = "状态：等待"
+	_inspector_status_value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_inspector_status_value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ResearchThemeScript.apply_label_style(_inspector_status_value, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_STATUS_OK)
+	status_row.add_child(_inspector_status_value)
 	_phase2_retry_button = Button.new()
 	_phase2_retry_button.text = "重试"
-	_phase2_retry_button.visible = false
 	_phase2_retry_button.focus_mode = Control.FOCUS_NONE
+	_phase2_retry_button.visible = false
+	ResearchThemeScript.apply_button_style(_phase2_retry_button, ResearchThemeScript.FONT_SIZE_SMALL)
 	_phase2_retry_button.pressed.connect(_on_retry_pressed)
-	row.add_child(_phase2_retry_button)
+	status_row.add_child(_phase2_retry_button)
+	vbox.add_child(identity_card.root)
+
+	# Motivation 卡
+	var motivation_card := _make_card("Motivation")
+	_motivation_need_label = Label.new()
+	_motivation_need_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ResearchThemeScript.apply_label_style(_motivation_need_label, ResearchThemeScript.FONT_SIZE_BODY, ResearchThemeScript.COLOR_TEXT_PRIMARY)
+	_motivation_need_label.text = "需求：等待数据"
+	motivation_card.body.add_child(_motivation_need_label)
+	_motivation_need_bar = ProgressBar.new()
+	_motivation_need_bar.min_value = 0.0
+	_motivation_need_bar.max_value = 1.0
+	_motivation_need_bar.value = 0.0
+	_motivation_need_bar.show_percentage = false
+	_motivation_need_bar.custom_minimum_size = Vector2(0, 8)
+	var bar_bg := StyleBoxFlat.new()
+	bar_bg.bg_color = Color(0.12, 0.16, 0.22, 0.92)
+	bar_bg.set_corner_radius_all(4)
+	var bar_fg := StyleBoxFlat.new()
+	bar_fg.bg_color = ResearchThemeScript.COLOR_ACCENT
+	bar_fg.set_corner_radius_all(4)
+	_motivation_need_bar.add_theme_stylebox_override("background", bar_bg)
+	_motivation_need_bar.add_theme_stylebox_override("fill", bar_fg)
+	motivation_card.body.add_child(_motivation_need_bar)
+	_motivation_decision_label = Label.new()
+	_motivation_decision_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ResearchThemeScript.apply_label_style(_motivation_decision_label, ResearchThemeScript.FONT_SIZE_BODY, ResearchThemeScript.COLOR_ACCENT)
+	_motivation_decision_label.text = "决策：—"
+	motivation_card.body.add_child(_motivation_decision_label)
+	var sources_title := Label.new()
+	sources_title.text = "contributingSources"
+	ResearchThemeScript.apply_label_style(sources_title, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_MUTED)
+	motivation_card.body.add_child(sources_title)
+	_motivation_sources_box = HBoxContainer.new()
+	_motivation_sources_box.add_theme_constant_override("separation", 6)
+	motivation_card.body.add_child(_motivation_sources_box)
+	vbox.add_child(motivation_card.root)
+
+	# 主观记忆卡（subjectiveMemory）
+	var memory_card := _make_card("subjectiveMemory")
+	_memory_summary_label = Label.new()
+	_memory_summary_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ResearchThemeScript.apply_label_style(_memory_summary_label, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_MUTED)
+	_memory_summary_label.text = SECTION_EMPTY_TEXT["subjectiveMemory"]
+	memory_card.body.add_child(_memory_summary_label)
+	_memory_list = VBoxContainer.new()
+	_memory_list.add_theme_constant_override("separation", 6)
+	memory_card.body.add_child(_memory_list)
+	vbox.add_child(memory_card.root)
+
+	# 关系边卡（relationshipEdges）
+	var relationship_card := _make_card("relationshipEdges（点击 chip 高亮地图 NPC）")
+	_relationship_summary_label = Label.new()
+	_relationship_summary_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ResearchThemeScript.apply_label_style(_relationship_summary_label, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_MUTED)
+	_relationship_summary_label.text = SECTION_EMPTY_TEXT["relationshipEdges"]
+	relationship_card.body.add_child(_relationship_summary_label)
+	_relationship_list = VBoxContainer.new()
+	_relationship_list.add_theme_constant_override("separation", 4)
+	relationship_card.body.add_child(_relationship_list)
+	vbox.add_child(relationship_card.root)
+
+	# 启发式卡（heuristics）
+	var heuristic_card := _make_card("heuristics")
+	_heuristic_summary_label = Label.new()
+	_heuristic_summary_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ResearchThemeScript.apply_label_style(_heuristic_summary_label, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_MUTED)
+	_heuristic_summary_label.text = SECTION_EMPTY_TEXT["heuristics"]
+	heuristic_card.body.add_child(_heuristic_summary_label)
+	_heuristic_list = VBoxContainer.new()
+	_heuristic_list.add_theme_constant_override("separation", 4)
+	heuristic_card.body.add_child(_heuristic_list)
+	vbox.add_child(heuristic_card.root)
+
+	return scroll
 
 
-func _build_recent_trace_filter(parent: VBoxContainer) -> void:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	parent.add_child(row)
-
-	var label := Label.new()
-	label.text = "traceFilter:"
-	label.add_theme_font_size_override("font_size", 13)
-	row.add_child(label)
-
-	_recent_trace_filter = OptionButton.new()
-	_recent_trace_filter.focus_mode = Control.FOCUS_NONE
-	for index in range(TRACE_FILTER_IDS.size()):
-		var filter_id := str(TRACE_FILTER_IDS[index])
-		_recent_trace_filter.add_item("%d %s" % [index + 1, filter_id])
-		_recent_trace_filter.set_item_metadata(index, filter_id)
-	_recent_trace_filter.item_selected.connect(_on_recent_trace_filter_selected)
-	row.add_child(_recent_trace_filter)
-
-	_trace_prev_button = Button.new()
-	_trace_prev_button.text = "Prev"
-	_trace_prev_button.focus_mode = Control.FOCUS_NONE
-	_trace_prev_button.pressed.connect(_on_trace_prev_pressed)
-	row.add_child(_trace_prev_button)
-
-	_trace_next_button = Button.new()
-	_trace_next_button.text = "Next"
-	_trace_next_button.focus_mode = Control.FOCUS_NONE
-	_trace_next_button.pressed.connect(_on_trace_next_pressed)
-	row.add_child(_trace_next_button)
-
-	_trace_copy_button = Button.new()
-	_trace_copy_button.text = "Copy trace"
-	_trace_copy_button.focus_mode = Control.FOCUS_NONE
-	_trace_copy_button.pressed.connect(_on_trace_copy_pressed)
-	row.add_child(_trace_copy_button)
-
-	_trace_index_value = Label.new()
-	_trace_index_value.text = "0/0"
-	_trace_index_value.add_theme_font_size_override("font_size", 12)
-	row.add_child(_trace_index_value)
-
-
-func _build_recent_trace_rows(parent: VBoxContainer) -> void:
-	_recent_trace_rows = VBoxContainer.new()
-	_recent_trace_rows.add_theme_constant_override("separation", 4)
-	parent.add_child(_recent_trace_rows)
-
-
-func _build_trace_detail_popup() -> void:
-	_trace_detail_popup = PanelContainer.new()
-	_trace_detail_popup.name = "TraceDetailsPopup"
-	_trace_detail_popup.visible = false
-	_trace_detail_popup.anchor_left = 0.0
-	_trace_detail_popup.anchor_top = 0.0
-	_trace_detail_popup.anchor_right = 1.0
-	_trace_detail_popup.anchor_bottom = 1.0
-	_trace_detail_popup.offset_left = 12.0
-	_trace_detail_popup.offset_top = 116.0
-	_trace_detail_popup.offset_right = -12.0
-	_trace_detail_popup.offset_bottom = -12.0
-	_trace_detail_popup.mouse_filter = Control.MOUSE_FILTER_STOP
-	_trace_detail_popup.z_index = 50
-	_trace_detail_popup.add_theme_stylebox_override("panel", _make_trace_popup_style())
-	_panel.add_child(_trace_detail_popup)
-
-	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 12)
-	margin.add_theme_constant_override("margin_right", 12)
-	margin.add_theme_constant_override("margin_top", 10)
-	margin.add_theme_constant_override("margin_bottom", 10)
-	_trace_detail_popup.add_child(margin)
-
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 8)
-	margin.add_child(column)
-
-	var title_row := HBoxContainer.new()
-	title_row.add_theme_constant_override("separation", 8)
-	column.add_child(title_row)
-
-	_trace_detail_popup_title = Label.new()
-	_trace_detail_popup_title.text = "Trace details"
-	_trace_detail_popup_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_trace_detail_popup_title.add_theme_font_size_override("font_size", 14)
-	title_row.add_child(_trace_detail_popup_title)
-
-	_trace_detail_close_button = Button.new()
-	_trace_detail_close_button.text = "关闭 [Esc]"
-	_trace_detail_close_button.focus_mode = Control.FOCUS_NONE
-	_trace_detail_close_button.pressed.connect(_hide_trace_details_popup)
-	title_row.add_child(_trace_detail_close_button)
-
-	_trace_detail_scroll = ScrollContainer.new()
-	_trace_detail_scroll.focus_mode = Control.FOCUS_NONE
-	_trace_detail_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_trace_detail_scroll.custom_minimum_size = Vector2(0.0, 250.0)
-	column.add_child(_trace_detail_scroll)
-
-	_trace_detail_popup_value = Label.new()
-	_trace_detail_popup_value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_trace_detail_popup_value.add_theme_font_size_override("font_size", 11)
-	_trace_detail_popup_value.add_theme_color_override("font_color", Color(0.96, 0.98, 1.0, 1.0))
-	_trace_detail_scroll.add_child(_trace_detail_popup_value)
-
-
-func _make_trace_popup_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.03, 0.05, 0.08, 0.96)
-	style.border_color = Color(0.58, 0.82, 1.0, 0.92)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(10)
-	style.shadow_color = Color(0.0, 0.0, 0.0, 0.35)
-	style.shadow_size = 8
-	return style
-
-
-func _add_row(parent: GridContainer, key_text: String) -> void:
+func _add_identity_row(grid: GridContainer, key: String, default_text: String) -> Label:
 	var key_label := Label.new()
-	key_label.text = "%s:" % key_text
-	key_label.add_theme_font_size_override("font_size", 13)
-	parent.add_child(key_label)
-
-
-func _add_value(parent: GridContainer) -> Label:
+	key_label.text = key
+	ResearchThemeScript.apply_label_style(key_label, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_MUTED)
+	grid.add_child(key_label)
 	var value_label := Label.new()
-	value_label.add_theme_font_size_override("font_size", 13)
-	parent.add_child(value_label)
+	value_label.text = default_text
+	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	value_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ResearchThemeScript.apply_label_style(value_label, ResearchThemeScript.FONT_SIZE_BODY, ResearchThemeScript.COLOR_TEXT_PRIMARY)
+	grid.add_child(value_label)
 	return value_label
 
 
-func _build_section_value(parent: VBoxContainer, title_text: String) -> Label:
-	var title := Label.new()
-	title.text = "%s:" % title_text
-	title.add_theme_font_size_override("font_size", 13)
-	parent.add_child(title)
-
-	var value := Label.new()
-	value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	value.add_theme_font_size_override("font_size", 12)
-	value.add_theme_color_override("font_color", Color(0.92, 0.96, 1.0, 0.98))
-	parent.add_child(value)
-	return value
-
-
-func _on_recent_trace_filter_selected(index: int) -> void:
-	if _recent_trace_filter == null:
+func _render_empty_motivation() -> void:
+	if _motivation_need_label == null:
 		return
-	_current_trace_filter = str(_recent_trace_filter.get_item_metadata(index))
-	_select_latest_trace_detail()
-	_update_recent_trace_view()
+	_motivation_need_label.text = "需求：等待 motivation 数据"
+	_motivation_need_bar.value = 0.0
+	_motivation_decision_label.text = "决策：—"
+	for child in _motivation_sources_box.get_children():
+		child.queue_free()
+
+
+func _render_motivation(payload: Dictionary, summary: Dictionary) -> void:
+	var items := _payload_items(payload.get("motivation", {}))
+	if items.is_empty():
+		_render_empty_motivation()
+		# fallback 用 town_map 拼好的文本，保证字段在面板里至少能看到。
+		_motivation_decision_label.text = _section_summary_text(summary, "motivation")
+		return
+	var focus = items[0]
+	if not (focus is Dictionary):
+		_render_empty_motivation()
+		return
+	var focus_dict := focus as Dictionary
+	var primary_need = focus_dict.get("primaryNeed", {})
+	var need_id := ""
+	var urgency := 0.0
+	var current := 0.0
+	if primary_need is Dictionary:
+		need_id = str((primary_need as Dictionary).get("needId", "unknown"))
+		urgency = float((primary_need as Dictionary).get("urgency", 0.0))
+		current = float((primary_need as Dictionary).get("current", 0.0))
+	_motivation_need_label.text = "%s · urgency %.2f · current %.2f" % [_need_label(need_id), urgency, current]
+	_motivation_need_bar.value = clampf(urgency, 0.0, 1.0)
+
+	var decision = focus_dict.get("decision", {})
+	var tool_id := ""
+	if decision is Dictionary:
+		tool_id = str((decision as Dictionary).get("selectedToolId", ""))
+	if tool_id == "":
+		tool_id = "—"
+	_motivation_decision_label.text = "selectedToolId · %s" % tool_id
+
+	for child in _motivation_sources_box.get_children():
+		child.queue_free()
+	var sources := []
+	if decision is Dictionary:
+		var raw_sources = (decision as Dictionary).get("contributingSources", [])
+		if raw_sources is Array:
+			sources = raw_sources as Array
+	if sources.is_empty():
+		var empty_chip := _make_chip("无 contributing source", ResearchThemeScript.COLOR_BORDER_SOFT)
+		_motivation_sources_box.add_child(empty_chip)
+	else:
+		var count: int = mini(sources.size(), 4)
+		for i in range(count):
+			var source = sources[i]
+			if not (source is Dictionary):
+				continue
+			var source_type := str((source as Dictionary).get("type", "source"))
+			var chip := _make_chip(_short_source_label(source_type), ResearchThemeScript.contributing_source_color(source_type))
+			_motivation_sources_box.add_child(chip)
+		if sources.size() > 4:
+			_motivation_sources_box.add_child(_make_chip("+%d" % (sources.size() - 4), ResearchThemeScript.COLOR_BORDER_SOFT))
+
+
+func _render_empty_memory() -> void:
+	if _memory_list == null:
+		return
+	for child in _memory_list.get_children():
+		child.queue_free()
+	_memory_summary_label.text = SECTION_EMPTY_TEXT["subjectiveMemory"]
+
+
+func _render_memory(payload: Dictionary, summary: Dictionary) -> void:
+	var items := _payload_items(payload.get("subjectiveMemory", {}))
+	for child in _memory_list.get_children():
+		child.queue_free()
+	if items.is_empty():
+		_memory_summary_label.text = _section_summary_text(summary, "subjectiveMemory")
+		return
+	# 按 effectiveSalience 排序取 top N。
+	var sortable: Array = []
+	for item in items:
+		if item is Dictionary:
+			sortable.append((item as Dictionary).duplicate(true))
+	sortable.sort_custom(func(a, b):
+		return float(a.get("effectiveSalience", a.get("salience", 0.0))) > float(b.get("effectiveSalience", b.get("salience", 0.0))))
+	var shown: int = mini(sortable.size(), MEMORY_CARD_TOP_N)
+	_memory_summary_label.text = "共 %d 条，显示 salience 最高 %d 条" % [items.size(), shown]
+	for i in range(shown):
+		_memory_list.add_child(_build_memory_row(sortable[i]))
+
+
+func _build_memory_row(entry: Dictionary) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	var valence := float(entry.get("emotionalValence", 0.0))
+	var dot := _make_dot(ResearchThemeScript.valence_color(valence), 9)
+	row.add_child(dot)
+	var inner_vbox := VBoxContainer.new()
+	inner_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	inner_vbox.add_theme_constant_override("separation", 2)
+	row.add_child(inner_vbox)
+	var text_label := Label.new()
+	text_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	text_label.text = _truncate_text(str(entry.get("text", "")), 110)
+	ResearchThemeScript.apply_label_style(text_label, ResearchThemeScript.FONT_SIZE_BODY, ResearchThemeScript.COLOR_TEXT_PRIMARY)
+	inner_vbox.add_child(text_label)
+	var meta_row := HBoxContainer.new()
+	meta_row.add_theme_constant_override("separation", 6)
+	inner_vbox.add_child(meta_row)
+	var valence_chip := _make_chip("valence %.2f" % valence, ResearchThemeScript.valence_color(valence))
+	meta_row.add_child(valence_chip)
+	var salience := float(entry.get("effectiveSalience", entry.get("salience", 0.0)))
+	meta_row.add_child(_make_chip("salience %.2f" % salience, ResearchThemeScript.COLOR_BORDER_SOFT))
+	var tick := int(entry.get("createdTick", -1))
+	if tick >= 0:
+		meta_row.add_child(_make_chip("t%d" % tick, ResearchThemeScript.COLOR_BORDER_SOFT))
+	return row
+
+
+func _render_empty_relationships() -> void:
+	if _relationship_list == null:
+		return
+	for child in _relationship_list.get_children():
+		child.queue_free()
+	_relationship_summary_label.text = SECTION_EMPTY_TEXT["relationshipEdges"]
+
+
+func _render_relationships(payload: Dictionary, summary: Dictionary) -> void:
+	var items := _payload_items(payload.get("relationshipEdges", {}))
+	for child in _relationship_list.get_children():
+		child.queue_free()
+	if items.is_empty():
+		_relationship_summary_label.text = _section_summary_text(summary, "relationshipEdges")
+		return
+	var sortable: Array = []
+	for item in items:
+		if item is Dictionary:
+			sortable.append((item as Dictionary).duplicate(true))
+	sortable.sort_custom(func(a, b):
+		return absf(float(a.get("strength", 0.0))) > absf(float(b.get("strength", 0.0))))
+	var shown: int = mini(sortable.size(), 6)
+	_relationship_summary_label.text = "共 %d 条，按 |strength| 排序" % items.size()
+	var chip_row := HBoxContainer.new()
+	chip_row.add_theme_constant_override("separation", 6)
+	_relationship_list.add_child(chip_row)
+	var current_row := chip_row
+	var row_chip_count := 0
+	for i in range(shown):
+		var edge := sortable[i] as Dictionary
+		var target_id := str(edge.get("targetAgentId", "?"))
+		var edge_type := str(edge.get("edgeType", "edge"))
+		var strength := float(edge.get("strength", 0.0))
+		var sign_text := "+" if strength >= 0.0 else ""
+		var label_text := "%s · %s · %s%.2f" % [edge_type, target_id, sign_text, strength]
+		var color := ResearchThemeScript.contributing_source_color("relationship_edge_refs")
+		var chip_button := _make_chip_button(label_text, color)
+		var captured_id := target_id
+		chip_button.pressed.connect(func(): highlight_npcs_requested.emit([captured_id]))
+		current_row.add_child(chip_button)
+		row_chip_count += 1
+		if row_chip_count >= 2:
+			current_row = HBoxContainer.new()
+			current_row.add_theme_constant_override("separation", 6)
+			_relationship_list.add_child(current_row)
+			row_chip_count = 0
+
+
+func _render_empty_heuristics() -> void:
+	if _heuristic_list == null:
+		return
+	for child in _heuristic_list.get_children():
+		child.queue_free()
+	_heuristic_summary_label.text = SECTION_EMPTY_TEXT["heuristics"]
+
+
+func _render_heuristics(payload: Dictionary, summary: Dictionary) -> void:
+	var items := _payload_items(payload.get("heuristics", {}))
+	for child in _heuristic_list.get_children():
+		child.queue_free()
+	if items.is_empty():
+		_heuristic_summary_label.text = _section_summary_text(summary, "heuristics")
+		return
+	var sortable: Array = []
+	for item in items:
+		if item is Dictionary:
+			sortable.append((item as Dictionary).duplicate(true))
+	sortable.sort_custom(func(a, b):
+		return float(a.get("effectiveConfidence", a.get("confidence", 0.0))) > float(b.get("effectiveConfidence", b.get("confidence", 0.0))))
+	var shown: int = mini(sortable.size(), 5)
+	_heuristic_summary_label.text = "共 %d 条，按 effectiveConfidence 排序" % items.size()
+	for i in range(shown):
+		_heuristic_list.add_child(_build_heuristic_row(sortable[i]))
+
+
+func _build_heuristic_row(entry: Dictionary) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	var trigger := str(entry.get("triggerPattern", entry.get("heuristicId", "heuristic")))
+	var confidence := float(entry.get("effectiveConfidence", entry.get("confidence", 0.0)))
+	var status_text := str(entry.get("status", ""))
+	var status_color := ResearchThemeScript.COLOR_VALENCE_POS if status_text == "active" else ResearchThemeScript.COLOR_TEXT_MUTED
+	var dot := _make_dot(status_color, 8)
+	row.add_child(dot)
+	var label := Label.new()
+	label.text = trigger
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ResearchThemeScript.apply_label_style(label, ResearchThemeScript.FONT_SIZE_BODY, ResearchThemeScript.COLOR_TEXT_PRIMARY)
+	row.add_child(label)
+	var bar := ProgressBar.new()
+	bar.min_value = 0.0
+	bar.max_value = 1.0
+	bar.value = clampf(confidence, 0.0, 1.0)
+	bar.show_percentage = false
+	bar.custom_minimum_size = Vector2(72, 6)
+	var bar_bg := StyleBoxFlat.new()
+	bar_bg.bg_color = Color(0.12, 0.16, 0.22, 0.92)
+	bar_bg.set_corner_radius_all(3)
+	var bar_fg := StyleBoxFlat.new()
+	bar_fg.bg_color = ResearchThemeScript.contributing_source_color("heuristic_refs")
+	bar_fg.set_corner_radius_all(3)
+	bar.add_theme_stylebox_override("background", bar_bg)
+	bar.add_theme_stylebox_override("fill", bar_fg)
+	row.add_child(bar)
+	var conf_label := Label.new()
+	conf_label.text = "%.2f" % confidence
+	conf_label.custom_minimum_size = Vector2(36, 0)
+	ResearchThemeScript.apply_label_style(conf_label, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_MUTED)
+	row.add_child(conf_label)
+	return row
+
+
+# ---------------------------------------------------------------------------
+# Tab 3 · Trace 时间线
+# ---------------------------------------------------------------------------
+
+func _build_trace_tab() -> Control:
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(vbox)
+
+	# 过滤 + 分页 + 复制条
+	var control_card := _make_card("traceFilter（1-5 切换）")
+	var filter_row := HBoxContainer.new()
+	filter_row.add_theme_constant_override("separation", 4)
+	control_card.body.add_child(filter_row)
+	_trace_filter_buttons.clear()
+	for i in range(TRACE_FILTER_IDS.size()):
+		var filter_id := str(TRACE_FILTER_IDS[i])
+		var button := Button.new()
+		button.text = "%d %s" % [i + 1, str(TRACE_FILTER_LABELS.get(filter_id, filter_id))]
+		button.focus_mode = Control.FOCUS_NONE
+		button.toggle_mode = true
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		ResearchThemeScript.apply_button_style(button, ResearchThemeScript.FONT_SIZE_SMALL)
+		button.pressed.connect(_select_trace_filter_by_index.bind(i))
+		filter_row.add_child(button)
+		_trace_filter_buttons.append(button)
+
+	var nav_row := HBoxContainer.new()
+	nav_row.add_theme_constant_override("separation", 6)
+	control_card.body.add_child(nav_row)
+	_trace_prev_button = Button.new()
+	_trace_prev_button.text = "◀ Prev"
+	_trace_prev_button.focus_mode = Control.FOCUS_NONE
+	ResearchThemeScript.apply_button_style(_trace_prev_button, ResearchThemeScript.FONT_SIZE_SMALL)
+	_trace_prev_button.pressed.connect(_on_trace_prev_pressed)
+	nav_row.add_child(_trace_prev_button)
+	_trace_next_button = Button.new()
+	_trace_next_button.text = "Next ▶"
+	_trace_next_button.focus_mode = Control.FOCUS_NONE
+	ResearchThemeScript.apply_button_style(_trace_next_button, ResearchThemeScript.FONT_SIZE_SMALL)
+	_trace_next_button.pressed.connect(_on_trace_next_pressed)
+	nav_row.add_child(_trace_next_button)
+	_trace_index_label = Label.new()
+	_trace_index_label.text = "0/0"
+	_trace_index_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_trace_index_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ResearchThemeScript.apply_label_style(_trace_index_label, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_MUTED)
+	nav_row.add_child(_trace_index_label)
+	_trace_copy_button = Button.new()
+	_trace_copy_button.text = "Copy trace"
+	_trace_copy_button.focus_mode = Control.FOCUS_NONE
+	ResearchThemeScript.apply_button_style(_trace_copy_button, ResearchThemeScript.FONT_SIZE_SMALL)
+	_trace_copy_button.pressed.connect(_on_trace_copy_pressed)
+	nav_row.add_child(_trace_copy_button)
+	vbox.add_child(control_card.root)
+
+	# 时间线（recentTraceEvents）
+	var rows_card := _make_card("recentTraceEvents")
+	_trace_summary_label = Label.new()
+	_trace_summary_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ResearchThemeScript.apply_label_style(_trace_summary_label, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_MUTED)
+	_trace_summary_label.text = "点击 trace 行：decision 高亮 NPC；memory 高亮观察者；其它弹 details。"
+	rows_card.body.add_child(_trace_summary_label)
+	_trace_rows_box = VBoxContainer.new()
+	_trace_rows_box.add_theme_constant_override("separation", 4)
+	rows_card.body.add_child(_trace_rows_box)
+	vbox.add_child(rows_card.root)
+
+	# Trace 详情（key-value 表）
+	var details_card := _make_card("trace details")
+	_trace_details_status_label = Label.new()
+	_trace_details_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ResearchThemeScript.apply_label_style(_trace_details_status_label, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_MUTED)
+	_trace_details_status_label.text = SECTION_EMPTY_TEXT["traceDetails"]
+	details_card.body.add_child(_trace_details_status_label)
+	_trace_details_box = VBoxContainer.new()
+	_trace_details_box.add_theme_constant_override("separation", 4)
+	details_card.body.add_child(_trace_details_box)
+	vbox.add_child(details_card.root)
+
+	_update_trace_filter_button_states()
+	return scroll
 
 
 func _select_trace_filter_by_index(index: int) -> void:
 	if index < 0 or index >= TRACE_FILTER_IDS.size():
 		return
 	_current_trace_filter = str(TRACE_FILTER_IDS[index])
-	if _recent_trace_filter != null:
-		_recent_trace_filter.select(index)
 	_select_latest_trace_detail()
 	_update_recent_trace_view()
 
 
-func _trace_filter_index_for_key(keycode: int) -> int:
-	match keycode:
-		KEY_1:
-			return 0
-		KEY_2:
-			return 1
-		KEY_3:
-			return 2
-		KEY_4:
-			return 3
-		KEY_5:
-			return 4
-		_:
-			return -1
-
-
-func _trace_summary_dict(summary: Dictionary) -> Dictionary:
-	var groups = summary.get("recentTraceEventGroups", {})
-	if groups is Dictionary:
-		return (groups as Dictionary).duplicate(true)
-	return _empty_trace_summary_dict()
-
-
-func _trace_event_group_dict(summary: Dictionary) -> Dictionary:
-	var groups = summary.get("recentTraceEventRows", {})
-	if groups is Dictionary:
-		return (groups as Dictionary).duplicate(true)
-	return _empty_trace_event_group_dict()
-
-
-func _trace_detail_group_dict(summary: Dictionary) -> Dictionary:
-	var groups = summary.get("recentTraceDetailGroups", {})
-	if groups is Dictionary:
-		return (groups as Dictionary).duplicate(true)
-	return _empty_trace_detail_group_dict()
-
-
-func _trace_copy_detail_group_dict(summary: Dictionary) -> Dictionary:
-	var groups = summary.get("recentTraceCopyDetailGroups", {})
-	if groups is Dictionary:
-		return (groups as Dictionary).duplicate(true)
-	return _trace_detail_group_dict(summary)
+func _update_trace_filter_button_states() -> void:
+	if _trace_filter_buttons.is_empty():
+		return
+	for i in range(_trace_filter_buttons.size()):
+		var button := _trace_filter_buttons[i]
+		var filter_id := str(TRACE_FILTER_IDS[i])
+		var active := filter_id == _current_trace_filter
+		button.button_pressed = active
+		var style := ResearchThemeScript.make_tab_style(active)
+		button.add_theme_stylebox_override("normal", style)
+		button.add_theme_stylebox_override("pressed", style)
+		button.add_theme_stylebox_override("hover", style)
 
 
 func _reset_recent_trace_view() -> void:
-	_recent_trace_summaries = _empty_trace_summary_dict()
-	_recent_trace_event_groups = _empty_trace_event_group_dict()
-	_recent_trace_detail_groups = _empty_trace_detail_group_dict()
-	_recent_trace_copy_detail_groups = _empty_trace_detail_group_dict()
-	_recent_trace_details = str(SECTION_EMPTY_TEXT["traceDetails"])
+	_recent_trace_event_groups = _empty_filter_dict()
+	_recent_trace_copy_detail_groups = _empty_filter_dict()
+	_recent_trace_summaries = _empty_summary_dict()
 	_current_trace_detail_index = 0
 	_current_trace_filter = "all"
-	if _recent_trace_filter != null:
-		_recent_trace_filter.select(0)
 	_hide_trace_details_popup()
 	_update_recent_trace_view()
 
 
 func _update_recent_trace_view() -> void:
+	_update_trace_filter_button_states()
 	var rows := _trace_events_for_filter()
-	if _recent_trace_value != null:
-		if rows.is_empty():
-			_recent_trace_value.text = _trace_summary_text_for_filter()
-		else:
-			_recent_trace_value.text = "点击 trace 行：decision 高亮参与 NPC；tool 展开 details；memory 高亮观察者。"
 	_rebuild_recent_trace_rows(rows)
-	_update_recent_trace_detail_text()
-
-
-func _update_recent_trace_detail_text() -> void:
-	if _recent_trace_detail_value == null:
-		_update_trace_index_label()
-		return
-	var details := _trace_details_for_filter()
-	var item_count := _trace_item_count()
-	if item_count <= 0:
-		_recent_trace_detail_value.text = _recent_trace_details
-		_update_trace_index_label()
-		return
-	_current_trace_detail_index = int(clamp(_current_trace_detail_index, 0, item_count - 1))
-	if _current_trace_detail_index < details.size():
-		_recent_trace_detail_value.text = str(details[_current_trace_detail_index])
-	else:
-		_recent_trace_detail_value.text = _recent_trace_details
-	_update_trace_index_label()
+	_update_recent_trace_detail_view()
+	if _trace_summary_label != null:
+		if rows.is_empty():
+			_trace_summary_label.text = _trace_summary_text_for_filter()
+		else:
+			_trace_summary_label.text = "点击 trace 行：decision 高亮 NPC；memory 高亮观察者；其它弹 details。"
+	if _trace_prev_button != null:
+		_trace_prev_button.disabled = rows.is_empty()
+	if _trace_next_button != null:
+		_trace_next_button.disabled = rows.is_empty()
+	if _trace_copy_button != null:
+		_trace_copy_button.disabled = rows.is_empty()
 
 
 func _rebuild_recent_trace_rows(rows: Array) -> void:
-	if _recent_trace_rows == null:
+	if _trace_rows_box == null:
 		return
-	for child in _recent_trace_rows.get_children():
+	for child in _trace_rows_box.get_children():
 		child.queue_free()
-	for index in range(rows.size()):
-		if not (rows[index] is Dictionary):
+	if rows.is_empty():
+		return
+	for i in range(rows.size()):
+		if not (rows[i] is Dictionary):
 			continue
-		var entry := (rows[index] as Dictionary).duplicate(true)
-		var row_button := Button.new()
-		row_button.focus_mode = Control.FOCUS_NONE
-		row_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row_button.clip_text = true
-		var prefix := "▶" if index == _current_trace_detail_index else "•"
-		row_button.text = "%s %s" % [prefix, _trace_row_text(entry)]
-		row_button.tooltip_text = "点击执行 trace 动作"
-		row_button.pressed.connect(_on_trace_row_pressed.bind(entry, index))
-		_recent_trace_rows.add_child(row_button)
+		var entry := (rows[i] as Dictionary).duplicate(true)
+		_trace_rows_box.add_child(_build_trace_row_button(entry, i))
 
 
-func _trace_summary_text_for_filter() -> String:
-	var fallback := str(_recent_trace_summaries.get(_current_trace_filter, _recent_trace_summaries.get("all", "")))
-	return _text_or_placeholder(fallback, "recentTraceEvents")
+func _build_trace_row_button(entry: Dictionary, row_index: int) -> Button:
+	var event_type := _trace_event_type(entry)
+	var tick_text := _trace_tick_text(entry)
+	var summary := _truncate_text(str(entry.get("summary", "")), 64)
+	var hint := _trace_detail_hint(entry.get("details", {}))
+	var color := ResearchThemeScript.trace_type_color(event_type)
+	var label_text := "%s  %s%s · %s" % [tick_text, _pretty_trace_type(event_type), hint, summary]
+
+	var button := Button.new()
+	button.focus_mode = Control.FOCUS_NONE
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.clip_text = true
+	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	button.text = ("▶ " if row_index == _current_trace_detail_index else "• ") + label_text
+	button.add_theme_color_override("font_color", color)
+	button.add_theme_color_override("font_hover_color", color)
+	button.add_theme_font_override("font", ResearchThemeScript.get_system_font())
+	button.add_theme_font_size_override("font_size", ResearchThemeScript.FONT_SIZE_BODY)
+	# Trace 行使用极简 stylebox，避免按钮厚边压挤行高。
+	var row_box := StyleBoxFlat.new()
+	row_box.bg_color = Color(0.0, 0.0, 0.0, 0.12) if row_index != _current_trace_detail_index else Color(color.r, color.g, color.b, 0.20)
+	row_box.set_corner_radius_all(6)
+	row_box.content_margin_left = 8
+	row_box.content_margin_right = 8
+	row_box.content_margin_top = 4
+	row_box.content_margin_bottom = 4
+	row_box.border_color = color if row_index == _current_trace_detail_index else Color(0.0, 0.0, 0.0, 0.0)
+	row_box.set_border_width_all(1 if row_index == _current_trace_detail_index else 0)
+	button.add_theme_stylebox_override("normal", row_box)
+	button.add_theme_stylebox_override("hover", row_box)
+	button.add_theme_stylebox_override("pressed", row_box)
+	button.add_theme_stylebox_override("focus", row_box)
+	button.pressed.connect(_on_trace_row_pressed.bind(entry, row_index))
+	return button
 
 
-func _trace_details_for_filter() -> Array:
-	var details = _recent_trace_detail_groups.get(_current_trace_filter, _recent_trace_detail_groups.get("all", []))
-	if details is Array:
-		return details as Array
-	return []
+func _update_recent_trace_detail_view() -> void:
+	if _trace_details_box == null or _trace_details_status_label == null:
+		return
+	for child in _trace_details_box.get_children():
+		child.queue_free()
+	var rows := _trace_events_for_filter()
+	var item_count := rows.size()
+	_update_trace_index_label(item_count)
+	if item_count <= 0:
+		_trace_details_status_label.text = SECTION_EMPTY_TEXT["traceDetails"]
+		return
+	_current_trace_detail_index = int(clamp(_current_trace_detail_index, 0, item_count - 1))
+	var entry := rows[_current_trace_detail_index] as Dictionary
+	var event_type := _trace_event_type(entry)
+	_trace_details_status_label.text = "%s · trace=%s · span=%s" % [
+		_pretty_trace_type(event_type),
+		str(entry.get("traceId", "-")),
+		str(entry.get("spanId", "-")),
+	]
+	_trace_details_box.add_child(_make_detail_kv("tick", _trace_tick_text(entry)))
+	_trace_details_box.add_child(_make_detail_kv("type", event_type))
+	_trace_details_box.add_child(_make_detail_kv("agentId", str(entry.get("agentId", "-"))))
+	var target_ids = entry.get("targetIds", [])
+	if target_ids is Array and not (target_ids as Array).is_empty():
+		_trace_details_box.add_child(_make_detail_kv("targetIds", ", ".join((target_ids as Array).map(func(x): return str(x)))))
+	var summary := str(entry.get("summary", ""))
+	if summary != "":
+		_trace_details_box.add_child(_make_detail_kv("summary", summary))
+	# details 折叠为多行 key-value
+	var details = entry.get("details", {})
+	if details is Dictionary:
+		for key in (details as Dictionary).keys():
+			var key_text := str(key)
+			var value = (details as Dictionary)[key]
+			_trace_details_box.add_child(_make_detail_kv(key_text, _value_to_text(value)))
+	# 提供"展开完整 JSON"按钮
+	var expand_row := HBoxContainer.new()
+	expand_row.add_theme_constant_override("separation", 6)
+	_trace_details_box.add_child(expand_row)
+	var expand_btn := Button.new()
+	expand_btn.text = "展开完整 JSON"
+	expand_btn.focus_mode = Control.FOCUS_NONE
+	ResearchThemeScript.apply_button_style(expand_btn, ResearchThemeScript.FONT_SIZE_SMALL)
+	expand_btn.pressed.connect(_show_trace_details_popup.bind(entry))
+	expand_row.add_child(expand_btn)
 
 
-func _trace_copy_details_for_filter() -> Array:
-	var details = _recent_trace_copy_detail_groups.get(_current_trace_filter, _recent_trace_copy_detail_groups.get("all", []))
-	if details is Array:
-		return details as Array
-	return _trace_details_for_filter()
+func _make_detail_kv(key: String, value_text: String) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	var key_label := Label.new()
+	key_label.text = key
+	key_label.custom_minimum_size = Vector2(110, 0)
+	ResearchThemeScript.apply_label_style(key_label, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_MUTED)
+	row.add_child(key_label)
+	var value_label := Label.new()
+	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	value_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	value_label.text = _truncate_text(value_text, 320)
+	ResearchThemeScript.apply_label_style(value_label, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_PRIMARY)
+	row.add_child(value_label)
+	return row
 
 
-func _trace_events_for_filter() -> Array:
-	var rows = _recent_trace_event_groups.get(_current_trace_filter, _recent_trace_event_groups.get("all", []))
-	if rows is Array:
-		return rows as Array
-	return []
-
-
-func _trace_item_count() -> int:
-	return int(max(_trace_details_for_filter().size(), _trace_events_for_filter().size()))
+func _value_to_text(value) -> String:
+	if value == null:
+		return "null"
+	if value is Dictionary or value is Array:
+		return JSON.stringify(value)
+	return str(value)
 
 
 func _select_latest_trace_detail() -> void:
-	_current_trace_detail_index = max(0, _trace_item_count() - 1)
+	var rows := _trace_events_for_filter()
+	_current_trace_detail_index = max(0, rows.size() - 1)
 
 
-func _update_trace_index_label() -> void:
-	if _trace_index_value == null:
+func _update_trace_index_label(item_count: int) -> void:
+	if _trace_index_label == null:
 		return
-	var item_count := _trace_item_count()
 	if item_count <= 0:
-		_trace_index_value.text = "0/0"
+		_trace_index_label.text = "0/0"
 		return
-	_trace_index_value.text = "%d/%d" % [_current_trace_detail_index + 1, item_count]
+	_trace_index_label.text = "%d/%d" % [_current_trace_detail_index + 1, item_count]
 
 
 func _on_trace_prev_pressed() -> void:
-	var item_count := _trace_item_count()
+	var item_count := _trace_events_for_filter().size()
 	if item_count <= 0:
 		return
 	_current_trace_detail_index = max(0, _current_trace_detail_index - 1)
@@ -577,7 +1139,7 @@ func _on_trace_prev_pressed() -> void:
 
 
 func _on_trace_next_pressed() -> void:
-	var item_count := _trace_item_count()
+	var item_count := _trace_events_for_filter().size()
 	if item_count <= 0:
 		return
 	_current_trace_detail_index = min(item_count - 1, _current_trace_detail_index + 1)
@@ -596,15 +1158,13 @@ func _on_trace_copy_pressed() -> void:
 		copy_text = JSON.stringify(rows[_current_trace_detail_index], "\t")
 	if copy_text == "":
 		return
-	# 复制当前单条 trace detail，便于真实窗口验收时粘贴到 issue / 文档。
 	DisplayServer.clipboard_set(copy_text)
-	_set_phase2_status("状态：已复制 trace detail")
+	_set_phase2_status("已复制 trace detail")
 
 
 func _on_trace_row_pressed(entry: Dictionary, row_index: int) -> void:
 	_current_trace_detail_index = row_index
-	_update_recent_trace_detail_text()
-	_rebuild_recent_trace_rows(_trace_events_for_filter())
+	_update_recent_trace_view()
 	var event_type := _trace_event_type(entry)
 	if event_type == "motivation.decision_made":
 		_hide_trace_details_popup()
@@ -614,24 +1174,70 @@ func _on_trace_row_pressed(entry: Dictionary, row_index: int) -> void:
 		_hide_trace_details_popup()
 		_emit_highlight(_memory_observer_ids(entry), "memory observers")
 		return
+	# 其它类型直接展开完整 JSON 弹层
 	_show_trace_details_popup(entry)
 
 
 func _on_retry_pressed() -> void:
 	if _current_npc_id == "":
 		return
-	_set_phase2_status("状态：重试加载中...")
+	_set_phase2_status("重试加载中…")
 	_set_retry_visible(false)
 	retry_requested.emit(_current_npc_id)
 
 
-func _emit_highlight(npc_ids: Array, label_text: String) -> void:
-	var normalized := _unique_ids(npc_ids)
-	if normalized.is_empty():
-		_set_phase2_status("状态：%s 未提供可高亮 NPC" % label_text)
-		return
-	highlight_npcs_requested.emit(normalized)
-	_set_phase2_status("状态：已高亮 %s：%s" % [label_text, ", ".join(normalized)])
+# ---------------------------------------------------------------------------
+# Trace details 弹层（旧"完整 JSON 弹层"路径，便于 paper 截图）
+# ---------------------------------------------------------------------------
+
+func _build_trace_detail_popup() -> void:
+	_trace_detail_popup = PanelContainer.new()
+	_trace_detail_popup.name = "TraceDetailsPopup"
+	_trace_detail_popup.visible = false
+	_trace_detail_popup.anchor_left = 0.0
+	_trace_detail_popup.anchor_top = 0.0
+	_trace_detail_popup.anchor_right = 1.0
+	_trace_detail_popup.anchor_bottom = 1.0
+	_trace_detail_popup.offset_left = 16.0
+	_trace_detail_popup.offset_top = 84.0
+	_trace_detail_popup.offset_right = -16.0
+	_trace_detail_popup.offset_bottom = -16.0
+	_trace_detail_popup.mouse_filter = Control.MOUSE_FILTER_STOP
+	_trace_detail_popup.z_index = 60
+	_trace_detail_popup.add_theme_stylebox_override("panel", ResearchThemeScript.make_panel_style(Color(0.02, 0.04, 0.06, 0.97), ResearchThemeScript.COLOR_ACCENT))
+	_panel.add_child(_trace_detail_popup)
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 12)
+	margin.add_theme_constant_override("margin_right", 12)
+	margin.add_theme_constant_override("margin_top", 10)
+	margin.add_theme_constant_override("margin_bottom", 10)
+	_trace_detail_popup.add_child(margin)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 8)
+	margin.add_child(column)
+	var title_row := HBoxContainer.new()
+	title_row.add_theme_constant_override("separation", 8)
+	column.add_child(title_row)
+	_trace_detail_popup_title = Label.new()
+	_trace_detail_popup_title.text = "Trace details"
+	_trace_detail_popup_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ResearchThemeScript.apply_label_style(_trace_detail_popup_title, ResearchThemeScript.FONT_SIZE_SUBTITLE, ResearchThemeScript.COLOR_ACCENT)
+	title_row.add_child(_trace_detail_popup_title)
+	var close_btn := Button.new()
+	close_btn.text = "关闭 [Esc]"
+	close_btn.focus_mode = Control.FOCUS_NONE
+	ResearchThemeScript.apply_button_style(close_btn, ResearchThemeScript.FONT_SIZE_SMALL)
+	close_btn.pressed.connect(_hide_trace_details_popup)
+	title_row.add_child(close_btn)
+	_trace_detail_scroll = ScrollContainer.new()
+	_trace_detail_scroll.focus_mode = Control.FOCUS_NONE
+	_trace_detail_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_trace_detail_scroll.custom_minimum_size = Vector2(0.0, 280.0)
+	column.add_child(_trace_detail_scroll)
+	_trace_detail_popup_value = Label.new()
+	_trace_detail_popup_value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ResearchThemeScript.apply_label_style(_trace_detail_popup_value, ResearchThemeScript.FONT_SIZE_SMALL, Color(0.93, 0.97, 1.0, 1.0))
+	_trace_detail_scroll.add_child(_trace_detail_popup_value)
 
 
 func _show_trace_details_popup(entry: Dictionary) -> void:
@@ -639,7 +1245,7 @@ func _show_trace_details_popup(entry: Dictionary) -> void:
 		return
 	var event_type := _trace_event_type(entry)
 	var trace_id := str(entry.get("traceId", entry.get("id", "-")))
-	_trace_detail_popup_title.text = "%s details · %s" % [_pretty_trace_type(event_type), trace_id]
+	_trace_detail_popup_title.text = "%s · %s" % [_pretty_trace_type(event_type), trace_id]
 	var details = entry.get("details", {})
 	var detail_text := "{}"
 	if details is Dictionary or details is Array:
@@ -647,10 +1253,9 @@ func _show_trace_details_popup(entry: Dictionary) -> void:
 	else:
 		detail_text = str(details)
 	if detail_text.length() > DETAIL_POPUP_MAX_CHARS:
-		detail_text = "%s\n... 已截断，Copy trace 可复制完整 trace 文本。" % detail_text.substr(0, DETAIL_POPUP_MAX_CHARS)
+		detail_text = "%s\n... 已截断，Copy trace 可复制完整。" % detail_text.substr(0, DETAIL_POPUP_MAX_CHARS)
 	_trace_detail_popup_value.text = detail_text
 	_trace_detail_popup.visible = true
-	_set_phase2_status("状态：已展开 %s details，可按 Esc 关闭" % _pretty_trace_type(event_type))
 	call_deferred("_reset_trace_detail_scroll")
 
 
@@ -668,73 +1273,197 @@ func _is_trace_detail_popup_visible() -> bool:
 	return _trace_detail_popup != null and _trace_detail_popup.visible
 
 
-func _decision_trace_agent_ids(entry: Dictionary) -> Array:
-	var ids: Array = []
-	_append_ids_from_value(ids, entry.get("agentId", null))
-	_append_ids_from_value(ids, entry.get("targetIds", null))
-	var details = entry.get("details", {})
-	if details is Dictionary:
-		var detail_dict := details as Dictionary
-		_append_ids_from_value(ids, detail_dict.get("npcId", null))
-		_append_ids_from_value(ids, detail_dict.get("targetNpcId", null))
-	return _unique_ids(ids)
+# ---------------------------------------------------------------------------
+# 公共小工具
+# ---------------------------------------------------------------------------
+
+func _switch_tab(next_tab: int) -> void:
+	_current_tab = int(clamp(next_tab, 0, _tab_pages.size() - 1))
+	for i in range(_tab_pages.size()):
+		_tab_pages[i].visible = i == _current_tab
+	for i in range(_tab_buttons.size()):
+		var button := _tab_buttons[i]
+		var active := i == _current_tab
+		button.button_pressed = active
+		var style := ResearchThemeScript.make_tab_style(active)
+		button.add_theme_stylebox_override("normal", style)
+		button.add_theme_stylebox_override("pressed", style)
+		button.add_theme_stylebox_override("hover", style)
 
 
-func _memory_observer_ids(entry: Dictionary) -> Array:
-	var ids: Array = []
-	var details = entry.get("details", {})
-	if details is Dictionary:
-		var detail_dict := details as Dictionary
-		var scope = detail_dict.get("observerScope", {})
-		if scope is Dictionary:
-			var scope_dict := scope as Dictionary
-			_append_ids_from_value(ids, scope_dict.get("observers", null))
-			_append_ids_from_value(ids, scope_dict.get("observerIds", null))
-		_append_ids_from_value(ids, detail_dict.get("observers", null))
-	if ids.is_empty():
-		_append_ids_from_value(ids, entry.get("targetIds", null))
-	return _unique_ids(ids)
+func _make_card(title_text: String) -> Dictionary:
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", ResearchThemeScript.make_card_style())
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 12)
+	margin.add_theme_constant_override("margin_right", 12)
+	margin.add_theme_constant_override("margin_top", 10)
+	margin.add_theme_constant_override("margin_bottom", 10)
+	card.add_child(margin)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 6)
+	margin.add_child(column)
+	var title := Label.new()
+	title.text = title_text
+	ResearchThemeScript.apply_label_style(title, ResearchThemeScript.FONT_SIZE_SUBTITLE, ResearchThemeScript.COLOR_TEXT_TITLE)
+	column.add_child(title)
+	var body := VBoxContainer.new()
+	body.add_theme_constant_override("separation", 6)
+	column.add_child(body)
+	return {"root": card, "body": body}
 
 
-func _append_ids_from_value(ids: Array, value) -> void:
-	if value == null:
+func _make_chip(text: String, accent: Color) -> Control:
+	var chip := PanelContainer.new()
+	chip.add_theme_stylebox_override("panel", ResearchThemeScript.make_chip_style(accent))
+	var label := Label.new()
+	label.text = text
+	ResearchThemeScript.apply_label_style(label, ResearchThemeScript.FONT_SIZE_CHIP, accent)
+	chip.add_child(label)
+	return chip
+
+
+func _make_chip_button(text: String, accent: Color) -> Button:
+	var button := Button.new()
+	button.text = text
+	button.focus_mode = Control.FOCUS_NONE
+	button.add_theme_font_override("font", ResearchThemeScript.get_system_font())
+	button.add_theme_font_size_override("font_size", ResearchThemeScript.FONT_SIZE_CHIP)
+	button.add_theme_color_override("font_color", accent)
+	button.add_theme_color_override("font_hover_color", ResearchThemeScript.COLOR_TEXT_PRIMARY)
+	var style := ResearchThemeScript.make_chip_style(accent)
+	var hover_style := ResearchThemeScript.make_chip_style(accent)
+	hover_style.bg_color = Color(accent.r * 0.4, accent.g * 0.4, accent.b * 0.4, 0.85)
+	button.add_theme_stylebox_override("normal", style)
+	button.add_theme_stylebox_override("hover", hover_style)
+	button.add_theme_stylebox_override("pressed", hover_style)
+	button.add_theme_stylebox_override("focus", style)
+	return button
+
+
+func _make_dot(color: Color, size_px: int) -> Control:
+	var dot := ColorRect.new()
+	dot.color = color
+	dot.custom_minimum_size = Vector2(size_px, size_px)
+	dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return dot
+
+
+func _set_phase2_status(text: String, is_error: bool = false) -> void:
+	if _inspector_status_value == null:
 		return
-	if value is Array:
-		var value_array := value as Array
-		for item in value_array:
-			_append_ids_from_value(ids, item)
-		return
-	var id_text := str(value).strip_edges()
-	if id_text == "" or id_text == "<null>":
-		return
-	if not ids.has(id_text):
-		ids.append(id_text)
+	_inspector_status_value.text = "状态：%s" % text
+	_inspector_status_value.add_theme_color_override("font_color", ResearchThemeScript.COLOR_STATUS_ERROR if is_error else ResearchThemeScript.COLOR_STATUS_OK)
 
 
-func _unique_ids(ids: Array) -> Array:
-	var unique: Array = []
-	for item in ids:
-		_append_ids_from_value(unique, item)
-	return unique
+func _set_retry_visible(next_visible: bool) -> void:
+	if _phase2_retry_button != null:
+		_phase2_retry_button.visible = next_visible
 
 
-func _trace_row_text(entry: Dictionary) -> String:
-	var event_type := _trace_event_type(entry)
-	var summary := _truncate_text(str(entry.get("summary", "")), 58)
-	var world_time = entry.get("worldTime", {})
-	var tick_text := "t?"
-	if world_time is Dictionary:
-		tick_text = "t%d" % int((world_time as Dictionary).get("tick", -1))
-	return "%s %s%s · %s" % [
-		tick_text,
-		_pretty_trace_type(event_type),
-		_trace_detail_hint(entry.get("details", {})),
-		summary,
-	]
+# ---------------------------------------------------------------------------
+# 数据辅助
+# ---------------------------------------------------------------------------
+
+func _payload_items(section) -> Array:
+	if section is Array:
+		return section as Array
+	if section is Dictionary:
+		var items = (section as Dictionary).get("items", [])
+		if items is Array:
+			return items as Array
+	return []
+
+
+func _section_summary_text(summary: Dictionary, key: String) -> String:
+	var text := str(summary.get(key, "")).strip_edges()
+	if text == "" or text == "-" or text == "[]" or text == "{}" or text == "<null>":
+		return str(SECTION_EMPTY_TEXT.get(key, "暂无数据。"))
+	return text
+
+
+func _trace_summary_dict(summary: Dictionary) -> Dictionary:
+	var groups = summary.get("recentTraceEventGroups", {})
+	if groups is Dictionary:
+		return (groups as Dictionary).duplicate(true)
+	return _empty_summary_dict()
+
+
+func _trace_event_group_dict(summary: Dictionary) -> Dictionary:
+	var groups = summary.get("recentTraceEventRows", {})
+	if groups is Dictionary:
+		return (groups as Dictionary).duplicate(true)
+	return _empty_filter_dict()
+
+
+func _trace_copy_detail_group_dict(summary: Dictionary) -> Dictionary:
+	var groups = summary.get("recentTraceCopyDetailGroups", {})
+	if groups is Dictionary:
+		return (groups as Dictionary).duplicate(true)
+	return _empty_filter_dict()
+
+
+func _trace_events_for_filter() -> Array:
+	var rows = _recent_trace_event_groups.get(_current_trace_filter, _recent_trace_event_groups.get("all", []))
+	if rows is Array:
+		return rows as Array
+	return []
+
+
+func _trace_copy_details_for_filter() -> Array:
+	var details = _recent_trace_copy_detail_groups.get(_current_trace_filter, _recent_trace_copy_detail_groups.get("all", []))
+	if details is Array:
+		return details as Array
+	return []
+
+
+func _trace_summary_text_for_filter() -> String:
+	var fallback := str(_recent_trace_summaries.get(_current_trace_filter, _recent_trace_summaries.get("all", "")))
+	if fallback.strip_edges() == "":
+		fallback = str(SECTION_EMPTY_TEXT["recentTraceEvents"])
+	return fallback
+
+
+static func _empty_filter_dict() -> Dictionary:
+	return {"all": [], "decision": [], "tool": [], "interrupt": [], "memory": []}
+
+
+static func _empty_summary_dict() -> Dictionary:
+	return {
+		"all": "暂无 recentTraceEvents：该 NPC 尚未产生可解释 trace。",
+		"decision": "暂无 decision trace。",
+		"tool": "暂无 tool trace。",
+		"interrupt": "暂无 interrupt trace。",
+		"memory": "暂无 memory trace。",
+	}
+
+
+func _trace_filter_index_for_key(keycode: int) -> int:
+	match keycode:
+		KEY_1:
+			return 0
+		KEY_2:
+			return 1
+		KEY_3:
+			return 2
+		KEY_4:
+			return 3
+		KEY_5:
+			return 4
+		_:
+			return -1
 
 
 func _trace_event_type(entry: Dictionary) -> String:
 	return str(entry.get("eventType", entry.get("type", "trace")))
+
+
+func _trace_tick_text(entry: Dictionary) -> String:
+	var world_time = entry.get("worldTime", {})
+	if world_time is Dictionary:
+		return "t%d" % int((world_time as Dictionary).get("tick", -1))
+	return "t?"
 
 
 func _trace_detail_hint(details) -> String:
@@ -769,45 +1498,114 @@ func _pretty_trace_type(event_type: String) -> String:
 			return event_type
 
 
-func _section_text(summary: Dictionary, key: String) -> String:
-	return _text_or_placeholder(summary.get(key, ""), key)
+func _decision_trace_agent_ids(entry: Dictionary) -> Array:
+	var ids: Array = []
+	_append_ids_from_value(ids, entry.get("agentId", null))
+	_append_ids_from_value(ids, entry.get("targetIds", null))
+	var details = entry.get("details", {})
+	if details is Dictionary:
+		var detail_dict := details as Dictionary
+		_append_ids_from_value(ids, detail_dict.get("npcId", null))
+		_append_ids_from_value(ids, detail_dict.get("targetNpcId", null))
+	return _unique_ids(ids)
 
 
-func _text_or_placeholder(value, key: String) -> String:
-	var text := str(value).strip_edges()
-	if text == "" or text == "-" or text == "[]" or text == "{}" or text == "<null>":
-		return str(SECTION_EMPTY_TEXT.get(key, "暂无数据。"))
-	return text
+func _memory_observer_ids(entry: Dictionary) -> Array:
+	var ids: Array = []
+	var details = entry.get("details", {})
+	if details is Dictionary:
+		var detail_dict := details as Dictionary
+		var scope = detail_dict.get("observerScope", {})
+		if scope is Dictionary:
+			var scope_dict := scope as Dictionary
+			_append_ids_from_value(ids, scope_dict.get("observers", null))
+			_append_ids_from_value(ids, scope_dict.get("observerIds", null))
+		_append_ids_from_value(ids, detail_dict.get("observers", null))
+	if ids.is_empty():
+		_append_ids_from_value(ids, entry.get("targetIds", null))
+	return _unique_ids(ids)
 
 
-func _empty_trace_summary_dict() -> Dictionary:
-	return {
-		"all": str(SECTION_EMPTY_TEXT["recentTraceEvents"]),
-		"decision": "暂无 decision trace：等待 NPC 完成动机决策。",
-		"tool": "暂无 tool trace：等待工具执行结果。",
-		"interrupt": "暂无 interrupt trace：当前没有工具中断。",
-		"memory": "暂无 memory trace：等待观察者写入记忆。",
-	}
-
-
-func _empty_trace_event_group_dict() -> Dictionary:
-	return {"all": [], "decision": [], "tool": [], "interrupt": [], "memory": []}
-
-
-func _empty_trace_detail_group_dict() -> Dictionary:
-	return {"all": [], "decision": [], "tool": [], "interrupt": [], "memory": []}
-
-
-func _set_phase2_status(text: String, is_error: bool = false) -> void:
-	if _phase2_status_value == null:
+func _emit_highlight(npc_ids: Array, label_text: String) -> void:
+	var normalized := _unique_ids(npc_ids)
+	if normalized.is_empty():
+		_set_phase2_status("%s 未提供可高亮 NPC" % label_text)
 		return
-	_phase2_status_value.text = text
-	_phase2_status_value.add_theme_color_override("font_color", _error_status_color if is_error else _normal_status_color)
+	highlight_npcs_requested.emit(normalized)
+	_set_phase2_status("已高亮 %s：%s" % [label_text, ", ".join(normalized)])
 
 
-func _set_retry_visible(next_visible: bool) -> void:
-	if _phase2_retry_button != null:
-		_phase2_retry_button.visible = next_visible
+func _append_ids_from_value(ids: Array, value) -> void:
+	if value == null:
+		return
+	if value is Array:
+		for item in value as Array:
+			_append_ids_from_value(ids, item)
+		return
+	var id_text := str(value).strip_edges()
+	if id_text == "" or id_text == "<null>":
+		return
+	if not ids.has(id_text):
+		ids.append(id_text)
+
+
+func _unique_ids(ids: Array) -> Array:
+	var unique: Array = []
+	for item in ids:
+		_append_ids_from_value(unique, item)
+	return unique
+
+
+func _short_source_label(source_type: String) -> String:
+	match source_type:
+		"relationship_edge_refs":
+			return "关系"
+		"subjective_memory_refs":
+			return "主观记忆"
+		"heuristic_refs":
+			return "启发式"
+		"motivation_decision_trace":
+			return "decision"
+		"llm_social_strategic_layer":
+			return "LLM"
+		_:
+			return source_type.replace("_", " ")
+
+
+func _need_label(need_id: String) -> String:
+	match need_id:
+		"energy":
+			return "energy 恢复体力"
+		"money_anxiety":
+			return "money_anxiety 稳定收入"
+		"affiliation":
+			return "affiliation 建立联结"
+		"recognition":
+			return "recognition 获得认可"
+		"":
+			return "等待动机"
+		_:
+			return need_id
+
+
+func _pretty_location(location_id: String) -> String:
+	if location_id == "":
+		return "-"
+	match location_id:
+		"farm":
+			return "Farm 农场"
+		"plaza":
+			return "Plaza 广场"
+		"tavern":
+			return "Tavern 酒馆"
+		_:
+			return location_id
+
+
+func _pretty_anchor(anchor_id: String) -> String:
+	if anchor_id == "":
+		return "-"
+	return anchor_id.replace("_", " ")
 
 
 func _truncate_text(value: String, max_chars: int) -> String:

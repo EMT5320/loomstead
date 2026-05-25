@@ -1,6 +1,8 @@
 class_name WorldVnPanel
 extends CanvasLayer
 
+const ResearchThemeScript := preload("res://scripts/ui/research_theme.gd")
+
 var _dialogue_panel: PanelContainer
 var _speaker_label: Label
 var _body_label: Label
@@ -53,15 +55,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _build_hint_label() -> void:
+	# WorldHint 已迁移到 TopBanner；这里保留隐藏 Label 保持 show_hint API
+	# 不破坏，便于其它代码（包括测试脚本）继续调用 vn_panel.show_hint。
 	_hint_label = Label.new()
 	_hint_label.name = "WorldHint"
-	_hint_label.position = Vector2(360.0, 20.0)
-	_hint_label.size = Vector2(1180.0, 34.0)
-	_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_hint_label.add_theme_font_size_override("font_size", 18)
-	_hint_label.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.88))
-	_hint_label.add_theme_constant_override("shadow_offset_x", 2)
-	_hint_label.add_theme_constant_override("shadow_offset_y", 2)
+	_hint_label.visible = false
 	add_child(_hint_label)
 
 
@@ -90,37 +88,26 @@ func _build_dialogue_panel() -> void:
 
 	_speaker_label = Label.new()
 	_speaker_label.name = "Speaker"
-	_speaker_label.add_theme_font_size_override("font_size", 22)
-	_speaker_label.add_theme_color_override("font_color", Color(1.0, 0.88, 0.48, 1.0))
-	_speaker_label.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.9))
-	_speaker_label.add_theme_constant_override("shadow_offset_x", 2)
-	_speaker_label.add_theme_constant_override("shadow_offset_y", 2)
+	ResearchThemeScript.apply_label_style(_speaker_label, 22, ResearchThemeScript.COLOR_TEXT_TITLE, true)
 	column.add_child(_speaker_label)
 
 	_body_label = Label.new()
 	_body_label.name = "Body"
 	_body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_body_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_body_label.add_theme_font_size_override("font_size", 18)
-	_body_label.add_theme_color_override("font_color", Color(0.98, 0.97, 0.90, 1.0))
-	_body_label.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.82))
-	_body_label.add_theme_constant_override("shadow_offset_x", 1)
-	_body_label.add_theme_constant_override("shadow_offset_y", 1)
+	ResearchThemeScript.apply_label_style(_body_label, 17, ResearchThemeScript.COLOR_TEXT_PRIMARY, true)
 	column.add_child(_body_label)
 
 	_status_label = Label.new()
 	_status_label.name = "Status"
-	_status_label.add_theme_font_size_override("font_size", 14)
-	_status_label.add_theme_color_override("font_color", Color(0.74, 0.92, 1.0, 0.92))
+	ResearchThemeScript.apply_label_style(_status_label, 13, ResearchThemeScript.COLOR_TEXT_MUTED)
 	column.add_child(_status_label)
 
 
 func _make_panel_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.07, 0.08, 0.10, 0.88)
-	style.border_color = Color(0.95, 0.75, 0.32, 0.95)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(18)
-	style.shadow_color = Color(0.0, 0.0, 0.0, 0.35)
-	style.shadow_size = 6
-	return style
+	return ResearchThemeScript.make_panel_style(
+		Color(0.06, 0.08, 0.11, 0.92),
+		Color(0.95, 0.75, 0.32, 0.85),
+		18,
+		2
+	)

@@ -36,6 +36,8 @@ var _fallback_body: ColorRect
 var _intent_label: Label
 var _name_label: Label
 var _action_label: Label
+var _player_nearby: bool = false
+var _current_action_text: String = ""
 
 
 func _ready() -> void:
@@ -74,17 +76,22 @@ func _ready() -> void:
 	_fallback_body.position = Vector2(-20.0, -72.0)
 	_visual_root.add_child(_fallback_body)
 
-	_intent_label = _make_label("IntentLabel", "意图：等待同步", Vector2(-84.0, -150.0), 168.0, 13)
-	_intent_label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.52, 0.96))
+	# 旧 IntentLabel 已迁移到 Research Dock Inspector Tab，这里保持节点存在但隐藏，
+	# 避免破坏 set_intent_status 调用链。
+	_intent_label = _make_label("IntentLabel", "", Vector2(-84.0, -150.0), 168.0, 12)
+	_intent_label.visible = false
 	add_child(_intent_label)
 
-	_name_label = _make_label("NameLabel", _display_name if _display_name != "" else npc_id, Vector2(-72.0, -128.0), 144.0, 15)
+	_name_label = _make_label("NameLabel", _display_name if _display_name != "" else npc_id, Vector2(-72.0, -120.0), 144.0, 13)
 	add_child(_name_label)
 
-	_action_label = _make_label("ActionLabel", "Idle", Vector2(-74.0, -106.0), 148.0, 14)
+	_action_label = _make_label("ActionLabel", "Idle", Vector2(-74.0, -98.0), 148.0, 11)
+	_action_label.visible = false
+	_action_label.add_theme_color_override("font_color", Color(0.93, 0.96, 1.0, 0.92))
 	add_child(_action_label)
 	_apply_pending_texture()
 	_enter_state(NpcState.IDLE, "Idle")
+	_apply_label_visibility()
 
 
 func _process(delta: float) -> void:
@@ -126,20 +133,31 @@ func set_crowd_offset(offset: Vector2) -> void:
 
 
 func set_intent_status(text: String) -> void:
+	# intent 文本只保留为数据缓存供其它系统读取；头顶展示已移除。
 	if _intent_label == null:
 		return
-	var trimmed := text.strip_edges()
-	_intent_label.visible = trimmed != ""
-	_intent_label.text = _short_label_text(trimmed, 30)
+	_intent_label.text = _short_label_text(text.strip_edges(), 30)
 
 
 func set_action_status(text: String) -> void:
-	if _action_label == null:
-		return
 	var trimmed := text.strip_edges()
 	if trimmed == "":
 		return
-	_action_label.text = _short_label_text(trimmed, 32)
+	_current_action_text = _short_label_text(trimmed, 28)
+	_apply_label_visibility()
+
+
+func set_player_nearby(is_near: bool) -> void:
+	if _player_nearby == is_near:
+		return
+	_player_nearby = is_near
+	_apply_label_visibility()
+
+
+func _apply_label_visibility() -> void:
+	if _action_label != null:
+		_action_label.text = _current_action_text if _current_action_text != "" else "Idle"
+		_action_label.visible = _player_nearby and _current_action_text != ""
 
 
 func flash_observer_highlight(duration_msec: int = 2200, highlight_color: Color = Color(1.0, 0.92, 0.28, 1.0)) -> void:
@@ -256,8 +274,8 @@ func _action_label_from_event(event_payload: Dictionary, fallback_text: String) 
 
 func _enter_state(next_state: NpcState, label_text: String) -> void:
 	current_state = next_state
-	if _action_label != null:
-		_action_label.text = label_text
+	_current_action_text = label_text
+	_apply_label_visibility()
 	match current_state:
 		NpcState.IDLE:
 			_set_visual_modulate(Color(1.0, 1.0, 1.0, 1.0))

@@ -6,6 +6,7 @@ const AssetRegistryScript := preload("res://scripts/asset_registry.gd")
 const PlayerControllerScript := preload("res://scripts/world/player_controller.gd")
 const VnPanelScript := preload("res://scripts/ui/vn_panel.gd")
 const ObserverPanelScript := preload("res://scripts/ui/observer_panel.gd")
+const TopBannerScript := preload("res://scripts/ui/top_banner.gd")
 
 const STAGE_WIDTH := 640.0
 const STAGE_HEIGHT := 1080.0
@@ -100,6 +101,7 @@ var _player_controller
 var _camera: Camera2D
 var _vn_panel
 var _observer_panel
+var _top_banner
 var _nearest_npc_id := ""
 var _selected_observer_npc_id := ""
 var _observer_phase2_cache: Dictionary = {}
@@ -135,6 +137,7 @@ func _ready() -> void:
 	_build_camera()
 	_build_vn_panel()
 	_build_observer_panel()
+	_build_top_banner()
 	_connect_event_bus()
 	_connect_world_clock()
 	call_deferred("_request_initial_world_snapshot")
@@ -148,6 +151,7 @@ func _process(_delta: float) -> void:
 	_update_event_beacons()
 	_refresh_event_compass()
 	_refresh_selected_observer_npc()
+	_refresh_top_banner_stage()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -209,15 +213,13 @@ func _build_stage_background(stage_id: String, origin: Vector2) -> void:
 
 
 func _build_stage_title(stage_id: String, origin: Vector2) -> void:
+	# 旧的"Title_<stage>"贴图大字号标题已迁移到 Top Banner 顶栏，
+	# 这里保留隐藏 Label 节点，避免大字号挡背景。
 	var title := Label.new()
 	title.name = "Title_%s" % stage_id
 	title.text = "%s / %s" % [str(STAGE_NAMES.get(stage_id, stage_id)), stage_id]
 	title.position = origin + Vector2(18.0, 18.0)
-	title.add_theme_font_size_override("font_size", 24)
-	title.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))
-	title.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.75))
-	title.add_theme_constant_override("shadow_offset_x", 2)
-	title.add_theme_constant_override("shadow_offset_y", 2)
+	title.visible = false
 	stage_layer.add_child(title)
 
 
@@ -280,21 +282,22 @@ func _build_anchor_marker(anchor_id: String, anchor_position: Vector2) -> void:
 
 
 func _build_event_label() -> void:
+	# 旧 WorldEventLabel 改为隐藏背景节点：tick 状态会由 Research Dock 接管展示，
+	# 但保留节点和文本字段，便于其它代码继续 set text 作为内部状态。
 	_event_label = Label.new()
 	_event_label.name = "WorldEventLabel"
 	_event_label.position = Vector2(18.0, STAGE_HEIGHT - 96.0)
 	_event_label.size = Vector2(900.0, 56.0)
 	_event_label.text = "Waiting for /api/world/tick ..."
-	_event_label.add_theme_font_size_override("font_size", 18)
-	_event_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 0.95))
-	_event_label.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.85))
-	_event_label.add_theme_constant_override("shadow_offset_x", 2)
-	_event_label.add_theme_constant_override("shadow_offset_y", 2)
+	_event_label.visible = false
 	debug_layer.add_child(_event_label)
 
 
 func _build_world_pulse_panel() -> void:
-	# 世界动态面板把后端日程快照转成玩家可读提示，避免只看调试路径线。
+	# 旧 WorldPulsePanel 已迁移到 Research Dock Tab 1。这里保留 layer + label
+	# 字段作为隐藏数据缓冲，让 `_refresh_world_pulse_panel` 继续写入
+	# `_pulse_clock_label / _pulse_event_label / _pulse_schedule_label`，
+	# 不影响其它读取这些 label 的代码（如 tick failed 兜底）。
 	_pulse_layer = CanvasLayer.new()
 	_pulse_layer.name = "WorldPulseLayer"
 	_pulse_layer.layer = 12
@@ -302,62 +305,31 @@ func _build_world_pulse_panel() -> void:
 
 	var panel := PanelContainer.new()
 	panel.name = "WorldPulsePanel"
-	panel.anchor_left = 1.0
-	panel.anchor_top = 0.0
-	panel.anchor_right = 1.0
-	panel.anchor_bottom = 0.0
-	panel.offset_left = -440.0
-	panel.offset_top = 72.0
-	panel.offset_right = -18.0
-	panel.offset_bottom = 322.0
+	panel.visible = false
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.add_theme_stylebox_override("panel", _make_pulse_panel_style())
 	_pulse_layer.add_child(panel)
 	_build_event_compass_label()
 
-	var margin := MarginContainer.new()
-	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	margin.add_theme_constant_override("margin_left", 16)
-	margin.add_theme_constant_override("margin_right", 16)
-	margin.add_theme_constant_override("margin_top", 12)
-	margin.add_theme_constant_override("margin_bottom", 12)
-	panel.add_child(margin)
-
-	var column := VBoxContainer.new()
-	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	column.add_theme_constant_override("separation", 7)
-	margin.add_child(column)
-
-	var title := _make_pulse_label("WorldPulseTitle", "World Pulse / 小镇动态", 18, Color(1.0, 0.88, 0.52, 1.0))
-	column.add_child(title)
-
-	_pulse_clock_label = _make_pulse_label("WorldPulseClock", "Clock: waiting for tick", 14, Color(0.82, 0.94, 1.0, 0.95))
-	column.add_child(_pulse_clock_label)
-
-	_pulse_event_label = _make_pulse_label("WorldPulseEvent", "Event: loading world state ...", 14, Color(1.0, 0.82, 0.68, 0.95))
-	_pulse_event_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	column.add_child(_pulse_event_label)
-
-	_pulse_schedule_label = _make_pulse_label("WorldPulseSchedule", "NPC Plans: loading ...", 13, Color(0.93, 1.0, 0.90, 0.95))
-	_pulse_schedule_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_pulse_schedule_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	column.add_child(_pulse_schedule_label)
+	# 隐藏的内部 label 字段：保持 set text 路径活着，但不会渲染。
+	_pulse_clock_label = Label.new()
+	_pulse_clock_label.name = "WorldPulseClock"
+	panel.add_child(_pulse_clock_label)
+	_pulse_event_label = Label.new()
+	_pulse_event_label.name = "WorldPulseEvent"
+	panel.add_child(_pulse_event_label)
+	_pulse_schedule_label = Label.new()
+	_pulse_schedule_label.name = "WorldPulseSchedule"
+	panel.add_child(_pulse_schedule_label)
 	_refresh_world_pulse_panel()
 
 
 func _build_event_compass_label() -> void:
+	# RemoteEventCompass 文案改由 TopBanner 接管展示；这里保留隐藏 Label
+	# 节点以维持原有刷新链路（_refresh_event_compass 仍在写入 text）。
 	_event_compass_label = Label.new()
 	_event_compass_label.name = "RemoteEventCompass"
-	_event_compass_label.position = Vector2(520.0, 64.0)
-	_event_compass_label.size = Vector2(760.0, 34.0)
-	_event_compass_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_event_compass_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_event_compass_label.visible = false
-	_event_compass_label.add_theme_font_size_override("font_size", 18)
-	_event_compass_label.add_theme_color_override("font_color", Color(1.0, 0.78, 0.38, 0.96))
-	_event_compass_label.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.90))
-	_event_compass_label.add_theme_constant_override("shadow_offset_x", 2)
-	_event_compass_label.add_theme_constant_override("shadow_offset_y", 2)
+	_event_compass_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_pulse_layer.add_child(_event_compass_label)
 
 
@@ -427,11 +399,35 @@ func _build_observer_panel() -> void:
 	_observer_panel = ObserverPanelScript.new()
 	_observer_panel.name = "ObserverPanel"
 	add_child(_observer_panel)
-	# ObserverPanel 只发出 UI 意图，世界节点负责真实 NPC 高亮和重新拉取。
+	# Research Dock 只发出 UI 意图，世界节点负责 NPC 高亮、重新拉取与跳转选中。
 	if not _observer_panel.highlight_npcs_requested.is_connected(_on_observer_panel_highlight_npcs_requested):
 		_observer_panel.highlight_npcs_requested.connect(_on_observer_panel_highlight_npcs_requested)
 	if not _observer_panel.retry_requested.is_connected(_on_observer_panel_retry_requested):
 		_observer_panel.retry_requested.connect(_on_observer_panel_retry_requested)
+	if _observer_panel.has_signal("select_npc_requested"):
+		if not _observer_panel.select_npc_requested.is_connected(_on_observer_panel_select_npc_requested):
+			_observer_panel.select_npc_requested.connect(_on_observer_panel_select_npc_requested)
+
+
+func _build_top_banner() -> void:
+	_top_banner = TopBannerScript.new()
+	_top_banner.name = "TopBanner"
+	add_child(_top_banner)
+
+
+func _refresh_top_banner_stage() -> void:
+	if _top_banner == null or _player_controller == null:
+		return
+	var stage_id := _stage_id_for_position(_player_controller.global_position)
+	_top_banner.set_stage(str(STAGE_NAMES.get(stage_id, stage_id)))
+
+
+func _on_observer_panel_select_npc_requested(npc_id) -> void:
+	# Tab 1 全景行点击会调用此入口，与鼠标点击 NPC 走同一选中路径。
+	var trimmed := str(npc_id).strip_edges()
+	if trimmed == "":
+		return
+	_select_observer_npc(trimmed)
 
 
 func _on_observer_panel_highlight_npcs_requested(npc_ids) -> void:
@@ -625,7 +621,11 @@ func _fetch_phase2_debug_for_observer_async(npc_id: String) -> void:
 
 
 func _build_phase2_observer_summary(payload: Dictionary) -> Dictionary:
+	# `payload` 字段承载原始 phase2 debug 字典，Research Dock 用它直接渲染
+	# motivation / subjectiveMemory / relationshipEdges / heuristics 富卡片；
+	# 其它字段为兼容旧 ObserverPanel 文本摘要的 fallback。
 	return {
+		"payload": payload.duplicate(true),
 		"motivation": _summarize_phase2_motivation(payload.get("motivation", {})),
 		"subjectiveMemory": _summarize_phase2_subjective_memory(payload.get("subjectiveMemory", {})),
 		"relationshipEdges": _summarize_phase2_relationship_edges(payload.get("relationshipEdges", {})),
@@ -1351,30 +1351,29 @@ func _update_event_beacons() -> void:
 
 
 func _refresh_event_compass() -> void:
-	if _event_compass_label == null:
-		return
-	if _active_event_records.is_empty() or _player_controller == null:
+	# RemoteEventCompass 文案现在写到 TopBanner 的右块；
+	# 隐藏的 _event_compass_label 仍同步更新，保持旧测试路径活着。
+	var compass_text := ""
+	if not _active_event_records.is_empty() and _player_controller != null:
+		var event_id := str(_active_event_records.keys()[0])
+		var record = _active_event_records.get(event_id, {})
+		if record is Dictionary:
+			var event_location := str(record.get("locationId", ""))
+			var player_location := _stage_id_for_position(_player_controller.global_position)
+			if event_location != "" and event_location != player_location:
+				var anchor_id := str(record.get("anchorId", ""))
+				var anchor_point = _anchor_positions.get(anchor_id, _player_controller.global_position)
+				var direction := "→" if (anchor_point is Vector2 and (anchor_point as Vector2).x > _player_controller.global_position.x) else "←"
+				compass_text = "远处事件 %s %s：%s" % [
+					direction,
+					_pretty_location(event_location),
+					_truncate_text(str(record.get("title", event_id)), 34),
+				]
+	if _event_compass_label != null:
+		_event_compass_label.text = compass_text
 		_event_compass_label.visible = false
-		return
-	var event_id := str(_active_event_records.keys()[0])
-	var record = _active_event_records.get(event_id, {})
-	if not (record is Dictionary):
-		_event_compass_label.visible = false
-		return
-	var event_location := str(record.get("locationId", ""))
-	var player_location := _stage_id_for_position(_player_controller.global_position)
-	if event_location == "" or event_location == player_location:
-		_event_compass_label.visible = false
-		return
-	var anchor_id := str(record.get("anchorId", ""))
-	var anchor_point = _anchor_positions.get(anchor_id, _player_controller.global_position)
-	var direction := "→" if (anchor_point is Vector2 and (anchor_point as Vector2).x > _player_controller.global_position.x) else "←"
-	_event_compass_label.text = "远处事件 %s %s：%s" % [
-		direction,
-		_pretty_location(event_location),
-		_truncate_text(str(record.get("title", event_id)), 34),
-	]
-	_event_compass_label.visible = true
+	if _top_banner != null:
+		_top_banner.set_remote_event(compass_text)
 
 
 func _refresh_world_pulse_panel() -> void:
@@ -1384,21 +1383,51 @@ func _refresh_world_pulse_panel() -> void:
 	_pulse_event_label.text = _format_pulse_event_line()
 
 	var lines: Array[String] = []
+	var pulse_rows: Array = []
+	var visible_count := 0
 	for npc_key in NPC_DISPLAY_NAMES.keys():
 		var npc_id := str(npc_key)
 		var npc_name := str(NPC_DISPLAY_NAMES.get(npc_id, npc_id))
 		var status := str(_npc_statuses.get(npc_id, ""))
 		if status == "":
 			status = _format_npc_plan(npc_id)
-		if status == "":
-			continue
-		lines.append("· %s：%s" % [npc_name, _truncate_text(status, 54)])
-		if lines.size() >= PULSE_PANEL_MAX_LINES:
+		var plan_dict = _npc_plans.get(npc_id, {})
+		var location_id := ""
+		if plan_dict is Dictionary:
+			location_id = str((plan_dict as Dictionary).get("locationId", ""))
+		if location_id == "":
+			var controller := _npc_nodes.get(npc_id, null) as NpcController
+			if controller != null:
+				location_id = _stage_id_for_position(controller.global_position)
+		pulse_rows.append({
+			"npcId": npc_id,
+			"name": npc_name,
+			"status": status if status != "" else "—",
+			"location": location_id,
+			"color": NPC_COLORS.get(npc_id, Color(1.0, 1.0, 1.0, 1.0)),
+		})
+		if status != "":
+			lines.append("· %s：%s" % [npc_name, _truncate_text(status, 54)])
+			visible_count += 1
+		if visible_count >= PULSE_PANEL_MAX_LINES:
 			break
 	if lines.is_empty():
 		_pulse_schedule_label.text = "NPC Plans: waiting for /api/world/state"
 	else:
 		_pulse_schedule_label.text = "NPC Plans:\n%s" % "\n".join(lines)
+
+	# 把同一份数据推到 Research Dock Tab 1，让全景视图与隐藏的 pulse 数据同步。
+	if _observer_panel != null and _observer_panel.has_method("set_world_pulse_data"):
+		var active_events: Array = []
+		for event_key in _active_event_records.keys():
+			var record = _active_event_records.get(str(event_key), {})
+			if record is Dictionary:
+				active_events.append((record as Dictionary).duplicate(true))
+		_observer_panel.set_world_pulse_data({
+			"clock": _latest_clock.duplicate(true),
+			"activeEvents": active_events,
+			"npcRows": pulse_rows,
+		})
 
 
 func _format_pulse_clock() -> String:
@@ -1541,15 +1570,25 @@ func _update_nearest_npc_hint() -> void:
 		if controller == null:
 			continue
 		var distance: float = player_point.distance_to(controller.global_position)
+		# 头顶 action label 仅在玩家靠近时显示，减少远处密集字段堆叠。
+		var nearby := distance <= PLAYER_INTERACT_RADIUS
+		if controller.has_method("set_player_nearby"):
+			controller.set_player_nearby(nearby)
 		if distance < nearest_distance:
 			nearest_distance = distance
 			nearest_id = npc_id
 	if nearest_id != "" and nearest_distance <= PLAYER_INTERACT_RADIUS:
 		_nearest_npc_id = nearest_id
-		_vn_panel.show_hint("E: talk to %s  (%.0f px)" % [str(NPC_DISPLAY_NAMES.get(nearest_id, nearest_id)), nearest_distance], true)
+		var hint_text := "按 E 与 %s 对话  (%.0f px)" % [str(NPC_DISPLAY_NAMES.get(nearest_id, nearest_id)), nearest_distance]
+		_vn_panel.show_hint(hint_text, true)
+		if _top_banner != null:
+			_top_banner.set_hint(hint_text, true)
 		return
 	_nearest_npc_id = ""
-	_vn_panel.show_hint("WASD / Arrow move - get close to an NPC and press E to talk", false)
+	var idle_hint := "WASD / 方向键移动 · 靠近 NPC 按 E 对话"
+	_vn_panel.show_hint(idle_hint, false)
+	if _top_banner != null:
+		_top_banner.set_hint(idle_hint, false)
 
 
 func _submit_talk(npc_id: String) -> void:

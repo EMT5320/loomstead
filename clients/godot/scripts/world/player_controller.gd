@@ -43,10 +43,13 @@ func _ready() -> void:
 	_fallback_body.position = Vector2(-21.0, -74.0)
 	_visual_root.add_child(_fallback_body)
 
-	_name_label = _make_label("NameLabel", "Player", Vector2(-74.0, -130.0), 148.0, 15)
+	_name_label = _make_label("NameLabel", "Player", Vector2(-74.0, -120.0), 148.0, 13)
 	add_child(_name_label)
 
-	_state_label = _make_label("StateLabel", "WASD", Vector2(-74.0, -108.0), 148.0, 14)
+	# 简化后只在移动时显示 "Moving" 状态，避免静止时叠一行 WASD。
+	_state_label = _make_label("StateLabel", "", Vector2(-74.0, -98.0), 148.0, 11)
+	_state_label.visible = false
+	_state_label.add_theme_color_override("font_color", Color(0.93, 0.96, 1.0, 0.85))
 	add_child(_state_label)
 	_apply_motion_state(false)
 
@@ -103,6 +106,7 @@ func _read_move_axis() -> Vector2:
 func _apply_motion_state(is_moving: bool) -> void:
 	if _state_label != null:
 		_state_label.text = "Moving" if is_moving else "Idle"
+		_state_label.visible = is_moving
 	if _sprite != null:
 		_sprite.modulate = Color(0.80, 0.94, 1.0, 1.0) if is_moving else Color(1.0, 1.0, 1.0, 1.0)
 		if abs(_last_axis.x) > 0.1:
