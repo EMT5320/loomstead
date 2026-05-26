@@ -9,7 +9,7 @@ scope: current implementation facts, verification state, and work constraints
 
 # 当前项目状态与开发前约束
 
-> 状态更新时间：2026-05-26（上下文治理收缩；trace 体验代码与离线验证已完成，真实窗口 source chip / Copy trace 仍待最终人工验收）
+> 状态更新时间：2026-05-26（真实窗口已确认 `memory.result_observed` 行与来源跳转按钮；下一阶段转入 Eval 证据链收紧）
 > 本文记录当前仓库中已核对、命令已检或明确标注人工未验收的事实。长期方向见 `docs/project_vision.md`，研究 framing 见 `docs/research_framing_motivational_delegation.md`，Agent loop 设计见 `docs/agent_loop_architecture.md`。
 
 ## 1. 当前阶段判断
@@ -27,7 +27,7 @@ scope: current implementation facts, verification state, and work constraints
 | --- | --- | --- |
 | 后端 Runtime / Director | Python Agent Server 是权威世界状态入口；已有 `GET /api/world/state`、`POST /api/player/action`、`POST /api/world/tick`、`GET /api/debug.phase2`；规则版 Director v0 与单个 Event Skill `event.starlight_festival_shortage` 已运行；Phase 2 tick 主路径已切到 `MotivationEngine -> ToolExecutor -> ResultObserver`；`motivation.decision_made`、工具完成 / 失败 / 中断、`memory.result_observed` 均带 trace 证据；`schema_registry.v1` 已集中治理主要 schema。 | 继续扩展 schema 迁移覆盖、失败模式、真实预算策略和更完整竞争上下文裁决；旧 `LifeActionExecutor` 只做回归修复。 |
 | Eval / Research | `scripts/run_agent_eval.py` 已覆盖 rule process suite、stability、stability determinism、domain adapter suite；Process Fidelity Eval 包含 Hard Delegation、No Subjective Memory、No Relationship Edge、Shuffled Owner、Evidence-Link Removal、Branna Forgiveness fixture、Counterfactual Replay 和本地 export / archive manifest；coding domain adapter 已覆盖 7 类 repo fixture。 | Eval 是 Phase 2 硬验收线；继续加深真实依赖图、跨文件回归、review agent 分歧和 dependency evidence chain；真实 cloud LLM 证据不进默认 CI。 |
-| Godot 客户端 | `clients/godot/` 是 Godot 4.x 项目；默认主场景为 `res://scenes/world_main.tscn`；Phase 1 玩家移动、`E` talk、tick NPC 行动、远处事件提示和三场景拼图已收口；Research Dock 三 Tab 已读取 `/api/debug.phase2` 并展示 motivation、subjective memory、relationship edges、heuristics 与 trace timeline；source chip 跳转、Copy 当前 trace JSON 和 NPC 高亮代码已落地。 | 主人已确认 UI 重设计后的整体观感、非全屏滚动、6 NPC 密度和遮挡风险修复；source chip 点击、Copy 当前 trace JSON、trace detail 文案和快捷键手感仍需真实窗口最终人工验收。 |
+| Godot 客户端 | `clients/godot/` 是 Godot 4.x 项目；默认主场景为 `res://scenes/world_main.tscn`；Phase 1 玩家移动、`E` talk、tick NPC 行动、远处事件提示和三场景拼图已收口；Research Dock 三 Tab 已读取 `/api/debug.phase2` 并展示 motivation、subjective memory、relationship edges、heuristics 与 trace timeline；`memory.result_observed` 行、来源跳转按钮、Copy 当前 trace JSON 和 NPC 高亮代码已落地。 | 主人已确认 UI 重设计后的整体观感、非全屏滚动、6 NPC 密度、遮挡风险修复，以及 `memory.result_observed` 可发现性和来源跳转按钮；Copy 当前 trace JSON、trace detail 文案和快捷键手感保留为后续 polish 验收。 |
 | Web Debug / LLM | `RuleBasedProvider` 与 OpenAI-compatible `CloudApiProvider` 已接入；`config/models.example.json` 默认 rule fallback；Web Debug 已展示 provider / fallback / cost 总览、Heuristic Library、Arbitration Trace 和 Rashomon Memory。 | 最新成功真实 LLM smoke 是 2026-05-23；2026-05-24 曾触达 CloudApiProvider 但供应商返回 `HTTP 402 Insufficient Balance`，未刷新通过证据；切换 key / profile / prompt 后需单独跑 `npm.cmd run llm:smoke`。 |
 | Content / NPC | 6 名首发 NPC 深度卡已入库；`voiceStyle`、`speechQuirks`、`monologueSeeds`、`giftReactions`、`gossipHooks` 已被 runtime / smoke 覆盖；4 核心 NPC（kai / mira / bram / lena）已有实际 motivation / capability / heuristic seed；tomas / orren 保持 stub。 | 谣言传播仍只记录校验结果，不写入世界状态、关系或记忆扩散；2 名 stub NPC 后续按剧情需要升级。 |
 | 资产管线 | `assets/manifests/asset_manifest.json` 登记 55 条资产；3 张地点背景、星灯祭 CG、玩家 + 6 NPC 立绘、7 张地图小人和 3 类交互 marker 已进入 Godot；`AssetRegistry` 支持 happy / troubled 回退。 | 表情差分、行动反馈图标和生活行动 UI 小组件仍是 `prompt_ready` backlog；地图小人是否晋级 `source_selected` 仍需主人确认。 |
@@ -35,6 +35,7 @@ scope: current implementation facts, verification state, and work constraints
 
 ## 3. 最近核对结果
 
+- 2026-05-26 真实 Godot 窗口复验发现 `memory.result_observed` 行和 source chip 可发现性不足：`memory.result_observed` 只藏在 detail `type` 字段里，source chip 外观像标签；已补显式行名、观察记忆提示、来源跳转按钮文案和聚焦状态提示，主人随后确认通过，可转入 Eval 证据链收紧阶段。
 - 2026-05-26 上下文治理收缩：`docs/agent_context.md` 从长事实堆叠改为短入口；`docs/current_status.md` 聚焦当前事实、manual gate 和下一步；接续流程开始收敛到 `context:resume`。
 - 2026-05-25 Trace 体验闭环代码已落地：`GET /api/debug.phase2` 支持 `focusEventId` / `focusTraceId`，`recentTraceEvents[]` 支持 `sourceLinks[]`，响应可返回 `traceFocus`；Godot Research Dock Trace detail 新增“证据链”chip，点击 source chip 会重拉 focus 并选中源事件；Copy trace 会复制当前 trace JSON。
 - 2026-05-25 晚间 Godot 可读性补修已落地：NPC 一览双层行、集中字号 / 布局缩放和 Tab 底部滚动留白；主人随后确认非全屏滚动到底、6 NPC 密度和 HUD / TopBanner 遮挡风险修复。
@@ -55,7 +56,8 @@ scope: current implementation facts, verification state, and work constraints
 - `manual verified`：2026-05-21 主人确认 Phase 1 可以收口，默认 `world_main.tscn` 进入完成基线。
 - `manual verified`：2026-05-25 主人确认 UI 重设计后整体观感与主路径无大问题。
 - `manual verified`：2026-05-25 晚间主人确认 Research Dock 可读性补修，包括非全屏滚动到底、NPC 密度和遮挡风险。
-- `manual unverified`：Trace source chip 点击、Copy 当前 trace JSON、trace detail 文案、快捷键逐项手感仍需真实窗口最终验收。
+- `manual verified`：2026-05-26 主人确认 Trace 时间线中 `memory.result_observed` 行可发现，来源跳转按钮可点击并可进入下一阶段。
+- `manual unverified`：Copy 当前 trace JSON、trace detail 文案和快捷键逐项手感仍作为后续 polish 验收。
 - `manual unverified`：真实 LLM 最新成功证据仍沿用 2026-05-23；2026-05-24 的真实 provider 尝试因 `HTTP 402 Insufficient Balance` 未形成通过证据。
 - `manual unverified`：`prompt_ready` 资产尚未生成、筛选、登记源图或接入 Godot registry。
 
@@ -88,8 +90,8 @@ git diff --check
 
 ## 7. 下一轮建议
 
-- 先做真实 Godot 窗口 trace 体验验收：`memory.result_observed` 行、source chip、NPC 高亮、Copy 当前 trace JSON、非全屏滚动和弹层关闭。
-- 通过 trace 体验验收后转入 Eval 线，继续强化 dependency evidence chain、真实依赖图、跨文件回归和 reviewer disagreement。
+- 转入 Eval 线，继续强化 dependency evidence chain、真实依赖图、跨文件回归和 reviewer disagreement。
+- Godot trace 后续只保留 Copy 当前 trace JSON、detail 文案、快捷键和手感 polish。
 - Godot 线后续以 detail 文案、快捷键和手感 polish 为主，不重开 Phase 1 旧玩法扩写。
 - LLM / Debug 线只在切换模型、key、profile、prompt 或需要刷新真实成本证据时运行 `npm.cmd run llm:smoke`。
 - 资产线按 `docs/asset_batches/prompt_ready_export.md` 推进前，先结合 `docs/open_questions.md` 的资产范围调整重新排序。

@@ -217,7 +217,6 @@ func set_phase2_debug_summary(summary: Dictionary) -> void:
 	# summary 仍兼容旧 text 字段（供 check_godot_project 校验）；新版面板从 `payload`
 	# 拿原始 phase2 debug 字典进行卡片渲染。
 	_current_payload = summary.duplicate(true)
-	_set_phase2_status("已同步")
 	_set_retry_visible(false)
 	var payload = summary.get("payload", {})
 	if not (payload is Dictionary):
@@ -232,6 +231,8 @@ func set_phase2_debug_summary(summary: Dictionary) -> void:
 	_recent_trace_copy_detail_groups = _trace_copy_detail_group_dict(summary)
 	_recent_trace_summaries = _trace_summary_dict(summary)
 	_current_trace_focus = _trace_focus_dict(summary)
+	var focus_status := _trace_focus_status_text(_current_trace_focus)
+	_set_phase2_status(focus_status if focus_status != "" else "已同步")
 	_select_trace_focus_or_latest(true)
 	_update_recent_trace_view()
 
@@ -956,7 +957,7 @@ func _build_trace_tab() -> Control:
 	_trace_summary_label = Label.new()
 	_trace_summary_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	ResearchThemeScript.apply_label_style(_trace_summary_label, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_MUTED)
-	_trace_summary_label.text = "点击 trace 行：decision 高亮 NPC；memory 高亮观察者；带 [源] 的行可在证据链里跳转来源。"
+	_trace_summary_label.text = _trace_interaction_hint()
 	rows_card.body.add_child(_trace_summary_label)
 	_trace_rows_box = VBoxContainer.new()
 	_trace_rows_box.add_theme_constant_override("separation", 4)
@@ -1022,7 +1023,7 @@ func _update_recent_trace_view() -> void:
 		if rows.is_empty():
 			_trace_summary_label.text = _trace_summary_text_for_filter()
 		else:
-			_trace_summary_label.text = "点击 trace 行：decision 高亮 NPC；memory 高亮观察者；带 [源] 的行可在证据链里跳转来源。"
+			_trace_summary_label.text = _trace_interaction_hint()
 	if _trace_prev_button != null:
 		_trace_prev_button.disabled = rows.is_empty()
 	if _trace_next_button != null:
@@ -1052,14 +1053,17 @@ func _build_trace_row_button(entry: Dictionary, row_index: int) -> Button:
 	var hint := _trace_detail_hint(entry.get("details", {}))
 	var source_badge := _trace_source_badge(entry)
 	var color := ResearchThemeScript.trace_type_color(event_type)
-	var label_text := "%s  %s%s%s · %s" % [tick_text, _pretty_trace_type(event_type), hint, source_badge, summary]
+	var label_text := "%s  %s%s%s · %s" % [tick_text, _trace_row_type_label(event_type), hint, source_badge, summary]
 
 	var button := Button.new()
 	button.focus_mode = Control.FOCUS_NONE
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.custom_minimum_size = Vector2(0, 32)
+	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.clip_text = true
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.text = ("▶ " if row_index == _current_trace_detail_index else "• ") + label_text
+	button.tooltip_text = _trace_row_tooltip(entry)
 	button.add_theme_color_override("font_color", color)
 	button.add_theme_color_override("font_hover_color", color)
 	button.add_theme_font_override("font", ResearchThemeScript.get_system_font())
@@ -1097,10 +1101,14 @@ func _update_recent_trace_detail_view() -> void:
 	var entry := rows[_current_trace_detail_index] as Dictionary
 	var event_type := _trace_event_type(entry)
 	_trace_details_status_label.text = "%s · trace=%s · span=%s" % [
-		_pretty_trace_type(event_type),
+		_trace_detail_type_label(event_type),
 		str(entry.get("traceId", "-")),
 		str(entry.get("spanId", "-")),
 	]
+	if event_type == "memory.result_observed":
+		_trace_details_box.add_child(_make_trace_callout(
+			"当前选中行：memory.result_observed（观察记忆）。这就是人工验收里的 memory.result_observed 行；点击上方紫色 trace 行会高亮观察者。"
+		))
 	_trace_details_box.add_child(_make_detail_kv("tick", _trace_tick_text(entry)))
 	_trace_details_box.add_child(_make_detail_kv("type", event_type))
 	_trace_details_box.add_child(_make_detail_kv("agentId", str(entry.get("agentId", "-"))))
@@ -1148,6 +1156,18 @@ func _make_detail_kv(key: String, value_text: String) -> Control:
 	return row
 
 
+func _make_trace_callout(text: String) -> Control:
+	# 真实窗口验收要能一眼确认当前 trace 类型，避免只在 key-value 里找字段。
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", ResearchThemeScript.make_chip_style(ResearchThemeScript.COLOR_ACCENT))
+	var label := Label.new()
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.text = text
+	ResearchThemeScript.apply_label_style(label, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_PRIMARY)
+	panel.add_child(label)
+	return panel
+
+
 func _append_trace_source_links_section(entry: Dictionary) -> void:
 	var title := Label.new()
 	title.text = "证据链"
@@ -1161,7 +1181,7 @@ func _append_trace_source_links_section(entry: Dictionary) -> void:
 		_trace_details_box.add_child(empty)
 		return
 	var hint := Label.new()
-	hint.text = "点击下方按钮跳转到直接来源事件"
+	hint.text = "下方是可点击按钮；点击后会重新拉取并聚焦直接来源事件。"
 	ResearchThemeScript.apply_label_style(hint, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_MUTED)
 	_trace_details_box.add_child(hint)
 	var current_row := HBoxContainer.new()
@@ -1174,7 +1194,7 @@ func _append_trace_source_links_section(entry: Dictionary) -> void:
 			continue
 		var link := item as Dictionary
 		var event_id := str(link.get("eventId", ""))
-		var label := "跳转来源 · %s" % _pretty_trace_type(str(link.get("eventType", "trace")))
+		var label := "点击跳转来源事件 · %s" % _trace_row_type_label(str(link.get("eventType", "trace")))
 		if event_id != "":
 			label = "%s · %s" % [label, event_id.substr(0, min(10, event_id.length()))]
 		var chip := _make_chip_button(label, ResearchThemeScript.trace_type_color(str(link.get("eventType", ""))))
@@ -1474,6 +1494,8 @@ func _make_chip_button(text: String, accent: Color) -> Button:
 	var button := Button.new()
 	button.text = text
 	button.focus_mode = Control.FOCUS_NONE
+	button.custom_minimum_size = Vector2(0, 28)
+	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.add_theme_font_override("font", ResearchThemeScript.get_system_font())
 	button.add_theme_font_size_override("font_size", ResearchThemeScript.scaled_size(ResearchThemeScript.FONT_SIZE_CHIP))
 	button.add_theme_color_override("font_color", accent)
@@ -1579,6 +1601,30 @@ func _trace_summary_text_for_filter() -> String:
 	return fallback
 
 
+func _trace_interaction_hint() -> String:
+	# 文案直接写出验收关键词，减少 Research Dock 的交互猜测成本。
+	return "点击 trace 行：memory.result_observed 行会高亮观察者；证据链里的橙色“点击跳转来源事件”按钮会聚焦来源。"
+
+
+func _trace_focus_status_text(focus: Dictionary) -> String:
+	if focus.is_empty():
+		return ""
+	var requested = focus.get("requested", {})
+	var requested_event_id := ""
+	var requested_trace_id := ""
+	if requested is Dictionary:
+		requested_event_id = str((requested as Dictionary).get("eventId", ""))
+		requested_trace_id = str((requested as Dictionary).get("traceId", ""))
+	var focus_event_id := str(focus.get("eventId", requested_event_id))
+	var focus_trace_id := str(focus.get("traceId", requested_trace_id))
+	var focus_label := focus_event_id if focus_event_id != "" else focus_trace_id
+	if bool(focus.get("matched", false)):
+		return "已聚焦来源事件：%s" % (focus_label if focus_label != "" else "matched")
+	if str(focus.get("status", "")) == "missing":
+		return "未找到来源事件：%s" % (focus_label if focus_label != "" else "unknown")
+	return ""
+
+
 static func _empty_filter_dict() -> Dictionary:
 	return {"all": [], "decision": [], "tool": [], "interrupt": [], "memory": []}
 
@@ -1613,6 +1659,29 @@ func _trace_event_type(entry: Dictionary) -> String:
 	return str(entry.get("eventType", entry.get("type", "trace")))
 
 
+func _trace_row_type_label(event_type: String) -> String:
+	if event_type == "memory.result_observed":
+		return "memory.result_observed"
+	return _pretty_trace_type(event_type)
+
+
+func _trace_detail_type_label(event_type: String) -> String:
+	if event_type == "memory.result_observed":
+		return "memory.result_observed（观察记忆）"
+	return "%s · %s" % [_pretty_trace_type(event_type), event_type] if event_type != _pretty_trace_type(event_type) else event_type
+
+
+func _trace_row_tooltip(entry: Dictionary) -> String:
+	var event_type := _trace_event_type(entry)
+	if event_type == "memory.result_observed":
+		return "memory.result_observed 行：点击后高亮观察者；在 details 的证据链里点击来源按钮。"
+	if event_type == "motivation.decision_made":
+		return "decision 行：点击后高亮决策 NPC。"
+	if event_type in ["tool.execution_completed", "tool.execution_failed", "tool.execution_interrupted"]:
+		return "tool 行：点击后高亮相关 NPC。"
+	return "点击查看 trace details。"
+
+
 func _trace_tick_text(entry: Dictionary) -> String:
 	var world_time = entry.get("worldTime", {})
 	if world_time is Dictionary:
@@ -1639,7 +1708,7 @@ func _trace_detail_hint(details) -> String:
 func _trace_source_badge(entry: Dictionary) -> String:
 	var links = entry.get("sourceLinks", [])
 	if links is Array and not (links as Array).is_empty():
-		return " [源]"
+		return " [有来源按钮]"
 	return ""
 
 

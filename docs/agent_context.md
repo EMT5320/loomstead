@@ -32,7 +32,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - Phase 2（骨架建立期）首轮已落地，当前主线是 trace / eval 收紧和可解释证据复用。
 - 后端权威路径已切到 `MotivationEngine -> ToolExecutor -> ResultObserver`，`/api/world/tick`、`/api/debug.phase2`、`phase2.trace.v1` 和 `schema_registry.v1` 是核心观察入口。
 - Process Fidelity Eval 已包含 rule process suite、stability / determinism、memory / relationship ablation、counterfactual replay、domain adapter suite 和 eval archive manifest。
-- Godot Research Dock 已接入 Phase 2 debug 摘要、trace timeline、source chip 跳转、Copy 当前 trace JSON、NPC 高亮和三 Tab UI；代码与离线验证已完成，source chip / Copy trace 仍待真实窗口最终人工验收。
+- Godot Research Dock 已接入 Phase 2 debug 摘要、trace timeline、来源跳转按钮、Copy 当前 trace JSON、NPC 高亮和三 Tab UI；`memory.result_observed` 行与来源跳转可发现性已通过真实窗口复验，Copy trace / detail 文案 / 快捷键保留为 polish。
 - Web Debug 已有 provider / fallback / cost 总览、Heuristic Library、Arbitration Trace 和 Rashomon Memory 三卡片。
 - 6 名首发 NPC 深度卡已入库；4 核心 NPC（kai / mira / bram / lena）已有实际 motivation / capability / heuristic seed，tomas / orren 保持 stub。
 - 资产 manifest 登记 55 条资产；表情差分、行动反馈图标和生活行动 UI 小组件仍是 `prompt_ready` backlog。
@@ -48,8 +48,8 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 
 ## 5. 最近下一步
 
-- 先完成真实 Godot 窗口验收：`memory.result_observed` 行、source chip 跳转、NPC 高亮、Copy 当前 trace JSON、非全屏滚动和弹层关闭。
-- 通过 trace 体验验收后，优先转入 Eval 线：继续加深真实依赖图、跨文件回归、review agent 分歧和 dependency evidence chain。
+- 优先转入 Eval 线：继续加深真实依赖图、跨文件回归、review agent 分歧和 dependency evidence chain。
+- Godot 线后续只保留 Copy trace、detail 文案、快捷键和手感 polish。
 - Godot 线后续只保留 detail 文案、快捷键和手感 polish；不要重新扩 Phase 1 旧玩法线。
 - 切换模型、key、profile 或需要刷新真实成本证据时，再单独运行 `npm.cmd run llm:smoke`。
 - 资产线按 `docs/asset_batches/prompt_ready_export.md` 推进，但先按 `docs/open_questions.md` 的资产范围调整重新评估优先级。
