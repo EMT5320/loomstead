@@ -33,9 +33,12 @@ const TRACE_FILTER_LABELS := {
 	"memory": "记忆",
 }
 const DETAIL_POPUP_MAX_CHARS := 12000
-const TRACE_COPY_BUTTON_TEXT := "Copy 当前 trace JSON [C]"
-const TRACE_COPY_BUTTON_COPIED_TEXT := "Copied ✓"
-const TRACE_SHORTCUT_HINT_TEXT := "快捷键：1-5 过滤，[,] 上一条，[.] 下一条，[C] 复制当前 trace JSON，[Esc] 关闭弹层"
+const TRACE_COPY_BUTTON_TEXT := "复制 trace JSON [C]"
+const TRACE_COPY_BUTTON_COPIED_TEXT := "已复制 ✓"
+const TRACE_SHORTCUT_HINT_TEXT := "快捷键：1-5 过滤，逗号/左方括号上一条，句号/右方括号下一条，[C] 复制，[Esc] 关闭弹层"
+const TRACE_ROW_SUMMARY_MAX_CHARS := 52
+const TRACE_TOOL_HINT_MAX_CHARS := 28
+const TRACE_SOURCE_BUTTON_MAX_TEXT := 40
 const SECTION_EMPTY_TEXT := {
 	"motivation": "暂无 motivation：等待下一次世界 tick。",
 	"subjectiveMemory": "暂无 subjectiveMemory：该 NPC 尚未写入主观记忆。",
@@ -131,29 +134,27 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _handle_trace_hotkeys(key_event: InputEventKey) -> bool:
-	if key_event.keycode == KEY_ESCAPE and _is_trace_detail_popup_visible():
+	if _trace_key_matches(key_event, KEY_ESCAPE) and _is_trace_detail_popup_visible():
 		_hide_trace_details_popup()
 		return true
 	# 1-5：切换 trace 过滤；自动跳 Tab 3，便于排查决策链。
-	var filter_index := _trace_filter_index_for_key(key_event.keycode)
+	var filter_index := _trace_filter_index_for_key_event(key_event)
 	if filter_index >= 0:
 		_switch_tab(TAB_TRACE)
 		_select_trace_filter_by_index(filter_index)
 		return true
 	if _current_tab != TAB_TRACE:
 		return false
-	match key_event.keycode:
-		KEY_COMMA:
-			_on_trace_prev_pressed()
-			return true
-		KEY_PERIOD:
-			_on_trace_next_pressed()
-			return true
-		KEY_C:
-			_on_trace_copy_pressed()
-			return true
-		_:
-			return false
+	if _trace_key_matches(key_event, KEY_COMMA) or _trace_key_matches(key_event, KEY_BRACKETLEFT):
+		_on_trace_prev_pressed()
+		return true
+	if _trace_key_matches(key_event, KEY_PERIOD) or _trace_key_matches(key_event, KEY_BRACKETRIGHT):
+		_on_trace_next_pressed()
+		return true
+	if _trace_key_matches(key_event, KEY_C):
+		_on_trace_copy_pressed()
+		return true
+	return false
 
 
 # ---------------------------------------------------------------------------
@@ -929,9 +930,12 @@ func _build_trace_tab() -> Control:
 
 	# 过滤 + 分页 + 复制条
 	var control_card := _make_card("traceFilter（1-5 切换）")
-	var filter_row := HBoxContainer.new()
-	filter_row.add_theme_constant_override("separation", 4)
-	control_card.body.add_child(filter_row)
+	var filter_grid := GridContainer.new()
+	filter_grid.columns = 3
+	filter_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	filter_grid.add_theme_constant_override("h_separation", 4)
+	filter_grid.add_theme_constant_override("v_separation", 4)
+	control_card.body.add_child(filter_grid)
 	_trace_filter_buttons.clear()
 	for i in range(TRACE_FILTER_IDS.size()):
 		var filter_id := str(TRACE_FILTER_IDS[i])
@@ -940,9 +944,10 @@ func _build_trace_tab() -> Control:
 		button.focus_mode = Control.FOCUS_NONE
 		button.toggle_mode = true
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.clip_text = true
 		ResearchThemeScript.apply_button_style(button, ResearchThemeScript.FONT_SIZE_SMALL)
 		button.pressed.connect(_select_trace_filter_by_index.bind(i))
-		filter_row.add_child(button)
+		filter_grid.add_child(button)
 		_trace_filter_buttons.append(button)
 
 	var nav_row := HBoxContainer.new()
@@ -954,25 +959,29 @@ func _build_trace_tab() -> Control:
 	ResearchThemeScript.apply_button_style(_trace_prev_button, ResearchThemeScript.FONT_SIZE_SMALL)
 	_trace_prev_button.pressed.connect(_on_trace_prev_pressed)
 	nav_row.add_child(_trace_prev_button)
-	_trace_next_button = Button.new()
-	_trace_next_button.text = "Next [.] ▶"
-	_trace_next_button.focus_mode = Control.FOCUS_NONE
-	ResearchThemeScript.apply_button_style(_trace_next_button, ResearchThemeScript.FONT_SIZE_SMALL)
-	_trace_next_button.pressed.connect(_on_trace_next_pressed)
-	nav_row.add_child(_trace_next_button)
 	_trace_index_label = Label.new()
 	_trace_index_label.text = "0/0"
 	_trace_index_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_trace_index_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	ResearchThemeScript.apply_label_style(_trace_index_label, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_MUTED)
 	nav_row.add_child(_trace_index_label)
+	_trace_next_button = Button.new()
+	_trace_next_button.text = "Next [.] ▶"
+	_trace_next_button.focus_mode = Control.FOCUS_NONE
+	ResearchThemeScript.apply_button_style(_trace_next_button, ResearchThemeScript.FONT_SIZE_SMALL)
+	_trace_next_button.pressed.connect(_on_trace_next_pressed)
+	nav_row.add_child(_trace_next_button)
+	var copy_row := HBoxContainer.new()
+	copy_row.add_theme_constant_override("separation", 6)
+	control_card.body.add_child(copy_row)
 	_trace_copy_button = Button.new()
 	_trace_copy_button.text = TRACE_COPY_BUTTON_TEXT
 	_trace_copy_button.focus_mode = Control.FOCUS_NONE
+	_trace_copy_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_trace_copy_button.tooltip_text = "复制当前选中 trace 的完整 JSON 到剪贴板"
 	ResearchThemeScript.apply_button_style(_trace_copy_button, ResearchThemeScript.FONT_SIZE_SMALL)
 	_trace_copy_button.pressed.connect(_on_trace_copy_pressed)
-	nav_row.add_child(_trace_copy_button)
+	copy_row.add_child(_trace_copy_button)
 	_trace_control_hint_label = Label.new()
 	_trace_control_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_trace_control_hint_label.text = TRACE_SHORTCUT_HINT_TEXT
@@ -1076,7 +1085,7 @@ func _rebuild_recent_trace_rows(rows: Array) -> void:
 func _build_trace_row_button(entry: Dictionary, row_index: int) -> Button:
 	var event_type := _trace_event_type(entry)
 	var tick_text := _trace_tick_text(entry)
-	var summary := _truncate_text(str(entry.get("summary", "")), 64)
+	var summary := _truncate_text(str(entry.get("summary", "")), TRACE_ROW_SUMMARY_MAX_CHARS)
 	var hint := _trace_detail_hint(entry.get("details", {}))
 	var source_badge := _trace_source_badge(entry)
 	var color := ResearchThemeScript.trace_type_color(event_type)
@@ -1213,29 +1222,19 @@ func _append_trace_source_links_section(entry: Dictionary) -> void:
 	hint.text = "下方是可点击按钮；点击后会重新拉取并聚焦直接来源事件。"
 	ResearchThemeScript.apply_label_style(hint, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_MUTED)
 	_trace_details_box.add_child(hint)
-	var current_row := HBoxContainer.new()
-	current_row.add_theme_constant_override("separation", 6)
-	_trace_details_box.add_child(current_row)
-	var row_chip_count := 0
 	for index in range((links as Array).size()):
 		var item = (links as Array)[index]
 		if not (item is Dictionary):
 			continue
 		var link := item as Dictionary
-		var event_id := str(link.get("eventId", ""))
-		var label := "点击跳转来源事件 · %s" % _trace_row_type_label(str(link.get("eventType", "trace")))
-		if event_id != "":
-			label = "%s · %s" % [label, event_id.substr(0, min(10, event_id.length()))]
-		var chip := _make_chip_button(label, ResearchThemeScript.trace_type_color(str(link.get("eventType", ""))))
-		chip.tooltip_text = "%s\n%s" % [str(link.get("summary", "")), event_id]
+		var chip := _make_chip_button(_trace_source_link_label(link, index), ResearchThemeScript.trace_type_color(str(link.get("eventType", ""))))
+		chip.tooltip_text = "%s\n%s\n%s" % [
+			"点击后跳转 / 聚焦来源事件",
+			str(link.get("summary", "")),
+			str(link.get("eventId", link.get("traceId", ""))),
+		]
 		chip.pressed.connect(_on_trace_source_link_pressed.bind(link))
-		current_row.add_child(chip)
-		row_chip_count += 1
-		if row_chip_count >= 2 and index < (links as Array).size() - 1:
-			current_row = HBoxContainer.new()
-			current_row.add_theme_constant_override("separation", 6)
-			_trace_details_box.add_child(current_row)
-			row_chip_count = 0
+		_trace_details_box.add_child(chip)
 
 
 func _value_to_text(value) -> String:
@@ -1322,20 +1321,45 @@ func _update_trace_copy_button_state(has_rows: bool) -> void:
 	_trace_copy_button.text = TRACE_COPY_BUTTON_TEXT
 
 
+func _trace_filter_display_name() -> String:
+	return str(TRACE_FILTER_LABELS.get(_current_trace_filter, _current_trace_filter))
+
+
+func _show_trace_navigation_notice(text: String) -> void:
+	# Prev/Next 在 1/1 时没有视觉切换，这里把按钮/热键响应写进当前详情卡，方便真实窗口验收。
+	_set_phase2_status(text)
+	if _trace_details_status_label != null and _trace_details_status_label.text != "":
+		_trace_details_status_label.text = "%s\n导航：%s" % [_trace_details_status_label.text, text]
+
+
 func _on_trace_prev_pressed() -> void:
 	var item_count := _trace_events_for_filter().size()
 	if item_count <= 0:
+		_show_trace_navigation_notice("当前过滤没有 trace：%s" % _trace_filter_display_name())
 		return
-	_current_trace_detail_index = max(0, _current_trace_detail_index - 1)
+	if item_count == 1:
+		_current_trace_detail_index = 0
+		_update_recent_trace_view()
+		_show_trace_navigation_notice("当前过滤只有 1 条 trace：%s 1/1" % _trace_filter_display_name())
+		return
+	_current_trace_detail_index = (_current_trace_detail_index - 1 + item_count) % item_count
 	_update_recent_trace_view()
+	_show_trace_navigation_notice("已切到上一条 trace：%s %d/%d" % [_trace_filter_display_name(), _current_trace_detail_index + 1, item_count])
 
 
 func _on_trace_next_pressed() -> void:
 	var item_count := _trace_events_for_filter().size()
 	if item_count <= 0:
+		_show_trace_navigation_notice("当前过滤没有 trace：%s" % _trace_filter_display_name())
 		return
-	_current_trace_detail_index = min(item_count - 1, _current_trace_detail_index + 1)
+	if item_count == 1:
+		_current_trace_detail_index = 0
+		_update_recent_trace_view()
+		_show_trace_navigation_notice("当前过滤只有 1 条 trace：%s 1/1" % _trace_filter_display_name())
+		return
+	_current_trace_detail_index = (_current_trace_detail_index + 1) % item_count
 	_update_recent_trace_view()
+	_show_trace_navigation_notice("已切到下一条 trace：%s %d/%d" % [_trace_filter_display_name(), _current_trace_detail_index + 1, item_count])
 
 
 func _on_trace_copy_pressed() -> void:
@@ -1537,6 +1561,9 @@ func _make_chip_button(text: String, accent: Color) -> Button:
 	button.text = text
 	button.focus_mode = Control.FOCUS_NONE
 	button.custom_minimum_size = Vector2(0, 28)
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.clip_text = true
+	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.add_theme_font_override("font", ResearchThemeScript.get_system_font())
 	button.add_theme_font_size_override("font_size", ResearchThemeScript.scaled_size(ResearchThemeScript.FONT_SIZE_CHIP))
@@ -1645,7 +1672,7 @@ func _trace_summary_text_for_filter() -> String:
 
 func _trace_interaction_hint() -> String:
 	# 文案直接写出验收关键词，减少 Research Dock 的交互猜测成本。
-	return "点击 trace 行：memory.result_observed 会高亮观察者；证据链按钮会聚焦来源。快捷键可用：1-5 过滤，[,] / [.] 翻页，[C] 复制。"
+	return "点击 trace 行：memory.result_observed 会高亮观察者；证据链按钮会聚焦来源。Prev/Next 会循环切换；只有 1 条时会提示。"
 
 
 func _trace_focus_status_text(focus: Dictionary) -> String:
@@ -1667,6 +1694,11 @@ func _trace_focus_status_text(focus: Dictionary) -> String:
 	return ""
 
 
+func _trace_key_matches(key_event: InputEventKey, keycode: int) -> bool:
+	# Godot 在不同键盘布局下可能只稳定填充 physical_keycode；两个字段都接受，保证真实窗口热键可用。
+	return key_event.keycode == keycode or key_event.physical_keycode == keycode
+
+
 static func _empty_filter_dict() -> Dictionary:
 	return {"all": [], "decision": [], "tool": [], "interrupt": [], "memory": []}
 
@@ -1679,6 +1711,20 @@ static func _empty_summary_dict() -> Dictionary:
 		"interrupt": "暂无 interrupt trace。",
 		"memory": "暂无 memory trace。",
 	}
+
+
+func _trace_filter_index_for_key_event(key_event: InputEventKey) -> int:
+	if _trace_key_matches(key_event, KEY_1):
+		return 0
+	if _trace_key_matches(key_event, KEY_2):
+		return 1
+	if _trace_key_matches(key_event, KEY_3):
+		return 2
+	if _trace_key_matches(key_event, KEY_4):
+		return 3
+	if _trace_key_matches(key_event, KEY_5):
+		return 4
+	return -1
 
 
 func _trace_filter_index_for_key(keycode: int) -> int:
@@ -1737,7 +1783,7 @@ func _trace_detail_hint(details) -> String:
 	var detail_dict := details as Dictionary
 	var tool_id := str(detail_dict.get("selectedToolId", detail_dict.get("toolId", detail_dict.get("interruptedToolId", ""))))
 	if tool_id != "":
-		return " [%s]" % tool_id
+		return " [%s]" % _truncate_text(tool_id, TRACE_TOOL_HINT_MAX_CHARS)
 	var observer_count := str(detail_dict.get("observerCount", ""))
 	if observer_count != "":
 		return " [%s observers]" % observer_count
@@ -1752,6 +1798,17 @@ func _trace_source_badge(entry: Dictionary) -> String:
 	if links is Array and not (links as Array).is_empty():
 		return " [有来源按钮]"
 	return ""
+
+
+func _trace_source_link_label(link: Dictionary, source_index: int) -> String:
+	var event_type := _trace_row_type_label(str(link.get("eventType", "trace")))
+	var event_id := str(link.get("eventId", ""))
+	var trace_id := str(link.get("traceId", ""))
+	var short_id := event_id if event_id != "" else trace_id
+	var label := "来源 %d · %s" % [source_index + 1, event_type]
+	if short_id != "":
+		label = "%s · %s" % [label, short_id.substr(0, min(8, short_id.length()))]
+	return _truncate_text(label, TRACE_SOURCE_BUTTON_MAX_TEXT)
 
 
 func _trace_filter_for_event_type(event_type: String) -> String:

@@ -9,7 +9,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 
 # Loomstead 新对话入口
 
-> 更新时间：2026-05-26（三线推进后：coding counterfactual replay 已接入，Godot trace polish 待真实窗口手感验收）
+> 更新时间：2026-05-26（三线推进后：Godot trace Prev/Next 与中断布局补修已落地，真实窗口待复验）
 > 用途：新对话、跨机器切换、子代理任务和多助手接手时的第一入口。
 
 ## 1. 启动路线
@@ -32,7 +32,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - Phase 2（骨架建立期）首轮已落地，当前主线是 trace / eval 收紧和可解释证据复用。
 - 后端权威路径已切到 `MotivationEngine -> ToolExecutor -> ResultObserver`，`/api/world/tick`、`/api/debug.phase2`、`phase2.trace.v1` 和 `schema_registry.v1` 是核心观察入口。
 - Process Fidelity Eval 已包含 rule process suite、stability / determinism、memory / relationship ablation、counterfactual replay、domain adapter suite 和 eval archive manifest；coding adapter 当前 8 个 fixture，已覆盖源码派生依赖图、dependency evidence chain v2、跨文件回归、reviewer judgment arbitration 和 `coding.domain_counterfactual_replay.v1` 证据移除 replay。
-- Godot Research Dock 已接入 Phase 2 debug 摘要、trace timeline、来源跳转按钮、Copy 当前 trace JSON、Copy 短反馈、`[C]` / `[,]` / `[.]` 热键提示、NPC 高亮和三 Tab UI；`memory.result_observed` 行与来源跳转可发现性已通过真实窗口复验，Copy / detail / 热键手感仍待真实窗口验收。
+- Godot Research Dock 已接入 Phase 2 debug 摘要、trace timeline、来源跳转按钮、Copy trace JSON、Prev/Next 循环导航、单条 trace 提示、`[C]` / `[,]` / `[.]` / 左右方括号热键、NPC 高亮和三 Tab UI；`memory.result_observed` 行与来源跳转可发现性已通过真实窗口复验，最新导航和中断布局补修仍待真实窗口复验。
 - Web Debug 已有 provider / fallback / cost 总览、Heuristic Library、Arbitration Trace 和 Rashomon Memory 三卡片。
 - 6 名首发 NPC 深度卡已入库；4 核心 NPC（kai / mira / bram / lena）已有实际 motivation / capability / heuristic seed，tomas / orren 保持 stub。
 - 资产 manifest 登记 55 条资产；表情差分、行动反馈图标和生活行动 UI 小组件仍是 `prompt_ready` backlog。
@@ -49,7 +49,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 ## 5. 最近下一步
 
 - Eval 线已让 coding domain 的 counterfactual route replay 拉开指标；下一步补更多 seeds / 人工 reviewer 抽样，或把 narrative domain route-level replay 接入 domain suite。
-- Godot 线下一步只做真实窗口验收：Copy 短反馈、detail 提示、`[C]` / `[,]` / `[.]` 热键手感。
+- Godot 线下一步只做真实窗口复验：`Prev` / `Next` 循环、逗号/句号/左右方括号热键、Copy 短反馈、`4 中断` filter 和 source link 按钮不溢出。
 - Research 线下一步把 domain export `.run/eval-runs/domain_2026-05-26T14-14-58Z` 写入 claim / Table 5，保持 interface evidence 口径。
 - 不要重新扩 Phase 1 旧玩法线。
 - 切换模型、key、profile 或需要刷新真实成本证据时，再单独运行 `npm.cmd run llm:smoke`。
