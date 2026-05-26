@@ -19,6 +19,7 @@ from app.eval.process_fidelity import build_process_metrics
 FAILING_TEST_REPAIR_GOAL_ID = "coding.skill_failing_test_repair_dryrun"
 MULTIFILE_REVIEW_GOAL_ID = "coding.skill_multifile_review_dryrun"
 MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID = "coding.skill_multifile_dependency_repair_dryrun"
+CROSS_FILE_REGRESSION_GOAL_ID = "coding.skill_cross_file_regression_dryrun"
 REVIEWER_DISAGREEMENT_GOAL_ID = "coding.skill_reviewer_disagreement_dryrun"
 JAVASCRIPT_SMOKE_GOAL_ID = "coding.skill_javascript_smoke_dryrun"
 
@@ -34,6 +35,7 @@ CODING_GOAL_IDS = (
     FAILING_TEST_REPAIR_GOAL_ID,
     MULTIFILE_REVIEW_GOAL_ID,
     MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID,
+    CROSS_FILE_REGRESSION_GOAL_ID,
     REVIEWER_DISAGREEMENT_GOAL_ID,
     JAVASCRIPT_SMOKE_GOAL_ID,
 )
@@ -48,6 +50,9 @@ CODING_GOAL_TEXT = {
     ),
     MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID: (
         "Repair a cross-file dependency bug where tests pass only after coordinated source edits."
+    ),
+    CROSS_FILE_REGRESSION_GOAL_ID: (
+        "Repair a cross-file regression where a normalization helper and its caller must change together."
     ),
     REVIEWER_DISAGREEMENT_GOAL_ID: (
         "Resolve conflicting rule-reviewer judgments through traceable arbitration."
@@ -134,7 +139,11 @@ class CodingDomainAdapter:
             {"id": "review_completed", "predicate": "reviewer records approval with source evidence"},
             {"id": "failure_pattern_memory", "predicate": "review cites a prior failure or constraint memory"},
         ]
-        if goal_id in (FAILING_TEST_REPAIR_GOAL_ID, MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID):
+        if goal_id in (
+            FAILING_TEST_REPAIR_GOAL_ID,
+            MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID,
+            CROSS_FILE_REGRESSION_GOAL_ID,
+        ):
             required_process.insert(
                 3,
                 {
@@ -157,7 +166,7 @@ class CodingDomainAdapter:
                     "predicate": "implementation updates dependency metadata alongside skill content",
                 },
             )
-        if goal_id == MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID:
+        if goal_id in (MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID, CROSS_FILE_REGRESSION_GOAL_ID):
             required_process.insert(
                 2,
                 {
@@ -166,24 +175,39 @@ class CodingDomainAdapter:
                 },
             )
             required_process.insert(
-                5,
+                3,
+                {
+                    "id": "real_dependency_graph_recorded",
+                    "predicate": "adapter derives a dependency graph from actual fixture imports",
+                },
+            )
+            required_process.insert(
+                6,
                 {
                     "id": "patch_covers_multiple_source_files",
                     "predicate": "patch changes at least two dependency-linked source files",
                 },
             )
             required_process.insert(
-                6,
+                7,
                 {
                     "id": "single_file_patch_still_fails",
                     "predicate": "single-file partial patch replay still fails the repo tests",
                 },
             )
             required_process.insert(
-                7,
+                8,
                 {
                     "id": "dependency_evidence_chain_confirmed",
                     "predicate": "review report links pre/partial/post test evidence with command and exitCode",
+                },
+            )
+        if goal_id == CROSS_FILE_REGRESSION_GOAL_ID:
+            required_process.insert(
+                9,
+                {
+                    "id": "regression_case_covered",
+                    "predicate": "cross-file regression case remains red until both linked files are patched",
                 },
             )
         if goal_id == REVIEWER_DISAGREEMENT_GOAL_ID:
@@ -222,11 +246,16 @@ class CodingDomainAdapter:
             FAILING_TEST_REPAIR_GOAL_ID: "skill_failing_test_repair",
             MULTIFILE_REVIEW_GOAL_ID: "skill_multifile_review",
             MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID: "skill_multifile_dependency_repair",
+            CROSS_FILE_REGRESSION_GOAL_ID: "skill_cross_file_regression",
             REVIEWER_DISAGREEMENT_GOAL_ID: "skill_reviewer_disagreement",
             JAVASCRIPT_SMOKE_GOAL_ID: "skill_javascript_smoke",
         }[goal_id]
         success_evidence = ["design_event", "diff_event", "test_event", "review_event"]
-        if goal_id in (FAILING_TEST_REPAIR_GOAL_ID, MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID):
+        if goal_id in (
+            FAILING_TEST_REPAIR_GOAL_ID,
+            MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID,
+            CROSS_FILE_REGRESSION_GOAL_ID,
+        ):
             success_evidence.insert(1, "pre_patch_test_event")
         if goal_id == REVIEWER_DISAGREEMENT_GOAL_ID:
             success_evidence.append("review_arbitration_trace")
@@ -243,7 +272,13 @@ class CodingDomainAdapter:
             required_process=required_process,
             allowed_interventions=["event_skill_load", "constraint_injection", "evaluation_checkpoint"],
             success_evidence=success_evidence,
-            max_steps=5 if goal_id in (FAILING_TEST_REPAIR_GOAL_ID, MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID) else 4,
+            max_steps=5
+            if goal_id in (
+                FAILING_TEST_REPAIR_GOAL_ID,
+                MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID,
+                CROSS_FILE_REGRESSION_GOAL_ID,
+            )
+            else 4,
         )
 
     def observe(self, world: dict[str, Any], goal: DomainGoalSpec) -> DomainObservation:
@@ -351,6 +386,11 @@ class CodingDomainAdapter:
         metadata_path = str(repo_fixture.get("metadataPath") or "")
         review_rubric_path = str(repo_fixture.get("reviewRubricPath") or "")
         import_graph = repo_fixture.get("importGraph", {}) if isinstance(repo_fixture.get("importGraph"), dict) else {}
+        derived_dependency_graph = (
+            repo_fixture.get("derivedDependencyGraph", {})
+            if isinstance(repo_fixture.get("derivedDependencyGraph"), dict)
+            else {}
+        )
         dependency_evidence = artifact.get("dependencyEvidence", {}) if isinstance(artifact.get("dependencyEvidence"), dict) else {}
         patch_coverage_file_count = int(artifact.get("patchCoverageFileCount") or 0)
         source_changed_files = [
@@ -389,6 +429,7 @@ class CodingDomainAdapter:
         )
         dependency_chain_confirmed = bool(dependency_evidence_chain) and all(
             (
+                dependency_evidence_chain.get("chainVersion") == "coding.dependency_evidence_chain.v2",
                 bool(dependency_chain_pre.get("testRunner")),
                 bool(dependency_chain_pre.get("command")),
                 dependency_chain_pre.get("exitCode") not in (None, 0),
@@ -405,6 +446,8 @@ class CodingDomainAdapter:
                 ),
                 bool(dependency_evidence_chain.get("allExpectedFailuresObserved")),
                 bool(dependency_evidence_chain.get("consistentRunner")),
+                bool(dependency_evidence_chain.get("transitionEdges")),
+                bool(dependency_evidence_chain.get("caseEvidence")),
             )
         )
         reviewer_evaluations = (
@@ -447,11 +490,20 @@ class CodingDomainAdapter:
             and metadata_path in changed_files
             and bool(artifact.get("fileSha256", {}).get(metadata_path)),
             "import_graph_recorded": bool(import_graph.get("nodes")) and bool(import_graph.get("edges")),
+            "real_dependency_graph_recorded": bool(derived_dependency_graph.get("nodes"))
+            and bool(derived_dependency_graph.get("edges"))
+            and not derived_dependency_graph.get("missingDeclaredEdges"),
             "patch_covers_multiple_source_files": patch_coverage_file_count >= 2
             and len(source_changed_files) >= 2
             and bool(dependency_evidence.get("importGraph")),
             "single_file_patch_still_fails": single_file_patch_still_fails,
             "dependency_evidence_chain_confirmed": dependency_chain_confirmed,
+            "regression_case_covered": _regression_case_covered(
+                goal.goal_id,
+                pre_patch_report if isinstance(pre_patch_report, dict) else {},
+                test_report if isinstance(test_report, dict) else {},
+                partial_reports,
+            ),
             "external_repo_checkout_tested": "coding.tests_executed" in event_types
             and bool(test_report.get("passed"))
             and test_report.get("testPhase") == "post_patch"
@@ -461,7 +513,11 @@ class CodingDomainAdapter:
             "review_completed": bool(review_event) and review_report.get("status") == "approved",
             "reviewer_conflict_observed": bool(review_report.get("conflict", {}).get("conflictDetected"))
             and {"approve", "request_changes"}.issubset(reviewer_decisions),
-            "arbitration_contributing_sources": len(arbitration_layer.get("contributing_sources", [])) >= 2,
+            "arbitration_contributing_sources": len(arbitration_layer.get("contributing_sources", [])) >= 2
+            and all(
+                isinstance(item, dict) and bool(item.get("sourceEventId"))
+                for item in arbitration_layer.get("contributing_sources", [])
+            ),
             "review_trace_ref_recorded": bool(
                 review_report.get("finalDecisionTraceRef", {}).get("eventId")
             ),
@@ -806,6 +862,11 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
                 if isinstance(world.get("partialPatchTestReports"), dict)
                 else {}
             )
+            derived_dependency_graph = (
+                repo_fixture.get("derivedDependencyGraph", {})
+                if isinstance(repo_fixture.get("derivedDependencyGraph"), dict)
+                else {}
+            )
             partial_failures = [
                 report
                 for report in partial_patch_reports.values()
@@ -819,6 +880,15 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
                     and len(partial_failures) == len(partial_patch_reports),
                 },
             )
+            checklist.insert(
+                3,
+                {
+                    "id": "real_dependency_graph_recorded",
+                    "passed": bool(derived_dependency_graph.get("nodes"))
+                    and bool(derived_dependency_graph.get("edges"))
+                    and not derived_dependency_graph.get("missingDeclaredEdges"),
+                },
+            )
             dependency_chain = _build_dependency_evidence_chain(
                 pre_patch_report=pre_patch_report if isinstance(pre_patch_report, dict) else {},
                 post_patch_report=test_report if isinstance(test_report, dict) else {},
@@ -830,10 +900,25 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
                     "id": "dependency_evidence_chain_confirmed",
                     "passed": bool(dependency_chain.get("allExpectedFailuresObserved"))
                     and bool(dependency_chain.get("consistentRunner"))
+                    and bool(dependency_chain.get("transitionEdges"))
+                    and bool(dependency_chain.get("caseEvidence"))
                     and dependency_chain.get("prePatch", {}).get("exitCode") not in (None, 0)
                     and dependency_chain.get("postPatch", {}).get("exitCode") == 0,
                 },
             )
+            if world.get("goalId") == CROSS_FILE_REGRESSION_GOAL_ID:
+                checklist.insert(
+                    5,
+                    {
+                        "id": "regression_case_covered",
+                        "passed": _regression_case_covered(
+                            str(world.get("goalId") or ""),
+                            pre_patch_report if isinstance(pre_patch_report, dict) else {},
+                            test_report if isinstance(test_report, dict) else {},
+                            partial_failures,
+                        ),
+                    },
+                )
         else:
             dependency_chain = {}
         cited_memory_ids = ["prior_failure.skip_tests"]
@@ -847,6 +932,31 @@ def _advance_coding_world(world: dict[str, Any]) -> list[dict[str, Any]]:
             test_report=test_report if isinstance(test_report, dict) else {},
             checklist=checklist,
         )
+        if reviewer_evaluations:
+            enriched_evaluations: list[dict[str, Any]] = []
+            for evaluation in reviewer_evaluations:
+                if not isinstance(evaluation, dict):
+                    continue
+                # reviewer judgment 先落事件，再进入 ArbitrationLayer，保证分歧来源可追溯。
+                judgment_event = _append_event(
+                    world,
+                    "coding.reviewer_judgment_recorded",
+                    {
+                        "agentId": str(evaluation.get("reviewerId") or "reviewer"),
+                        "reviewReportId": review_report_id,
+                        "decision": evaluation.get("decision"),
+                        "score": evaluation.get("score"),
+                        "focus": evaluation.get("focus"),
+                        "grounds": evaluation.get("grounds", []),
+                        "sourceEventIds": list(source_event_ids),
+                    },
+                )
+                emitted.append(judgment_event)
+                enriched = dict(evaluation)
+                enriched["sourceEventId"] = _event_id(judgment_event)
+                enriched["sourceEventIds"] = list(source_event_ids) + [_event_id(judgment_event)]
+                enriched_evaluations.append(enriched)
+            reviewer_evaluations = enriched_evaluations
         arbitration_layer = _arbitrate_reviewer_disagreement(
             reviewer_evaluations=reviewer_evaluations,
             test_report=test_report if isinstance(test_report, dict) else {},
@@ -1074,6 +1184,52 @@ def _build_repo_fixture(goal_id: str) -> dict[str, Any]:
             },
         ]
         test_expectations = []
+    elif goal_id == CROSS_FILE_REGRESSION_GOAL_ID:
+        fixture_id = "loomstead-debug-cross-file-regression-fixture.v1"
+        artifact_id = "skill_cross_file_regression.patch"
+        test_report_id = "skill_cross_file_regression.tests"
+        pre_patch_test_report_id = "skill_cross_file_regression.pre_patch_tests"
+        review_report_id = "skill_cross_file_regression.review"
+        requires_pre_patch_failure = True
+        requires_single_file_failure_evidence = True
+        target_path = "src/normalizer.py"
+        import_graph = {
+            "nodes": [
+                "src/normalizer.py",
+                "src/report.py",
+                "tests/test_skill.py",
+            ],
+            "edges": [
+                {
+                    "from": "src/report.py",
+                    "imports": "src/normalizer.py",
+                    "symbols": ["normalize_status", "severity_label"],
+                },
+                {"from": "tests/test_skill.py", "imports": "src/report.py", "symbols": ["build_status_report"]},
+            ],
+        }
+        planned_additions = []
+        planned_file_updates = [
+            {
+                "path": "src/normalizer.py",
+                "replace": {
+                    "def severity_label(priority: str) -> str:\n    return priority\n": (
+                        "def severity_label(priority: str) -> str:\n"
+                        "    return priority.strip().lower()\n"
+                    ),
+                },
+            },
+            {
+                "path": "src/report.py",
+                "replace": {
+                    '    return {"status": status, "severity": priority, "display": f"{status}:{priority}"}\n': (
+                        "    severity = severity_label(priority)\n"
+                        '    return {"status": status, "severity": severity, "display": f"{status}:{severity}"}\n'
+                    ),
+                },
+            },
+        ]
+        test_expectations = []
     elif goal_id == REVIEWER_DISAGREEMENT_GOAL_ID:
         test_runner = "unittest"
         fixture_id = "loomstead-debug-reviewer-disagreement-fixture.v1"
@@ -1189,10 +1345,15 @@ def _build_repo_fixture(goal_id: str) -> dict[str, Any]:
     command_template = _command_template_for_runner(test_runner)
     if goal_id == MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID:
         files = _dependency_repair_fixture_files()
+    elif goal_id == CROSS_FILE_REGRESSION_GOAL_ID:
+        files = _cross_file_regression_fixture_files()
     elif goal_id == JAVASCRIPT_SMOKE_GOAL_ID:
         files = _javascript_smoke_fixture_files()
     else:
         files = _skill_fixture_files(test_expectations, test_runner)
+    derived_dependency_graph = _derive_dependency_graph_from_files(files)
+    if import_graph:
+        derived_dependency_graph = _compare_declared_and_derived_graph(import_graph, derived_dependency_graph)
     return {
         "fixtureId": fixture_id,
         "repoName": "fixture/loomstead-debug-skill",
@@ -1221,6 +1382,7 @@ def _build_repo_fixture(goal_id: str) -> dict[str, Any]:
         "commandTemplate": command_template,
         "testCommandSource": "metadata.testRunner",
         "importGraph": import_graph,
+        "derivedDependencyGraph": derived_dependency_graph,
         "reviewerRubrics": reviewer_rubrics,
         "plannedAdditions": planned_additions,
         "plannedFileUpdates": planned_file_updates,
@@ -1324,6 +1486,124 @@ def _dependency_repair_fixture_files() -> dict[str, str]:
             ]
         ),
     }
+
+
+def _cross_file_regression_fixture_files() -> dict[str, str]:
+    """构造跨文件回归 fixture：helper 与调用者需要一起修，单文件补丁会保持红灯。"""
+    return {
+        "README.md": "# Cross-file Regression Fixture\n\nA tiny Python repo where status report formatting crosses two source files.\n",
+        "src/__init__.py": "",
+        "src/normalizer.py": "\n".join(
+            [
+                "from __future__ import annotations",
+                "",
+                "",
+                "def normalize_status(raw: str) -> str:",
+                "    return ' '.join(raw.strip().lower().split())",
+                "",
+                "",
+                "def severity_label(priority: str) -> str:",
+                "    return priority",
+                "",
+            ]
+        ),
+        "src/report.py": "\n".join(
+            [
+                "from __future__ import annotations",
+                "",
+                "from src.normalizer import normalize_status, severity_label",
+                "",
+                "",
+                "def build_status_report(raw_status: str, priority: str) -> dict[str, str]:",
+                "    status = normalize_status(raw_status)",
+                '    return {"status": status, "severity": priority, "display": f"{status}:{priority}"}',
+                "",
+            ]
+        ),
+        "tests/test_skill.py": "\n".join(
+            [
+                "from __future__ import annotations",
+                "",
+                "from pathlib import Path",
+                "import sys",
+                "",
+                "repo_root = Path(__file__).resolve().parents[1]",
+                "sys.path.insert(0, str(repo_root))",
+                "",
+                "from src.report import build_status_report",
+                "",
+                "",
+                "def test_status_report_normalizes_cross_file_severity():",
+                "    report = build_status_report('  Ready  ', ' LOW ')",
+                "    assert report == {'status': 'ready', 'severity': 'low', 'display': 'ready:low'}",
+                "",
+                "",
+                "def test_status_report_preserves_status_word_spacing():",
+                "    report = build_status_report('Needs   Review', ' Medium ')",
+                "    assert report == {'status': 'needs review', 'severity': 'medium', 'display': 'needs review:medium'}",
+                "",
+            ]
+        ),
+    }
+
+
+def _derive_dependency_graph_from_files(files: dict[str, str]) -> dict[str, Any]:
+    """从 fixture 的真实源码 import 语句派生依赖图，避免只依赖手写 graph 声明。"""
+    source_paths = {path for path in files if path.startswith("src/") and path.endswith(".py")}
+    test_paths = {path for path in files if path.startswith("tests/") and path.endswith(".py")}
+    nodes = sorted(source_paths | test_paths)
+    edges: list[dict[str, Any]] = []
+    for path in nodes:
+        content = str(files.get(path, ""))
+        for line_number, raw_line in enumerate(content.splitlines(), start=1):
+            match = re.match(r"^\s*from\s+(src(?:\.[\w_]+)*)\s+import\s+(.+)$", raw_line)
+            if not match:
+                continue
+            imported_path = "%s.py" % match.group(1).replace(".", "/")
+            if imported_path not in source_paths:
+                continue
+            symbols = [symbol.strip().split(" as ")[0] for symbol in match.group(2).split(",") if symbol.strip()]
+            edges.append(
+                {
+                    "from": path,
+                    "imports": imported_path,
+                    "symbols": symbols,
+                    "sourceLine": line_number,
+                }
+            )
+    return {
+        "graphVersion": "coding.derived_dependency_graph.v1",
+        "nodes": nodes,
+        "edges": edges,
+    }
+
+
+def _compare_declared_and_derived_graph(declared_graph: dict[str, Any], derived_graph: dict[str, Any]) -> dict[str, Any]:
+    """把手写 importGraph 与源码派生图对齐，供 Eval 判断依赖图是否来自真实文件。"""
+    declared_edges = {
+        (str(edge.get("from")), str(edge.get("imports")))
+        for edge in declared_graph.get("edges", [])
+        if isinstance(edge, dict)
+    }
+    derived_edges = {
+        (str(edge.get("from")), str(edge.get("imports")))
+        for edge in derived_graph.get("edges", [])
+        if isinstance(edge, dict)
+    }
+    compared = dict(derived_graph)
+    compared["declaredGraphVersion"] = str(declared_graph.get("graphVersion") or "manual_import_graph.v1")
+    compared["declaredEdgeCount"] = len(declared_edges)
+    compared["derivedEdgeCount"] = len(derived_edges)
+    compared["missingDeclaredEdges"] = [
+        {"from": source, "imports": target}
+        for source, target in sorted(declared_edges - derived_edges)
+    ]
+    compared["extraDerivedEdges"] = [
+        {"from": source, "imports": target}
+        for source, target in sorted(derived_edges - declared_edges)
+    ]
+    compared["declaredEdgesCovered"] = not compared["missingDeclaredEdges"] and bool(declared_edges)
+    return compared
 
 
 def _javascript_smoke_fixture_files() -> dict[str, str]:
@@ -1457,6 +1737,11 @@ def _build_dependency_patch_evidence(
 ) -> dict[str, Any]:
     """记录跨文件依赖修复所需的全文件 hash、import 图和补丁覆盖范围。"""
     import_graph = repo_fixture.get("importGraph", {}) if isinstance(repo_fixture.get("importGraph"), dict) else {}
+    derived_dependency_graph = (
+        repo_fixture.get("derivedDependencyGraph", {})
+        if isinstance(repo_fixture.get("derivedDependencyGraph"), dict)
+        else {}
+    )
     if not import_graph:
         return {}
     return {
@@ -1467,6 +1752,7 @@ def _build_dependency_patch_evidence(
             str(path): _stable_digest(str(content)) for path, content in sorted(patched_files.items())
         },
         "importGraph": import_graph,
+        "derivedDependencyGraph": derived_dependency_graph,
         "patchCoverageFileCount": len(changed_files),
         "changedFiles": list(changed_files),
         "changedSourceFiles": [
@@ -1549,15 +1835,32 @@ def _build_dependency_evidence_chain(
                 "command": report.get("command"),
                 "exitCode": report.get("exitCode"),
                 "failureObserved": bool(report.get("failureObserved")),
+                "failingCaseIds": list(report.get("failingCaseIds", []))
+                if isinstance(report.get("failingCaseIds"), list)
+                else [],
+                "sourceEventIds": list(report.get("sourceEventIds", []))
+                if isinstance(report.get("sourceEventIds"), list)
+                else [],
                 "sha256": report.get("sha256"),
             }
         )
+    pre_cases = pre_patch_report.get("caseResults", []) if isinstance(pre_patch_report.get("caseResults"), list) else []
+    post_cases = post_patch_report.get("caseResults", []) if isinstance(post_patch_report.get("caseResults"), list) else []
     evidence = {
+        "chainVersion": "coding.dependency_evidence_chain.v2",
         "prePatch": {
             "testReportId": pre_patch_report.get("testReportId"),
             "testRunner": pre_patch_report.get("testRunner"),
             "command": pre_patch_report.get("command"),
             "exitCode": pre_patch_report.get("exitCode"),
+            "failingCaseIds": [
+                str(item.get("caseId") or "unknown_case")
+                for item in pre_cases
+                if isinstance(item, dict) and not bool(item.get("passed"))
+            ],
+            "sourceEventIds": list(pre_patch_report.get("sourceEventIds", []))
+            if isinstance(pre_patch_report.get("sourceEventIds"), list)
+            else [],
             "sha256": pre_patch_report.get("sha256"),
         },
         "postPatch": {
@@ -1565,6 +1868,14 @@ def _build_dependency_evidence_chain(
             "testRunner": post_patch_report.get("testRunner"),
             "command": post_patch_report.get("command"),
             "exitCode": post_patch_report.get("exitCode"),
+            "passingCaseIds": [
+                str(item.get("caseId") or "unknown_case")
+                for item in post_cases
+                if isinstance(item, dict) and bool(item.get("passed"))
+            ],
+            "sourceEventIds": list(post_patch_report.get("sourceEventIds", []))
+            if isinstance(post_patch_report.get("sourceEventIds"), list)
+            else [],
             "sha256": post_patch_report.get("sha256"),
         },
         "partialPatchFailures": partial_rows,
@@ -1576,7 +1887,75 @@ def _build_dependency_evidence_chain(
         bool(item.get("failureObserved")) and item.get("exitCode") not in (None, 0)
         for item in partial_rows
     )
+    evidence["transitionEdges"] = _dependency_chain_transition_edges(evidence)
+    evidence["caseEvidence"] = {
+        "prePatchFailingCaseIds": list(evidence["prePatch"].get("failingCaseIds", [])),
+        "partialPatchFailingCaseIdsByFile": {
+            str(item.get("patchedFile")): list(item.get("failingCaseIds", []))
+            for item in partial_rows
+        },
+        "postPatchPassingCaseIds": list(evidence["postPatch"].get("passingCaseIds", [])),
+    }
     return evidence
+
+
+def _dependency_chain_transition_edges(evidence: dict[str, Any]) -> list[dict[str, Any]]:
+    """把 pre -> partial -> post 串成可审计边，导出时可直接查看依赖证据路径。"""
+    pre_report = evidence.get("prePatch", {}) if isinstance(evidence.get("prePatch"), dict) else {}
+    post_report = evidence.get("postPatch", {}) if isinstance(evidence.get("postPatch"), dict) else {}
+    partial_rows = evidence.get("partialPatchFailures", []) if isinstance(evidence.get("partialPatchFailures"), list) else []
+    edges: list[dict[str, Any]] = []
+    for partial in partial_rows:
+        if not isinstance(partial, dict):
+            continue
+        edges.append(
+            {
+                "from": pre_report.get("testReportId"),
+                "to": partial.get("testReportId"),
+                "reason": "single_file_partial_patch_replays_pre_patch_failure",
+                "patchedFile": partial.get("patchedFile"),
+            }
+        )
+        edges.append(
+            {
+                "from": partial.get("testReportId"),
+                "to": post_report.get("testReportId"),
+                "reason": "coordinated_cross_file_patch_resolves_failure",
+                "patchedFile": partial.get("patchedFile"),
+            }
+        )
+    return edges
+
+
+def _regression_case_covered(
+    goal_id: str,
+    pre_patch_report: dict[str, Any],
+    post_patch_report: dict[str, Any],
+    partial_patch_reports: list[dict[str, Any]],
+) -> bool:
+    """确认跨文件回归场景具备红灯、单文件仍红、双文件变绿的完整用例证据。"""
+    if goal_id != CROSS_FILE_REGRESSION_GOAL_ID:
+        return True
+    pre_cases = pre_patch_report.get("caseResults", []) if isinstance(pre_patch_report.get("caseResults"), list) else []
+    post_cases = post_patch_report.get("caseResults", []) if isinstance(post_patch_report.get("caseResults"), list) else []
+    partial_case_ids = {
+        str(case.get("caseId") or "")
+        for report in partial_patch_reports
+        if isinstance(report, dict)
+        for case in report.get("caseResults", [])
+        if isinstance(case, dict) and not bool(case.get("passed"))
+    }
+    regression_case_ids = {
+        str(case.get("caseId") or "")
+        for case in pre_cases
+        if isinstance(case, dict) and not bool(case.get("passed"))
+    }
+    post_passing_case_ids = {
+        str(case.get("caseId") or "")
+        for case in post_cases
+        if isinstance(case, dict) and bool(case.get("passed"))
+    }
+    return bool(regression_case_ids) and regression_case_ids.issubset(partial_case_ids) and regression_case_ids.issubset(post_passing_case_ids)
 
 
 def _build_rule_reviewer_evaluations(
@@ -1652,6 +2031,10 @@ def _arbitrate_reviewer_disagreement(
                 "score": item.get("score"),
                 "grounds": item.get("grounds", []),
                 "scoringBasis": item.get("scoringBasis", {}),
+                "sourceEventId": item.get("sourceEventId"),
+                "sourceEventIds": list(item.get("sourceEventIds", []))
+                if isinstance(item.get("sourceEventIds"), list)
+                else [],
             }
             for item in reviewer_evaluations
         ],

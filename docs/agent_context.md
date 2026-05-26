@@ -31,7 +31,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - Phase 1（活着的世界）已收口；`world_main.tscn` 是当前完成基线，旧 `LifeActionExecutor` 只保留回归修复。
 - Phase 2（骨架建立期）首轮已落地，当前主线是 trace / eval 收紧和可解释证据复用。
 - 后端权威路径已切到 `MotivationEngine -> ToolExecutor -> ResultObserver`，`/api/world/tick`、`/api/debug.phase2`、`phase2.trace.v1` 和 `schema_registry.v1` 是核心观察入口。
-- Process Fidelity Eval 已包含 rule process suite、stability / determinism、memory / relationship ablation、counterfactual replay、domain adapter suite 和 eval archive manifest。
+- Process Fidelity Eval 已包含 rule process suite、stability / determinism、memory / relationship ablation、counterfactual replay、domain adapter suite 和 eval archive manifest；coding adapter 当前 8 个 fixture，已覆盖源码派生依赖图、dependency evidence chain v2、跨文件回归和 reviewer judgment arbitration。
 - Godot Research Dock 已接入 Phase 2 debug 摘要、trace timeline、来源跳转按钮、Copy 当前 trace JSON、NPC 高亮和三 Tab UI；`memory.result_observed` 行与来源跳转可发现性已通过真实窗口复验，Copy trace / detail 文案 / 快捷键保留为 polish。
 - Web Debug 已有 provider / fallback / cost 总览、Heuristic Library、Arbitration Trace 和 Rashomon Memory 三卡片。
 - 6 名首发 NPC 深度卡已入库；4 核心 NPC（kai / mira / bram / lena）已有实际 motivation / capability / heuristic seed，tomas / orren 保持 stub。
@@ -48,9 +48,9 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 
 ## 5. 最近下一步
 
-- 优先转入 Eval 线：继续加深真实依赖图、跨文件回归、review agent 分歧和 dependency evidence chain。
+- Eval 线下一步优先加深 counterfactual / ablation 可区分度，避免 domain suite 长期停留在全 1.0 / 0.0 的脚手架证据。
 - Godot 线后续只保留 Copy trace、detail 文案、快捷键和手感 polish。
-- Godot 线后续只保留 detail 文案、快捷键和手感 polish；不要重新扩 Phase 1 旧玩法线。
+- 不要重新扩 Phase 1 旧玩法线。
 - 切换模型、key、profile 或需要刷新真实成本证据时，再单独运行 `npm.cmd run llm:smoke`。
 - 资产线按 `docs/asset_batches/prompt_ready_export.md` 推进，但先按 `docs/open_questions.md` 的资产范围调整重新评估优先级。
 

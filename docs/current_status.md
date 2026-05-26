@@ -26,7 +26,7 @@ scope: current implementation facts, verification state, and work constraints
 | 开发线 | 当前事实 | 仍需关注 |
 | --- | --- | --- |
 | 后端 Runtime / Director | Python Agent Server 是权威世界状态入口；已有 `GET /api/world/state`、`POST /api/player/action`、`POST /api/world/tick`、`GET /api/debug.phase2`；规则版 Director v0 与单个 Event Skill `event.starlight_festival_shortage` 已运行；Phase 2 tick 主路径已切到 `MotivationEngine -> ToolExecutor -> ResultObserver`；`motivation.decision_made`、工具完成 / 失败 / 中断、`memory.result_observed` 均带 trace 证据；`schema_registry.v1` 已集中治理主要 schema。 | 继续扩展 schema 迁移覆盖、失败模式、真实预算策略和更完整竞争上下文裁决；旧 `LifeActionExecutor` 只做回归修复。 |
-| Eval / Research | `scripts/run_agent_eval.py` 已覆盖 rule process suite、stability、stability determinism、domain adapter suite；Process Fidelity Eval 包含 Hard Delegation、No Subjective Memory、No Relationship Edge、Shuffled Owner、Evidence-Link Removal、Branna Forgiveness fixture、Counterfactual Replay 和本地 export / archive manifest；coding domain adapter 已覆盖 7 类 repo fixture。 | Eval 是 Phase 2 硬验收线；继续加深真实依赖图、跨文件回归、review agent 分歧和 dependency evidence chain；真实 cloud LLM 证据不进默认 CI。 |
+| Eval / Research | `scripts/run_agent_eval.py` 已覆盖 rule process suite、stability、stability determinism、domain adapter suite；Process Fidelity Eval 包含 Hard Delegation、No Subjective Memory、No Relationship Edge、Shuffled Owner、Evidence-Link Removal、Branna Forgiveness fixture、Counterfactual Replay 和本地 export / archive manifest；coding domain adapter 已覆盖 8 类 repo fixture，并新增源码派生依赖图、`dependency_evidence_chain.v2`、跨文件回归 fixture 和 reviewer judgment 事件。 | Eval 是 Phase 2 硬验收线；继续加深 counterfactual / ablation 可拉开差距的证据，真实 cloud LLM 证据不进默认 CI。 |
 | Godot 客户端 | `clients/godot/` 是 Godot 4.x 项目；默认主场景为 `res://scenes/world_main.tscn`；Phase 1 玩家移动、`E` talk、tick NPC 行动、远处事件提示和三场景拼图已收口；Research Dock 三 Tab 已读取 `/api/debug.phase2` 并展示 motivation、subjective memory、relationship edges、heuristics 与 trace timeline；`memory.result_observed` 行、来源跳转按钮、Copy 当前 trace JSON 和 NPC 高亮代码已落地。 | 主人已确认 UI 重设计后的整体观感、非全屏滚动、6 NPC 密度、遮挡风险修复，以及 `memory.result_observed` 可发现性和来源跳转按钮；Copy 当前 trace JSON、trace detail 文案和快捷键手感保留为后续 polish 验收。 |
 | Web Debug / LLM | `RuleBasedProvider` 与 OpenAI-compatible `CloudApiProvider` 已接入；`config/models.example.json` 默认 rule fallback；Web Debug 已展示 provider / fallback / cost 总览、Heuristic Library、Arbitration Trace 和 Rashomon Memory。 | 最新成功真实 LLM smoke 是 2026-05-23；2026-05-24 曾触达 CloudApiProvider 但供应商返回 `HTTP 402 Insufficient Balance`，未刷新通过证据；切换 key / profile / prompt 后需单独跑 `npm.cmd run llm:smoke`。 |
 | Content / NPC | 6 名首发 NPC 深度卡已入库；`voiceStyle`、`speechQuirks`、`monologueSeeds`、`giftReactions`、`gossipHooks` 已被 runtime / smoke 覆盖；4 核心 NPC（kai / mira / bram / lena）已有实际 motivation / capability / heuristic seed；tomas / orren 保持 stub。 | 谣言传播仍只记录校验结果，不写入世界状态、关系或记忆扩散；2 名 stub NPC 后续按剧情需要升级。 |
@@ -35,6 +35,7 @@ scope: current implementation facts, verification state, and work constraints
 
 ## 3. 最近核对结果
 
+- 2026-05-26 Eval 线按顺序加深：dependency evidence chain 升级到 `coding.dependency_evidence_chain.v2`，fixture 源码派生 `derivedDependencyGraph`，新增 `coding.skill_cross_file_regression_dryrun`，reviewer disagreement 记录 `coding.reviewer_judgment_recorded` 后再进入 arbitration；`npm.cmd run eval:domain` 为 11/11，`npm.cmd run eval:domain:export` 生成 `.run/eval-runs/domain_2026-05-26T13-47-52Z`，artifactCount=65，`npm.cmd run eval:archive:check` 通过。
 - 2026-05-26 真实 Godot 窗口复验发现 `memory.result_observed` 行和 source chip 可发现性不足：`memory.result_observed` 只藏在 detail `type` 字段里，source chip 外观像标签；已补显式行名、观察记忆提示、来源跳转按钮文案和聚焦状态提示，主人随后确认通过，可转入 Eval 证据链收紧阶段。
 - 2026-05-26 上下文治理收缩：`docs/agent_context.md` 从长事实堆叠改为短入口；`docs/current_status.md` 聚焦当前事实、manual gate 和下一步；接续流程开始收敛到 `context:resume`。
 - 2026-05-25 Trace 体验闭环代码已落地：`GET /api/debug.phase2` 支持 `focusEventId` / `focusTraceId`，`recentTraceEvents[]` 支持 `sourceLinks[]`，响应可返回 `traceFocus`；Godot Research Dock Trace detail 新增“证据链”chip，点击 source chip 会重拉 focus 并选中源事件；Copy trace 会复制当前 trace JSON。
@@ -90,7 +91,7 @@ git diff --check
 
 ## 7. 下一轮建议
 
-- 转入 Eval 线，继续强化 dependency evidence chain、真实依赖图、跨文件回归和 reviewer disagreement。
+- Eval 线下一步继续强化 counterfactual / ablation 能拉开差距的场景证据，并把 `counterfactual_tool_selection_change_rate` 从干跑脚手架推进到更有区分度的样例。
 - Godot trace 后续只保留 Copy 当前 trace JSON、detail 文案、快捷键和手感 polish。
 - Godot 线后续以 detail 文案、快捷键和手感 polish 为主，不重开 Phase 1 旧玩法扩写。
 - LLM / Debug 线只在切换模型、key、profile、prompt 或需要刷新真实成本证据时运行 `npm.cmd run llm:smoke`。

@@ -318,6 +318,20 @@ def _write_domain_evidence_files(run_dir: Path, item: dict[str, Any]) -> list[di
                 baseline=baseline,
             )
         )
+        derived_graph = repo_fixture.get("derivedDependencyGraph", {})
+        if isinstance(derived_graph, dict) and derived_graph:
+            # 依赖图单独导出，方便审查 cross-file fixture 是否真的来自源码 import。
+            graph_path = evidence_dir / "derived_dependency_graph.json"
+            _write_json(graph_path, derived_graph)
+            artifacts.append(
+                _artifact_record(
+                    graph_path,
+                    run_dir,
+                    kind="domain_evidence_derived_dependency_graph_json",
+                    scenario_id=scenario_id,
+                    baseline=baseline,
+                )
+            )
 
     artifact_map = evidence.get("artifacts", {})
     if isinstance(artifact_map, dict):
