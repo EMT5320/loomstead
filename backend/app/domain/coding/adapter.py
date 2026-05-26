@@ -532,6 +532,16 @@ class CodingDomainAdapter:
             event for event in world.get("events", []) if event.get("type") == "domain.intervention_applied"
         ]
         has_review_source = bool(review_event and review_event.get("payload", {}).get("sourceEventIds"))
+        counterfactual_replay = _ensure_coding_counterfactual_replay(
+            world,
+            goal_id=goal.goal_id,
+            repo_fixture=repo_fixture,
+            artifact=artifact,
+            pre_patch_report=pre_patch_report if isinstance(pre_patch_report, dict) else {},
+            partial_patch_reports=partial_patch_reports,
+            test_report=test_report if isinstance(test_report, dict) else {},
+            review_report=review_report if isinstance(review_report, dict) else {},
+        )
         return build_process_metrics(
             process_checks=process_checks,
             required_process_ids=tuple(str(item["id"]) for item in goal.required_process),
@@ -544,6 +554,9 @@ class CodingDomainAdapter:
             state_changes_with_source=1 if has_review_source else 0,
             relationship_relevant_decisions=1,
             decisions_with_relationship_memory=1 if process_checks["failure_pattern_memory"] else 0,
+            counterfactual_tool_selection_change_rate=float(
+                counterfactual_replay.get("changeRate", 0.0)
+            ),
             goal_success_override=process_checks["review_completed"] and process_checks["external_repo_checkout_tested"],
         )
 
@@ -1956,6 +1969,326 @@ def _regression_case_covered(
         if isinstance(case, dict) and bool(case.get("passed"))
     }
     return bool(regression_case_ids) and regression_case_ids.issubset(partial_case_ids) and regression_case_ids.issubset(post_passing_case_ids)
+
+
+def _ensure_coding_counterfactual_replay(
+    world: dict[str, Any],
+    *,
+    goal_id: str,
+    repo_fixture: dict[str, Any],
+    artifact: dict[str, Any],
+    pre_patch_report: dict[str, Any],
+    partial_patch_reports: dict[str, Any],
+    test_report: dict[str, Any],
+    review_report: dict[str, Any],
+) -> dict[str, Any]:
+    """缓存 coding domain 的证据移除 replay，避免 evaluate / observe 重复生成不一致结构。"""
+    if not review_report:
+        return {}
+    replay_id = str(review_report.get("reviewReportId") or f"{goal_id}.counterfactual_replay")
+    replay_map = world.setdefault("counterfactualReplays", {})
+    if not isinstance(replay_map, dict):
+        replay_map = {}
+        world["counterfactualReplays"] = replay_map
+    existing = replay_map.get(replay_id)
+    if isinstance(existing, dict):
+        return existing
+    replay = _build_coding_counterfactual_replay(
+        goal_id=goal_id,
+        repo_fixture=repo_fixture,
+        artifact=artifact,
+        pre_patch_report=pre_patch_report,
+        partial_patch_reports=partial_patch_reports,
+        test_report=test_report,
+        review_report=review_report,
+    )
+    replay_map[replay_id] = replay
+    return replay
+
+
+def _build_coding_counterfactual_replay(
+    *,
+    goal_id: str,
+    repo_fixture: dict[str, Any],
+    artifact: dict[str, Any],
+    pre_patch_report: dict[str, Any],
+    partial_patch_reports: dict[str, Any],
+    test_report: dict[str, Any],
+    review_report: dict[str, Any],
+) -> dict[str, Any]:
+    """逐项移除证据，复算 review 路由，给 cross-domain suite 提供可区分的因果信号。"""
+    features = _coding_evidence_features(
+        goal_id=goal_id,
+        repo_fixture=repo_fixture,
+        artifact=artifact,
+        pre_patch_report=pre_patch_report,
+        partial_patch_reports=partial_patch_reports,
+        test_report=test_report,
+        review_report=review_report,
+    )
+    selected_with = _select_coding_process_tool(goal_id, features)
+    comparisons: list[dict[str, Any]] = []
+    changed_count = 0
+    for spec in _coding_counterfactual_ablation_specs(goal_id, repo_fixture):
+        ablated_features = dict(features)
+        removed_evidence_ids = [str(item) for item in spec.get("removeEvidenceIds", [])]
+        for evidence_id in removed_evidence_ids:
+            ablated_features[evidence_id] = False
+        selected_without = _select_coding_process_tool(goal_id, ablated_features)
+        changed = selected_with != selected_without
+        changed_count += 1 if changed else 0
+        comparisons.append(
+            {
+                "ablationId": spec.get("ablationId"),
+                "kind": spec.get("kind", "critical"),
+                "removedEvidenceIds": removed_evidence_ids,
+                "selectedWithEvidence": selected_with,
+                "selectedWithoutEvidence": selected_without,
+                "changed": changed,
+                "reason": spec.get("reason"),
+            }
+        )
+    critical_rows = [row for row in comparisons if row.get("kind") == "critical"]
+    control_rows = [row for row in comparisons if row.get("kind") == "control"]
+    return {
+        "replayVersion": "coding.domain_counterfactual_replay.v1",
+        "goalId": goal_id,
+        "selectedWithEvidence": selected_with,
+        "featureSnapshot": features,
+        "comparisonCount": len(comparisons),
+        "changedDecisionCount": changed_count,
+        "criticalChangeCount": sum(1 for row in critical_rows if row.get("changed")),
+        "controlStableCount": sum(1 for row in control_rows if not row.get("changed")),
+        "changeRate": round(_safe_ratio(changed_count, len(comparisons)), 6),
+        "criticalChangeRate": round(
+            _safe_ratio(sum(1 for row in critical_rows if row.get("changed")), len(critical_rows)),
+            6,
+        ),
+        "controlStabilityRate": round(
+            _safe_ratio(sum(1 for row in control_rows if not row.get("changed")), len(control_rows)),
+            6,
+        ),
+        "comparisons": comparisons,
+    }
+
+
+def _coding_evidence_features(
+    *,
+    goal_id: str,
+    repo_fixture: dict[str, Any],
+    artifact: dict[str, Any],
+    pre_patch_report: dict[str, Any],
+    partial_patch_reports: dict[str, Any],
+    test_report: dict[str, Any],
+    review_report: dict[str, Any],
+) -> dict[str, bool]:
+    """把 patch / test / review 证据压缩为确定性路由特征。"""
+    changed_files = artifact.get("changedFiles", []) if isinstance(artifact.get("changedFiles"), list) else []
+    metadata_path = str(repo_fixture.get("metadataPath") or "")
+    derived_graph = (
+        repo_fixture.get("derivedDependencyGraph", {})
+        if isinstance(repo_fixture.get("derivedDependencyGraph"), dict)
+        else {}
+    )
+    dependency_chain = (
+        review_report.get("dependencyEvidenceChain", {})
+        if isinstance(review_report.get("dependencyEvidenceChain"), dict)
+        else {}
+    )
+    reviewer_evaluations = (
+        review_report.get("reviewerEvaluations", [])
+        if isinstance(review_report.get("reviewerEvaluations"), list)
+        else []
+    )
+    reviewer_decisions = {
+        str(item.get("decision") or "")
+        for item in reviewer_evaluations
+        if isinstance(item, dict)
+    }
+    arbitration_layer = (
+        review_report.get("arbitrationLayer", {})
+        if isinstance(review_report.get("arbitrationLayer"), dict)
+        else {}
+    )
+    partial_reports = [
+        report for report in partial_patch_reports.values() if isinstance(report, dict)
+    ]
+    return {
+        "repo_fixture_loaded": bool(repo_fixture.get("files")),
+        "non_python_fixture_loaded": (
+            repo_fixture.get("metadata", {}).get("testRunner") == "node_test"
+            if isinstance(repo_fixture.get("metadata"), dict)
+            else False
+        ),
+        "implementation_diff": bool(artifact.get("patchText")) and bool(changed_files),
+        "metadata_dependency_updated": bool(metadata_path)
+        and metadata_path in {str(path) for path in changed_files}
+        and bool(artifact.get("fileSha256", {}).get(metadata_path))
+        if isinstance(artifact.get("fileSha256"), dict)
+        else False,
+        "pre_patch_failure_observed": bool(pre_patch_report.get("failureObserved"))
+        and pre_patch_report.get("exitCode") not in (None, 0),
+        "post_patch_tests_passed": bool(test_report.get("passed")) and test_report.get("exitCode") == 0,
+        "derived_dependency_graph_recorded": bool(derived_graph.get("nodes"))
+        and bool(derived_graph.get("edges"))
+        and not derived_graph.get("missingDeclaredEdges"),
+        "single_file_replay_failed": bool(partial_reports)
+        and all(
+            bool(report.get("failureObserved")) and report.get("exitCode") not in (None, 0)
+            for report in partial_reports
+        ),
+        "dependency_chain_confirmed": bool(dependency_chain)
+        and dependency_chain.get("chainVersion") == "coding.dependency_evidence_chain.v2"
+        and bool(dependency_chain.get("transitionEdges"))
+        and bool(dependency_chain.get("caseEvidence"))
+        and bool(dependency_chain.get("allExpectedFailuresObserved")),
+        "reviewer_conflict_observed": {"approve", "request_changes"}.issubset(reviewer_decisions),
+        "arbitration_contributing_sources": len(arbitration_layer.get("contributing_sources", [])) >= 2
+        and all(
+            isinstance(item, dict) and bool(item.get("sourceEventId"))
+            for item in arbitration_layer.get("contributing_sources", [])
+        ),
+        "review_source_links": bool(review_report.get("sourceEventIds")),
+        "review_approved": review_report.get("status") == "approved",
+        # control 特征只用于 stable ablation，帮助指标显示“关键证据变化”和“无关信息移除”的差异。
+        "optional_readme_context": True,
+    }
+
+
+def _select_coding_process_tool(goal_id: str, features: dict[str, bool]) -> str:
+    """用证据特征复算 coding review 下一步路由，作为 task-domain 的 tool-selection proxy。"""
+    if not features.get("repo_fixture_loaded", False):
+        return "design.load_repo_fixture"
+    if goal_id == JAVASCRIPT_SMOKE_GOAL_ID and not features.get("non_python_fixture_loaded", False):
+        return "evaluation.select_node_test_runner"
+    if goal_id in {
+        FAILING_TEST_REPAIR_GOAL_ID,
+        MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID,
+        CROSS_FILE_REGRESSION_GOAL_ID,
+    } and not features.get("pre_patch_failure_observed", False):
+        return "evaluation.record_pre_patch_failure"
+    if not features.get("implementation_diff", False):
+        return "implement.create_patch"
+    if goal_id == MULTIFILE_REVIEW_GOAL_ID and not features.get("metadata_dependency_updated", False):
+        return "implement.sync_metadata_dependency"
+    if not features.get("post_patch_tests_passed", False):
+        return "evaluation.run_external_checkout_tests"
+    if goal_id in {MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID, CROSS_FILE_REGRESSION_GOAL_ID}:
+        if not features.get("derived_dependency_graph_recorded", False):
+            return "evaluation.derive_dependency_graph"
+        if not features.get("single_file_replay_failed", False):
+            return "evaluation.run_single_file_replays"
+        if not features.get("dependency_chain_confirmed", False):
+            return "review.request_dependency_evidence_chain"
+    if goal_id == REVIEWER_DISAGREEMENT_GOAL_ID:
+        if not features.get("reviewer_conflict_observed", False):
+            return "review.collect_reviewer_judgments"
+        if not features.get("arbitration_contributing_sources", False):
+            return "arbitration.collect_contributing_sources"
+    if not features.get("review_source_links", False):
+        return "review.request_source_event_links"
+    if not features.get("review_approved", False):
+        return "review.request_changes"
+    return "review.approve_patch"
+
+
+def _coding_counterfactual_ablation_specs(goal_id: str, repo_fixture: dict[str, Any]) -> list[dict[str, Any]]:
+    """列出每个 scenario 应移除的关键证据和一个稳定 control。"""
+    specs: list[dict[str, Any]] = [
+        {
+            "ablationId": "remove_post_patch_tests",
+            "kind": "critical",
+            "removeEvidenceIds": ["post_patch_tests_passed"],
+            "reason": "post-patch checkout test is the final approval gate",
+        },
+        {
+            "ablationId": "remove_review_source_links",
+            "kind": "critical",
+            "removeEvidenceIds": ["review_source_links"],
+            "reason": "review approval must stay linked to test/source events",
+        },
+        {
+            "ablationId": "remove_optional_readme_context",
+            "kind": "control",
+            "removeEvidenceIds": ["optional_readme_context"],
+            "reason": "non-gating context removal should keep the process route stable",
+        },
+    ]
+    if goal_id == JAVASCRIPT_SMOKE_GOAL_ID:
+        specs.insert(
+            0,
+            {
+                "ablationId": "remove_non_python_runner_metadata",
+                "kind": "critical",
+                "removeEvidenceIds": ["non_python_fixture_loaded"],
+                "reason": "JavaScript fixture requires node_test runner metadata",
+            },
+        )
+    if goal_id in {
+        FAILING_TEST_REPAIR_GOAL_ID,
+        MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID,
+        CROSS_FILE_REGRESSION_GOAL_ID,
+    }:
+        specs.insert(
+            0,
+            {
+                "ablationId": "remove_pre_patch_failure",
+                "kind": "critical",
+                "removeEvidenceIds": ["pre_patch_failure_observed"],
+                "reason": "repair scenarios must show the red test before applying a fix",
+            },
+        )
+    if goal_id == MULTIFILE_REVIEW_GOAL_ID and repo_fixture.get("metadataPath"):
+        specs.insert(
+            1,
+            {
+                "ablationId": "remove_metadata_dependency_update",
+                "kind": "critical",
+                "removeEvidenceIds": ["metadata_dependency_updated"],
+                "reason": "metadata-sensitive skill changes must update the paired dependency file",
+            },
+        )
+    if goal_id in {MULTIFILE_DEPENDENCY_REPAIR_GOAL_ID, CROSS_FILE_REGRESSION_GOAL_ID}:
+        specs.extend(
+            [
+                {
+                    "ablationId": "remove_derived_dependency_graph",
+                    "kind": "critical",
+                    "removeEvidenceIds": ["derived_dependency_graph_recorded"],
+                    "reason": "cross-file repair needs import graph evidence derived from real files",
+                },
+                {
+                    "ablationId": "remove_single_file_replay_failures",
+                    "kind": "critical",
+                    "removeEvidenceIds": ["single_file_replay_failed"],
+                    "reason": "single-file partial replay proves the repair needs coordinated edits",
+                },
+                {
+                    "ablationId": "remove_dependency_chain",
+                    "kind": "critical",
+                    "removeEvidenceIds": ["dependency_chain_confirmed"],
+                    "reason": "review requires pre/partial/post dependency evidence chain",
+                },
+            ]
+        )
+    if goal_id == REVIEWER_DISAGREEMENT_GOAL_ID:
+        specs.extend(
+            [
+                {
+                    "ablationId": "remove_reviewer_conflict",
+                    "kind": "critical",
+                    "removeEvidenceIds": ["reviewer_conflict_observed"],
+                    "reason": "disagreement scenario must preserve opposing reviewer judgments",
+                },
+                {
+                    "ablationId": "remove_arbitration_sources",
+                    "kind": "critical",
+                    "removeEvidenceIds": ["arbitration_contributing_sources"],
+                    "reason": "arbitration must cite reviewer judgment sources",
+                },
+            ]
+        )
+    return specs
 
 
 def _build_rule_reviewer_evaluations(

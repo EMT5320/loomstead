@@ -33,6 +33,9 @@ const TRACE_FILTER_LABELS := {
 	"memory": "记忆",
 }
 const DETAIL_POPUP_MAX_CHARS := 12000
+const TRACE_COPY_BUTTON_TEXT := "Copy 当前 trace JSON [C]"
+const TRACE_COPY_BUTTON_COPIED_TEXT := "Copied ✓"
+const TRACE_SHORTCUT_HINT_TEXT := "快捷键：1-5 过滤，[,] 上一条，[.] 下一条，[C] 复制当前 trace JSON，[Esc] 关闭弹层"
 const SECTION_EMPTY_TEXT := {
 	"motivation": "暂无 motivation：等待下一次世界 tick。",
 	"subjectiveMemory": "暂无 subjectiveMemory：该 NPC 尚未写入主观记忆。",
@@ -83,6 +86,7 @@ var _trace_index_label: Label
 var _trace_prev_button: Button
 var _trace_next_button: Button
 var _trace_copy_button: Button
+var _trace_control_hint_label: Label
 var _trace_rows_box: VBoxContainer
 var _trace_summary_label: Label
 var _trace_details_box: VBoxContainer
@@ -122,16 +126,34 @@ func _unhandled_input(event: InputEvent) -> void:
 	var key_event := event as InputEventKey
 	if not key_event.pressed or key_event.echo:
 		return
+	if _handle_trace_hotkeys(key_event):
+		get_viewport().set_input_as_handled()
+
+
+func _handle_trace_hotkeys(key_event: InputEventKey) -> bool:
 	if key_event.keycode == KEY_ESCAPE and _is_trace_detail_popup_visible():
 		_hide_trace_details_popup()
-		get_viewport().set_input_as_handled()
-		return
+		return true
 	# 1-5：切换 trace 过滤；自动跳 Tab 3，便于排查决策链。
 	var filter_index := _trace_filter_index_for_key(key_event.keycode)
 	if filter_index >= 0:
 		_switch_tab(TAB_TRACE)
 		_select_trace_filter_by_index(filter_index)
-		get_viewport().set_input_as_handled()
+		return true
+	if _current_tab != TAB_TRACE:
+		return false
+	match key_event.keycode:
+		KEY_COMMA:
+			_on_trace_prev_pressed()
+			return true
+		KEY_PERIOD:
+			_on_trace_next_pressed()
+			return true
+		KEY_C:
+			_on_trace_copy_pressed()
+			return true
+		_:
+			return false
 
 
 # ---------------------------------------------------------------------------
@@ -927,13 +949,13 @@ func _build_trace_tab() -> Control:
 	nav_row.add_theme_constant_override("separation", 6)
 	control_card.body.add_child(nav_row)
 	_trace_prev_button = Button.new()
-	_trace_prev_button.text = "◀ Prev"
+	_trace_prev_button.text = "◀ Prev [,]"
 	_trace_prev_button.focus_mode = Control.FOCUS_NONE
 	ResearchThemeScript.apply_button_style(_trace_prev_button, ResearchThemeScript.FONT_SIZE_SMALL)
 	_trace_prev_button.pressed.connect(_on_trace_prev_pressed)
 	nav_row.add_child(_trace_prev_button)
 	_trace_next_button = Button.new()
-	_trace_next_button.text = "Next ▶"
+	_trace_next_button.text = "Next [.] ▶"
 	_trace_next_button.focus_mode = Control.FOCUS_NONE
 	ResearchThemeScript.apply_button_style(_trace_next_button, ResearchThemeScript.FONT_SIZE_SMALL)
 	_trace_next_button.pressed.connect(_on_trace_next_pressed)
@@ -945,11 +967,17 @@ func _build_trace_tab() -> Control:
 	ResearchThemeScript.apply_label_style(_trace_index_label, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_MUTED)
 	nav_row.add_child(_trace_index_label)
 	_trace_copy_button = Button.new()
-	_trace_copy_button.text = "Copy trace"
+	_trace_copy_button.text = TRACE_COPY_BUTTON_TEXT
 	_trace_copy_button.focus_mode = Control.FOCUS_NONE
+	_trace_copy_button.tooltip_text = "复制当前选中 trace 的完整 JSON 到剪贴板"
 	ResearchThemeScript.apply_button_style(_trace_copy_button, ResearchThemeScript.FONT_SIZE_SMALL)
 	_trace_copy_button.pressed.connect(_on_trace_copy_pressed)
 	nav_row.add_child(_trace_copy_button)
+	_trace_control_hint_label = Label.new()
+	_trace_control_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_trace_control_hint_label.text = TRACE_SHORTCUT_HINT_TEXT
+	ResearchThemeScript.apply_label_style(_trace_control_hint_label, ResearchThemeScript.FONT_SIZE_SMALL, ResearchThemeScript.COLOR_TEXT_MUTED)
+	control_card.body.add_child(_trace_control_hint_label)
 	vbox.add_child(control_card.root)
 
 	# 时间线（recentTraceEvents）
@@ -1028,8 +1056,7 @@ func _update_recent_trace_view() -> void:
 		_trace_prev_button.disabled = rows.is_empty()
 	if _trace_next_button != null:
 		_trace_next_button.disabled = rows.is_empty()
-	if _trace_copy_button != null:
-		_trace_copy_button.disabled = rows.is_empty()
+	_update_trace_copy_button_state(not rows.is_empty())
 
 
 func _rebuild_recent_trace_rows(rows: Array) -> void:
@@ -1100,10 +1127,12 @@ func _update_recent_trace_detail_view() -> void:
 	_current_trace_detail_index = int(clamp(_current_trace_detail_index, 0, item_count - 1))
 	var entry := rows[_current_trace_detail_index] as Dictionary
 	var event_type := _trace_event_type(entry)
-	_trace_details_status_label.text = "%s · trace=%s · span=%s" % [
+	_trace_details_status_label.text = "%s · trace=%s · span=%s · %d/%d\n提示：按 [C] 复制当前 trace JSON；如需看完整 details，点下方“展开完整 JSON”。" % [
 		_trace_detail_type_label(event_type),
 		str(entry.get("traceId", "-")),
 		str(entry.get("spanId", "-")),
+		_current_trace_detail_index + 1,
+		item_count,
 	]
 	if event_type == "memory.result_observed":
 		_trace_details_box.add_child(_make_trace_callout(
@@ -1286,6 +1315,13 @@ func _update_trace_index_label(item_count: int) -> void:
 	_trace_index_label.text = "%d/%d" % [_current_trace_detail_index + 1, item_count]
 
 
+func _update_trace_copy_button_state(has_rows: bool) -> void:
+	if _trace_copy_button == null:
+		return
+	_trace_copy_button.disabled = not has_rows
+	_trace_copy_button.text = TRACE_COPY_BUTTON_TEXT
+
+
 func _on_trace_prev_pressed() -> void:
 	var item_count := _trace_events_for_filter().size()
 	if item_count <= 0:
@@ -1310,7 +1346,13 @@ func _on_trace_copy_pressed() -> void:
 	if copy_text == "":
 		return
 	DisplayServer.clipboard_set(copy_text)
-	_set_phase2_status("已复制当前 trace JSON")
+	if _trace_copy_button != null:
+		_trace_copy_button.text = TRACE_COPY_BUTTON_COPIED_TEXT
+	var trace_id := str(copy_payload.get("traceId", "-"))
+	var rows := _trace_events_for_filter()
+	_set_phase2_status("已复制 trace JSON：%s（%s %d/%d）" % [trace_id, _current_trace_filter, _current_trace_detail_index + 1, rows.size()])
+	await get_tree().create_timer(0.85).timeout
+	_update_trace_copy_button_state(not rows.is_empty())
 
 
 func _on_trace_row_pressed(entry: Dictionary, row_index: int) -> void:
@@ -1603,7 +1645,7 @@ func _trace_summary_text_for_filter() -> String:
 
 func _trace_interaction_hint() -> String:
 	# 文案直接写出验收关键词，减少 Research Dock 的交互猜测成本。
-	return "点击 trace 行：memory.result_observed 行会高亮观察者；证据链里的橙色“点击跳转来源事件”按钮会聚焦来源。"
+	return "点击 trace 行：memory.result_observed 会高亮观察者；证据链按钮会聚焦来源。快捷键可用：1-5 过滤，[,] / [.] 翻页，[C] 复制。"
 
 
 func _trace_focus_status_text(focus: Dictionary) -> String:
@@ -1674,12 +1716,12 @@ func _trace_detail_type_label(event_type: String) -> String:
 func _trace_row_tooltip(entry: Dictionary) -> String:
 	var event_type := _trace_event_type(entry)
 	if event_type == "memory.result_observed":
-		return "memory.result_observed 行：点击后高亮观察者；在 details 的证据链里点击来源按钮。"
+		return "memory.result_observed：点击后高亮观察者；在 details 证据链里点击来源按钮。"
 	if event_type == "motivation.decision_made":
-		return "decision 行：点击后高亮决策 NPC。"
+		return "decision：点击后高亮决策 NPC。"
 	if event_type in ["tool.execution_completed", "tool.execution_failed", "tool.execution_interrupted"]:
-		return "tool 行：点击后高亮相关 NPC。"
-	return "点击查看 trace details。"
+		return "tool trace：点击后高亮相关 NPC。"
+	return "点击查看 trace details；按 [C] 可复制当前 JSON。"
 
 
 func _trace_tick_text(entry: Dictionary) -> String:

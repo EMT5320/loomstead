@@ -319,6 +319,8 @@ A7 Evidence-Link Removal
 A8 No Event Skill
 ```
 
+区分度验收补充：ablation 需要在 route / selected tool / process metric 中产生可观察差异；`counterfactual_tool_selection_change_rate` 长期为 0.0 时，只能说明 replay scaffold 可运行，不能作为因果证据。control ablation 也应保留稳定项，用来证明关键证据移除与无关信息移除的差别。
+
 ### 5.2 运行次数
 
 Phase 2 alpha：每 scenario 每 baseline 至少 5 个 seed。
@@ -391,6 +393,8 @@ counterfactual_effect = selected_tool_original != selected_tool_without_memory
 ```
 
 这比只看最终成功率更能证明记忆对单次决策有因果作用。
+
+当前实现状态（2026-05-26）：process suite 的 Branna forgiveness replay 已在真实 `MotivationEngine.evaluate_npc` 输入层移除主观记忆 / 关系边并复算 `selectedToolId`；coding domain 额外加入 `coding.domain_counterfactual_replay.v1`，对 post-patch tests、review source links、derived dependency graph、single-file replay、dependency chain、reviewer arbitration sources 等证据做移除 replay，并导出 `domain_evidence_counterfactual_replay_json` artifact。最新 domain export 中 aggregate `counterfactual_tool_selection_change_rate=0.554329`，coding mean `0.762203`，control stability 为 1.0。
 
 ## 7. Process Fidelity GoalSpec Schema
 

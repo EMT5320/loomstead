@@ -88,7 +88,7 @@ First skeleton pass is already in place. Current implemented pieces include:
 - SubjectiveMemoryStore, RelationshipEdgeStore, ResultObserver, and HeuristicLibrary feeding later decisions.
 - `phase2.trace.v1` across decision, tool result, interruption, and memory-observation events.
 - World entity skeleton for farm plots, items, inventories, shops, buildings, time, and weather debug projections.
-- Rule-level Process Fidelity Eval, counterfactual replay, memory / relationship ablations, 24-hour / 72-hour stability eval, determinism guard, manifest-backed local eval exports, and a cross-domain adapter dry-run/export suite with 8 coding fixtures, derived dependency graphs, cross-file regression evidence, and reviewer arbitration evidence.
+- Rule-level Process Fidelity Eval, counterfactual replay, memory / relationship ablations, 24-hour / 72-hour stability eval, determinism guard, manifest-backed local eval exports, and a cross-domain adapter dry-run/export suite with 8 coding fixtures, derived dependency graphs, cross-file regression evidence, reviewer arbitration evidence, and coding-domain counterfactual replay artifacts.
 - Godot ObserverPanel reading `/api/debug.phase2` summaries, filtered recent trace events, and latest trace details for the selected NPC.
 
 The old `LifeActionExecutor` is frozen for regression fixes. Phase 2 does not run a shadow path beside MotivationEngine. Current eval results remain rule-level / posterior ablation guardrails, so they should be described as scaffolding evidence rather than final research proof.
