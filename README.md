@@ -14,7 +14,7 @@ Short research tagline:
 Motivational Delegation for process-constrained goals in persistent multi-agent narratives.
 ```
 
-For orientation, agent assistants can start with [AGENTS.md](AGENTS.md) and [docs/agent_context.md](docs/agent_context.md). Current implementation facts live in [docs/current_status.md](docs/current_status.md), long-term direction in [docs/project_vision.md](docs/project_vision.md), and research framing in [docs/research_framing_motivational_delegation.md](docs/research_framing_motivational_delegation.md).
+For orientation, agent assistants can run `npm.cmd run context:resume`, then read [AGENTS.md](AGENTS.md) and [docs/agent_context.md](docs/agent_context.md). Current implementation facts live in [docs/current_status.md](docs/current_status.md), cross-assistant continuity lives in [docs/assistant_continuity.md](docs/assistant_continuity.md), long-term direction in [docs/project_vision.md](docs/project_vision.md), and research framing in [docs/research_framing_motivational_delegation.md](docs/research_framing_motivational_delegation.md).
 
 ## Why Loomstead
 

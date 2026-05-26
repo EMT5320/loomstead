@@ -3,15 +3,15 @@ title: Loomstead workflow catalog
 status: active
 source_of_truth: true
 owner_lane: context-governance
-last_reviewed: 2026-05-25
-last_verified: 2026-05-25
+last_reviewed: 2026-05-26
+last_verified: 2026-05-26
 startup_load: on-demand
-scope: Persistent Claude Code workflow catalog for research, eval, and verification discipline.
+scope: Persistent workflow catalog for research, eval, verification, and cross-assistant continuity.
 ---
 
 # Loomstead workflow catalog
 
-本页记录可在家里和公司环境共享的项目 workflow。它们用于提高研究效率、审查质量和证据复盘，不替代研究判断，也不自动扩展项目 scope。
+本页记录可在家里和公司环境共享的项目 workflow。它们用于提高研究效率、审查质量和证据复盘，不替代研究判断，也不自动扩展项目 scope。跨助手通用接续协议见 `docs/assistant_continuity.md`。
 
 ## 核心原则
 
@@ -37,6 +37,26 @@ docs/workflows.md
 ```
 
 ## P0：优先使用
+
+### `assistant-continuity`
+
+位置：`docs/assistant_continuity.md`
+
+用途：统一家里 / 公司、多助手和子代理之间的接手、开工、收工交接与证据等级。
+
+适用场景：
+
+- 新环境接手项目。
+- 切换 AI 助手。
+- 子代理完成研究后需要主会话合并事实。
+- 准备结构化 handoff。
+
+推荐入口：
+
+```powershell
+npm.cmd run context:resume
+npm.cmd run context:handoff
+```
 
 ### `research-claim-review`
 
@@ -139,12 +159,12 @@ docs/workflows.md
 
 ## 建议执行节奏
 
-今晚优先完成 P0 / P1 workflow 文档化。后续在公司环境 smoke 后，再把高频 workflow 转成可执行 JS workflow 或 npm script。
+高频流程先沉淀为助手无关文档和 npm script，再为 Kilo / Claude / Codex 增加薄适配层。
 
 推荐顺序：
 
-1. 使用 `research-claim-review` 收紧研究 claim。
-2. 使用 `process-eval-audit` 审查证据链。
-3. 使用 `test-eval-triage` 选择最小验证命令。
-4. 根据验证结果串行修改代码或文档。
-5. 运行 `npm.cmd run context:check` 和 `git diff --check`。
+1. 使用 `context:resume` 接手项目现场。
+2. 使用 `test-eval-triage` 选择最小验证命令。
+3. 研究或 eval 变更后使用 `research-claim-review` / `process-eval-audit` 审查证据链。
+4. 跨 lane 或交接前使用 `branch-review` / `consistency-sweep`。
+5. 调整上下文治理后运行 `npm.cmd run context:check` 和 `git diff --check`。

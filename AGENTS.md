@@ -12,12 +12,12 @@
 
 ## 2. 新会话阅读路线
 
-1. 推荐先读 `docs/agent_context.md`，快速确认当前入口、边界、命令和最近下一步。
-2. 再按任务线加载对应文档，避免一次性读取全部历史资料。
-3. 涉及实现或状态更新时，核对 `docs/current_status.md`，区分已验证事实、部分完成和人工未验收内容。
-4. 长期方向通常参考 `docs/project_vision.md`；当前实现事实通常参考 `docs/current_status.md`。
-5. 历史草案、旧 handoff 和早期观察台描述建议只作背景，当前事实以 active 文档为准。
-6. 读取 `docs/*.md` 时可先看 frontmatter：`active` 表示当前参考，`snapshot` 表示阶段证据，`source_of_truth=false` 表示不作为当前事实源。
+1. 推荐先运行 `npm.cmd run context:resume`，快速确认分支、脏区、manual gate 和最小接续信息。
+2. 再读 `docs/agent_context.md`，确认当前入口、边界、命令和最近下一步。
+3. 按任务线加载对应文档，避免一次性读取全部历史资料。
+4. 涉及实现或状态更新时，核对 `docs/current_status.md`，区分已验证事实、部分完成和人工未验收内容。
+5. 跨家里 / 公司、多助手或子代理接续时参考 `docs/assistant_continuity.md`。
+6. 历史草案、旧 handoff 和早期观察台描述建议只作背景，当前事实以 active 文档为准。
 
 ## 3. 文档分层
 
@@ -26,6 +26,8 @@
 - `docs/agent_context.md`：新对话第一入口，保持短、准、可执行。
 - `docs/current_status.md`：当前代码事实、缺口、验收命令和人工验收状态。
 - `docs/README.md`：文档索引和分层读取路线。
+- `docs/assistant_continuity.md`：跨环境、多助手和子代理接续协议。
+- `docs/workflows.md`：研究、验证、审查和交接 workflow 索引。
 
 ### 决策源
 
@@ -48,7 +50,7 @@
 - LLM / Debug / Eval：`docs/model_profile_template_guide.md`、`config/`、`backend/app/providers/`、`docs/agent_loop_architecture.md` §10、`docs/process_fidelity_eval_spec.md`、Debug API 相关代码。
 - 研究 framing / 跨域 adapter：`docs/research_framing_motivational_delegation.md`、`docs/process_fidelity_eval_spec.md`、`docs/cross_domain_adapter.md`；实现阶段转为代码后进入 `backend/app/domain/`、`backend/app/eval/`。
 - 资产管线：`docs/art_direction.md`、`docs/asset_generation_prompts.md`、`docs/map_sprite_style_guide.md`、`assets/manifests/asset_manifest.json`。
-- 上下文治理：`AGENTS.md`、`CLAUDE.md`、`docs/agent_context.md`、`scripts/build_agent_context.py`。
+- 上下文治理：`AGENTS.md`、`CLAUDE.md`、`docs/agent_context.md`、`docs/assistant_continuity.md`、`docs/workflows.md`、`scripts/build_agent_context.py`。
 - 归档历史：`docs/archive/`（仅供溯源，通常不作为当前事实源）。
 
 ## 4. 协作注意事项
@@ -65,9 +67,12 @@ Windows PowerShell 下常用命令：
 
 ```powershell
 npm.cmd run context:check
+npm.cmd run context:resume
+npm.cmd run context:handoff
 npm.cmd run check
 npm.cmd run context:brief
 npm.cmd run smoke
+npm.cmd run schema:check
 npm.cmd run llm:smoke
 npm.cmd run asset:check
 npm.cmd run client:env
@@ -75,7 +80,7 @@ npm.cmd run client:run:check
 git diff --check
 ```
 
-按任务线选择最小必要命令。`npm.cmd run check` 与 `npm.cmd run smoke` 默认不访问真实 LLM；需要验收真实模型链路、刷新 token / latency / cost 证据或切换 key/profile 后，单独运行 `npm.cmd run llm:smoke`。调整上下文治理文件时，建议运行 `npm.cmd run context:check` 和 `git diff --check`。
+按任务线选择最小必要命令，完整命令清单见 `docs/current_status.md`。`npm.cmd run check` 与 `npm.cmd run smoke` 默认不访问真实 LLM；需要验收真实模型链路、刷新 token / latency / cost 证据或切换 key/profile 后，单独运行 `npm.cmd run llm:smoke`。调整上下文治理文件时，建议运行 `npm.cmd run context:check` 和 `git diff --check`。
 
 ## 6. 协作信息参考
 

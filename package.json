@@ -41,6 +41,8 @@
                     "paper:build":  "latexmk -pdf -cd -interaction=nonstopmode -halt-on-error -outdir=build paper/latex/main.tex",
                     "paper:check":  "python scripts/check_paper_tooling.py --json && python scripts/paper_extract_eval_tables.py && latexmk -pdf -cd -interaction=nonstopmode -halt-on-error -outdir=build paper/latex/main.tex",
                     "context:brief":  "python scripts/build_agent_context.py",
+                    "context:resume":  "python scripts/build_agent_context.py --resume",
+                    "context:handoff":  "python scripts/build_agent_context.py --handoff",
                     "context:check":  "python scripts/build_agent_context.py --check",
                     "context:docs":  "python scripts/build_agent_context.py --docs"
                 },

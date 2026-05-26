@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: project-status
-last_verified: 2026-05-25
+last_verified: 2026-05-26
 startup_load: after-agent-context
 source_of_truth: true
 scope: current implementation facts, verification state, and work constraints
@@ -9,192 +9,64 @@ scope: current implementation facts, verification state, and work constraints
 
 # 当前项目状态与开发前约束
 
-> 状态更新时间：2026-05-25（Trace 体验闭环：`/api/debug.phase2` focus 查询、`recentTraceEvents.sourceLinks`、`traceFocus`、Godot Research Dock 证据链 chip 跳转与 Copy 当前 trace JSON 已落地；必跑离线门禁与建议 Eval 命令通过；真实 LLM smoke 本轮按计划未刷新；source chip 真实窗口点击仍待主人最终人工验收）
-> 本文只记录当前仓库中已核对、命令已检或明确标注人工未验收的事实。长期方向见 `docs/project_vision.md`，研究 framing 见 `docs/research_framing_motivational_delegation.md`，NPC agent loop 设计见 `docs/agent_loop_architecture.md`，世界实体 schema 见 `docs/world_entity_model.md`，Process Fidelity Eval 规格见 `docs/process_fidelity_eval_spec.md`，跨域 adapter 接口见 `docs/cross_domain_adapter.md`，多层 Agent 系统设计见 `docs/agentic_game_design.md`。
+> 状态更新时间：2026-05-26（上下文治理收缩；trace 体验代码与离线验证已完成，真实窗口 source chip / Copy trace 仍待最终人工验收）
+> 本文记录当前仓库中已核对、命令已检或明确标注人工未验收的事实。长期方向见 `docs/project_vision.md`，研究 framing 见 `docs/research_framing_motivational_delegation.md`，Agent loop 设计见 `docs/agent_loop_architecture.md`。
 
 ## 1. 当前阶段判断
 
-项目已经从早期观察台阶段进入 `Loomstead` 第一版垂直切片收束阶段。**2026-05-19 项目重定位**为"可解释多 Agent 叙事运行时"，差异化主轴改为"少而深 + 可解释 + 可评估"；**2026-05-21 对外项目名确认改为 `Loomstead`**。
+- 项目名：`Loomstead`。
+- 当前定位：narrative-primary 的可解释多 Agent 叙事运行时与研究环境。
+- 技术骨架：Godot 4.x 客户端 + Python Agent Server + Web Debug / 研究控制台。
+- Phase 1（活着的世界）：done；2026-05-21 主人确认可以收口，默认 `world_main.tscn` 是完成基线。
+- Phase 2（骨架建立期）：首轮骨架已落地，当前进入 trace / eval 收紧期。
+- 当前差异化主轴：少而深 + 可解释 + 可评估。
 
-当前仓库具备：
+## 2. 当前已验证事实
 
-- 可运行的 Python Agent Server。
-- Godot 4.x P0 客户端骨架，已接入事件查看、事件选择、地图角色层和交互 marker；真实窗口已由主人验收旧 P0 版本基本可用。
-- Phase 1 sprint 已收口：`world_main.tscn` + tick 闭环 + 玩家本地控制 + `E` talk + `WorldPulsePanel` + 远处事件提示 + 三场景横向拼图已作为 Phase 1 完成基线；旧 `LifeActionExecutor` 只保留回归修复，Phase 2 tick 主路径已切到 MotivationEngine。
-- 首批静态视觉资产、地图小人候选与 manifest 校验。
-- 规则版 Director v0 + 单个 Event Skill 的最小闭环。
-- LLM profile、fallback、Debug 字段记录路径，以及 Debug / Memory / influence 查询 API。
-- 首发 6 名 NPC 的深度卡、关系阶段、送礼反应和写作工作流。
-- 新对话入口与上下文治理索引。
+| 开发线 | 当前事实 | 仍需关注 |
+| --- | --- | --- |
+| 后端 Runtime / Director | Python Agent Server 是权威世界状态入口；已有 `GET /api/world/state`、`POST /api/player/action`、`POST /api/world/tick`、`GET /api/debug.phase2`；规则版 Director v0 与单个 Event Skill `event.starlight_festival_shortage` 已运行；Phase 2 tick 主路径已切到 `MotivationEngine -> ToolExecutor -> ResultObserver`；`motivation.decision_made`、工具完成 / 失败 / 中断、`memory.result_observed` 均带 trace 证据；`schema_registry.v1` 已集中治理主要 schema。 | 继续扩展 schema 迁移覆盖、失败模式、真实预算策略和更完整竞争上下文裁决；旧 `LifeActionExecutor` 只做回归修复。 |
+| Eval / Research | `scripts/run_agent_eval.py` 已覆盖 rule process suite、stability、stability determinism、domain adapter suite；Process Fidelity Eval 包含 Hard Delegation、No Subjective Memory、No Relationship Edge、Shuffled Owner、Evidence-Link Removal、Branna Forgiveness fixture、Counterfactual Replay 和本地 export / archive manifest；coding domain adapter 已覆盖 7 类 repo fixture。 | Eval 是 Phase 2 硬验收线；继续加深真实依赖图、跨文件回归、review agent 分歧和 dependency evidence chain；真实 cloud LLM 证据不进默认 CI。 |
+| Godot 客户端 | `clients/godot/` 是 Godot 4.x 项目；默认主场景为 `res://scenes/world_main.tscn`；Phase 1 玩家移动、`E` talk、tick NPC 行动、远处事件提示和三场景拼图已收口；Research Dock 三 Tab 已读取 `/api/debug.phase2` 并展示 motivation、subjective memory、relationship edges、heuristics 与 trace timeline；source chip 跳转、Copy 当前 trace JSON 和 NPC 高亮代码已落地。 | 主人已确认 UI 重设计后的整体观感、非全屏滚动、6 NPC 密度和遮挡风险修复；source chip 点击、Copy 当前 trace JSON、trace detail 文案和快捷键手感仍需真实窗口最终人工验收。 |
+| Web Debug / LLM | `RuleBasedProvider` 与 OpenAI-compatible `CloudApiProvider` 已接入；`config/models.example.json` 默认 rule fallback；Web Debug 已展示 provider / fallback / cost 总览、Heuristic Library、Arbitration Trace 和 Rashomon Memory。 | 最新成功真实 LLM smoke 是 2026-05-23；2026-05-24 曾触达 CloudApiProvider 但供应商返回 `HTTP 402 Insufficient Balance`，未刷新通过证据；切换 key / profile / prompt 后需单独跑 `npm.cmd run llm:smoke`。 |
+| Content / NPC | 6 名首发 NPC 深度卡已入库；`voiceStyle`、`speechQuirks`、`monologueSeeds`、`giftReactions`、`gossipHooks` 已被 runtime / smoke 覆盖；4 核心 NPC（kai / mira / bram / lena）已有实际 motivation / capability / heuristic seed；tomas / orren 保持 stub。 | 谣言传播仍只记录校验结果，不写入世界状态、关系或记忆扩散；2 名 stub NPC 后续按剧情需要升级。 |
+| 资产管线 | `assets/manifests/asset_manifest.json` 登记 55 条资产；3 张地点背景、星灯祭 CG、玩家 + 6 NPC 立绘、7 张地图小人和 3 类交互 marker 已进入 Godot；`AssetRegistry` 支持 happy / troubled 回退。 | 表情差分、行动反馈图标和生活行动 UI 小组件仍是 `prompt_ready` backlog；地图小人是否晋级 `source_selected` 仍需主人确认。 |
+| 上下文治理 | `AGENTS.md`、`CLAUDE.md`、`docs/agent_context.md`、`docs/current_status.md`、`docs/README.md` 是基础入口；`docs/assistant_continuity.md` 和 `docs/workflows.md` 负责跨助手接续与 workflow 索引；`scripts/build_agent_context.py` 提供 `context:check` / `context:brief` / `context:resume`。 | 状态文档只记录当前事实和验证边界；长历史、过时 handoff 和旧看板留在 `docs/archive/`。 |
 
-### 当前阶段位置
+## 3. 最近核对结果
 
-- **Phase 1（活着的世界）**：done。2026-05-21 主人确认 Phase 1 可以收口，默认 `world_main` 作为已验收完成基线进入冻结维护。
-- **Phase 2（骨架建立期）**：首轮骨架已落地，进入 trace / eval 收紧期。文档前置工作已完成，NPC 深度卡 schema 已增补 `motivationProfile` / `capabilityPreferences` / `heuristicSeeds` 字段，`heuristicSeeds` 首批 designer seed 已接入运行时；后端 ToolDefinition / ToolContractValidator / DecisionBudgetStore / CapabilityRegistry / MotivationEngine / NeedAccumulator / ArbitrationLayer / ToolExecutor / ResultObserver / SubjectiveMemoryStore / RelationshipEdgeStore / HeuristicLibrary / DomainAdapter shared Protocol / narrative adapter / coding dry-run skeleton / WorldEntity farm_plot/item/inventory/shop/building/time/weather typed schema / Eval L1 + 规则级 Process Fidelity + Counterfactual Replay + subjective / relationship memory ablation + 24h stability + cross-domain adapter suite 的最小骨架已落地，并接入 Debug snapshot、`/api/world/tick`、`motivation.decision_made`、`tool.execution_failed`、`tool.execution_interrupted`、`budget.decision_consumed` / `budget.decision_fallback`、`memory.result_observed`、`phase2.trace.v1`、`schema_registry.v1` 与 `npm.cmd run check`。SubjectiveMemoryStore 与 HeuristicLibrary 召回均已进入 ArbitrationLayer 候选评分和 decision trace。Godot 观察者面板已开始读取 `/api/debug.phase2`，Trace 详情已接入 source chip 跳转。ToolContractValidator 已支持常用 JSON Schema 子集；DecisionBudgetStore 已从单通道固定额度扩展为 NPC / feature / tool cost 策略，输出 `costBreakdown`、`recentUsage`，并聚合真实 / 规则 provider 的 `provider_usage_actual.v1` 到 `providerActuals`；ResultObserver 已按 `observerVisibility` 区分 private / participants_only / all_in_location，并输出带 `observer_spatial_model.v1` 与 `spatialEvidence` 的 `observer_scope.v1`；`/api/debug.phase2.schemaRegistry` 已集中暴露 trace / motivation / budget / memory / observer / Event Skill outcome 版本，smoke 会校验实时 Debug 输出一致性。旧 `LifeActionExecutor` 不再服务 tick 主路径。
+- 2026-05-26 上下文治理收缩：`docs/agent_context.md` 从长事实堆叠改为短入口；`docs/current_status.md` 聚焦当前事实、manual gate 和下一步；接续流程开始收敛到 `context:resume`。
+- 2026-05-25 Trace 体验闭环代码已落地：`GET /api/debug.phase2` 支持 `focusEventId` / `focusTraceId`，`recentTraceEvents[]` 支持 `sourceLinks[]`，响应可返回 `traceFocus`；Godot Research Dock Trace detail 新增“证据链”chip，点击 source chip 会重拉 focus 并选中源事件；Copy trace 会复制当前 trace JSON。
+- 2026-05-25 晚间 Godot 可读性补修已落地：NPC 一览双层行、集中字号 / 布局缩放和 Tab 底部滚动留白；主人随后确认非全屏滚动到底、6 NPC 密度和 HUD / TopBanner 遮挡风险修复。
+- 2026-05-24 Round 2 已落地：Process Eval cloud / mixed provider 接入、Web Debug Phase 2 三卡片、跨域测试框架矩阵和 JavaScript smoke dry-run。
+- 2026-05-24 stability 证据口径已收紧：24h / 72h stability 和 72h determinism 以硬门禁不变量为准，run-specific exact count 只记录在 artifact 中。
 
-## 2. 本轮核对结果
+## 4. 开发前硬约束
 
-游戏内容剧本线的讨论、四层方案、当前实现与后续主线拆分已沉淀到 `docs/game_content_storyline.md`。
+- 后端 Runtime 是权威世界状态修改点；Godot 本地坐标只做表现，不写回权威世界。
+- LLM 输出只生成文本、结构化建议或工具意图；世界状态变更必须经过 Runtime 规则、schema 校验和 fallback。
+- 密钥、私有模型配置、本机绝对路径和临时 overlay 不写入仓库。
+- 新增 API、事件类型、schema、eval artifact、Debug 字段或 Godot 消费字段前，先写清数据契约。
+- 未由代码、命令或人工窗口验证的能力必须标注 `manual unverified` 或同等说明。
+- Phase 2 直接使用 MotivationEngine；不并行扩写旧 `LifeActionExecutor`。
 
-- 2026-05-25 Trace 体验闭环已落地：`GET /api/debug.phase2` 新增可选 `focusEventId` / `focusTraceId`，`recentTraceEvents[]` 增加可选 `sourceLinks[]`，响应可返回 `traceFocus` 命中 / missing / 下游观察摘要；`scripts/check_schema_registry.py` 覆盖 focus 查询、sourceLinks 结构和未知 focus fallback；Godot Research Dock Trace detail 新增“证据链”chip，点击 source chip 会重拉 focus 并选中对应 trace 行，tool / decision / memory / source 行点击会触发相应 NPC 高亮，Copy trace 改为复制当前 trace 的完整 JSON。离线验证已覆盖 `schema:check`、`smoke`、`check`、`client:run:check`、`check_godot_project.py`、`eval:process`、`eval:stability`、`eval:domain`；真实 LLM smoke 本轮按计划未刷新，source chip 真实窗口操作仍待主人最终人工验收。
+## 5. 人工验收与本机门禁
 
-- 2026-05-25 晚间三线并行收口已落地：Godot Research Dock 补修 NPC 一览双层行、集中字号 / 布局缩放和 Tab 底部滚动留白；`scripts/check_schema_registry.py` 新增 `/api/debug.phase2` 实时契约探针，校验 registry、trace schema 和 `details` fallback；`coding.skill_multifile_dependency_repair_dryrun` 新增 dependency evidence chain，partial patch / pre-patch / post-patch 报告补 source ids 与 sha256 证据。真实 LLM smoke 本轮继续暂缓；主人已确认本轮客户端问题修复。
-
-- 2026-05-24 Round 2 收紧已落地三条线：
-  - Lane A · Process Eval cloud/mixed provider 接入：`scripts/run_agent_eval.py` 新增 `--provider {rule,cloud,mixed}` / `--scenario` / `--seeds` CLI；`backend/app/eval/runner.py` 按 provider_mode 派发 baseline，manifest 新增 `process_llm_evidence.v1` 块（含 `provider_usage_actual.v1` 逐次记录、totals、cloudCallCount、fallbackCount），cloud/mixed mode 缓存到 `.run/process-llm-evidence/latest.json` 供 rule 导出附加最近证据；`backend/app/runtime/agent_runtime.py::_maybe_apply_phase2_social_llm_decision` 在 cloud/mixed mode 让 social_strategic 候选走真实 LLM，profile / parsing 失败回落规则路径并记录 `fallbackReason`；`scripts/index_eval_runs.py` paper promotion 模板加 LLM evidence checklist 和 `externalModelVerifiedIfNeeded` 自动判定，`PROMOTION.md` 渲染 LLM evidence 块；`docs/process_fidelity_eval_spec.md` 同步 manifest.llmEvidence schema、手动 cloud 验证命令和 Phase 2 success criterion #7。真实 cloud LLM 链路验收为手动命令，不进默认 CI。
-  - Lane B · Web Debug Phase 2 三卡片：`frontend/app.js` 接入 `/api/debug.phase2`（全局 + per-agent），新增 Heuristic Library / Arbitration Trace / Rashomon Memory 三卡片；Heuristic Library 显示活跃 / 休眠分组、`effectiveConfidence` / `createdTick` / `updatedTick` / `activations`，按 NPC 过滤 + `worldTick` 标记；Arbitration Trace 列出最近 `motivation.decision_made`，展开候选工具 baseScore / need / capability / memory / heuristic / relationship bonus 并高亮 winner；Rashomon Memory 按 `sourceEventId` 分组横向多 NPC 视角对比 `perspective` / `valence` / `confidence` / `text`；前端 stepBtn / autoBtn 已修复同时驱动 `/api/world/tick` 与 `/api/step`，主人 Round 2 验收时确认在 tick 修复后三卡片渲染正常（boot 时 18 条 designer heuristic 可见）。
-  - Lane C · 跨域测试框架矩阵：`backend/app/domain/coding/adapter.py` 每个 fixture metadata 声明 `testRunner`（pytest / unittest / node_test），adapter 按 runner 路由 `commandTemplate`，test report 记录 `testRunner` / `command` / `durationMs` / `exitCode`；新增 `coding.skill_javascript_smoke_dryrun` 使用 `node --test` 与 JavaScript 源文件，复用现有 `prePatchTestReports` / `testReports` / `reviewReports` 证据流；coding scenario 从 6 → 7，`eval:domain` 10/10 通过；`docs/cross_domain_adapter.md` §1 / §5 / §6 同步 7-scenario inventory，reviewer 抽样人工复核移到 `eval:archive:promote` 阶段。
-- 2026-05-24 stability 证据口径已收紧：`eval:stability` / `eval:stability:long` 保留 24h / 72h 硬门禁，`eval:stability:determinism` 连跑 72h stability 并比较 `ticksCompleted`、`failedToolCount=0`、9 项 checks、关系边、活跃 NPC 覆盖等不变量（本轮 3 repeats 输出 `mismatches=[]`）；`interruptedToolCount`、`memoryObservationCount`、`subjectiveMemoryCount`、`heuristic_count` 和 ref-rate 等 exact count 归入 run-specific artifact。
-- 2026-05-24 Round 1 收紧已落地三条线：
-  - Lane A · Eval 深化：`backend/app/domain/coding/adapter.py` 新增 `coding.skill_multifile_dependency_repair_dryrun` 与 `coding.skill_reviewer_disagreement_dryrun`；`backend/app/eval/process_fidelity.py` 新增 `counterfactual_tool_selection_change_rate` 指标；`backend/app/eval/runner.py::_build_counterfactual_tool_selection_replay` 逐条移除 winner tool 引用主观记忆并复算 24 个决策周期。
-  - Lane C · Godot Observer 打磨：trace 行可点击 + 高亮 NPC sprite + details 弹层；五大区域空态文案；HTTP 失败 retry banner；Esc / 1-5 快捷键。
-  - Lane D · NPC 数据填充：4 核心 NPC（kai/mira/bram/lena）的 `motivationProfile.needs` / `personalityModifiers` / `capabilityPreferences` 已填实际数据，`heuristicSeeds` 每人扩到 4 条；tomas / orren 保持 stub。
-- 2026-05-23 SubjectiveMemoryStore：tick 级 `effectiveSalience` 衰减、低显著性 / 低情绪强度归档、`activeCount` / `archivedCount` / `archivedItems` debug 视图，`subjective_memory_recall.v2` salience 证据。
-- 2026-05-23 WorldEntities 首批 typed schema：FarmPlot / Item / Inventory / Shop / Building / Time / Weather dataclass 提供统一 `world_entities.v1` Debug 快照，纳入 `schema_registry.v1`。
-
-| 开发线 | 当前状态 | 已验证事实 | 仍需验证或实现 |
-| --- | --- | --- | --- |
-| 后端 Director / Event Skill | 部分完成 | `WorldDigest`、`DirectorBeat`、`TensionDetector`、`SkillRouter`、`DirectorValidator`、`DirectorQueueManager` 已落地；Runtime 会生成、校验、消费或丢弃 `activate_event_skill` Beat；星灯祭单技能已注册；玩家画像证据模板、玩家风格信号 `styleSignal`、事件反应记忆模板、asset hints 和通用 fallback 台词模板已迁入 Event Skill；星灯祭结算已统一输出 `event_skill_outcome.v1`，API `eventResult`、事件流和 `completedEvents` 共用 `outcomeRecord`；Debug / Memory / influence 查询 API 已由 smoke 走真实 HTTP 路由验证；Phase 2 后端骨架已新增 10 个 ToolDefinition、ToolContractValidator、DecisionBudgetStore、CapabilityRegistry、NeedAccumulator、MotivationEngine、ArbitrationLayer、ToolExecutor、ResultObserver、SubjectiveMemoryStore、RelationshipEdgeStore、HeuristicLibrary，并通过专用 `GET /api/debug.phase2` 暴露 tools / needAccumulator / decisionBudget / motivation / toolRuntime / subjectiveMemory / relationshipEdges / heuristics / recentTraceEvents / schemaRegistry；`phase2.trace.v1` 已统一 `traceId` / `spanId` / `sourceEventId` / `agentId` / `targetIds` / `worldTime` / `eventType` / `summary`；`schema_registry.v1` 已集中治理 Phase 2 主路径版本并由 smoke 对齐实时 Debug；`/api/world/tick` 已切到 MotivationEngine -> ToolExecutor 主路径，先写入 `motivation.decision_made`，再把 `motivation_decision_trace`、`subjective_memory_refs` 和 `heuristic_refs` 引用带入 `tool.execution_completed`，随后 `memory.result_observed` 可追溯到工具完成事件；CapabilityRegistry 已输出 `need_relevance / preconditions / npc_profile / event_scope / decision_budget` 五层过滤 / 路由理由并进入 MotivationEngine snapshot 与 decision trace details；SubjectiveMemoryStore 与 HeuristicLibrary 召回已进入 ArbitrationLayer 候选评分，decision trace details 已展开 `subjectiveMemoryRecall` / `subjectiveMemoryRefs` / `heuristicRecall` / `heuristicRefs` / `decisionBudgetRoute`；Debug trace snapshot 已提供 compact `details` 展开字段，`recentTraceEvents` 已新增可选 `sourceLinks`，`GET /api/debug.phase2` 已支持 `focusEventId` / `focusTraceId` 并返回可选 `traceFocus`；失败路径 `tool.execution_failed`、中断路径 `tool.execution_interrupted`、预算 fallback 路径 `budget.decision_fallback` 和观察者分发路径 `memory.result_observed.observerScope` 已接入 trace，并由 smoke 覆盖 target_unavailable / higher_priority_need / rule_fallback / private / participants_only / all_in_location / distance_too_far；JSON Schema 子集覆盖 type / required / properties / additionalProperties / enum / minLength / minItems / uniqueItems / numeric range 等违规 code；预算策略覆盖 toolCost、feature 预算耗尽、`costBreakdown`、`recentUsage` 和 provider tokens / latency / cost 聚合 | Event Skill 仍只有一个；星灯祭仍有部分结算模板留在 Runtime；通用 DirectorPlanner 和多事件 Skill 尚未完成；ToolExecutor 仍是首版事务和规则副作用；失败 / 中断路径仍是首版规则覆盖，更多工具前置条件、遮挡和听力材质衰减仍需扩展 |
-| Content Codex / NPC 深度卡 | 已完成首批 + Phase 2 seed 接入 | `docs/npc_deep_card_spec.md` 已定义数据契约；`.windsurf/workflows/author-npc-deep-card.md` 已定义批量写作流程；`backend/app/content/data/npc/` 已入库 `kai`、`bram`、`mira`、`tomas`、`orren`、`lena` 6 份卡；`monologueSeeds` 已接入夜间反思上下文、compact evidence 和规则 fallback；`gossipHooks` 已进入校验、对话上下文 `gossipEvidence`、选择理由、传播草案、`candidateDebugSummary`、`gossip_propagation` 契约和 validator；6 张卡已新增 `lifeActionSeeds`、`dailyRumorBeats`、`relationshipBeatSeeds`，每卡当前为 `3/2/3` 条 Day 1 素材；已新增 `motivationProfile` / `capabilityPreferences` / `heuristicSeeds` 字段，且 `heuristicSeeds` 已填入首批 designer seed；Runtime 会写入 `gossip.propagation_validated` 校验事件；`npm.cmd run content:check` 通过；smoke 覆盖 `deepCard`、对话 Prompt、送礼、关系阶段、monologue evidence、gossip evidence、designer heuristic seed 与合法 / 非法传播样例 | 谣言传播仍只记录校验结果，不写入世界状态、关系或记忆扩散；Phase 2 ToolDefinition / MotivationEngine 已驱动 NPC 工具行动，但内容卡的实际动机权重和工具偏好仍未填充，启发式 seed 后续继续扩充；后续批量 Event Skill 工作流未开始 |
-| Godot 客户端 | Phase 1 done，Phase 2 观察者面板已接入 debug 数据，2026-05-25 完成 UI 重设计并完成晚间可读性补修 | 代码已接入：地点背景层、NPC 选择、底部 VN 对话层、聊天提交、进行中事件区、`inspect`、choices、`attend_event`、VN 结果展示；地图角色层已渲染玩家与当前场景 NPC / event marker；WASD 独立连续移动、地图层直接点击当前场景空地落点、落点标记、单个最近交互目标高亮、MapMoveHint 和更大舞台移动范围已接入；已移除小人淡黄色矩形背景；已补 UI 点击穿透、按钮禁用键盘焦点、WASD 物理键兜底、玩家 / NPC 分离站位槽、玩家出生点上移、收紧交互半径、点击落点边界修正、动态地图 bounds、靠近目标滞回和 NPC 小人保持可点；地图上下文候选面板、`E`/`Space` 执行、`actionFeedback` VN 回执已接入；2026-05-25 重设计完成：新增 `scripts/ui/research_theme.gd` 统一深色卡片 + 系统 CJK 字体；`ObserverPanel` 重写为三 Tab Research Dock（全景 Pulse / 选中 NPC / Trace 时间线），Tab 1 接管 WorldPulsePanel 时钟 / 事件 / NPC 一览并支持点击行切到 Inspector，Tab 2 五张卡片（身份 / Motivation 含 need bar + decision + contributingSources chips / 主观记忆 Top N + valence 染色 / 关系边 chip 可点击高亮 / 启发式 confidence bar），Tab 3 segment filter + 时间线行染色 + key-value details + 展开完整 JSON + Copy trace；Trace detail 已新增“证据链”source chip，点击 chip 会用 focus 查询重拉后端并选中对应源事件，Copy trace 改为复制当前 trace JSON 并附带 `traceFocus` 摘要，保留 Tab/Esc/1-5/Prev/Next/Copy 所有快捷键；`hud.gd` 重写为卡片化时钟 + segment 倍速激活态 + 状态点；新增 `top_banner.gd` 顶部居中横幅合并 stage 名 / 操作提示 / RemoteEventCompass；旧 WorldPulsePanel / RemoteEventCompass / stage title 改为隐藏数据缓冲，所有 cache / 节流 / retry / highlight 信号链路保留；NPC 头顶标签精简为常显 name + 玩家靠近时显示 action；`check_godot_project.py`、Godot headless import 与 `client:env` 通过；2026-05-25 主人已完成 UI 重构后初步窗口验证，整体观感与主路径无大问题；2026-05-21 主人确认 Phase 1 可以收口；晚间补修已把“小镇全景”NPC 一览改为名字/地点 + 状态双层行，新增全局 `FONT_SCALE` / `LAYOUT_SCALE`，HUD / TopBanner / Research Dock 统一放大字号与间距，三 Tab ScrollContainer 增加底部留白并保留快捷键和高亮信号链路；`client:run:check` 与 `check_godot_project.py` 通过 | 主人已确认本轮客户端问题修复：非全屏滚动到底、小镇全景 6 NPC 视觉密度、字号放大和 HUD / TopBanner 遮挡风险均通过人工复核；Trace source chip 点击、Copy 当前 trace JSON 和 detail 文案仍需真实窗口最终人工验收，快捷键逐项手感继续作为后续 polish 项跟进 |
-| 资产管线 | 部分完成 | manifest 当前有 55 条资产：21 条 `source_selected`、3 条 `style_anchor_candidate`、7 条 `pending_review`、24 条 `prompt_ready`；新增 backlog 覆盖 14 张 `happy/troubled` 表情差分、5 张行动反馈图标和 5 个生活行动 UI 小组件；`prompt_ready` 条目均引用 `docs/asset_generation_prompts.md` 锚点，并补齐 `promptBatchId`、`godotTargetPath`、`godotTargetSlot`；`docs/asset_batches/` 已生成批次计划、机器可读导出和人工筛选表；`scripts/export_prompt_ready_assets.py` 可重复导出；`AssetRegistry` 已支持表情回退；地图小人与交互 marker 已进入 Godot 场景显示链路 | `prompt_ready` 仍只是可生成 backlog，尚未生成、筛选或接入 Godot registry；地图小人是否晋级 `source_selected` 仍需主人明确筛选结论 |
-| LLM / Debug | 部分完成 | 代码已接入：OpenAI-compatible cloud provider、profile 解析、本地 overlay 示例、Debug 字段记录、规则 fallback、`model:check` 配置校验（按当前环境 / 本机 overlay 输出 provider 状态；提交模板 `models.example.json` 默认为 rule）、Web LLM 配置卡片和热重载接口；2026-05-17 曾用本机 `config/models.json` 跑通真实 `CloudApiProvider` smoke；2026-05-21 本轮 `npm.cmd run check` 曾跑通真实 cloud smoke，dialogue / event_reaction / night_reflection 均为 `deepseek-v4-flash` 且 `fallbackReason=None`；2026-05-22 起常规 `check` / `smoke` 默认跳过真实 LLM，真实链路改由 `npm.cmd run llm:smoke` 显式验收；2026-05-23 本轮已清理本机 LLM overlay，`npm.cmd run model:check` 输出 warnings=0；同轮 `npm.cmd run llm:smoke` 通过，dialogue / event_reaction / night_reflection 均为 `deepseek-v4-flash` 且 `fallbackReason=None`，tokens 为 `3596 / 6188 / 19172`，latency 为 `7339 / 4094 / 10453ms`，cost 为 `0.00036306 / 0.00076279 / 0.00262712 USD`；smoke 覆盖 compact Debug payload、RAG-lite memory search、玩家影响链 | 提交态不包含真实 API key；`debug_analysis` profile 只在配置中存在；切换模型、key 或 profile 后需用 `npm.cmd run llm:smoke` 重新刷新真实延迟、成本和失败率 |
-| 文档治理 | 已完成本轮入口 | `AGENTS.md`、`CLAUDE.md`、`docs/README.md`、`agent_context`、`current_status`、`open_questions` 是当前新对话入口、分层索引和状态事实源；前期多线程并行看板 `docs/archive/goal_board.md` 已归档 | 后续状态维护以已验证变化为主，避免复制源设计长文 |
-
-## 3. 当前已实现能力
-
-### 后端 Runtime
-
-- Python HTTP 服务入口已存在。
-- 世界状态初始化仍保留 10 个 seed NPC、5 个地点、关系图谱、基础状态数值和 Agent 记忆列表；当前 Day 1 / Godot 切片只暴露 6 个首发 NPC，Phase 2 研究骨架按 4 核心 + 2 stub 深化。
-- 时间推进、Agent 轮换调度、事件记录和公开状态导出已存在。
-- 玩家游戏 API 已存在：`GET /api/world/state`、`POST /api/player/action`、`POST /api/world/tick`。
-- 玩家动作已覆盖 `move`、`move_to_anchor`、`scene_action`、`farm_action`、`end_phase`、`talk`、`give_gift`、`inspect`、`attend_event`。
-- 星灯祭供应短缺事件已有查看、选择、关系变化、即时记忆、事件反应、夜间反思和结算记录。
-- `/api/player/action` 的根节点、`result` 和 `state` 均带有 Godot 可直接展示的 `memoryEvidence`、`relationshipEvidence`、`playerProfile`、`currentObjective`、`availableInteractions`；锚点移动和场景行动会返回统一 `actionFeedback`。
-- `GET /api/world/state` 的 `npcSchedules` 与 `lifeActionPlan` 已切到 `motivation_plan.v1`，由 MotivationEngine / ToolExecutor 基于当前需求和工具目标生成只读候选快照；字段外形继续兼容 Godot 现有 WorldPulsePanel。
-- `POST /api/world/tick` 已切到 `MotivationEngine -> ToolExecutor`，按游戏时间推进 NPC 工具行动，返回 `clock`、EventStore 包装后的 `events` 和 `agents` diff；移动事件已透出 `npcId/fromAnchorId/toAnchorId` 供 Godot 扁平化消费；每轮决策先写入 `motivation.decision_made`，工具完成会写入 `tool.execution_completed` 或 `tool.execution_failed`，高优先级需求打断当前行动时会写入 `tool.execution_interrupted`；`ToolContractValidator` 会在权威副作用前校验输入 schema 与世界前置条件，失败 reason 已稳定覆盖 `input_not_object`、`missing_required_input:<field>`、`input_enum_mismatch:<field>`、`unexpected_input_field:<field>`、`input_array_duplicate_items:<field>`、`farm_plot_unavailable`、`target_unavailable` 等；`DecisionBudgetStore` 已接入 `CapabilityRegistry` 第五层 `decision_budget`，LLM eligible 工具会按 NPC / feature / toolCost 输出 `llm` / `rule_fallback` 路由，工具开始执行时写入带 `feature`、`costBreakdown`、`consumedDelta`、`remainingBefore` 和 `featureRemainingBefore` 的 `budget.decision_consumed` 或 `budget.decision_fallback`；`_build_provider_debug` 会把 provider `usage` 回填到 `providerUsageRecord` 和 `decisionBudget.providerActuals`，用于聚合真实 tokens / latency / cost；工具结果携带 `motivation_decision_trace`、可用的 `subjective_memory_refs` 与 `heuristic_refs`，随后通过 ResultObserver 按 `observerVisibility` 写入 `memory.result_observed`；观察者范围会输出 `observer_scope.v1`，覆盖 private / participants_only / all_in_location，并带 `observer_spatial_model.v1`、`distanceToEvent`、`distanceBand` 和 `reason`；这些 Phase 2 事件已携带 `phase2.trace.v1` trace envelope，Debug 快照同步输出 `schema_registry.v1`。
-- `ResultObserver + BiasFilter` 已把工具完成、失败和中断事件分发为主观记忆，并同步一条短记忆到旧 memory list，保证现有 RAG-lite 可见；观察者分发已按 `private`、`participants_only`、`all_in_location` 三档解析 actor、input target、同地点 presence 和排除列表；`all_in_location` 已增加 normalized anchor 距离阈值，近距离 NPC 以 `nearby_same_location` 进入观察者，远距离同地点 NPC 以 `distance_too_far` 留在排除证据中；`RelationshipEdgeStore` 已记录最小关系边和 `source_event_ids` / `trace_refs`；`HeuristicLibrary` 已能从成功工具、社交成功、工具失败或工具中断事件抽取规则启发式，记录 `effectiveConfidence`、`createdTick`、`updatedTick`，并进入后续仲裁；`GET /api/debug.phase2` 已输出 `recentTraceEvents.details`，可展开 decision、tool 和 memory observation 的轻量解释字段，其中 memory observation 已包含 `observerVisibility`、`observerCount`、`observerScope` 和 `spatialEvidence`。
-- 2026-05-17 已修正 Day 1 生活行动目标分布；2026-05-21 `scripts/check_life_action_targets.py` 已改为校验 `motivation_plan.v1` 在 morning / afternoon / evening 的工具目标不超出当前客户端切片且不超过锚点容量。
-
-### Director / Skill
-
-- `backend/app/director/v0.py` 已包含规则版 Director v0 的摘要、张力检测、路由、Beat、校验和队列组件。
-- `backend/app/skills/event_skill_schema.py` 已定义事件技能结构。
-- `backend/app/skills/event_skill_registry.py` 已注册 `event.starlight_festival_shortage`。
-- `EventChoiceOutcome` 已承载玩家画像证据模板、玩家风格信号 `styleSignal` 和事件反应记忆模板，`EventSkillSchema` 已承载 asset hints 与通用 fallback 台词模板，Runtime 继续负责格式化、事件写入和 fallback 执行。
-- Runtime 会把 Director 关键步骤写入事件流，便于 Debug Console 读取。
-
-### Content Codex / NPC 深度卡
-
-- `backend/app/content/codex_schema.py` 定义 NPC 深度卡 dataclass 契约。
-- `backend/app/content/codex_loader.py` 负责读取 `data/npc/*.json`、交叉校验关系阶段与 unlock 引用，并提供 runtime 字典转换。
-- `backend/app/content/data/npc/` 已包含 6 份首发 NPC 卡，每份包含秘密、喜好/厌恶、5 段关系阶段、8 条以上独白种子、送礼四档反应和谣言钩子。
-- `create_initial_world()` 会把深度卡挂载到对应 `agent.deepCard`。
-- 对话 Prompt 已读取深度卡语气锚点；送礼会匹配深度卡 `giftReactions`；玩家对话和送礼结果会返回 `relationshipStage`。
-- 夜间反思会读取 `monologueSeeds`，并把 compact `npc_monologue_seed` evidence 暴露给 Debug；规则 fallback 不依赖云端模型也能引用独白素材。
-- `scripts/check_npc_codex.py` 已加入 `npm.cmd run content:check` 和 `npm.cmd run check`，并校验独白素材覆盖 morning / afternoon / evening、post_event、high_mood / low_mood，以及 gossip hook 的可消费性和传播目标覆盖。
-
-### Provider / Debug
-
-- `RuleBasedProvider` 用于离线开发、测试夹具和异常兜底。
-- `CloudApiProvider` 支持 OpenAI-compatible API 形态。
-- `config/models.example.json` 默认 `activeProvider=rule`，保证无密钥也可检查。
-- `config/models.json` 是本机实际联调配置，已加入 gitignore；未配置本地密钥时运行链路会依赖 fallback。
-- `npm.cmd run model:check` 会校验 profile 引用、结构和公开配置是否误写 `apiKey`。
-- `/api/model-config/reload` 支持开发期热重载模型配置；Web 观察台已能展示 profile、路由、key 状态和触发对话 smoke。
-- Web Debug 总览已读取 `/api/debug?limit=12`，展示 Provider / Cost、Director / Skill、by-feature cost、recent provider calls 和 fallback 列表；Chrome 本地页面校验已确认该卡片渲染正常且没有前端 error，in-app Browser `iab` 当前不可用。
-- Debug 记录已包含 profile、provider、messages、rawText、parsed、executed、usage、latency 和 fallbackReason。
-- 已提供 `/api/debug`、`/api/debug/director`、`/api/debug/skills`、`/api/debug/turns`、`/api/debug/influence`、`/api/debug/skill`、`/api/memory/summary`、`/api/memory/search` 查询入口。
-- Debug 列表响应会压缩长 prompt / raw text，保留预览、长度和 message 数，便于 Web Debug Console 或 Godot 调试层读取。
-
-### Godot 客户端
-
-- `clients/godot/` 已有 Godot 4.x 项目、默认主场景 `scenes/world_main.tscn`、legacy 场景 `scenes/main.tscn`、`ApiClient`、`WorldSync`、`AssetRegistry`。
-- legacy 主场景代码仍能读取世界状态、渲染背景、列出地点和 NPC、展示半身立绘、提交聊天动作；`npm.cmd run client:run:legacy` 用于回看该路径。
-- 新默认 `world_main.tscn` 已接入三场景横向拼图、`WorldClockService`、`EventBusService`、`NpcController`、HUD 暂停/倍速，以及 `/api/world/tick` 返回事件驱动的 NPC 移动/行动状态；2026-05-17 已把默认画面从纯色块占位推进到现有地点背景、`map_idle` 小人、NPC 名称/状态、路径线和底部 tick 状态提示，`ColorRect` 仅作为缺图 fallback。
-- `world_main.tscn` 已新增玩家本地控制闭环：`PlayerController` 显示玩家 `map_idle` 小人，支持 WASD / 方向键在大地图中移动，`Camera2D` 跟随玩家，靠近 NPC 后按 `E` 会通过 `/api/player/action` 提交 `talk`，并由 `WorldVnPanel` 弹出后端返回的对话、关系/记忆/事件计数。
-- 2026-05-17 主人已确认玩家移动手感没有问题；同轮修正 NPC 首个 tick 全员同点迁徙、路径线过强和同锚点标签堆叠：NPC 初始站位对齐后端 presence，三名广场 NPC 使用表现层 crowd offset 分散显示，路径线改为低透明短暂调试线。
-- 2026-05-17 新增 `WorldPulsePanel`，在默认 `world_main` 右上角展示后端 `/api/world/state` 的 active event、`npcSchedules` 生活计划，以及 `/api/world/tick` 的 NPC 移动 / 行动状态，作为阶段 1 日程可视化的最小玩家可读入口。
-- 2026-05-17 新增远处事件提示：active event 会在对应地图锚点生成脉冲 beacon；当玩家不在事件所在场景时，顶部 `RemoteEventCompass` 会显示事件方向和地点，让玩家在远处也能感知酒馆 / 广场事件。
-- 主场景已能渲染地图角色层，显示玩家和当前场景 NPC / event marker，并提供 talk / gift / event 交互 marker。
-- 主场景已新增本地地图移动与靠近反馈：WASD 独立连续移动、点击当前场景空地设置落点、显示落点标记、玩家小人平滑移动、靠近最近 NPC / 事件后只高亮一个交互目标；玩家出生点与 NPC 比例站位槽分离并从底部边缘上移，交互半径已收紧并加入退出滞回；该坐标不写回后端。
-- 主场景已接入地图上下文动作：靠近服务端锚点、交互体、居民或事件后生成候选动作，`E`/`Space` 执行，`Tab`/`Q` 切换；侧栏“场景行动”保留为调试兜底。
-- 农场田块、公告板和事件点等入口可提交 `scene_action`，VN 面板会展示后端 `actionFeedback` 资源变化。
-- 玩家可移动范围已从地点小范围扩大为舞台主体区域，避开左右 UI 与底部 VN 面板。
-- 点击当前场景任意可见区域会先修正到可行走边界再设置落点，避免广场 / 酒馆视觉空地因 bounds 过窄产生无响应体感。
-- 地图背景、顶层空白容器和标签已改为点击穿透；按钮与交互标记禁用键盘焦点，降低空地点击和移动键被 UI 吃掉的概率。
-- 角色小人淡黄色矩形背景已移除，选中或靠近状态改用 sprite tint 与 marker 状态表达。
-- 主场景已能列出 `activeEvents`，点击“查看事件”调用 `inspect`，渲染事件标题、摘要和 choices。
-- 主场景已能点击事件选项调用 `attend_event`，并在 VN 面板中展示 NPC 台词、关系变化、记忆写入和夜间反思摘要。
-- `AssetRegistry` 已接入星灯祭事件 CG，并支持 `happy` / `troubled` 表情缺图时回退 `neutral`。
-- `scripts/check_godot_project.py` 会检查默认 `world_main.tscn`、legacy `main.tscn`、脚本、API 字符串、首批资产和 `.import` 元数据。
-- `clients/godot/assets/sprites/` 已包含玩家和 6 个 NPC 的 `map_idle` PNG，以及 talk / gift / event 三类交互标记和对应 `.import`。
-- 2026-05-16 主人已完成旧 P0 真实窗口人工验收，基本可用；2026-05-17 本轮默认 `world_main` 视觉可读性修复已通过 Godot headless 加载，仍需主人用真实窗口复验背景、小人、路径线和 tick 运动可读性。
-
-### 资产管线
-
-- `assets/source/` 是正式资产源目录。
-- `assets/manifests/asset_manifest.json` 是当前资产登记入口。
-- `scripts/check_asset_manifest.py` 会校验字段、源图、prompt 文件、PNG 尺寸和 Godot 引用。
-- 当前 manifest 共有 55 条资产：21 条 `source_selected`、3 条 `style_anchor_candidate`、7 条 `pending_review`、24 条 `prompt_ready`。
-- 当前已进入 Godot registry 的资产是 3 张地点背景、星灯祭事件 CG、玩家 + 6 个首发 NPC 的 `neutral` 半身立绘、玩家 + 6 个首发 NPC 的地图小人和 3 类交互标记。
-- 地图小人和交互标记已进入 Godot 资产目录、`AssetRegistry` 与主场景地图角色层。
-- 本轮新增表情差分、行动反馈图标和生活行动 UI 小组件的 `prompt_ready` backlog，并通过 `docs/asset_batches/prompt_ready_backlog_batches.json`、`prompt_ready_export.json`、`prompt_ready_export.md` 固化三批可执行清单；尚未生成或接入 Godot。
-
-## 4. 当前主要缺口
-
-### Phase 1 收口结果
-
-1. **Phase 1 done**：旧 P0 窗口基础链路已通过；新默认 `world_main` 具备 tick 驱动 NPC 移动骨架、HUD 暂停/倍速、玩家移动、`E` 键 VN talk、右上角世界动态面板、远处事件提示和三场景横向拼图。2026-05-21 主人确认 Phase 1 可以收口，后续只做回归修复，不继续在 `LifeActionExecutor` 旧线上扩写新能力。
-
-### Phase 2 启动前置（已完成的文档前置工作）
-
-2. **核心圣经文档已落地**：`docs/agent_loop_architecture.md`（NPC agent loop）+ `docs/world_entity_model.md`（世界实体 schema）。
-3. **方向文档已重写**：`project_vision.md` 重定位 + `production_roadmap.md` Phase 2 设计 + `gameplay_system_architecture.md` §2.4 软日程 → 动机系统。
-4. **历史文档已归档**：9 份过时文档移到 `docs/archive/`。
-5. **2026-05-20 研究 framing 增补已落地**：
-   - 新增 `docs/research_framing_motivational_delegation.md`、`docs/process_fidelity_eval_spec.md`、`docs/cross_domain_adapter.md` 三份决策源。
-   - `project_vision.md` / `production_roadmap.md` / `agent_loop_architecture.md` / `docs/README.md` / `AGENTS.md` / `docs/agent_context.md` 已同步研究 framing 增补。
-    - Phase 2 骨架清单新增 ResearchFraming / DomainAdapter / ProcessFidelityEval 三项，Phase 2 收口标准新增 Hard Delegation baseline 与关系记忆 ablation 硬验收。
-    - `scripts/build_agent_context.py` 与 `.claude/rules/backend.md` 历史死链（指向 `vertical_slice_spec.md` / `initial_asset_generation_plan.md`）已修复，`npm.cmd run context:check` 通过。
-6. **NPC 深度卡 Phase 2 schema 与首批 seed 已落地**：6 张首发 NPC 卡已新增 `motivationProfile` / `capabilityPreferences` / `heuristicSeeds` 字段；`heuristicSeeds` 已填入首批 designer seed 并接入 HeuristicLibrary，实际动机权重和工具偏好仍在 Phase 3 内容期填充。
-
-### Phase 2 当前实施缺口（pending）
-
-6. **三层工具分层 + ToolDefinition 注册表**：10 个首批工具已落地（life / farm / shop / cook / craft / social / strategic），ToolExecutor 已具备首版持续动作、移动、事务快照、失败回滚、规则副作用、完成事件 payload、DecisionBudgetStore 路由事件和高优先级中断 trace；ToolContractValidator 已支持常用 JSON Schema 子集：type、required、properties、additionalProperties、enum、const、minLength / maxLength、pattern、minItems / maxItems、uniqueItems、items、min/maxProperties、minimum / maximum、exclusiveMinimum / exclusiveMaximum、multipleOf；更多失败模式、更真实的 LLM 预算消费策略和 schema registry 迁移覆盖仍待扩展。
-7. **MotivationEngine（替换 LifeActionExecutor）**：最小决策骨架已落地，需求计算已抽到 `NeedAccumulator`，可按 status / 空占位 motivationProfile 计算 primaryNeed、经 CapabilityRegistry 取候选工具并由 ArbitrationLayer 产出 selectedToolId 与 contributingSources；`/api/world/tick` 已切到 MotivationEngine -> ToolExecutor 主路径，旧 LifeActionExecutor 不并行运行。
-8. **CapabilityRegistry**：`need_relevance / preconditions / npc_profile / event_scope / decision_budget` 五层动态过滤 / 路由已落地，`capability_resolution.v1` 会记录每层 input / allowed / rejected count、工具级过滤理由、allowedToolIds、rejectedTools 和 decisionBudgets，并进入 MotivationEngine snapshot 与 `motivation.decision_made.details.capabilityFilters`；`DecisionBudgetStore` 已支持 NPC / feature / toolCost 三级策略、feature exhausted fallback、costBreakdown、recentUsage、`provider_usage_actual.v1` 和 providerActuals 聚合；Phase 2 主路径 schema 版本已纳入 `schema_registry.v1`，`schema:check` 会阻止未知 schema id 引用和散落版本字面量；后续可继续扩更多前置条件和严格 fallback 策略。
-9. **双轨主观记忆**：SubjectiveMemoryStore record/list/recall/debug_snapshot 骨架已落地，并新增 tick 级 effectiveSalience 衰减、低显著性 / 低情绪强度归档、`activeCount` / `archivedCount` / `archivedItems` debug 视图和 recall salience 证据；`ResultObserver + BiasFilter` 已接入运行时工具完成、失败和中断事件分发并写入统一 trace；`memory.result_observed` 已可追溯到 `tool.execution_completed` / `tool.execution_failed` / `tool.execution_interrupted`；运行时会按 NPC 召回 active `tool_result` 主观记忆并传入 ArbitrationLayer，候选评分已输出 `subjectiveMemoryBonus` / `subjectiveMemoryRefCount`，`motivation.decision_made.details` 已展开 `subjectiveMemoryRecall` / `subjectiveMemoryRefs`；ResultObserver 已具备首版距离证据模型；遮挡 / 听力材质衰减、夜间反思 consolidation 写回和 LLM 增强仍待扩展。
-10. **HeuristicLibrary**：最小 schema、规则提取和 Debug snapshot 已落地；成功工具会生成 `prefer_successful_tool:<tool_id>`，社交成功会生成 `prefer_social_when_affiliation_high`，工具失败会生成 `avoid_failed_tool:<tool_id>`，工具中断会生成 `avoid_interrupted_tool:<tool_id>`；启发式带 `effectiveConfidence`、tick 衰减字段和 active / dormant 状态，已进入 MotivationEngine snapshot 与 `motivation.decision_made.details.heuristicRecall`；NPC 深度卡 `heuristicSeeds` 已可作为 `designer_seed` 注入运行时库，并通过 smoke 验证会影响同需求候选排序；LLM 提取和更复杂的置信度更新仍待扩展。
-11. **ArbitrationLayer**：最小候选工具裁决与 contributing_sources Trace 已落地；关系边、主观记忆和启发式已可在同一需求候选内部加权，并把 `relationship_edge_refs` / `subjective_memory_refs` / `heuristic_refs` 写入 decision contributing_sources；候选评分已输出 `heuristicBonus` / `heuristicRefCount` / `heuristicConflictCount`，启发式冲突以 `highest_effective_delta_wins` 裁决；仍需完整竞争上下文裁决规则。
-12. **WorldEntities**：WorldEntity dataclass 与 FarmPlot / Item / Inventory / Shop / Building / Time / Weather typed schema 已落地，`GET /api/debug.phase2.worldEntities` 会输出 `world_entities.v1`、`byKind` 和统一实体 items；当前 shop / weather 仍是规则投影与占位库存，后续继续接入真实经济、天气推进和建筑条件变化。
-13. **EvalFramework**：`scripts/run_agent_eval.py`、`backend/app/eval/` 与 5 个 L1 rule scenario 已落地，并纳入 `npm.cmd run check`；输出已包含 Full / Hard Delegation / No Relationship Edge 三组 rule baseline、`mean/std/n` 和 `ablation_comparison`。`npm.cmd run eval:process` 已新增 4 个 process-constrained GoalSpec（含 `pf.branna_forgiveness_requires_memory`）、10 项 Process Fidelity 指标、Full / Hard Delegation / No Subjective Memory / No Relationship Edge / Shuffled Memory Owner / Evidence-Link Removal 六组 process baseline、Branna Forgiveness fixture、runtime-level process input ablation、Counterfactual Replay 和 `.run/eval-runs` 导出脚本；Counterfactual Replay 现在区分 `relationshipEffect`、`subjectiveMemoryEffect` 与 `heuristicEffect`，其中 `relationshipEffect` 需通过只移除 relationship edges 的反事实证明 `relationshipBonus` 变化；当前 Full baseline 的 `relationship_memory_causal_use_rate=1.0`，No Subjective Memory 的 `required_process_coverage=0.742857` 且 `relationship_memory_causal_use_rate=1.0`，Hard / No Relationship Edge / Shuffled Memory Owner / Evidence-Link Removal 的关系记忆因果使用均为 `0.0`。这些结果当前属于规则级骨架，用于 CI 护栏和方向验证；Hard Delegation 仍是合成 baseline，No Subjective Memory / relationship-edge 系列 ablation 已在 `AgentRuntime.tick` 决策输入层生效，并继续通过后验证据检查导出 process coverage，Counterfactual Replay 后续还需加入更多真实窗口和 LLM 证据。`npm.cmd run eval:stability` 与 `npm.cmd run eval:stability:long` 已验证规则版 AgentRuntime 连续 24 / 72 游戏小时稳定推进；当前硬门禁关注 ticks 完成、`failedToolCount=0`、trace schema 覆盖、memory observations、relationship edges、heuristics、heuristic decision refs 与多 NPC 参与。`npm.cmd run eval:stability:determinism` 对 72h stability 连跑 3 次并比较硬门禁不变量；`interruptedToolCount`、`memoryObservationCount`、`subjectiveMemoryCount`、`heuristic_count` 和 ref-rate 等计数型证据记录在单次 run artifact 中，不作为跨天固定常量。2026-05-23 已修正主观记忆召回的同分排序，避免事件 uuid 影响 stability 指标；`eval:process:export`、`eval:stability:export`、`eval:stability:long:export` 与 `eval:domain:export` 现在会写入 `manifest.json`，记录 artifact `sha256` / `bytes` / JSONL `rowCount`、Git 状态和 `schema_registry.v1` 快照；`eval:archive:check` / `eval:archive:index` 已可校验和索引本地 run manifest，并用 `phase2.eval_run_index.v1` 标记 `keep_latest` / `historical_candidate`；`eval:archive:drift` 已可比较每个 suite 最新两次 run 的 metric / baseline / scenario / schema 漂移，并按 `phase2.eval_drift_policy.v1` 输出 none / review / breaking 分级；`eval:archive:promote -- <runDirName>` 已可复制候选 run，并写入 `phase2.eval_promotion.v1` 记录和 `PROMOTION.md` 人工复核摘要，支持 paper / portfolio / regression 三类 `phase2.eval_promotion_template.v1` 备注模板；`npm.cmd run eval:domain` 已跑通跨域 adapter dry-run：3 个 narrative GoalSpec 走现有 AgentRuntime 主路径，4 个 coding repo fixture scenario 走 repo fixture loaded / design / patch / git checkout / repo test command / review 事件链，并用统一 `full_motivational_delegation` baseline 输出 town / coding summary schema；coding 导出已生成独立 repo fixture / patch / pre-patch test report / test report / review report artifacts。failing-test repair scenario 已记录 pre-patch exitCode=1、failingCaseIds、post-patch exitCode=0、review checklist 与 sourcePrePatchTestReportId；multi-file review scenario 已记录 SKILL.md、metadata.json 与 review_rubric.md 三文件补丁、metadata quality gate、rubric checklist、三文件 git status 和 checkout test，`eval:domain:export` CLI 最新验证 `artifactCount=31`（包含 manifest；manifest artifacts 数组为 30）；test report 记录 checkoutSteps、git source / checkout head、statusAfterPatch、commandTemplate、exitCode、stdout / stderr、durationMs 与 workspace file hashes。更贴近真实开发的依赖图、跨文件回归和 review agent 分歧场景仍待继续扩充。
-14. **Godot 观察者模式**：Tab 切换、点击 NPC / `E` talk 同步选中、NPC 信息面板和 `/api/debug.phase2` 摘要读取已落地；观察者面板已展示 motivation / subjectiveMemory / relationshipEdges / heuristics 摘要，并展开最近 4 条 `recentTraceEvents`，包含 tick、事件类型、工具 / reason hint 和 summary；面板已支持 all / decision / tool / interrupt / memory 类型过滤、Prev / Next 单条 detail、Copy trace、trace 行点击高亮 NPC sprite、details 弹层、五大区域空态、HTTP retry banner 与 Esc / 1-5 快捷键。2026-05-25 已完成 UI 重设计并由主人完成重构后初步窗口验证（整体观感与主路径无大问题）；晚间已补“小镇全景”NPC 一览双层排布、全局字号 / 布局缩放和三 Tab 底部滚动留白，`client:run:check` 与 `check_godot_project.py` 通过。主人已在真实窗口确认本轮客户端问题修复；下一步补 trace 行跳转事件源和细节手感 polish。
-15. **NPC 深度卡实际数据填充**：4 核心 NPC（kai / mira / bram / lena）的 motivationProfile / capabilityPreferences / heuristicSeeds 已填实际内容；tomas / orren 继续保持 stub，后续按剧情需要升级。
-
-### 持续维持
-
-16. **真实 LLM 证据刷新**：2026-05-22 起真实 LLM smoke 已从常规 `check` / `smoke` 拆出；2026-05-23 本轮 `npm.cmd run llm:smoke` 已通过并刷新 token、延迟、成本和 fallback 证据；2026-05-24 本轮在开放网络权限后真实 smoke 已触达 CloudApiProvider，但供应商返回 `HTTP 402 Insufficient Balance`，未刷新 token / latency / cost 通过证据，最新成功真实证据仍沿用 2026-05-23 结果；修改 provider、prompt、模型配置或切换模型/key/profile 后，继续用 `npm.cmd run llm:smoke` 单独刷新真实证据。
-17. **资产补齐**：表情差分、UI 组件和行动反馈图标已进入三批 `prompt_ready` backlog 和导出清单，仍待生成、筛选、登记源图和接入；地图小人晋级状态需主人确认。
-18. **Debug Console 扩展**：后端已有 Debug / Memory 查询 API，Web 侧已展示 Director / Skill、fallback、成本总览、Heuristic Library、Arbitration Trace 和 Rashomon 主观记忆对比；后续继续补真实数据密度、copy / export 体验和 paper 证据复用。
-
-## 5. 开发前关注点
-
-- 后端 Runtime 是权威世界状态修改点。
-- Godot 客户端当前负责读取状态、提交玩家动作、展示结果。
-- LLM 输出进入可见结果前的路径包含解析、校验、fallback 和事件记录。
-- 密钥配置路径为本地 overlay 或环境变量。
-- 新增资产通常同步 manifest；新增 Godot 可用资产通常同步 registry 或检查脚本。
-- 新增 API、存档字段、事件类型、资产目录、Debug 字段前，建议先写清数据契约。
-- 未由代码、命令或人工窗口验证的能力在状态文档中保留为缺口或待验证项。
+- `manual verified`：2026-05-21 主人确认 Phase 1 可以收口，默认 `world_main.tscn` 进入完成基线。
+- `manual verified`：2026-05-25 主人确认 UI 重设计后整体观感与主路径无大问题。
+- `manual verified`：2026-05-25 晚间主人确认 Research Dock 可读性补修，包括非全屏滚动到底、NPC 密度和遮挡风险。
+- `manual unverified`：Trace source chip 点击、Copy 当前 trace JSON、trace detail 文案、快捷键逐项手感仍需真实窗口最终验收。
+- `manual unverified`：真实 LLM 最新成功证据仍沿用 2026-05-23；2026-05-24 的真实 provider 尝试因 `HTTP 402 Insufficient Balance` 未形成通过证据。
+- `manual unverified`：`prompt_ready` 资产尚未生成、筛选、登记源图或接入 Godot registry。
 
 ## 6. 当前可运行命令
 
 ```powershell
-npm.cmd run check
+npm.cmd run context:resume
 npm.cmd run context:check
-npm.cmd run content:check
+npm.cmd run context:brief
+npm.cmd run check
+npm.cmd run smoke
 npm.cmd run schema:check
 npm.cmd run eval:process
 npm.cmd run eval:stability
@@ -203,74 +75,21 @@ npm.cmd run eval:stability:determinism
 npm.cmd run eval:domain
 npm.cmd run eval:archive:check
 npm.cmd run eval:archive:drift
-npm.cmd run eval:archive:promote -- <runDirName>
-npm.cmd run smoke
-npm.cmd run asset:check
-npm.cmd run client:env
-npm.cmd run client:run:check
-npm.cmd run start
-npm.cmd run client:run
-npm.cmd run client:run:legacy
-git diff --check
-```
-
-本轮收口要求的完整验收命令为：
-
-```powershell
-npm.cmd run check
-npm.cmd run context:check
 npm.cmd run content:check
-npm.cmd run schema:check
-npm.cmd run eval:process
-npm.cmd run eval:stability
-npm.cmd run eval:stability:long
-npm.cmd run eval:stability:determinism
-npm.cmd run eval:domain
-npm.cmd run eval:archive:check
-npm.cmd run eval:archive:drift
-npm.cmd run smoke
 npm.cmd run asset:check
+npm.cmd run model:check
 npm.cmd run client:env
 npm.cmd run client:run:check
+npm.cmd run llm:smoke
 git diff --check
 ```
 
-早期白天整合交接快照已归档：
+按任务线选择最小必要命令。真实 LLM、真实 Godot 窗口和玩家手感验收不属于默认离线门禁。
 
-```powershell
-Get-Content docs\archive\daytime_integration_handoff.md
-```
+## 7. 下一轮建议
 
-## 7. 人工验收状态
-
-2026-05-16，主人已运行真实 Godot 窗口并确认当前基础体验基本无问题。该结论覆盖：地点切换、背景切换、NPC 选择、`talk` 提交、星灯祭事件查看、choices 展示和事件结算展示。
-
-2026-05-21，主人确认 Phase 1 可以收口，默认 `world_main.tscn` 进入完成基线。仍需后续人工验证的内容只保留 Phase 1 外延项：表情差分、UI 组件、真实 LLM profile 切换，以及 Phase 2 新增观察者模式 / Debug 视图。
-
-2026-05-24，本轮已执行 `npm.cmd run client:run`，Godot 4.6.2 窗口入口成功启动并完成项目初始化 / 编辑器加载输出；该结果只证明真实窗口入口可启动，Observer Panel 的 Tab / filter / Prev / Next / Copy trace / trace click / retry / shortcuts 仍需主人在窗口内人工确认。
-
-2026-05-25，主人在 Godot 客户端 UI 重设计落地后完成重构后初步窗口验证，整体观感与主路径无大问题；Research Dock 三 Tab、HUD 卡片、TopBanner、NPC 头顶标签精简均已在真实窗口跑过一次。晚间补修后，主人进一步确认本轮客户端问题已修复；后续只保留快捷键细节手感和 trace 详情可读性的 polish。
-
-2026-05-25 晚间，子代理 A 已补修 Research Dock 可读性：NPC 一览改为双层行，字号与布局缩放集中到 `ResearchTheme`，三个 Tab 增加底部滚动留白；headless / dry-run 校验已通过；主人随后确认客户端问题已修复，非全屏滚动到底、6 NPC 密度和 HUD / TopBanner 遮挡风险通过人工复核。
-
-2026-05-25 Trace 体验闭环已完成代码与离线验证：后端 focus 查询、sourceLinks / traceFocus、Godot source chip 跳转、NPC 高亮规则和 Copy 当前 trace JSON 已落地；真实窗口仍需主人按计划点击 `memory.result_observed` 行、source chip、Copy trace，并确认非全屏滚动与弹层关闭。
-
-## 8. 下一轮建议
-
-### 立即（Phase 2 收紧）
-
-1. Trace 体验闭环已完成代码与离线门禁收口；下一步先做真实窗口人工验收（memory 行 source chip 跳转、NPC 高亮、Copy 当前 trace JSON、非全屏滚动和弹层关闭），通过后再进入 Eval 或内容线。
-2. Eval 线继续扩展 `backend/app/eval/` 与 `backend/app/domain/`，在现有 L1 + Process Fidelity + Counterfactual Replay + memory ablation + stability + archive + cross-domain repo fixture 基础上继续加深真实依赖图、跨文件回归和 review agent 分歧，并沿用 dependency evidence chain 收紧 process fidelity 因果判据。
-3. Godot 观察者线已完成 trace 行跳转事件源闭环；后续只保留真实窗口手感验收、detail 文案微调和快捷键 polish。
-
-### Phase 2 硬约束
-
-4. `LifeActionExecutor` 旧线冻结，只做回归修复；Phase 2 直接切到 MotivationEngine，不并行运行。
-5. 完整 Phase 2 总骨架以 `production_roadmap.md` §4.3 的 15 项为准；`agent_loop_architecture.md` §13.3 是 Agent Loop 内部 11 项清单。
-6. Eval 是 Phase 2 硬验收线，不达标不进入 Phase 3。
-
-### 持续维持
-
-8. LLM / Debug 线在切换模型、key 或 profile 后用 `npm.cmd run llm:smoke` 刷新真实 smoke。
-9. 资产线按 `docs/asset_batches/prompt_ready_export.md` 推进表情差分、生活 UI 组件和行动反馈图标，**注意 Phase 2 后资产规划要按 `open_questions.md` 末尾的"资产路线的范围调整"重新评估**。
-10. Web Debug 已追加 Director / Skill / fallback / cost 总览，并已落地 Heuristic Library / Arbitration Trace / Rashomon 主观记忆对比三卡片；下一步关注真实数据密度、copy / export 体验和 paper 证据复用。
+- 先做真实 Godot 窗口 trace 体验验收：`memory.result_observed` 行、source chip、NPC 高亮、Copy 当前 trace JSON、非全屏滚动和弹层关闭。
+- 通过 trace 体验验收后转入 Eval 线，继续强化 dependency evidence chain、真实依赖图、跨文件回归和 reviewer disagreement。
+- Godot 线后续以 detail 文案、快捷键和手感 polish 为主，不重开 Phase 1 旧玩法扩写。
+- LLM / Debug 线只在切换模型、key、profile、prompt 或需要刷新真实成本证据时运行 `npm.cmd run llm:smoke`。
+- 资产线按 `docs/asset_batches/prompt_ready_export.md` 推进前，先结合 `docs/open_questions.md` 的资产范围调整重新排序。

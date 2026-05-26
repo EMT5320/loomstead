@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: context-governance
-last_verified: 2026-05-21
+last_verified: 2026-05-26
 startup_load: index
 source_of_truth: true
 scope: 文档分层索引与渐进式读取路线
@@ -17,9 +17,11 @@ scope: 文档分层索引与渐进式读取路线
 
 ## 2. 新对话最小读取
 
-1. [`../AGENTS.md`](../AGENTS.md)：所有开发助手共享的项目背景、任务线路由和常用验证入口。
-2. [`agent_context.md`](./agent_context.md)：下一轮对话第一入口，记录当前边界、命令和最近下一步。
-3. [`current_status.md`](./current_status.md)：当前实现事实、主要缺口、开发前硬性约束和人工验收清单。
+1. 先运行 `npm.cmd run context:resume`：输出分支、脏区、manual gate、最近下一步和最小验证命令。
+2. [`../AGENTS.md`](../AGENTS.md)：所有开发助手共享的项目背景、任务线路由和常用验证入口。
+3. [`agent_context.md`](./agent_context.md)：下一轮对话第一入口，记录当前边界、命令和最近下一步。
+4. [`current_status.md`](./current_status.md)：当前实现事实、主要缺口、开发前硬性约束和人工验收清单。
+5. [`assistant_continuity.md`](./assistant_continuity.md)：跨家里 / 公司、多助手和子代理接续协议。
 
 ## 3. 决策源文档
 
@@ -77,8 +79,11 @@ scope: 文档分层索引与渐进式读取路线
 
 ### 上下文治理 / 助手适配
 
+- [`../AGENTS.md`](../AGENTS.md)：跨助手共享入口。
 - [`../CLAUDE.md`](../CLAUDE.md)：Claude Code 适配层，导入根目录 `AGENTS.md`。
 - [`../.claude/rules/`](../.claude/rules/)：Claude Code 路径触发提示。
+- [`assistant_continuity.md`](./assistant_continuity.md)：跨助手接续协议。
+- [`workflows.md`](./workflows.md)：研究、验证、审查和交接 workflow 索引。
 - [`../scripts/build_agent_context.py`](../scripts/build_agent_context.py)：上下文 brief 生成和治理校验脚本。
 
 ## 5. 归档区
@@ -105,8 +110,10 @@ scope: 文档分层索引与渐进式读取路线
 | [`agentic_game_design.md`](./agentic_game_design.md) | active | backend-director | on-demand | true |
 | [`agent_loop_architecture.md`](./agent_loop_architecture.md) | active | backend-director | on-demand | true |
 | [`art_direction.md`](./art_direction.md) | active | asset-pipeline | on-demand | true |
+| [`assistant_continuity.md`](./assistant_continuity.md) | active | context-governance | on-demand | true |
 | [`asset_generation_prompts.md`](./asset_generation_prompts.md) | active | asset-pipeline | on-demand | true |
 | [`current_status.md`](./current_status.md) | active | project-status | after-agent-context | true |
+| [`eval_dataset_archive.md`](./eval_dataset_archive.md) | active | eval | on-demand | true |
 | [`game_client_environment.md`](./game_client_environment.md) | active | godot-client | on-demand | true |
 | [`game_content_storyline.md`](./game_content_storyline.md) | active | content-codex | on-demand | true |
 | [`gameplay_system_architecture.md`](./gameplay_system_architecture.md) | active | godot-client | on-demand | true |
@@ -121,6 +128,7 @@ scope: 文档分层索引与渐进式读取路线
 | [`cross_domain_adapter.md`](./cross_domain_adapter.md) | active | research-runtime | on-demand | true |
 | [`process_fidelity_eval_spec.md`](./process_fidelity_eval_spec.md) | active | eval | on-demand | true |
 | [`research_framing_motivational_delegation.md`](./research_framing_motivational_delegation.md) | active | research | on-demand | true |
+| [`workflows.md`](./workflows.md) | active | context-governance | on-demand | true |
 | [`archive/README.md`](./archive/README.md) | archived | context-governance | never | false |
 
 ## 7. 当前决策摘要
@@ -142,8 +150,8 @@ scope: 文档分层索引与渐进式读取路线
 ## 8. 文档维护建议
 
 - `agent_context.md` 保持短入口，不堆长篇设计。
-- `current_status.md` 主要记录当前已核对事实，未人工验收内容建议显式标注。
 - `current_status.md` 记录当前代码事实、验收证据、主要缺口和仍需人工验证的内容。
+- `assistant_continuity.md` 记录跨助手协议；具体工具适配尽量保持薄层。
 - 长期愿景和阶段事实冲突时，先更新事实文档，再决定是否需要修订愿景或规格。
 - 归档区文档通常只作历史背景；如需复活结论，建议在新核心文档中显式吸收。
 - 调整上下文治理后，建议运行：
