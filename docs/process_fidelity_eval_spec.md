@@ -394,7 +394,7 @@ counterfactual_effect = selected_tool_original != selected_tool_without_memory
 
 这比只看最终成功率更能证明记忆对单次决策有因果作用。
 
-当前实现状态（2026-05-27）：process suite 的 Branna forgiveness replay 已在真实 `MotivationEngine.evaluate_npc` 输入层移除主观记忆 / 关系边并复算 `selectedToolId`；coding domain 加入 `coding.domain_counterfactual_replay.v1`，对 post-patch tests、review source links、derived dependency graph、single-file replay、dependency chain、reviewer arbitration sources 等证据做移除 replay；narrative domain 加入 `narrative.domain_counterfactual_replay.v1`，对目标关系边、目标主观记忆、目标学习启发式和完整记忆上下文做 route-level replay，并导出 `domain_evidence_counterfactual_replay_json` artifact。Domain suite 已支持 `--seeds`；最新 clean deterministic five-repeat domain export 中 aggregate `counterfactual_tool_selection_change_rate=0.645238`，coding mean `0.762203`，town mean `0.333333`，n=55。
+当前实现状态（2026-05-27）：process suite 的 Branna forgiveness replay 已在真实 `MotivationEngine.evaluate_npc` 输入层移除主观记忆 / 关系边并复算 `selectedToolId`；最新 clean five-repeat process export 为 `.run/eval-runs/run_2026-05-27T13-37-33Z`，20/20 通过，full baseline `counterfactual_tool_selection_change_rate=0.375`，n=20。coding domain 加入 `coding.domain_counterfactual_replay.v1`，对 post-patch tests、review source links、derived dependency graph、single-file replay、dependency chain、reviewer arbitration sources 等证据做移除 replay；narrative domain 加入 `narrative.domain_counterfactual_replay.v1`，对目标关系边、目标主观记忆、目标学习启发式和完整记忆上下文做 route-level replay，并导出 `domain_evidence_counterfactual_replay_json` artifact。Domain suite 已支持 `--seeds`；最新 clean deterministic five-repeat domain export 中 aggregate `counterfactual_tool_selection_change_rate=0.645238`，coding mean `0.762203`，town mean `0.333333`，n=55。
 
 ## 7. Process Fidelity GoalSpec Schema
 
