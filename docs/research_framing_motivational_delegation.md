@@ -241,7 +241,7 @@ Loomstead 研究 goal-conditioned orchestration：用户给出过程约束目标
 
 ### 7.7 当前 evidence snapshot（research-preview）
 
-最新可复盘跨域证据来自 `.run/eval-runs/domain_2026-05-27T08-21-49Z`：domain suite 以 deterministic `--seeds 2` repeat 运行，aggregate 22/22 通过，`counterfactual_tool_selection_change_rate=0.645238`；coding domain 16/16，mean `0.762203`；town domain 6/6，mean `0.333333`。这些结果只支撑 interface evidence：证明同一 GoalSpec / Intervention / Trace / Eval schema 能在 narrative primary 与 coding secondary fixture 中输出可比较证据，不声称真实 coding 任务性能、统计显著性、非确定性鲁棒性或人工可信度已经完成。
+最新可复盘跨域证据来自 `.run/eval-runs/domain_2026-05-27T13-29-21Z`：domain suite 以 deterministic `--seeds 5` repeat 运行，aggregate 55/55 通过，`counterfactual_tool_selection_change_rate=0.645238`；coding domain 40/40，mean `0.762203`；town domain 15/15，mean `0.333333`。这些结果只支撑 interface evidence：证明同一 GoalSpec / Intervention / Trace / Eval schema 能在 narrative primary 与 coding secondary fixture 中输出可比较证据，不声称真实 coding 任务性能、统计显著性、非确定性鲁棒性或人工可信度已经完成。
 
 ## 8. Phase 2 增补项
 

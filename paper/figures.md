@@ -49,8 +49,8 @@
 ## Table 5: Cross-domain adapter
 
 - Goal: town vs coding scenarios, deterministic repeat count, shared metrics, counterfactual route change rate, and fixture-level coding evidence pipeline.
-- Source files: `.run/eval-runs/domain_2026-05-27T08-21-49Z/summary.json`, manifest, `docs/cross_domain_adapter.md`, `paper/generated/eval_tables.tex`.
-- Status: generated from current deterministic two-repeat domain run and included by `paper/latex/sections/05_experiments.tex`; wording should stay at interface / portability evidence.
+- Source files: `.run/eval-runs/domain_2026-05-27T13-29-21Z/summary.json`, manifest, `docs/cross_domain_adapter.md`, `paper/generated/eval_tables.tex`.
+- Status: generated from current clean deterministic five-repeat domain run and included by `paper/latex/sections/05_experiments.tex`; wording should stay at interface / portability evidence.
 
 ## Table 6: Related-work positioning
 
