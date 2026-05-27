@@ -118,7 +118,11 @@ def _target_agents(goal_payload: dict[str, Any]) -> list[str]:
 
 
 def _extract_domain_evidence(world: Any) -> dict[str, Any]:
-    if not isinstance(world, dict):
+    source = world
+    if not isinstance(source, dict):
+        runtime_world = getattr(world, "world", None)
+        source = runtime_world if isinstance(runtime_world, dict) else {}
+    if not isinstance(source, dict):
         return {}
     evidence_keys = (
         "repoFixture",
@@ -132,9 +136,9 @@ def _extract_domain_evidence(world: Any) -> dict[str, Any]:
     )
     # 只抽取跨域 dry-run 的可审计工件，避免把完整 world 快照塞进 Eval item。
     return {
-        key: world.get(key, {})
+        key: source.get(key, {})
         for key in evidence_keys
-        if isinstance(world.get(key), dict) and world.get(key)
+        if isinstance(source.get(key), dict) and source.get(key)
     }
 
 
@@ -296,7 +300,7 @@ def _domain_evidence_trace_items(items: list[dict[str, Any]]) -> list[dict[str, 
 
 
 def _write_domain_evidence_files(run_dir: Path, item: dict[str, Any]) -> list[dict[str, Any]]:
-    """把 coding fixture 的 patch / test / review 证据写成独立 artifact。"""
+    """把 domain fixture 的 patch / test / review / replay 证据写成独立 artifact。"""
     evidence = item.get("domainEvidence", {}) if isinstance(item.get("domainEvidence"), dict) else {}
     if not evidence:
         return []

@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: research-runtime
-last_verified: 2026-05-26
+last_verified: 2026-05-27
 startup_load: on-demand
 source_of_truth: true
 scope: cross-domain adapter interface, narrative primary boundary, optional task domain portability
@@ -17,9 +17,9 @@ scope: cross-domain adapter interface, narrative primary boundary, optional task
 2. Adapter 只抽象“目标、干预、观察、评估”四件事。
 3. 核心 Runtime 不依赖具体场景名词，例如 crop、festival、tavern。
 4. 任何新 domain 都必须支持 EventStore、AgentState、Memory、Relationship / Dependency Graph、ToolExecutor、EvalTrace。
-5. Phase 2 实现接口、narrative adapter、coding skeleton、8 个 coding dry-run scenario 和 fixture-level counterfactual replay artifact。
+5. Phase 2 实现接口、narrative adapter、coding skeleton、8 个 coding dry-run scenario，以及 town / coding 两类 domain counterfactual replay artifact。
 
-当前实现状态（2026-05-26）：`backend/app/domain/base.py` 已落地 shared dataclasses、`DomainAdapter` Protocol、`DEFAULT_TOWN_DOMAIN` / `DEFAULT_CODING_DOMAIN` metadata；`backend/app/domain/narrative/adapter.py` 已接入 3 个 narrative GoalSpec 和现有 AgentRuntime 主路径；`backend/app/domain/coding/adapter.py` 已提供 8 个 repo fixture scenario，加载确定性外部仓库快照，生成 patch、patched file hash、本地 git 源仓库 checkout、fixture metadata 声明的 `testRunner`、adapter runner->commandTemplate 路由、pytest / unittest / node:test 三类真实测试框架 test report、pre-patch failing test report、multi-file metadata / rubric evidence、源码派生 `derivedDependencyGraph`、`coding.dependency_evidence_chain.v2`、跨文件回归 fixture、JavaScript smoke fixture、reviewer disagreement judgment / arbitration report 证据，并为 coding fixture 生成 `coding.domain_counterfactual_replay.v1` 证据移除 replay；`npm.cmd run eval:domain` 会用统一 `full_motivational_delegation` baseline 输出跨域 summary schema，目前 aggregate `counterfactual_tool_selection_change_rate=0.554329`、coding mean `0.762203`；`npm.cmd run eval:domain:export` 会导出 per-scenario JSON、domain metrics、observation trace、intervention trace、domain evidence JSONL、独立 repo fixture / derived dependency graph / patch / pre-patch test / partial-patch test / test / review / counterfactual replay artifacts 和 `phase2.eval_manifest.v1` manifest。
+当前实现状态（2026-05-27）：`backend/app/domain/base.py` 已落地 shared dataclasses、`DomainAdapter` Protocol、`DEFAULT_TOWN_DOMAIN` / `DEFAULT_CODING_DOMAIN` metadata；`backend/app/domain/narrative/adapter.py` 已接入 3 个 narrative GoalSpec 和现有 AgentRuntime 主路径，并为 town domain 生成 `narrative.domain_counterfactual_replay.v1`，按目标关系边、主观记忆、学习启发式和完整记忆上下文四类 ablation 复算 route；`backend/app/domain/coding/adapter.py` 已提供 8 个 repo fixture scenario，加载确定性外部仓库快照，生成 patch、patched file hash、本地 git 源仓库 checkout、fixture metadata 声明的 `testRunner`、adapter runner->commandTemplate 路由、pytest / unittest / node:test 三类真实测试框架 test report、pre-patch failing test report、multi-file metadata / rubric evidence、源码派生 `derivedDependencyGraph`、`coding.dependency_evidence_chain.v2`、跨文件回归 fixture、JavaScript smoke fixture、reviewer disagreement judgment / arbitration report 证据，并为 coding fixture 生成 `coding.domain_counterfactual_replay.v1` 证据移除 replay；`npm.cmd run eval:domain` 会用统一 `full_motivational_delegation` baseline 输出跨域 summary schema，目前 aggregate `counterfactual_tool_selection_change_rate=0.645238`、coding mean `0.762203`、town mean `0.333333`；`npm.cmd run eval:domain:export` 会导出 per-scenario JSON、domain metrics、observation trace、intervention trace、domain evidence JSONL、独立 repo fixture / derived dependency graph / patch / pre-patch test / partial-patch test / test / review / counterfactual replay artifacts 和 `phase2.eval_manifest.v1` manifest，最新 `.run/eval-runs/domain_2026-05-27T07-20-04Z` artifactCount=76。
 
 ## 2. Core Interface
 
@@ -181,10 +181,10 @@ Forbidden shortcuts:
 Phase 2 的 adapter 当前验收点：
 
 ```text
-1. NarrativeAdapter 已运行 3 个 GoalSpec：close_friend_traceable / repair_trust_memory / affiliation_bias_agent_choice。
+1. NarrativeAdapter 已运行 3 个 GoalSpec：close_friend_traceable / repair_trust_memory / affiliation_bias_agent_choice，并导出 `narrative.domain_counterfactual_replay.v1` route-level replay。
 2. CodingAdapter 已有 8 个 repo fixture 级 scenario：coding.skill_prototype_dryrun / coding.skill_regression_fix_dryrun / coding.skill_failing_test_repair_dryrun / coding.skill_multifile_review_dryrun / coding.skill_multifile_dependency_repair_dryrun / coding.skill_cross_file_regression_dryrun / coding.skill_reviewer_disagreement_dryrun / coding.skill_javascript_smoke_dryrun，覆盖 repo fixture loaded -> design -> patch -> git checkout -> repo test command -> review；每个 fixture 在 metadata 声明 `testRunner`，adapter 按 runner 映射 `commandTemplate`，test report 记录 `testRunner`、`command`、`durationMs`、`exitCode`；failing-test repair 额外覆盖 pre-patch failing test -> patch -> post-patch passing test -> review，multi-file review 额外覆盖三文件补丁、metadata quality gate 与 review rubric checklist，multi-file dependency repair 额外覆盖源码派生依赖图、双源文件补丁、single-file partial patch failure 和 `dependency_evidence_chain.v2`，cross-file regression 额外覆盖 helper / caller 协同修复，reviewer disagreement 额外覆盖 approve / request_changes judgment 事件和 ArbitrationLayer contributing_sources，JavaScript smoke 额外覆盖 `node --test` 非 Python fixture；8 个 coding scenario 均导出证据移除 replay，用 selected review route 展示关键证据移除与 control 移除的可区分结果。
 3. Eval 已用相同 baseline 名称比较 town / coding domain 的 summary schema：npm.cmd run eval:domain。
-4. Eval 导出已接入 manifest、domain evidence JSONL 和独立 coding evidence artifacts，包括 pre-patch failing test report、partial-patch failure report、multi-file patch、metadata evidence、rubric review report、reviewer arbitration report 与 counterfactual replay report：npm.cmd run eval:domain:export。
+4. Eval 导出已接入 manifest、domain evidence JSONL 和独立 domain evidence artifacts，包括 narrative route replay、pre-patch failing test report、partial-patch failure report、multi-file patch、metadata evidence、rubric review report、reviewer arbitration report 与 coding counterfactual replay report：npm.cmd run eval:domain:export。
 5. 后续收紧项：人工 reviewer 抽样复核可在 `eval:archive:promote` promotion 阶段补充为备注或附件，不强制进入常规 CI。
 ```
 

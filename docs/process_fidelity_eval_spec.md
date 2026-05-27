@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: eval
-last_verified: 2026-05-24
+last_verified: 2026-05-27
 startup_load: on-demand
 source_of_truth: true
 scope: process fidelity metrics, hard delegation baseline, ablation protocol, dataset outputs
@@ -394,7 +394,7 @@ counterfactual_effect = selected_tool_original != selected_tool_without_memory
 
 这比只看最终成功率更能证明记忆对单次决策有因果作用。
 
-当前实现状态（2026-05-26）：process suite 的 Branna forgiveness replay 已在真实 `MotivationEngine.evaluate_npc` 输入层移除主观记忆 / 关系边并复算 `selectedToolId`；coding domain 额外加入 `coding.domain_counterfactual_replay.v1`，对 post-patch tests、review source links、derived dependency graph、single-file replay、dependency chain、reviewer arbitration sources 等证据做移除 replay，并导出 `domain_evidence_counterfactual_replay_json` artifact。最新 domain export 中 aggregate `counterfactual_tool_selection_change_rate=0.554329`，coding mean `0.762203`，control stability 为 1.0。
+当前实现状态（2026-05-27）：process suite 的 Branna forgiveness replay 已在真实 `MotivationEngine.evaluate_npc` 输入层移除主观记忆 / 关系边并复算 `selectedToolId`；coding domain 加入 `coding.domain_counterfactual_replay.v1`，对 post-patch tests、review source links、derived dependency graph、single-file replay、dependency chain、reviewer arbitration sources 等证据做移除 replay；narrative domain 加入 `narrative.domain_counterfactual_replay.v1`，对目标关系边、目标主观记忆、目标学习启发式和完整记忆上下文做 route-level replay，并导出 `domain_evidence_counterfactual_replay_json` artifact。最新 domain export 中 aggregate `counterfactual_tool_selection_change_rate=0.645238`，coding mean `0.762203`，town mean `0.333333`。
 
 ## 7. Process Fidelity GoalSpec Schema
 

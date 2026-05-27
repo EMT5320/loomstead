@@ -53,6 +53,7 @@ REQUIRED_METADATA_KEYS = [
 
 VALID_STATUSES = {"active", "snapshot", "archive"}
 VALID_STARTUP_LOADS = {"first-read", "after-agent-context", "index", "on-demand"}
+MANUAL_GATE_MAX_ITEMS = 10
 
 # 这些过期短语如果出现在 active 文档中，通常代表口径没有跟随当前事实更新。
 STALE_ACTIVE_PATTERNS = [
@@ -465,7 +466,7 @@ def build_resume() -> str:
     one_liner = extract_section_after_heading(vision, "## 一句话定位", max_lines=1)
     current_state = extract_bullet_section(agent_context, "## 3. 当前状态摘要", max_items=5)
     next_steps = extract_bullet_section(agent_context, "## 5. 最近下一步", max_items=4)
-    manual_gates = extract_bullet_section(status, "## 5. 人工验收与本机门禁", max_items=6)
+    manual_gates = extract_bullet_section(status, "## 5. 人工验收与本机门禁", max_items=MANUAL_GATE_MAX_ITEMS)
     lane_routes = extract_bullet_section(agent_context, "## 6. 按开发线读取", max_items=7)
     validation = extract_bullet_section(agent_context, "## 7. 验证命令", max_items=10)
 
@@ -533,7 +534,7 @@ def build_handoff() -> str:
     lanes = detect_lanes(dirty_paths)
     commands = unique_commands(lanes)
     next_steps = extract_bullet_section(agent_context, "## 5. 最近下一步", max_items=4)
-    manual_gates = extract_bullet_section(status, "## 5. 人工验收与本机门禁", max_items=6)
+    manual_gates = extract_bullet_section(status, "## 5. 人工验收与本机门禁", max_items=MANUAL_GATE_MAX_ITEMS)
 
     lane_lines = [f"- {lane}" for lane, _ in lanes]
     command_lines = [f"- `{command}`" for command in commands]
