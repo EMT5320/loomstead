@@ -150,6 +150,7 @@ class ArbitrationLayer:
         """对候选工具打分；记忆证据只影响同一需求候选内部排序，避免越权改需求。"""
         tier_rank = {"physiological": 0, "vocational": 1, "social_strategic": 2}
         relationship_strength = self._relationship_strength(relationship_edges, npc_id)
+        relationship_refs = self._relationship_refs(relationship_edges, npc_id) if relationship_strength > 0.0 else []
         decision_budget_by_tool = {
             str(item.get("toolId") or ""): dict(item)
             for item in decision_budgets
@@ -160,10 +161,13 @@ class ArbitrationLayer:
             tier_score = 1.0 - float(tier_rank.get(tool.tier, 99)) * 0.1
             duration_score = max(0.0, 1.0 - float(tool.duration_seconds) / 3600.0) * 0.05
             relationship_bonus = 0.0
+            relationship_bonus_refs: list[dict[str, Any]] = []
             if relationship_strength > 0.0 and tool.tool_id == "social.chat_with":
                 relationship_bonus = 0.12 * relationship_strength
+                relationship_bonus_refs = [dict(ref) for ref in relationship_refs]
             elif relationship_strength > 0.0 and tool.tool_id == "social.give_gift":
                 relationship_bonus = 0.03 * relationship_strength
+                relationship_bonus_refs = [dict(ref) for ref in relationship_refs]
             subjective_memory_refs = self._subjective_memory_refs(subjective_memories, tool.tool_id, npc_id)
             subjective_memory_bonus = self._subjective_memory_bonus(subjective_memory_refs)
             heuristic_refs = self._heuristic_refs(heuristics, tool.tool_id, need_id, npc_id, world_tick)
@@ -177,6 +181,7 @@ class ArbitrationLayer:
                     "tierScore": tier_score,
                     "durationScore": duration_score,
                     "relationshipBonus": relationship_bonus,
+                    "relationshipBonusRefs": relationship_bonus_refs,
                     "subjectiveMemoryBonus": subjective_memory_bonus,
                     "subjectiveMemoryRefs": subjective_memory_refs,
                     "heuristicBonus": heuristic_bonus,
@@ -361,6 +366,121 @@ class ArbitrationLayer:
         except (TypeError, ValueError):
             return fallback
 
+    def _score_component_source_refs(self, item: dict[str, Any]) -> list[dict[str, Any]]:
+        tool = item["tool"]
+        # 统一输出组件级来源，便于调试面板解释每个分值来自哪类证据。
+        refs: list[dict[str, Any]] = [
+            {
+                "component": "tierScore",
+                "sourceType": "tool_definition",
+                "value": round(float(item.get("tierScore") or 0.0), 6),
+                "detail": {"toolId": tool.tool_id, "tier": tool.tier},
+            },
+            {
+                "component": "durationScore",
+                "sourceType": "tool_definition",
+                "value": round(float(item.get("durationScore") or 0.0), 6),
+                "detail": {"toolId": tool.tool_id, "durationSeconds": tool.duration_seconds},
+            },
+        ]
+        relationship_refs = [ref for ref in item.get("relationshipBonusRefs", []) if isinstance(ref, dict)]
+        if relationship_refs:
+            refs.append(
+                {
+                    "component": "relationshipBonus",
+                    "sourceType": "relationship_edges",
+                    "value": round(float(item.get("relationshipBonus") or 0.0), 6),
+                    "detail": {
+                        "edgeIds": [str(ref.get("edgeId") or "") for ref in relationship_refs if str(ref.get("edgeId") or "")],
+                        "sourceEventIds": sorted(
+                            {
+                                str(event_id)
+                                for ref in relationship_refs
+                                for event_id in ref.get("sourceEventIds", [])
+                                if str(event_id)
+                            }
+                        ),
+                    },
+                }
+            )
+        subjective_memory_refs = [ref for ref in item.get("subjectiveMemoryRefs", []) if isinstance(ref, dict)]
+        if subjective_memory_refs:
+            refs.append(
+                {
+                    "component": "subjectiveMemoryBonus",
+                    "sourceType": "subjective_memory_records",
+                    "value": round(float(item.get("subjectiveMemoryBonus") or 0.0), 6),
+                    "detail": {
+                        "recordIds": [str(ref.get("recordId") or "") for ref in subjective_memory_refs if str(ref.get("recordId") or "")],
+                        "sourceEventIds": [str(ref.get("sourceEventId") or "") for ref in subjective_memory_refs if str(ref.get("sourceEventId") or "")],
+                    },
+                }
+            )
+        heuristic_refs = [ref for ref in item.get("heuristicRefs", []) if isinstance(ref, dict)]
+        if heuristic_refs:
+            refs.append(
+                {
+                    "component": "heuristicBonus",
+                    "sourceType": "heuristic_library",
+                    "value": round(float(item.get("heuristicBonus") or 0.0), 6),
+                    "detail": {
+                        "heuristicIds": [str(ref.get("heuristicId") or "") for ref in heuristic_refs if str(ref.get("heuristicId") or "")],
+                        "sourceEventIds": [str(ref.get("sourceEventId") or "") for ref in heuristic_refs if str(ref.get("sourceEventId") or "")],
+                    },
+                }
+            )
+        decision_budget = item.get("decisionBudget", {}) if isinstance(item.get("decisionBudget"), dict) else {}
+        if decision_budget.get("route"):
+            refs.append(
+                {
+                    "component": "decisionBudgetRoute",
+                    "sourceType": "decision_budget",
+                    "value": decision_budget.get("route"),
+                    "detail": {
+                        "channel": decision_budget.get("channel"),
+                        "feature": decision_budget.get("feature"),
+                        "remaining": decision_budget.get("remaining"),
+                        "reason": decision_budget.get("reason"),
+                    },
+                }
+            )
+        return refs
+
+    def _score_explanation_refs(self, item: dict[str, Any]) -> list[dict[str, Any]]:
+        # 展开最小引用集合，方便 API 直接跳转到关系边/主观记忆/启发式记录。
+        refs: list[dict[str, Any]] = []
+        for relationship_ref in item.get("relationshipBonusRefs", []):
+            if not isinstance(relationship_ref, dict):
+                continue
+            refs.append(
+                {
+                    "refType": "relationship_edge",
+                    "refId": relationship_ref.get("edgeId"),
+                    "sourceEventIds": [str(event_id) for event_id in relationship_ref.get("sourceEventIds", []) if str(event_id)],
+                }
+            )
+        for memory_ref in item.get("subjectiveMemoryRefs", []):
+            if not isinstance(memory_ref, dict):
+                continue
+            refs.append(
+                {
+                    "refType": "subjective_memory",
+                    "refId": memory_ref.get("recordId"),
+                    "sourceEventId": memory_ref.get("sourceEventId"),
+                }
+            )
+        for heuristic_ref in item.get("heuristicRefs", []):
+            if not isinstance(heuristic_ref, dict):
+                continue
+            refs.append(
+                {
+                    "refType": "heuristic",
+                    "refId": heuristic_ref.get("heuristicId"),
+                    "sourceEventId": heuristic_ref.get("sourceEventId"),
+                }
+            )
+        return refs
+
     def _score_to_debug(self, item: dict[str, Any]) -> dict[str, Any]:
         tool = item["tool"]
         return {
@@ -377,4 +497,6 @@ class ArbitrationLayer:
             "decisionBudgetRoute": item.get("decisionBudget", {}).get("route"),
             "decisionBudgetChannel": item.get("decisionBudget", {}).get("channel"),
             "decisionBudgetRemaining": item.get("decisionBudget", {}).get("remaining"),
+            "scoreComponentSourceRefs": self._score_component_source_refs(item),
+            "scoreExplanationRefs": self._score_explanation_refs(item),
         }

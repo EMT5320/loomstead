@@ -21,6 +21,8 @@
                     "eval:domain":  "python scripts/run_agent_eval.py --suite domain",
                     "eval:domain:full":  "python scripts/run_agent_eval.py --suite domain --full",
                     "eval:domain:export":  "python scripts/run_agent_eval.py --suite domain --export-dir .run/eval-runs",
+                    "eval:robustness":  "python scripts/run_agent_eval.py --suite robustness",
+                    "eval:robustness:export":  "python scripts/run_agent_eval.py --suite robustness --export-dir .run/eval-runs",
                     "eval:archive:check":  "python scripts/index_eval_runs.py --runs-dir .run/eval-runs",
                     "eval:archive:index":  "python scripts/index_eval_runs.py --runs-dir .run/eval-runs --write-index",
                     "eval:archive:drift":  "python scripts/index_eval_runs.py --runs-dir .run/eval-runs --write-drift-report",

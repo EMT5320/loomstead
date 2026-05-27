@@ -35,6 +35,12 @@ const TRACE_FILTER_LABELS := {
 const DETAIL_POPUP_MAX_CHARS := 12000
 const TRACE_COPY_BUTTON_TEXT := "复制 trace JSON [C]"
 const TRACE_COPY_BUTTON_COPIED_TEXT := "已复制 ✓"
+const TRACE_COPY_BUTTON_EMPTY_TEXT := "暂无 trace 可复制"
+const TRACE_COPY_READY_TOOLTIP_TEXT := "复制当前选中 trace 的完整 JSON 到剪贴板"
+const TRACE_COPY_EMPTY_TOOLTIP_TEXT := "当前过滤器暂无 trace，等待下一次 Phase 2 Debug 刷新"
+const TRACE_COPY_COPIED_TOOLTIP_TEXT := "复制成功，可直接粘贴到 issue / 文档"
+const TRACE_COPY_FEEDBACK_SECONDS := 0.85
+const TRACE_ERROR_HINT_TEXT := "Phase 2 Debug 请求失败：可点击 Retry 重新拉取，trace 区将自动恢复。"
 const TRACE_SHORTCUT_HINT_TEXT := "快捷键：1-5 过滤，逗号/左方括号上一条，句号/右方括号下一条，[C] 复制，[Esc] 关闭弹层"
 const TRACE_ROW_SUMMARY_MAX_CHARS := 52
 const TRACE_TOOL_HINT_MAX_CHARS := 28
@@ -234,6 +240,10 @@ func show_phase2_error(error_message: String) -> void:
 	_render_empty_relationships()
 	_render_empty_heuristics()
 	_reset_recent_trace_view()
+	if _trace_summary_label != null:
+		_trace_summary_label.text = TRACE_ERROR_HINT_TEXT
+	if _trace_details_status_label != null:
+		_trace_details_status_label.text = "trace details 暂不可用：请先点击 Retry 重试。"
 
 
 func set_phase2_debug_summary(summary: Dictionary) -> void:
@@ -978,7 +988,7 @@ func _build_trace_tab() -> Control:
 	_trace_copy_button.text = TRACE_COPY_BUTTON_TEXT
 	_trace_copy_button.focus_mode = Control.FOCUS_NONE
 	_trace_copy_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_trace_copy_button.tooltip_text = "复制当前选中 trace 的完整 JSON 到剪贴板"
+	_trace_copy_button.tooltip_text = TRACE_COPY_READY_TOOLTIP_TEXT
 	ResearchThemeScript.apply_button_style(_trace_copy_button, ResearchThemeScript.FONT_SIZE_SMALL)
 	_trace_copy_button.pressed.connect(_on_trace_copy_pressed)
 	copy_row.add_child(_trace_copy_button)
@@ -1318,7 +1328,8 @@ func _update_trace_copy_button_state(has_rows: bool) -> void:
 	if _trace_copy_button == null:
 		return
 	_trace_copy_button.disabled = not has_rows
-	_trace_copy_button.text = TRACE_COPY_BUTTON_TEXT
+	_trace_copy_button.text = TRACE_COPY_BUTTON_TEXT if has_rows else TRACE_COPY_BUTTON_EMPTY_TEXT
+	_trace_copy_button.tooltip_text = TRACE_COPY_READY_TOOLTIP_TEXT if has_rows else TRACE_COPY_EMPTY_TOOLTIP_TEXT
 
 
 func _trace_filter_display_name() -> String:
@@ -1372,10 +1383,11 @@ func _on_trace_copy_pressed() -> void:
 	DisplayServer.clipboard_set(copy_text)
 	if _trace_copy_button != null:
 		_trace_copy_button.text = TRACE_COPY_BUTTON_COPIED_TEXT
+		_trace_copy_button.tooltip_text = TRACE_COPY_COPIED_TOOLTIP_TEXT
 	var trace_id := str(copy_payload.get("traceId", "-"))
 	var rows := _trace_events_for_filter()
 	_set_phase2_status("已复制 trace JSON：%s（%s %d/%d）" % [trace_id, _current_trace_filter, _current_trace_detail_index + 1, rows.size()])
-	await get_tree().create_timer(0.85).timeout
+	await get_tree().create_timer(TRACE_COPY_FEEDBACK_SECONDS).timeout
 	_update_trace_copy_button_state(not rows.is_empty())
 
 

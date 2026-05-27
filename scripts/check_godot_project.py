@@ -103,6 +103,8 @@ checks = {
     "observer panel class": "class_name ObserverPanel" in observer_panel,
     "observer panel phase2 sections": "subjectiveMemory" in observer_panel and "relationshipEdges" in observer_panel and "heuristics" in observer_panel,
     "observer panel recent trace": "recentTraceEvents" in observer_panel and "_summarize_phase2_recent_trace" in town_map,
+    "observer panel trace copy empty state": "暂无 trace 可复制" in observer_panel and "当前过滤器暂无 trace，等待下一次 Phase 2 Debug 刷新" in observer_panel,
+    "observer panel phase2 error hint": "Phase 2 Debug 请求失败：可点击 Retry 重新拉取，trace 区将自动恢复。" in observer_panel and "trace details 暂不可用：请先点击 Retry 重试。" in observer_panel,
     "observer panel trace filter": "traceFilter" in observer_panel and "recentTraceEventGroups" in town_map and "_phase2_trace_filter_matches" in town_map,
     "observer panel trace drilldown": "Copy trace" in observer_panel and "_on_trace_copy_pressed" in observer_panel and "recentTraceDetailGroups" in town_map and "_phase2_trace_detail_text" in town_map,
     "asset registry class": "class_name AssetRegistry" in asset_registry,

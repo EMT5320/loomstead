@@ -4,6 +4,7 @@ from app.eval.scenarios import DEFAULT_L1_SCENARIOS, DEFAULT_PROCESS_GOALS, Eval
 
 _LAZY_EXPORTS = {
     "run_cross_domain_adapter_scenarios": ("app.eval.domain_adapter", "run_cross_domain_adapter_scenarios"),
+    "run_evidence_robustness_scenarios": ("app.eval.evidence_robustness", "run_evidence_robustness_scenarios"),
     "run_process_fidelity_scenarios": ("app.eval.runner", "run_process_fidelity_scenarios"),
     "run_rule_scenarios": ("app.eval.runner", "run_rule_scenarios"),
     "run_stability_determinism_check": ("app.eval.runner", "run_stability_determinism_check"),
@@ -16,6 +17,7 @@ __all__ = [
     "EvalScenario",
     "ProcessGoalSpec",
     "run_cross_domain_adapter_scenarios",
+    "run_evidence_robustness_scenarios",
     "run_process_fidelity_scenarios",
     "run_rule_scenarios",
     "run_stability_determinism_check",

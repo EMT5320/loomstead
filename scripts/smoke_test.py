@@ -599,6 +599,16 @@ def assert_designer_heuristic_seed_injection() -> dict:
         raise RuntimeError("social.chat_with 应引用 designer heuristic seed")
     if float(chat_score.get("heuristicBonus") or 0.0) <= 0:
         raise RuntimeError("designer heuristic seed 应给目标工具提供正向 heuristicBonus")
+    heuristic_component = next(
+        (
+            ref
+            for ref in chat_score.get("scoreComponentSourceRefs", [])
+            if isinstance(ref, dict) and ref.get("component") == "heuristicBonus"
+        ),
+        None,
+    )
+    if not isinstance(heuristic_component, dict):
+        raise RuntimeError("candidateScores 应记录 heuristicBonus 的来源引用")
     if decision.get("decision", {}).get("selectedToolId") != "social.chat_with":
         raise RuntimeError("designer heuristic seed 应能影响同需求候选排序")
     return {
@@ -702,6 +712,11 @@ def assert_phase2_decision_budget_routing() -> dict:
     )
     if selected_score.get("decisionBudgetRoute") != "rule_fallback":
         raise RuntimeError("Arbitration candidateScores 应展开选中工具的预算路由")
+    if not any(
+        isinstance(ref, dict) and ref.get("component") == "decisionBudgetRoute"
+        for ref in selected_score.get("scoreComponentSourceRefs", [])
+    ):
+        raise RuntimeError("Arbitration candidateScores 应记录预算路由的组件来源")
 
     planned = runtime.tool_executor.plan_action(world, decision)
     if planned.get("decisionBudget", {}).get("route") != "rule_fallback":
@@ -1029,8 +1044,18 @@ def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
     heuristic_recall = motivation["items"][0].get("heuristicRecall")
     if not isinstance(heuristic_recall, dict) or heuristic_recall.get("version") != versions["heuristic_recall"]:
         raise RuntimeError(f"{label}.phase2.motivation 应包含 {versions['heuristic_recall']}")
-    if not all("subjectiveMemoryBonus" in item and "subjectiveMemoryRefCount" in item and "heuristicBonus" in item and "heuristicRefCount" in item and "decisionBudgetRoute" in item for item in first_decision.get("candidateScores", []) if isinstance(item, dict)):
-        raise RuntimeError(f"{label}.phase2.motivation.candidateScores 应包含主观记忆、启发式和预算路由评分字段")
+    if not all(
+        "subjectiveMemoryBonus" in item
+        and "subjectiveMemoryRefCount" in item
+        and "heuristicBonus" in item
+        and "heuristicRefCount" in item
+        and "decisionBudgetRoute" in item
+        and isinstance(item.get("scoreComponentSourceRefs"), list)
+        and isinstance(item.get("scoreExplanationRefs"), list)
+        for item in first_decision.get("candidateScores", [])
+        if isinstance(item, dict)
+    ):
+        raise RuntimeError(f"{label}.phase2.motivation.candidateScores 应包含评分组件来源与解释引用字段")
     capability_filters = motivation["items"][0].get("capabilityFilters")
     if not isinstance(capability_filters, dict) or capability_filters.get("version") != versions["capability_resolution"]:
         raise RuntimeError(f"{label}.phase2.motivation 应包含 {versions['capability_resolution']}")
@@ -1071,6 +1096,12 @@ def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
     decision_details = decision_trace.get("details")
     if not isinstance(decision_details, dict) or not decision_details.get("selectedToolId") or not isinstance(decision_details.get("candidateScores"), list):
         raise RuntimeError(f"{label}.phase2.recentTraceEvents.decision.details 应包含 selectedToolId 和 candidateScores")
+    if not all(
+        isinstance(item.get("scoreComponentSourceRefs"), list) and isinstance(item.get("scoreExplanationRefs"), list)
+        for item in decision_details.get("candidateScores", [])
+        if isinstance(item, dict)
+    ):
+        raise RuntimeError(f"{label}.phase2.recentTraceEvents.decision.details.candidateScores 应包含可解释来源引用")
     if not isinstance(decision_details.get("subjectiveMemoryRefs"), list) or not isinstance(decision_details.get("subjectiveMemoryRecall"), dict):
         raise RuntimeError(f"{label}.phase2.recentTraceEvents.decision.details 应包含主观记忆召回字段")
     if not isinstance(decision_details.get("heuristicRefs"), list) or not isinstance(decision_details.get("heuristicRecall"), dict):
