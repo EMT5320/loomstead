@@ -21,6 +21,7 @@ SELECTED_METRICS = [
     "forced_action_rate",
     "agent_initiated_action_ratio",
     "relationship_memory_causal_use_rate",
+    "counterfactual_tool_selection_change_rate",
     "causal_trace_coverage",
     "process_believability_score",
     "stability_tick_success_rate",
@@ -48,6 +49,7 @@ METRIC_LABELS = {
     "forced_action_rate": "Forced",
     "agent_initiated_action_ratio": "Agent-init.",
     "relationship_memory_causal_use_rate": "Memory",
+    "counterfactual_tool_selection_change_rate": "CF route",
     "causal_trace_coverage": "Trace",
     "process_believability_score": "Believ.",
     "stability_tick_success_rate": "Tick success",
@@ -286,21 +288,25 @@ def write_latex_eval_tables(latest: dict[str, dict[str, Any]], out_dir: Path) ->
                 r"\begin{table}[t]",
                 r"\centering",
                 r"\small",
-                r"\caption{Cross-domain adapter suite summary from the latest local dry-run fixtures.}",
+                r"\caption{Cross-domain adapter suite summary from the latest local dry-run fixtures. Repeats are deterministic export repeats, and CF route reports counterfactual tool-selection change rate.}",
                 r"\label{tab:domain-adapter}",
-                r"\begin{tabular}{lrrl}",
+                r"\begin{tabular}{lrrrrr}",
                 r"\toprule",
-                r"Domain & Passed & Total & Scenario count \\",
+                r"Domain & Passed & Total & Scenarios & Det. repeats & CF route \\",
                 r"\midrule",
             ]
         )
         for domain_id, stats in sorted(domains.items()):
             scenario_count = len(stats.get("scenarioIds") or [])
+            domain_metrics = metric_lookup(summary, scenario_id=domain_id)
+            cf_route = (domain_metrics.get(("full_motivational_delegation", "counterfactual_tool_selection_change_rate")) or {}).get("mean")
             cells = [
                 latex_escape(domain_id),
                 latex_number(stats.get("passed")),
                 latex_number(stats.get("total")),
                 latex_number(scenario_count),
+                latex_number(stats.get("seedCount") or summary.get("seedCount")),
+                latex_number(cf_route),
             ]
             lines.append(" & ".join(cells) + r" \\")
         lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
@@ -331,11 +337,12 @@ def write_eval_summary(latest: dict[str, dict[str, Any]], out_dir: Path) -> None
                 manifest.get("git", {}).get("shortCommit"),
                 manifest.get("git", {}).get("dirty"),
                 len(manifest.get("artifacts") or []),
+                summary.get("seedCount"),
                 summary.get("passed"),
                 summary.get("total"),
             ]
         )
-    lines.append(markdown_table(["Suite", "Run", "OK", "Git", "Dirty", "Artifacts", "Passed", "Total"], latest_rows))
+    lines.append(markdown_table(["Suite", "Run", "OK", "Git", "Dirty", "Artifacts", "Seeds", "Passed", "Total"], latest_rows))
 
     for suite, run in sorted(latest.items()):
         summary = run["summary"]

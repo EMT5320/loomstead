@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 from typing import Any
 
@@ -22,16 +23,27 @@ from app.eval.process_fidelity import PROCESS_METRIC_IDS, metric_summary
 BASELINE_CROSS_DOMAIN = "full_motivational_delegation"
 
 
-def run_cross_domain_adapter_scenarios(*, export_dir: str | Path | None = None) -> dict[str, Any]:
+def run_cross_domain_adapter_scenarios(*, export_dir: str | Path | None = None, seed_count: int = 1) -> dict[str, Any]:
     """运行 narrative primary + coding secondary 的最小跨域 adapter dry-run。"""
     suites: tuple[tuple[DomainAdapter, tuple[str, ...]], ...] = (
         (NarrativeDomainAdapter(), NARRATIVE_GOAL_IDS),
         (CodingDomainAdapter(), CODING_GOAL_IDS),
     )
+    seed_count = max(1, int(seed_count))
     items: list[dict[str, Any]] = []
     for adapter, goal_ids in suites:
-        for index, goal_id in enumerate(goal_ids, start=1):
-            items.append(_run_adapter_goal(adapter, goal_id=goal_id, seed=index))
+        for goal_index, goal_id in enumerate(goal_ids, start=1):
+            for seed_index in range(1, seed_count + 1):
+                seed_value = goal_index + (seed_index - 1) * len(goal_ids)
+                items.append(
+                    _run_adapter_goal(
+                        adapter,
+                        goal_id=goal_id,
+                        seed_index=seed_index,
+                        seed_count=seed_count,
+                        seed_value=seed_value,
+                    )
+                )
 
     domain_ids = sorted({str(item["domainId"]) for item in items})
     metrics = _domain_metric_summaries(items, domain_ids)
@@ -43,6 +55,7 @@ def run_cross_domain_adapter_scenarios(*, export_dir: str | Path | None = None) 
         "ok": all(bool(item.get("ok")) for item in items),
         "suite": "cross_domain_adapter",
         "baseline": BASELINE_CROSS_DOMAIN,
+        "seedCount": seed_count,
         "passed": sum(1 for item in items if item.get("ok")),
         "total": len(items),
         "domains": domain_summaries,
@@ -54,9 +67,16 @@ def run_cross_domain_adapter_scenarios(*, export_dir: str | Path | None = None) 
     return result
 
 
-def _run_adapter_goal(adapter: DomainAdapter, *, goal_id: str, seed: int) -> dict[str, Any]:
+def _run_adapter_goal(
+    adapter: DomainAdapter,
+    *,
+    goal_id: str,
+    seed_index: int,
+    seed_count: int,
+    seed_value: int,
+) -> dict[str, Any]:
     goal = adapter.parse_goal(goal_id)
-    world = adapter.build_initial_world(goal.goal_id, seed)
+    world = adapter.build_initial_world(goal.goal_id, seed_value)
     initial_observation = adapter.observe(world, goal)
     allowed_interventions = adapter.list_allowed_interventions(initial_observation, goal)
     interventions = _build_interventions(goal_id, goal.to_dict(), allowed_interventions)
@@ -66,10 +86,12 @@ def _run_adapter_goal(adapter: DomainAdapter, *, goal_id: str, seed: int) -> dic
     step_events = adapter.step_world(world, ticks=goal.max_steps or 1)
     final_observation = adapter.observe(world, goal)
     metrics = adapter.evaluate(world, goal)
+    seed = _domain_seed_payload(goal.goal_id, seed_index=seed_index, seed_count=seed_count, seed_value=seed_value)
     return {
         "domainId": adapter.domain_id,
         "scenarioId": goal.goal_id,
         "baseline": BASELINE_CROSS_DOMAIN,
+        "seed": seed,
         "ok": metrics.get("goal_success_rate", 0.0) >= 1.0
         and metrics.get("required_process_coverage", 0.0) >= 0.8,
         "metrics": metrics,
@@ -161,10 +183,16 @@ def _domain_metric_summaries(items: list[dict[str, Any]], domain_ids: list[str])
 
 
 def _domain_summary(items: list[dict[str, Any]]) -> dict[str, Any]:
+    seed_indices = {
+        int(item.get("seed", {}).get("seedIndex") or 0)
+        for item in items
+        if isinstance(item.get("seed"), dict) and item.get("seed", {}).get("seedIndex") is not None
+    }
     return {
         "passed": sum(1 for item in items if item.get("ok")),
         "total": len(items),
-        "scenarioIds": [str(item.get("scenarioId") or "") for item in items],
+        "seedCount": max(seed_indices) if seed_indices else 1,
+        "scenarioIds": sorted({str(item.get("scenarioId") or "") for item in items if str(item.get("scenarioId") or "")}),
     }
 
 
@@ -187,7 +215,9 @@ def _export_cross_domain_adapter_eval(result: dict[str, Any], base_dir: Path) ->
     items = [item for item in result.get("items", []) if isinstance(item, dict)]
     for item in items:
         scenario_id = str(item.get("scenarioId") or "unknown_scenario")
-        scenario_path = per_scenario_dir / f"{scenario_id}.json"
+        seed_suffix = _domain_seed_suffix(item)
+        scenario_id_with_seed = f"{scenario_id}{seed_suffix}"
+        scenario_path = per_scenario_dir / f"{scenario_id_with_seed}.json"
         _write_json(scenario_path, item)
         artifacts.append(
             _artifact_record(
@@ -235,6 +265,7 @@ def _domain_metric_trace_items(items: list[dict[str, Any]]) -> list[dict[str, An
                     "domainId": item.get("domainId"),
                     "scenarioId": item.get("scenarioId"),
                     "baseline": item.get("baseline"),
+                    "seed": item.get("seed"),
                     "metric": metric_id,
                     "value": float(metrics.get(metric_id, 0.0)),
                 }
@@ -252,6 +283,7 @@ def _domain_observation_trace_items(items: list[dict[str, Any]]) -> list[dict[st
                     "domainId": item.get("domainId"),
                     "scenarioId": item.get("scenarioId"),
                     "baseline": item.get("baseline"),
+                    "seed": item.get("seed"),
                     "stage": stage,
                     "tick": observation.get("tick"),
                     "goalProgress": observation.get("goalProgress", {}),
@@ -272,6 +304,7 @@ def _domain_intervention_trace_items(items: list[dict[str, Any]]) -> list[dict[s
                 "domainId": item.get("domainId"),
                 "scenarioId": item.get("scenarioId"),
                 "baseline": item.get("baseline"),
+                "seed": item.get("seed"),
                 "allowedInterventions": item.get("allowedInterventions", []),
                 "appliedInterventionCount": item.get("appliedInterventionCount", 0),
                 "appliedEventCount": item.get("appliedEventCount", 0),
@@ -293,6 +326,7 @@ def _domain_evidence_trace_items(items: list[dict[str, Any]]) -> list[dict[str, 
                 "domainId": item.get("domainId"),
                 "scenarioId": item.get("scenarioId"),
                 "baseline": item.get("baseline"),
+                "seed": item.get("seed"),
                 "domainEvidence": evidence,
             }
         )
@@ -306,7 +340,8 @@ def _write_domain_evidence_files(run_dir: Path, item: dict[str, Any]) -> list[di
         return []
     scenario_id = str(item.get("scenarioId") or "unknown_scenario")
     baseline = str(item.get("baseline") or "")
-    evidence_dir = run_dir / "domain_evidence" / _safe_path_part(scenario_id)
+    scenario_id_with_seed = f"{scenario_id}{_domain_seed_suffix(item)}"
+    evidence_dir = run_dir / "domain_evidence" / _safe_path_part(scenario_id_with_seed)
     evidence_dir.mkdir(parents=True, exist_ok=True)
     artifacts: list[dict[str, Any]] = []
 
@@ -391,3 +426,25 @@ def _write_domain_evidence_files(run_dir: Path, item: dict[str, Any]) -> list[di
 
 def _safe_path_part(value: str) -> str:
     return "".join(char if char.isalnum() or char in {"-", "_", "."} else "_" for char in value)
+
+
+def _domain_seed_payload(goal_id: str, *, seed_index: int, seed_count: int, seed_value: int) -> dict[str, Any]:
+    seed_id = f"{goal_id}:seed_{int(seed_index):02d}"
+    digest = hashlib.sha256(seed_id.encode("utf-8")).hexdigest()[:16]
+    return {
+        "seedIndex": int(seed_index),
+        "seedCount": int(seed_count),
+        "seedValue": int(seed_value),
+        "seedId": seed_id,
+        "deterministicHash": digest,
+    }
+
+
+def _domain_seed_suffix(item: dict[str, Any]) -> str:
+    seed = item.get("seed", {}) if isinstance(item.get("seed"), dict) else {}
+    if int(seed.get("seedCount") or 1) <= 1:
+        return ""
+    seed_index = seed.get("seedIndex")
+    if seed_index is None:
+        return ""
+    return f"_seed{int(seed_index):02d}"

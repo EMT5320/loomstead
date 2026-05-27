@@ -31,7 +31,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - Phase 1（活着的世界）已收口；`world_main.tscn` 是当前完成基线，旧 `LifeActionExecutor` 只保留回归修复。
 - Phase 2（骨架建立期）首轮已落地，当前主线是 trace / eval 收紧和可解释证据复用。
 - 后端权威路径已切到 `MotivationEngine -> ToolExecutor -> ResultObserver`，`/api/world/tick`、`/api/debug.phase2`、`phase2.trace.v1` 和 `schema_registry.v1` 是核心观察入口。
-- Process Fidelity Eval 已包含 rule process suite、stability / determinism、memory / relationship ablation、counterfactual replay、domain adapter suite 和 eval archive manifest；coding adapter 当前 8 个 fixture，已覆盖源码派生依赖图、dependency evidence chain v2、跨文件回归、reviewer judgment arbitration 和 `coding.domain_counterfactual_replay.v1`；narrative adapter 已接入 `narrative.domain_counterfactual_replay.v1`，最新 domain eval aggregate counterfactual mean 为 `0.645238`、town mean 为 `0.333333`。
+- Process Fidelity Eval 已包含 rule process suite、stability / determinism、memory / relationship ablation、counterfactual replay、domain adapter suite 和 eval archive manifest；coding adapter 当前 8 个 fixture，已覆盖源码派生依赖图、dependency evidence chain v2、跨文件回归、reviewer judgment arbitration 和 `coding.domain_counterfactual_replay.v1`；narrative adapter 已接入 `narrative.domain_counterfactual_replay.v1`，domain suite 已支持 `--seeds`，最新 deterministic two-repeat export 为 22/22，aggregate counterfactual mean 为 `0.645238`、town mean 为 `0.333333`。
 - Godot Research Dock 已接入 Phase 2 debug 摘要、trace timeline、来源跳转按钮、Copy trace JSON、Prev/Next 循环导航、单条 trace 提示、`[C]` / `[,]` / `[.]` / 左右方括号热键、NPC 高亮和三 Tab UI；`memory.result_observed` 行与来源跳转可发现性已通过真实窗口复验，最新导航和中断布局补修仍待真实窗口复验。
 - Web Debug 已有 provider / fallback / cost 总览、Heuristic Library、Arbitration Trace 和 Rashomon Memory 三卡片。
 - 6 名首发 NPC 深度卡已入库；4 核心 NPC（kai / mira / bram / lena）已有实际 motivation / capability / heuristic seed，tomas / orren 保持 stub。
@@ -48,9 +48,9 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 
 ## 5. 最近下一步
 
-- Eval 线已让 coding + narrative domain 的 counterfactual route replay 拉开指标；下一步补更多 seeds / 人工 reviewer 抽样，或把最新 domain export 写入 research claim / Table 5。
+- Eval 线已让 coding + narrative domain 的 counterfactual route replay 拉开指标，并支持 domain `--seeds`；下一步补人工 reviewer 抽样或更多非确定性 seed/source 变化。
 - Godot 线下一步只做真实窗口复验：`Prev` / `Next` 循环、逗号/句号/左右方括号热键、Copy 短反馈、`4 中断` filter 和 source link 按钮不溢出。
-- Research 线下一步把 domain export `.run/eval-runs/domain_2026-05-27T07-20-04Z` 写入 claim / Table 5，保持 interface evidence 口径。
+- Research 线已把 domain export `.run/eval-runs/domain_2026-05-27T08-21-49Z` 写入 claim / Table 5 入口，保持 interface evidence 口径。
 - 不要重新扩 Phase 1 旧玩法线。
 - 切换模型、key、profile 或需要刷新真实成本证据时，再单独运行 `npm.cmd run llm:smoke`。
 - 资产线按 `docs/asset_batches/prompt_ready_export.md` 推进，但先按 `docs/open_questions.md` 的资产范围调整重新评估优先级。

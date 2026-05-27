@@ -32,8 +32,8 @@ Metric & Mean & Std. & N \\
 Tick success & 1 & 0 & 24 \\
 Memory obs. & 1 & 0 & 1 \\
 Tool fail & 0 & 0 & 1 \\
-Interrupt & 0.0204 & 0 & 1 \\
-Heuristic ref. & 0.0972 & 0 & 1 \\
+Interrupt & 0.143 & 0 & 1 \\
+Heuristic ref. & 0.694 & 0 & 1 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -41,32 +41,14 @@ Heuristic ref. & 0.0972 & 0 & 1 \\
 \begin{table}[t]
 \centering
 \small
-\caption{Stability metrics from the latest 72-hour local rule-level run.}
-\label{tab:stability-72h}
-\begin{tabular}{lrrr}
-\toprule
-Metric & Mean & Std. & N \\
-\midrule
-Tick success & 1 & 0 & 72 \\
-Memory obs. & 1 & 0 & 1 \\
-Tool fail & 0 & 0 & 1 \\
-Interrupt & 0.0069 & 0 & 1 \\
-Heuristic ref. & 0.0324 & 0 & 1 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}[t]
-\centering
-\small
-\caption{Cross-domain adapter suite summary from the latest local dry-run fixtures.}
+\caption{Cross-domain adapter suite summary from the latest local dry-run fixtures. Repeats are deterministic export repeats, and CF route reports counterfactual tool-selection change rate.}
 \label{tab:domain-adapter}
-\begin{tabular}{lrrl}
+\begin{tabular}{lrrrrr}
 \toprule
-Domain & Passed & Total & Scenario count \\
+Domain & Passed & Total & Scenarios & Det. repeats & CF route \\
 \midrule
-loomstead.coding.v0 & 8 & 8 & 8 \\
-loomstead.town.v0 & 3 & 3 & 3 \\
+loomstead.coding.v0 & 16 & 16 & 8 & 2 & 0.762 \\
+loomstead.town.v0 & 6 & 6 & 3 & 2 & 0.333 \\
 \bottomrule
 \end{tabular}
 \end{table}

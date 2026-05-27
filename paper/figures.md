@@ -42,15 +42,15 @@
 
 ## Table 4: Stability
 
-- Goal: 24h / 72h ticks, failures, interruptions, memory observations, heuristic references.
+- Goal: 24h ticks, failures, interruptions, memory observations, heuristic references.
 - Source files: latest stability summaries, `paper/generated/eval_tables.tex`.
 - Status: generated from current run and included by `paper/latex/sections/05_experiments.tex`.
 
 ## Table 5: Cross-domain adapter
 
-- Goal: town vs coding scenarios, shared metrics, and fixture-level coding evidence pipeline.
-- Source files: `.run/eval-runs/domain_2026-05-26T14-14-58Z/summary.json`, manifest, `docs/cross_domain_adapter.md`, `paper/generated/eval_tables.tex`.
-- Status: generated from current run and included by `paper/latex/sections/05_experiments.tex`; wording should stay at interface / portability evidence.
+- Goal: town vs coding scenarios, deterministic repeat count, shared metrics, counterfactual route change rate, and fixture-level coding evidence pipeline.
+- Source files: `.run/eval-runs/domain_2026-05-27T08-21-49Z/summary.json`, manifest, `docs/cross_domain_adapter.md`, `paper/generated/eval_tables.tex`.
+- Status: generated from current deterministic two-repeat domain run and included by `paper/latex/sections/05_experiments.tex`; wording should stay at interface / portability evidence.
 
 ## Table 6: Related-work positioning
 

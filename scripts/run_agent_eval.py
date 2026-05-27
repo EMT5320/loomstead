@@ -79,6 +79,7 @@ def _compact_domain_output(result: dict) -> dict:
         "ok": result.get("ok"),
         "suite": result.get("suite"),
         "baseline": result.get("baseline"),
+        "seedCount": result.get("seedCount"),
         "passed": result.get("passed"),
         "total": result.get("total"),
         "domains": result.get("domains"),
@@ -114,15 +115,16 @@ if __name__ == "__main__":
     parser.add_argument("--repeats", type=int, default=3, help="stability determinism check 连续运行次数。")
     parser.add_argument("--provider", choices=("rule", "cloud", "mixed"), default="rule", help="process suite 的 provider 模式。")
     parser.add_argument("--scenario", action="append", default=[], help="只运行指定 Process GoalSpec id，可重复传入。")
-    parser.add_argument("--seeds", type=int, default=1, help="process suite 每个 GoalSpec 的重复 seed 数。")
+    parser.add_argument("--seeds", type=int, default=1, help="对 process / domain suite 追加 seed 重复次数。")
     args = parser.parse_args()
 
+    seed_count = max(1, int(args.seeds))
     if args.suite == "process":
         result = run_process_fidelity_scenarios(
             scenarios=_select_process_scenarios(args.scenario),
             export_dir=args.export_dir,
             provider_mode=args.provider,
-            seed_count=max(1, int(args.seeds)),
+            seed_count=seed_count,
             attach_latest_llm_evidence=args.export_dir is not None and args.provider == "rule",
         )
         output = result if args.full else _compact_process_output(result)
@@ -134,7 +136,7 @@ if __name__ == "__main__":
             result = run_stability_scenarios(hours=args.hours, export_dir=args.export_dir)
             output = result if args.full else _compact_stability_output(result)
     elif args.suite == "domain":
-        result = run_cross_domain_adapter_scenarios(export_dir=args.export_dir)
+        result = run_cross_domain_adapter_scenarios(export_dir=args.export_dir, seed_count=seed_count)
         output = result if args.full else _compact_domain_output(result)
     else:
         result = run_rule_scenarios()
