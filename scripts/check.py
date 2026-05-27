@@ -48,6 +48,10 @@ schema_registry_check = subprocess.run([sys.executable, "scripts/check_schema_re
 if schema_registry_check.returncode != 0:
     raise SystemExit(schema_registry_check.returncode)
 
+capability_served_needs_check = subprocess.run([sys.executable, "scripts/check_capability_served_needs.py"], cwd=ROOT)
+if capability_served_needs_check.returncode != 0:
+    raise SystemExit(capability_served_needs_check.returncode)
+
 smoke = subprocess.run([sys.executable, "scripts/smoke_test.py"], cwd=ROOT)
 if smoke.returncode != 0:
     raise SystemExit(smoke.returncode)

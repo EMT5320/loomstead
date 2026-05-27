@@ -1,17 +1,17 @@
 \section{Evidence Skeleton}
 
-This section is intentionally kept as an evidence skeleton. The current exported evidence includes a process-fidelity suite, a 24-hour stability suite, and a cross-domain adapter suite. Generated paper tables live under \texttt{paper/generated/}. These tables are build guards and claim placeholders until larger experiments, LLM-backed runs, and human process ratings are available.
+This section stays at a research-preview evidence level. The current clean exports are \texttt{run\_2026-05-27T13-37-33Z} (process fidelity) and \texttt{domain\_2026-05-27T13-29-21Z} (cross-domain adapter), both with clean git manifests (\texttt{dirty=false}). Generated paper tables under \texttt{paper/generated/} are treated as build guards and claim placeholders, and the prose keeps an interface-evidence scope.
 
 \subsection{Process-fidelity ablations}
 
-Table~\ref{tab:process-ablation} summarizes the latest local process suite. At this stage, the table is used to verify that the ablation columns, metric names, and evidence export path stay stable. It should not be read as final empirical support. The publication version needs repeated seeds, runtime-level ablations, and provider-backed runs before the text makes strong comparative claims.
+Table~\ref{tab:process-ablation} summarizes \texttt{run\_2026-05-27T13-37-33Z}, which exports 4 scenarios $\times$ 6 baselines $\times$ 5 seeds (120 per-scenario artifacts) with a stable schema and checksum-indexed manifest. At this stage, the table is used as local guardrail evidence for metric wiring and ablation surface integrity. The observed separations between full motivational delegation and ablated settings are reported as preview signals for process-fidelity instrumentation, and they are not promoted to final causal claims. Figure~3 trace material is currently drafted from \texttt{per\_scenario/pf.branna\_forgiveness\_requires\_memory\_full\_motivational\_delegation\_seed01.json} and kept as a walkthrough note pending manual curation.
 
 \subsection{Stability runs}
 
-Table~\ref{tab:stability-24h} reports the latest rule-level stability window. These rows are regression guardrails for tick success, tool failures, interruptions, memory observations, and heuristic references. The publication version should refresh them with repeated seeds, longer windows, and LLM-backed runs.
+Table~\ref{tab:stability-24h} reports the latest rule-level stability window and serves as regression guardrails for tick success, tool failures, interruptions, memory observations, and heuristic references. This evidence remains local scaffolding; publication-level claims still need repeated windows under matched runtime settings and explicit external-validity checks.
 
 \subsection{Cross-domain adapter}
 
-Table~\ref{tab:domain-adapter} reports the latest cross-domain adapter dry-run with deterministic repeat exports. The adapter keeps Loomstead's town domain as the primary validation surface and checks whether the same GoalSpec, trace, and eval schema can also describe coding fixtures. The current coding results are interface evidence because they use dry-run artifacts with limited task realism. The coding suite now covers eight fixtures, source-derived dependency graphs, a dependency-evidence chain, cross-file regression, reviewer arbitration, and counterfactual replay artifacts; coding task performance and statistical robustness remain outside the current evidence scope.
+Table~\ref{tab:domain-adapter} reports \texttt{domain\_2026-05-27T13-29-21Z}, which contains deterministic five-seed exports over 11 scenarios (3 town + 8 coding dry-run fixtures). This suite checks whether GoalSpec, trace envelopes, and evaluation schema stay aligned across domains while Loomstead town remains the primary validation surface. Current coding rows remain interface evidence: they verify artifact plumbing (fixture snapshots, dependency graphs, patches, review reports, counterfactual replay exports), and they do not support strong claims about real-world coding performance.
 
 \input{../generated/eval_tables}

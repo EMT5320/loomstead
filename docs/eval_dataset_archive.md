@@ -118,3 +118,4 @@ Promotion 不代表证据已经可直接用于论文；它表示该 run 已从�
 
 - 在真实研究样本稳定后，把 drift policy 接入 CI gate，区分 warning、manual review 和 blocking。
 - 在真实研究样本稳定后，为 paper-grade runs 增加人工标签和备注文件。
+- 已补充人工 reviewer 抽样包流程，见 `docs/eval_reviewer_sampling_packet.md`（`scripts/build_eval_reviewer_packet.py`）。

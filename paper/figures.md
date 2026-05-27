@@ -20,7 +20,9 @@
 
 - Goal: visualize `intervention -> event -> subjective memory -> relationship edge / heuristic -> later decision -> outcome`.
 - Source files: `GET /api/debug.phase2`, `paper/generated/manifest_inventory.md`, process trace artifacts.
-- Status: needs concrete exported trace snippet.
+- Draft walkthrough: `paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md`.
+- Draft artifact source: `.run/eval-runs/run_2026-05-27T13-37-33Z/per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed01.json`.
+- Status: walkthrough draft extracted from clean process artifact; still requires manual figure curation and publication-quality wording review.
 
 ## Table 1: Metric families
 

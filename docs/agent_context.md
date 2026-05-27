@@ -31,6 +31,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - Phase 1（活着的世界）已收口；`world_main.tscn` 是当前完成基线，旧 `LifeActionExecutor` 只保留回归修复。
 - Phase 2（骨架建立期）首轮已落地，当前主线是 trace / eval 收紧和可解释证据复用。
 - 后端权威路径已切到 `MotivationEngine -> ToolExecutor -> ResultObserver`，`/api/world/tick`、`/api/debug.phase2`、`phase2.trace.v1` 和 `schema_registry.v1` 是核心观察入口。
+- CapabilityRegistry 已从 legacy tool-prefix 路由推进到 `ToolDefinition.served_needs` 显式需求匹配，并保留 legacy fallback；`scripts/check_capability_served_needs.py` 已进入 `npm.cmd run check`。
 - Process Fidelity Eval 已包含 rule process suite、stability / determinism、memory / relationship ablation、counterfactual replay、domain adapter suite 和 eval archive manifest；process suite 最新 clean five-repeat rule export 为 20/20；coding adapter 当前 8 个 fixture，已覆盖源码派生依赖图、dependency evidence chain v2、跨文件回归、reviewer judgment arbitration 和 `coding.domain_counterfactual_replay.v1`；narrative adapter 已接入 `narrative.domain_counterfactual_replay.v1`，domain suite 最新 clean deterministic five-repeat export 为 55/55，aggregate counterfactual mean 为 `0.645238`、town mean 为 `0.333333`。
 - Godot Research Dock 已接入 Phase 2 debug 摘要、trace timeline、来源跳转按钮、Copy trace JSON、Prev/Next 循环导航、单条 trace 提示、`[C]` / `[,]` / `[.]` / 左右方括号热键、NPC 高亮和三 Tab UI；`memory.result_observed` 行与来源跳转可发现性已通过真实窗口复验，最新导航和中断布局补修仍待真实窗口复验。
 - Web Debug 已有 provider / fallback / cost 总览、Heuristic Library、Arbitration Trace 和 Rashomon Memory 三卡片。
@@ -48,7 +49,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 
 ## 5. 最近下一步
 
-- Eval 线已让 coding + narrative domain 的 counterfactual route replay 拉开指标，并支持 domain `--seeds`；下一步补人工 reviewer 抽样或更多非确定性 seed/source 变化。
+- Eval 线已让 coding + narrative domain 的 counterfactual route replay 拉开指标，并支持 domain `--seeds`；人工 reviewer 抽样包生成脚本已落地，下一步需要人工填评分表或继续补更多非确定性 seed/source 变化。
 - Godot 线下一步只做真实窗口复验：`Prev` / `Next` 循环、逗号/句号/左右方括号热键、Copy 短反馈、`4 中断` filter 和 source link 按钮不溢出。
 - Research 线已把 clean domain export `.run/eval-runs/domain_2026-05-27T13-29-21Z` 写入 claim / Table 5 入口，保持 interface evidence 口径。
 - 不要重新扩 Phase 1 旧玩法线。
@@ -74,6 +75,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - 后端 trace / schema：`npm.cmd run schema:check`。
 - Eval：`npm.cmd run eval:process; npm.cmd run eval:stability; npm.cmd run eval:stability:determinism; npm.cmd run eval:domain`。
 - Eval archive：`npm.cmd run eval:archive:check; npm.cmd run eval:archive:drift`。
+- Eval reviewer：`npm.cmd run eval:reviewer:packet -- --process-run run_2026-05-27T13-37-33Z --domain-run domain_2026-05-27T13-29-21Z`。
 - Godot 环境：`npm.cmd run client:env; npm.cmd run client:run:check`。
 - 内容 / 资产：`npm.cmd run content:check; npm.cmd run asset:check`。
 - 真实 LLM：`npm.cmd run llm:smoke`，只在 provider / key / profile / prompt 或真实证据刷新任务中运行。

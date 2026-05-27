@@ -7,7 +7,7 @@ from app.runtime.decision_budget import DecisionBudgetStore
 from app.runtime.schema_registry import require_schema_version
 from app.tools import Precondition, ToolDefinition, ToolRegistry
 
-NEED_TO_TOOL_PREFIXES = {
+LEGACY_NEED_TO_TOOL_PREFIXES = {
     "energy": ("life.rest",),
     "sleep_pressure": ("life.rest",),
     "hunger": ("life.eat_food", "cook."),
@@ -152,11 +152,20 @@ class CapabilityRegistry:
         )
 
     def _need_relevance_decision(self, world: dict[str, Any], context: CapabilityContext, tool: ToolDefinition) -> tuple[bool, str, dict[str, Any]]:
-        prefixes = NEED_TO_TOOL_PREFIXES.get(context.need_id, ("life.",))
+        if tool.served_needs:
+            matched_need = next(
+                (served_need for served_need in tool.served_needs if self._need_family_matches(context.need_id, served_need)),
+                None,
+            )
+            if matched_need:
+                return True, "matches_served_need", {"needId": context.need_id, "servedNeed": matched_need}
+            return False, "served_need_mismatch", {"needId": context.need_id, "servedNeeds": list(tool.served_needs)}
+
+        prefixes = LEGACY_NEED_TO_TOOL_PREFIXES.get(context.need_id, ("life.",))
         matched_prefix = next((prefix for prefix in prefixes if tool.tool_id.startswith(prefix)), None)
         if matched_prefix:
-            return True, "matches_need_prefix", {"needId": context.need_id, "prefix": matched_prefix}
-        return False, "need_mismatch", {"needId": context.need_id, "allowedPrefixes": list(prefixes)}
+            return True, "matches_need_prefix_legacy", {"needId": context.need_id, "prefix": matched_prefix}
+        return False, "need_mismatch_legacy", {"needId": context.need_id, "allowedPrefixes": list(prefixes)}
 
     def _precondition_decision(self, world: dict[str, Any], context: CapabilityContext, tool: ToolDefinition) -> tuple[bool, str, dict[str, Any]]:
         location_reason = self._location_precondition_reason(world, context, tool)
@@ -250,3 +259,12 @@ class CapabilityRegistry:
             "allowedToolPrefixes": list(active_focus.get("allowedToolPrefixes", [])) if isinstance(active_focus.get("allowedToolPrefixes"), list) else [],
             "blockedToolPrefixes": list(active_focus.get("blockedToolPrefixes", [])) if isinstance(active_focus.get("blockedToolPrefixes"), list) else [],
         }
+
+    def _need_family_matches(self, need_id: str, served_need: str) -> bool:
+        normalized_need = str(need_id).strip().lower()
+        normalized_served_need = str(served_need).strip().lower()
+        if not normalized_need or not normalized_served_need:
+            return False
+        if normalized_need == normalized_served_need:
+            return True
+        return normalized_need.startswith(f"{normalized_served_need}.") or normalized_served_need.startswith(f"{normalized_need}.")

@@ -25,6 +25,7 @@
                     "eval:archive:index":  "python scripts/index_eval_runs.py --runs-dir .run/eval-runs --write-index",
                     "eval:archive:drift":  "python scripts/index_eval_runs.py --runs-dir .run/eval-runs --write-drift-report",
                     "eval:archive:promote":  "python scripts/index_eval_runs.py --runs-dir .run/eval-runs --promote",
+                    "eval:reviewer:packet":  "python scripts/build_eval_reviewer_packet.py",
                     "content:check":  "python scripts/check_npc_codex.py",
                     "schema:check":  "python scripts/check_schema_registry.py",
                     "model:check":  "python scripts/check_model_config.py",

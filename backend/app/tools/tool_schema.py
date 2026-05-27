@@ -33,6 +33,7 @@ class ToolDefinition:
     tool_id: str
     tier: ToolTier
     input_schema: dict[str, Any]
+    served_needs: tuple[str, ...] = ()
     preconditions: tuple[Precondition, ...] = ()
     duration_seconds: float = 0.0
     interruptible: bool = True
@@ -48,6 +49,7 @@ class ToolDefinition:
             "toolId": self.tool_id,
             "tier": self.tier,
             "inputSchema": dict(self.input_schema),
+            "servedNeeds": list(self.served_needs),
             "preconditions": [precondition.__dict__ for precondition in self.preconditions],
             "durationSeconds": self.duration_seconds,
             "interruptible": self.interruptible,
