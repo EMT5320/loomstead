@@ -1,13 +1,15 @@
 ---
-status: active
+status: archive
 owner_lane: content-codex
 last_verified: 2026-05-21
-startup_load: on-demand
-source_of_truth: true
-scope: NPC deep-card schema, writing rules, and validation contract
+startup_load: never
+source_of_truth: false
+scope: 已归档：NPC 深度卡 schema 早期契约
 ---
 
-# NPC 深度卡数据契约
+# NPC 深度卡数据契约（已归档）
+
+> **归档说明**：本文已于 2026-05-28 移入归档层。NPC 深度卡 schema 已落到 `backend/app/content/codex_schema.py`，深度卡数据落在 `backend/app/content/data/npc/`。仅供历史溯源。
 
 > 起草时间：2026-05-16
 > 用途：定义 `Loomstead` 第二轮内容扩充的 NPC 深度卡（`npc_codex`）数据契约，作为后续批量内容写作工作流的统一蓝本。

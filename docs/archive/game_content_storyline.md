@@ -1,15 +1,17 @@
 ---
-status: active
+status: archive
 owner_lane: content-codex
 last_verified: 2026-05-21
-startup_load: on-demand
-source_of_truth: true
-scope: storyline, first-day content, NPC roles, and narrative system plan
+startup_load: never
+source_of_truth: false
+scope: 已归档：内容剧本线早期工作台
 ---
 
-# 游戏内容剧本线工作台
+# 游戏内容剧本线工作台（已归档）
 
-> 更新时间：2026-05-21（NPC 写作工作流源文档路径同步到重定位后口径）
+> **归档说明**：本文已于 2026-05-28 移入归档层。内容剧本与 NPC 数据已固化到 `backend/app/content/`。仅供历史溯源。
+
+> 更新时间：2026-05-21
 > 用途：沉淀主人与 Windsurf 的内容扩充讨论、当前 Codex 收尾结果，以及后续把“游戏内容剧本线”拆成独立开发主线时的入口。
 
 ## 1. 主人原始需求

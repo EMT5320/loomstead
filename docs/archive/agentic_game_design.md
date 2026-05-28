@@ -1,13 +1,15 @@
 ---
-status: active
+status: archive
 owner_lane: backend-director
 last_verified: 2026-05-21
-startup_load: on-demand
-source_of_truth: true
-scope: multi-layer agent design, director system, event skills, memory, and model routing
+startup_load: never
+source_of_truth: false
+scope: 已归档：多层 Agent 系统设计早期定调
 ---
 
-# 多层 Agent 游戏系统设计
+# 多层 Agent 游戏系统设计（已归档）
+
+> **归档说明**：本文已于 2026-05-28 移入归档层。结论已被 [`../agent_loop_architecture.md`](../agent_loop_architecture.md) 与 [`../project_vision.md`](../project_vision.md) 吸收。仅供历史溯源，不作为当前事实源。
 
 > 状态更新时间：2026-05-15
 > 本文沉淀 `Loomstead` 后续开发的核心定调：项目把游戏世界设计为由多层 Agent、世界规则、事件 Skill 和可解释调试链路共同驱动的可游玩小镇社会，避免停留在传统固定剧情游戏加 LLM 对话的浅层形态。

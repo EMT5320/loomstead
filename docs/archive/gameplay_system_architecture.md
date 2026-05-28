@@ -1,13 +1,15 @@
 ---
-status: active
+status: archive
 owner_lane: godot-client
 last_verified: 2026-05-22
-startup_load: on-demand
-source_of_truth: true
-scope: gameplay loop, map interactions, motivation-driven npc actions, godot/backend boundaries
+startup_load: never
+source_of_truth: false
+scope: 已归档：游戏本体架构早期定调
 ---
 
-# 游戏本体架构定调：可解释多 Agent 叙事运行时的可玩切片
+# 游戏本体架构定调（已归档）
+
+> **归档说明**：本文已于 2026-05-28 移入归档层。当前 Godot 客户端事实由 [`../production_roadmap.md`](../production_roadmap.md)、[`../world_entity_model.md`](../world_entity_model.md) 与 `clients/godot/` 实现承载。仅供历史溯源，不作为当前事实源。
 
 > 状态更新时间：2026-05-22
 > 本文用于约束 `Loomstead` 的游戏本体路线，定义 Godot 切片如何承载 [`agent_loop_architecture.md`](./agent_loop_architecture.md) 定义的 NPC agent loop。后续客户端、后端玩法系统、资产、Debug 与无人值守 goal 都应先对齐本文。

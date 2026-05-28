@@ -10,8 +10,8 @@ scope: NPC agent loop, motivation engine, capability registry, subjective memory
 # NPC Agent Loop 架构（核心圣经）
 
 > 制定时间：2026-05-19
-> 触发原因：项目从"二次元田园 RPG"重定位为"可解释的多 Agent 叙事运行时"。本文档与 [`agentic_game_design.md`](./agentic_game_design.md) 平级，专门定义 NPC Agent Loop 的内部机制、决策链路、记忆架构、启发式学习与 Eval Framework，作为 Phase 2 及之后所有 NPC 行为系统开发的事实源。
-> 边界：本文不重复讲多层 Agent 系统的整体结构（见 `agentic_game_design.md`），也不讲世界实体 schema（见 `world_entity_model.md`）。本文聚焦"NPC 作为一个 agent，在每个决策周期里做了什么、依赖什么、如何被解释和评估"。
+> 触发原因：项目从"二次元田园 RPG"重定位为"可解释的多 Agent 叙事运行时"。本文档专门定义 NPC Agent Loop 的内部机制、决策链路、记忆架构、启发式学习与 Eval Framework，作为 Phase 2 及之后所有 NPC 行为系统开发的事实源。
+> 边界：本文聚焦"NPC 作为一个 agent，在每个决策周期里做了什么、依赖什么、如何被解释和评估"。世界实体 schema 见 [`world_entity_model.md`](./world_entity_model.md)。早期多层 Agent 系统总论已归档至 `docs/archive/agentic_game_design.md`。
 
 ## 0. 项目重定位（前言）
 
@@ -380,7 +380,7 @@ class DecisionBudget:
 - Social 层强制 fallback 到规则
 - 工具执行不产出动画事件，只产出状态变更事件
 
-玩家进入对应场景时，"离屏期间发生的痕迹"已经存在于世界状态（公告变化、物资箱状态、NPC 情绪、对话引用）。这点是 `gameplay_system_architecture.md` "离屏痕迹"原则的物理实现。
+玩家进入对应场景时，"离屏期间发生的痕迹"已经存在于世界状态（公告变化、物资箱状态、NPC 情绪、对话引用）。这点是早期"离屏痕迹"原则的物理实现（旧 `gameplay_system_architecture.md` 已归档）。
 
 ## 6. Tool Executor 与中断机制
 
@@ -1163,7 +1163,7 @@ Phase 2 启动时，Eval Framework 的 schema、metric 计算函数、L1 scenari
 
 ## 11. NPC 深度卡 schema 扩展
 
-NPC 深度卡新增三个字段（在 `npc_deep_card_spec.md` 中正式定义，本文给出形态）：
+NPC 深度卡新增三个字段（schema 已落到 `backend/app/content/codex_schema.py`，旧 `npc_deep_card_spec.md` 已归档）：
 
 ```json
 {
@@ -1282,7 +1282,7 @@ Phase 1（"活着的世界"）已使用 `LifeActionExecutor` + `/api/world/tick`
 - `archive/architecture_blueprint.md` 中的 NPC 行为描述（早期单层 NPC 调度）
 - `archive/vertical_slice_spec.md` 中的"软日程"描述
 - `archive/core_map.md` 中的"动机系统"草稿（已升级为本文形态）
-- `gameplay_system_architecture.md` 第 2.4 节已同步为 MotivationEngine 驱动的行为节奏，覆盖早期"软日程代替固定排班"描述
+- `archive/gameplay_system_architecture.md` 第 2.4 节的"软日程代替固定排班"描述（已被 MotivationEngine 取代）
 
 ### 13.6 Eval 是 Phase 2 的硬验收线
 

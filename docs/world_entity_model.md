@@ -11,7 +11,7 @@ scope: world entities (FarmPlot, Item, Inventory, Shop, Building, Time, Weather)
 
 > 制定时间：2026-05-19
 > 用途：定义 `Loomstead` 的世界实体 schema，作为 NPC Agent 工具调用的"行动空间"。本文档与 [`agent_loop_architecture.md`](./agent_loop_architecture.md) 配套，前者讲 NPC 怎么决策，本文讲 NPC 决策的对象和效果作用在什么状态上。
-> 边界：本文聚焦数据契约和状态规则，不讲 Godot 渲染层细节；不讲具体 NPC 内容（见 `npc_deep_card_spec.md` 和 `game_content_storyline.md`）；不讲资产 manifest（见 `art_direction.md` 和 `assets/manifests/`）。
+> 边界：本文聚焦数据契约和状态规则，不讲 Godot 渲染层细节；不讲资产 manifest（见 `art_direction.md` 和 `assets/manifests/`）。NPC 内容数据已落到 `backend/app/content/`，早期 `npc_deep_card_spec.md` 与 `game_content_storyline.md` 已归档。
 
 > 实现状态（2026-05-23）：`backend/app/world/entities/schema.py` 已补齐 FarmPlot / Item / Inventory / Shop / Building / Time / Weather typed dataclass 与统一 `WorldEntity` 投影；`GET /api/debug.phase2.worldEntities` 已暴露 `world_entities.v1` 快照。当前 Shop / Weather 仍是 Phase 2 规则投影，真实经济和天气推进留后续扩展。
 
@@ -667,7 +667,7 @@ Phase 2 启动时的迁移工作：
 - `archive/architecture_blueprint.md` 中的 World State 字段说明（早期粗略 schema）
 - `archive/vertical_slice_spec.md` 中的"Gameplay Systems Layer 农场系统"等章节
 - `archive/core_map.md` §2 的"世界实体设计"草稿（已升级为本文形态）
-- `gameplay_system_architecture.md` §3.3 已同步为指向本文档的 Gameplay Systems Layer 摘要
+- `archive/gameplay_system_architecture.md` §3.3 的 Gameplay Systems Layer 摘要（已归档）
 
 ## 10. Phase 2 验收标准
 
@@ -690,4 +690,4 @@ Phase 2 启动时的迁移工作：
 | 室内场景 | Building.enterable | 已留位置 |
 | 委托任务 | NoticeBoard | 通过 post_notice 工具铺垫 |
 | 节日 | Director Beat 注入 | 不需要独立 schema |
-| 长期剧情 | Event Skill 多日生命周期 | 已在 `agentic_game_design.md` 定义 |
+| 长期剧情 | Event Skill 多日生命周期 | 已在 `agent_loop_architecture.md` 与 `archive/agentic_game_design.md` 早期讨论中定义 |
