@@ -1,0 +1,169 @@
+{
+  "ok": true,
+  "suite": "stability_24h",
+  "baseline": "rule_24h_stability",
+  "passed": null,
+  "total": null,
+  "metrics": [
+    {
+      "metric": "stability_tick_success_rate",
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 24,
+      "baseline": "rule_24h_stability",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "trace_schema_coverage",
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "rule_24h_stability",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "memory_observation_per_tool_result",
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "rule_24h_stability",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "tool_failure_rate",
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "rule_24h_stability",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "tool_interruption_rate",
+      "mean": 0.142857,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "rule_24h_stability",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "active_agent_count",
+      "mean": 6.0,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "rule_24h_stability",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "relationship_edge_count",
+      "mean": 5.0,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "rule_24h_stability",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "heuristic_count",
+      "mean": 47.0,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "rule_24h_stability",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "heuristic_decision_ref_rate",
+      "mean": 0.743056,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "rule_24h_stability",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "budget_decision_source_link_rate",
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "rule_24h_stability",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "budget_decision_trace_ref_rate",
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "rule_24h_stability",
+      "scenarioId": "aggregate"
+    }
+  ],
+  "ablation_comparison": null,
+  "hours": 24,
+  "ticksCompleted": 24,
+  "checks": {
+    "tick_successful": true,
+    "clock_reached_expected_tick": true,
+    "no_tool_failures": true,
+    "trace_schema_complete": true,
+    "budget_trace_links_decision": true,
+    "memory_observations_follow_tools": true,
+    "relationship_edges_created": true,
+    "heuristics_created": true,
+    "heuristics_influence_decisions": true,
+    "multi_agent_participation": true
+  },
+  "evidence": {
+    "initialClock": {
+      "day": 1,
+      "hour": 8,
+      "tick": 0,
+      "phase": "morning",
+      "actionBudget": 3,
+      "paused": false,
+      "minute": 0,
+      "_daySeconds": 0.0
+    },
+    "finalClock": {
+      "day": 2,
+      "hour": 18,
+      "tick": 24,
+      "phase": "evening",
+      "actionBudget": 2,
+      "paused": false,
+      "minute": 0,
+      "_daySeconds": 36000.0
+    },
+    "eventTypeCounts": {
+      "budget.decision_consumed": 4,
+      "budget.decision_fallback": 1,
+      "memory.result_observed": 168,
+      "motivation.decision_made": 144,
+      "npc.action_completed": 144,
+      "npc.action_started": 144,
+      "npc.arrived": 29,
+      "npc.move_progress": 29,
+      "npc.move_started": 29,
+      "tool.execution_completed": 144,
+      "tool.execution_interrupted": 24
+    },
+    "completedToolCount": 144,
+    "failedToolCount": 0,
+    "interruptedToolCount": 24,
+    "memoryObservationCount": 168,
+    "subjectiveMemoryCount": 301,
+    "relationshipEdgeCount": 5,
+    "heuristicCount": 47,
+    "motivationDecisionCount": 144,
+    "budgetDecisionCount": 5,
+    "budgetTraceSchemaOkCount": 5,
+    "budgetSourceLinkCount": 5,
+    "budgetTraceRefCount": 5,
+    "heuristicDecisionCount": 107,
+    "activeAgentIds": [
+      "bram",
+      "kai",
+      "lena",
+      "mira",
+      "orren",
+      "tomas"
+    ],
+    "retainedEventStoreCount": 500
+  }
+}
