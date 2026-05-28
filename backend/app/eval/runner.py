@@ -1853,20 +1853,32 @@ def _scenario_ids(result: dict[str, Any]) -> list[str]:
     baselines = result.get("baselines")
     if isinstance(baselines, dict):
         for run in baselines.values():
-            for item in (run.get("items", []) if isinstance(run, dict) else []):
-                scenario = item.get("scenario", {}) if isinstance(item, dict) else {}
-                scenario_id = str(scenario.get("scenarioId") or "")
-                if scenario_id:
-                    ids.add(scenario_id)
-    for item in (result.get("items", []) if isinstance(result.get("items"), list) else []):
+            if isinstance(run, dict):
+                ids.update(_scenario_ids_from_items(run.get("items", [])))
+    ids.update(_scenario_ids_from_items(result.get("items", [])))
+    for section in ("process", "domain"):
+        section_result = result.get(section, {}) if isinstance(result.get(section), dict) else {}
+        ids.update(_scenario_ids_from_items(section_result.get("items", [])))
+    return sorted(ids)
+
+
+def _scenario_ids_from_items(items: Any) -> set[str]:
+    ids: set[str] = set()
+    if not isinstance(items, list):
+        return ids
+    for item in items:
         if not isinstance(item, dict):
             continue
+        scenario = item.get("scenario", {}) if isinstance(item.get("scenario"), dict) else {}
+        nested_scenario_id = str(scenario.get("scenarioId") or "")
+        if nested_scenario_id:
+            ids.add(nested_scenario_id)
         scenario_id = str(item.get("scenarioId") or "")
         if scenario_id:
             ids.add(scenario_id)
         if item.get("hourIndex") is not None:
             ids.add(f"hour_{int(item['hourIndex']):02d}")
-    return sorted(ids)
+    return ids
 
 
 def _eval_gates(result: dict[str, Any]) -> dict[str, Any]:
