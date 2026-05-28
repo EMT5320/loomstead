@@ -1,3 +1,7 @@
 \section{Limitations}
 
-The current evidence should be read as a research-preview scaffold. The process suite uses small sample counts, the Hard Delegation baseline remains synthetic, and several ablations are posterior analyses. The paper still needs more seeds, LLM-backed runs, human process-believability ratings, and real Godot observer-mode validation.
+The current evidence should be read as a research-preview scaffold. The process suite uses small sample counts, the Hard Delegation baseline remains synthetic, and several ablations are posterior analyses. The latest generated tables are useful regression guardrails, but they are not final empirical results.
+
+Three evidence gaps are especially important. First, the current manual reviewer packet stops at \texttt{manual\_review\_required}; no human process-believability ratings have been entered yet. Second, most exported runs use rule-level providers, so LLM-backed behavior quality, latency, fallback behavior, and cost remain separate checks rather than default evidence. Third, the cross-domain coding adapter is a fixture-level portability probe for GoalSpec, trace, artifact, and metric contracts; it does not evaluate real software-engineering performance.
+
+The current Godot observer experience is also only partially manually verified. Trace source links and \texttt{memory.result\_observed} discoverability have been checked in a real window, but newer trace navigation and filter-layout repairs still need focused window validation. Stronger claims require more seeds, refreshed provider-backed samples, completed human review sheets, runtime-level ablations, and observer-mode validation.
