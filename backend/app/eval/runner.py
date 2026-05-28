@@ -1621,7 +1621,18 @@ def _summary_only(result: dict[str, Any]) -> dict[str, Any]:
         "metrics": result.get("metrics"),
         "ablation_comparison": result.get("ablation_comparison"),
     }
-    for key in ("providerMode", "seedCount", "llmEvidence", "hours", "ticksCompleted", "checks", "evidence", "domains"):
+    for key in (
+        "providerMode",
+        "seedCount",
+        "llmEvidence",
+        "hours",
+        "ticksCompleted",
+        "checks",
+        "evidence",
+        "domains",
+        "robustnessChecksPass",
+        "strictGate",
+    ):
         if key in result:
             summary[key] = result.get(key)
     return summary
@@ -1712,6 +1723,7 @@ def _write_eval_manifest(
         "baselines": _baseline_names(result),
         "scenarioIds": _scenario_ids(result),
         "llmEvidence": result.get("llmEvidence", {}),
+        "evalGates": _eval_gates(result),
         "artifacts": artifacts,
         "verification": {
             "summary": "每个 artifact 提供 bytes / sha256；JSONL artifact 额外提供 rowCount，便于后续复核导出完整性。",
@@ -1722,6 +1734,8 @@ def _write_eval_manifest(
                 "npm.cmd run eval:stability:export",
                 "npm.cmd run eval:domain",
                 "npm.cmd run eval:domain:export",
+                "npm.cmd run eval:robustness",
+                "npm.cmd run eval:robustness:export",
             ],
         },
     }
@@ -1853,6 +1867,31 @@ def _scenario_ids(result: dict[str, Any]) -> list[str]:
         if item.get("hourIndex") is not None:
             ids.add(f"hour_{int(item['hourIndex']):02d}")
     return sorted(ids)
+
+
+def _eval_gates(result: dict[str, Any]) -> dict[str, Any]:
+    strict_gate = result.get("strictGate") if isinstance(result.get("strictGate"), dict) else None
+    if strict_gate is None:
+        return {}
+    domain = result.get("domain", {}) if isinstance(result.get("domain"), dict) else {}
+    process = result.get("process", {}) if isinstance(result.get("process"), dict) else {}
+    return {
+        "strictGate": {
+            "gateVersion": strict_gate.get("gateVersion"),
+            "pass": bool(strict_gate.get("pass")),
+            "failedCheckCount": int(strict_gate.get("failedCheckCount") or 0),
+            "failedCheckIds": [
+                str(check.get("checkId") or "")
+                for check in strict_gate.get("failedChecks", [])
+                if isinstance(check, dict)
+            ],
+        },
+        "signatureKinds": {
+            "process": process.get("signatureKinds", []),
+            "domain": domain.get("signatureKinds", []),
+        },
+        "domainGroups": domain.get("groups", []),
+    }
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:

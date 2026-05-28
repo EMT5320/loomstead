@@ -76,6 +76,21 @@ Stability suite 导出结构：
 └── manifest.json
 ```
 
+Evidence robustness suite 导出结构：
+
+```text
+.run/eval-runs/robustness_YYYY-MM-DDTHH-MM-SSZ/
+├── summary.json
+├── process_robustness.json
+├── domain_robustness.json
+├── strict_gate.json
+├── signature_summary.json
+├── perturbation_details.jsonl
+└── manifest.json
+```
+
+`strict_gate.json` 使用 `phase2.evidence_robustness.strict_gate.v1`，要求 process / domain 基础 eval 通过、四类 source perturbation 全部稳定、`loomstead.coding.v0` 与 `loomstead.town.v0` 分域组存在且 invariance rate 为 `1.0`。`signature_summary.json` 使用 `phase2.evidence_robustness.domain_signature.v2`，记录 process 签名、coding domain 签名和 narrative domain 签名摘要。
+
 `manifest.json` 当前使用 `phase2.eval_manifest.v1`，至少包含：
 
 - `exportKind`、`createdAt`、`suite`、`baseline`、`ok` 和 `runDirName`。
@@ -83,6 +98,7 @@ Stability suite 导出结构：
 - `schemaRegistry` 快照，当前由 `backend/app/runtime/schema_registry.py` 生成。
 - `metricIds`、`baselines`、`scenarioIds`。
 - `llmEvidence`：当手动运行 cloud / mixed process eval 时，记录 `process_llm_evidence.v1` 汇总和逐次 `provider_usage_actual.v1` 证据，包括 token、latency、cost、fallbackReason 与 final selectedToolId；规则导出可附带最近一次 `.run/process-llm-evidence/latest.json` 的手动 cloud 证据，字段 `source=latest_cache`。
+- `evalGates`：当前用于 robustness suite，压缩记录 strict gate、signature kinds 与 domain groups，供 archive drift / promotion 快速复核。
 - `artifacts[]`：每个导出文件的相对 `path`、`kind`、`bytes`、`sha256`；JSONL 文件额外记录 `rowCount`。
 
 ### 2.3 本地导出索引与归档
@@ -91,7 +107,7 @@ Stability suite 导出结构：
 
 `npm.cmd run eval:archive:index` 会写入 `.run/eval-runs/index.json`，生成 `phase2.eval_run_index.v1` 索引，并按 suite 给 run 标记 `keep_latest` 或 `historical_candidate`。当前工具只标记保留建议，不自动删除或搬运 run。完整策略见 `docs/eval_dataset_archive.md`。
 
-`npm.cmd run eval:archive:drift` 会写入 `.run/eval-runs/drift_report.json`，比较每个 suite 最新两次 run 的 metric、baseline、scenario、schema 和 artifact 数量变化。
+`npm.cmd run eval:archive:drift` 会写入 `.run/eval-runs/drift_report.json`，比较每个 suite 最新两次 run 的 metric、baseline、scenario、schema、eval gate 和 artifact 数量变化。
 
 `npm.cmd run eval:archive:promote -- <runDirName>` 会把已校验 run 复制到 `.run/eval-promoted/`，并写入 `phase2.eval_promotion.v1` 记录；若导出时 `git.dirty=true` 或 drift 缺少解释，promotion 状态会保持 `needs_manual_review`。
 

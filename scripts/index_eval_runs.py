@@ -45,6 +45,7 @@ DRIFT_POLICY = {
         "review": [
             "metric / baseline / scenario id 新增",
             "artifact 数量增加",
+            "eval gate 或 signature 摘要变化",
         ],
     },
 }
@@ -248,6 +249,7 @@ def _read_manifest_record(manifest_path: Path) -> tuple[dict[str, Any], list[str
             "baselines": list(manifest.get("baselines", [])) if isinstance(manifest.get("baselines"), list) else [],
             "scenarioIds": list(manifest.get("scenarioIds", [])) if isinstance(manifest.get("scenarioIds"), list) else [],
             "llmEvidence": _compact_llm_evidence(manifest.get("llmEvidence", {})),
+            "evalGates": _compact_eval_gates(manifest.get("evalGates", {})),
             "artifactCount": len(artifact_records),
             "artifacts": artifact_records,
             "valid": not errors,
@@ -371,6 +373,7 @@ def _build_promotion_record(
         "baselines": record.get("baselines", []),
         "scenarioIds": record.get("scenarioIds", []),
         "llmEvidence": llm_evidence,
+        "evalGates": record.get("evalGates", {}),
         "artifactCount": record.get("artifactCount"),
         "archiveChecks": {
             "archiveIndexVersion": index.get("indexVersion"),
@@ -603,6 +606,11 @@ def _compare_latest_runs(suite: str, *, latest: dict[str, Any], previous: dict[s
         "previous": bool(previous.get("ok")),
         "changed": bool(latest.get("ok")) != bool(previous.get("ok")),
     }
+    eval_gate_change = {
+        "latest": latest.get("evalGates", {}),
+        "previous": previous.get("evalGates", {}),
+        "changed": latest.get("evalGates", {}) != previous.get("evalGates", {}),
+    }
     artifact_count_delta = int(latest.get("artifactCount") or 0) - int(previous.get("artifactCount") or 0)
     deltas = {
         "metricIds": _list_delta(latest.get("metricIds", []), previous.get("metricIds", [])),
@@ -613,6 +621,7 @@ def _compare_latest_runs(suite: str, *, latest: dict[str, Any], previous: dict[s
         schema_change=schema_change,
         export_kind_change=export_kind_change,
         ok_change=ok_change,
+        eval_gate_change=eval_gate_change,
         latest_ok=bool(latest.get("ok")),
         artifact_count_delta=artifact_count_delta,
         deltas=deltas,
@@ -629,6 +638,7 @@ def _compare_latest_runs(suite: str, *, latest: dict[str, Any], previous: dict[s
         "schemaRegistryVersion": schema_change,
         "exportKind": export_kind_change,
         "ok": ok_change,
+        "evalGates": eval_gate_change,
         "artifactCountDelta": artifact_count_delta,
         "metricIds": deltas["metricIds"],
         "baselines": deltas["baselines"],
@@ -646,6 +656,7 @@ def _classify_drift(
     schema_change: dict[str, Any],
     export_kind_change: dict[str, Any],
     ok_change: dict[str, Any],
+    eval_gate_change: dict[str, Any],
     latest_ok: bool,
     artifact_count_delta: int,
     deltas: dict[str, dict[str, list[str]]],
@@ -666,6 +677,7 @@ def _classify_drift(
 
     add_check("latest_ok_false", not latest_ok, "breaking", "latest run manifest ok=false")
     add_check("ok_changed", bool(ok_change.get("changed")), "breaking", "manifest ok 状态变化")
+    add_check("eval_gate_changed", bool(eval_gate_change.get("changed")), "review", "eval gate 或 signature 摘要变化")
     add_check(
         "schema_registry_changed",
         bool(schema_change.get("changed")),
@@ -812,6 +824,44 @@ def _compact_llm_evidence(llm_evidence: Any) -> dict[str, Any]:
             }
             for record in records[:12]
             if isinstance(record, dict)
+        ],
+    }
+
+
+def _compact_eval_gates(eval_gates: Any) -> dict[str, Any]:
+    """压缩 eval gate 信息，供 archive drift / promotion 快速复核。"""
+    if not isinstance(eval_gates, dict):
+        return {}
+    strict_gate = eval_gates.get("strictGate", {}) if isinstance(eval_gates.get("strictGate"), dict) else {}
+    signature_kinds = eval_gates.get("signatureKinds", {}) if isinstance(eval_gates.get("signatureKinds"), dict) else {}
+    domain_groups = eval_gates.get("domainGroups", []) if isinstance(eval_gates.get("domainGroups"), list) else []
+    return {
+        "strictGate": {
+            "gateVersion": strict_gate.get("gateVersion"),
+            "pass": strict_gate.get("pass"),
+            "failedCheckCount": int(strict_gate.get("failedCheckCount") or 0),
+            "failedCheckIds": list(strict_gate.get("failedCheckIds", []))
+            if isinstance(strict_gate.get("failedCheckIds"), list)
+            else [],
+        },
+        "signatureKindIds": {
+            section: sorted(
+                str(item.get("signatureId") or "")
+                for item in values
+                if isinstance(item, dict) and item.get("signatureId")
+            )
+            for section, values in signature_kinds.items()
+            if isinstance(values, list)
+        },
+        "domainGroups": [
+            {
+                "groupId": group.get("groupId"),
+                "total": group.get("total"),
+                "overallInvarianceRate": group.get("overallInvarianceRate"),
+                "allStable": group.get("allStable"),
+            }
+            for group in domain_groups
+            if isinstance(group, dict)
         ],
     }
 

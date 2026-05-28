@@ -29,6 +29,9 @@ SELECTED_METRICS = [
     "tool_interruption_rate",
     "memory_observation_per_tool_result",
     "heuristic_decision_ref_rate",
+    "process_evidence_robustness_score",
+    "domain_evidence_robustness_score",
+    "evidence_robustness_score",
 ]
 
 PAPER_TABLE_METRICS = [
@@ -57,6 +60,9 @@ METRIC_LABELS = {
     "tool_interruption_rate": "Interrupt",
     "memory_observation_per_tool_result": "Memory obs.",
     "heuristic_decision_ref_rate": "Heuristic ref.",
+    "process_evidence_robustness_score": "Process robust.",
+    "domain_evidence_robustness_score": "Domain robust.",
+    "evidence_robustness_score": "Evidence robust.",
 }
 
 BASELINE_LABELS = {

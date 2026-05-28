@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: eval
-last_verified: 2026-05-23
+last_verified: 2026-05-28
 startup_load: on-demand
 source_of_truth: true
 scope: eval export manifest indexing, archive validation, and local retention policy
@@ -26,6 +26,7 @@ npm.cmd run eval:process:export
 npm.cmd run eval:stability:export
 npm.cmd run eval:stability:long:export
 npm.cmd run eval:domain:export
+npm.cmd run eval:robustness:export
 npm.cmd run eval:archive:check
 npm.cmd run eval:archive:index
 npm.cmd run eval:archive:drift
@@ -47,6 +48,7 @@ npm.cmd run eval:archive:promote -- <runDirName>
 4. artifact path 必须留在当前 run 目录内。
 5. artifact 文件必须存在，且 `bytes` 与 `sha256` 匹配。
 6. JSONL artifact 必须有 `rowCount`，且实际行数一致。
+7. robustness manifest 可额外包含 `evalGates`，archive 会压缩 strict gate、signature kinds 和 domain groups 供 drift / promotion 快速复核。
 
 ## 4. Retention 标记
 
@@ -63,13 +65,14 @@ npm.cmd run eval:archive:promote -- <runDirName>
 
 - `metricIds`、`baselines`、`scenarioIds` 的新增、移除和稳定交集。
 - `schemaRegistryVersion`、`exportKind`、`ok` 的变化。
+- `evalGates` 中 strict gate 与 signature 摘要的变化。
 - `artifactCountDelta`。
 - 最新 run 与上一 run 的目录、创建时间和 Git 摘要。
 
 该报告用于发现指标漂移、scenario 漏登、schema 迁移影响和导出内容变化；它会按 `phase2.eval_drift_policy.v1` 生成分级结果：
 
 - `none`：未触发阈值，`requiresManualReview=false`。
-- `review`：新增 metric / baseline / scenario 或 artifact 数量增加，需要人工说明变化原因。
+- `review`：新增 metric / baseline / scenario、artifact 数量增加，或 eval gate / signature 摘要变化，需要人工说明变化原因。
 - `breaking`：最新 run `ok=false`、`ok` 状态变化、schema / export kind 变化、metric / baseline / scenario 被移除或 artifact 数量下降，会阻止自动晋级为 paper-grade candidate。
 
 当前阈值策略为零容忍：任何 metric / baseline / scenario 新增和 artifact 数量增加都会进入 `review`；任何移除、schema 迁移或失败态变化都会进入 `breaking`。

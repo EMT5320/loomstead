@@ -28,6 +28,9 @@ PERTURBATION_IDS = (
     "source_variation_duplicate",
     "source_variation_irrelevant",
 )
+STRICT_GATE_VERSION = "phase2.evidence_robustness.strict_gate.v1"
+DOMAIN_SIGNATURE_VERSION = "phase2.evidence_robustness.domain_signature.v2"
+EXPECTED_DOMAIN_GROUPS = ("loomstead.coding.v0", "loomstead.town.v0")
 SOURCE_LIST_KEYS = {
     "sourceEventIds",
     "subjectiveMemoryRefs",
@@ -71,6 +74,7 @@ def run_evidence_robustness_scenarios(
     metrics: list[dict[str, Any]] = []
     metrics.extend(_invariance_metrics(process_probe, suite_prefix="process", baseline=BASELINE_FULL))
     metrics.extend(_invariance_metrics(domain_probe, suite_prefix="domain", baseline=BASELINE_CROSS_DOMAIN))
+    metrics.extend(_group_robustness_metrics(domain_probe, baseline=BASELINE_CROSS_DOMAIN))
     metrics.extend(
         [
             metric_summary(
@@ -97,12 +101,21 @@ def run_evidence_robustness_scenarios(
     passed = int(process_probe.get("stableCount", 0)) + int(domain_probe.get("stableCount", 0))
     total = int(process_probe.get("totalChecks", 0)) + int(domain_probe.get("totalChecks", 0))
     robustness_checks_pass = total > 0 and bool(process_probe.get("allStable")) and bool(domain_probe.get("allStable"))
+    strict_gate = _build_strict_gate(
+        process_result=process_result,
+        domain_result=domain_result,
+        process_probe=process_probe,
+        domain_probe=domain_probe,
+        total_checks=total,
+        robustness_checks_pass=robustness_checks_pass,
+    )
     result = {
-        "ok": bool(process_result.get("ok")) and bool(domain_result.get("ok")) and robustness_checks_pass,
+        "ok": bool(strict_gate.get("pass")),
         "suite": "evidence_robustness",
         "baseline": BASELINE_FULL,
         "providerMode": "rule",
         "robustnessChecksPass": robustness_checks_pass,
+        "strictGate": strict_gate,
         "seedCount": {
             "process": process_seed_count,
             "domain": domain_seed_count,
@@ -140,13 +153,17 @@ def _probe_items(
         perturbation_id: {"stable": 0, "total": 0}
         for perturbation_id in PERTURBATION_IDS
     }
+    group_stats: dict[str, dict[str, Any]] = {}
 
     for item in items:
         scenario_id = _scenario_id(item)
+        group_id = _probe_group_id(suite_id, item)
+        group = group_stats.setdefault(group_id, {"stable": 0, "total": 0, "perturbations": _empty_perturbation_stats()})
         base_signature = signature_builder(item)
         row = {
             "suite": suite_id,
             "scenarioId": scenario_id,
+            "groupId": group_id,
             "domainId": str(item.get("domainId") or ""),
             "baseline": str(item.get("baseline") or ""),
             "seed": item.get("seed"),
@@ -160,9 +177,13 @@ def _probe_items(
             stable = mutated_signature == base_signature
             total_checks += 1
             perturbation_stats[perturbation_id]["total"] += 1
+            group["total"] += 1
+            group["perturbations"][perturbation_id]["total"] += 1
             if stable:
                 stable_count += 1
                 perturbation_stats[perturbation_id]["stable"] += 1
+                group["stable"] += 1
+                group["perturbations"][perturbation_id]["stable"] += 1
             row["perturbations"].append(
                 {
                     "perturbationId": perturbation_id,
@@ -193,6 +214,8 @@ def _probe_items(
         "totalChecks": total_checks,
         "overallInvarianceRate": round(_safe_ratio(stable_count, total_checks), 6),
         "allStable": stable_count == total_checks,
+        "groups": _format_groups(group_stats),
+        "signatureKinds": _signature_kinds(details),
         "items": details,
     }
 
@@ -229,14 +252,175 @@ def _process_signature(item: dict[str, Any]) -> dict[str, Any]:
 
 
 def _domain_signature(item: dict[str, Any]) -> dict[str, Any]:
+    domain_id = str(item.get("domainId") or "")
+    if domain_id == "loomstead.town.v0":
+        return _narrative_domain_signature(item)
+    if domain_id == "loomstead.coding.v0":
+        return _coding_domain_signature(item)
+    return _generic_domain_signature(item)
+
+
+def _generic_domain_signature(item: dict[str, Any]) -> dict[str, Any]:
     sources = _collect_source_ids(item)
     events = _collect_event_ids(item)
     anchored = sorted(source_id for source_id in sources if source_id in events)
     return {
+        "signatureId": f"{DOMAIN_SIGNATURE_VERSION}.generic",
         "eventIdCount": len(events),
         "anchoredSourceLinkCount": len(anchored),
         "hasAnchoredSourceLink": bool(anchored),
     }
+
+
+def _narrative_domain_signature(item: dict[str, Any]) -> dict[str, Any]:
+    common = _generic_domain_signature(item)
+    domain_evidence = _domain_evidence(item)
+    replays = _counterfactual_replays(domain_evidence, version_contains="narrative")
+    goal_progress = _goal_progress_signature(item)
+    eval_signals = _final_eval_signals(item)
+    return {
+        **{key: value for key, value in common.items() if key != "signatureId"},
+        "signatureId": f"{DOMAIN_SIGNATURE_VERSION}.narrative",
+        "replayCount": len(replays),
+        "goalEventCount": sum(len(_list_value(replay.get("goalEventIds"))) for replay in replays),
+        "relationshipEvidenceCount": sum(len(_list_value(replay.get("goalRelationshipEdgeIds"))) for replay in replays),
+        "subjectiveMemoryEvidenceCount": sum(len(_list_value(replay.get("goalSubjectiveMemoryRecordIds"))) for replay in replays),
+        "heuristicEvidenceCount": sum(len(_list_value(replay.get("goalHeuristicIds"))) for replay in replays),
+        "comparisonCount": sum(int(replay.get("comparisonCount") or 0) for replay in replays),
+        "changedDecisionCount": sum(int(replay.get("changedDecisionCount") or 0) for replay in replays),
+        "scoreChangedCount": sum(_score_changed_count(replay) for replay in replays),
+        "changeRateBuckets": sorted({_rounded(replay.get("changeRate")) for replay in replays}),
+        "goalSuccess": goal_progress.get("goal_success_rate"),
+        "requiredProcessCoverage": goal_progress.get("required_process_coverage"),
+        "counterfactualChangeRate": goal_progress.get("counterfactual_tool_selection_change_rate"),
+        "recentTraceEventCount": int(float(eval_signals.get("recentTraceEventCount") or 0.0)),
+        "relationshipEdgeCount": int(float(eval_signals.get("relationshipEdgeCount") or 0.0)),
+    }
+
+
+def _coding_domain_signature(item: dict[str, Any]) -> dict[str, Any]:
+    common = _generic_domain_signature(item)
+    domain_evidence = _domain_evidence(item)
+    repo_fixture = domain_evidence.get("repoFixture", {}) if isinstance(domain_evidence.get("repoFixture"), dict) else {}
+    artifacts = domain_evidence.get("artifacts", {}) if isinstance(domain_evidence.get("artifacts"), dict) else {}
+    pre_patch_reports = domain_evidence.get("prePatchTestReports", {}) if isinstance(domain_evidence.get("prePatchTestReports"), dict) else {}
+    partial_patch_reports = domain_evidence.get("partialPatchTestReports", {}) if isinstance(domain_evidence.get("partialPatchTestReports"), dict) else {}
+    test_reports = domain_evidence.get("testReports", {}) if isinstance(domain_evidence.get("testReports"), dict) else {}
+    review_reports = domain_evidence.get("reviewReports", {}) if isinstance(domain_evidence.get("reviewReports"), dict) else {}
+    derived_graph = repo_fixture.get("derivedDependencyGraph", {}) if isinstance(repo_fixture.get("derivedDependencyGraph"), dict) else {}
+    declared_graph = repo_fixture.get("importGraph", {}) if isinstance(repo_fixture.get("importGraph"), dict) else {}
+    replays = _counterfactual_replays(domain_evidence, version_contains="coding")
+    goal_progress = _goal_progress_signature(item)
+    return {
+        **{key: value for key, value in common.items() if key != "signatureId"},
+        "signatureId": f"{DOMAIN_SIGNATURE_VERSION}.coding",
+        "repoFixtureLoaded": bool(repo_fixture.get("fixtureId")),
+        "sourceRepoKind": str(repo_fixture.get("sourceRepoKind") or ""),
+        "fixtureFileCount": len(repo_fixture.get("files", {})) if isinstance(repo_fixture.get("files"), dict) else 0,
+        "declaredImportNodeCount": len(_list_value(declared_graph.get("nodes"))),
+        "declaredImportEdgeCount": len(_list_value(declared_graph.get("edges"))),
+        "derivedDependencyNodeCount": len(_list_value(derived_graph.get("nodes"))),
+        "derivedDependencyEdgeCount": len(_list_value(derived_graph.get("edges"))),
+        "missingDeclaredDependencyCount": len(_list_value(derived_graph.get("missingDeclaredEdges"))),
+        "artifactCount": len(artifacts),
+        "changedFileCount": sum(len(_list_value(artifact.get("changedFiles"))) for artifact in artifacts.values() if isinstance(artifact, dict)),
+        "patchCoverageFileCount": sum(int(artifact.get("patchCoverageFileCount") or 0) for artifact in artifacts.values() if isinstance(artifact, dict)),
+        "prePatchReportCount": len(pre_patch_reports),
+        "partialPatchReportCount": len(partial_patch_reports),
+        "postPatchReportCount": len(test_reports),
+        "postPatchPassCount": sum(1 for report in test_reports.values() if isinstance(report, dict) and bool(report.get("passed"))),
+        "reviewReportCount": len(review_reports),
+        "approvedReviewCount": sum(1 for report in review_reports.values() if isinstance(report, dict) and report.get("status") == "approved"),
+        "reviewsWithMemoryCitations": sum(1 for report in review_reports.values() if isinstance(report, dict) and _list_value(report.get("citedMemoryIds"))),
+        "reviewConflictCount": sum(1 for report in review_reports.values() if isinstance(report, dict) and _review_conflict_detected(report)),
+        "arbitrationSourceCount": sum(_arbitration_source_count(report) for report in review_reports.values() if isinstance(report, dict)),
+        "finalTraceRefCount": sum(1 for report in review_reports.values() if isinstance(report, dict) and isinstance(report.get("finalDecisionTraceRef"), dict) and report.get("finalDecisionTraceRef", {}).get("eventId")),
+        "replayCount": len(replays),
+        "criticalComparisonCount": sum(_comparison_count(replay, kind="critical") for replay in replays),
+        "controlComparisonCount": sum(_comparison_count(replay, kind="control") for replay in replays),
+        "criticalChangeCount": sum(int(replay.get("criticalChangeCount") or 0) for replay in replays),
+        "controlStableCount": sum(int(replay.get("controlStableCount") or 0) for replay in replays),
+        "criticalChangeRateBuckets": sorted({_rounded(replay.get("criticalChangeRate")) for replay in replays}),
+        "controlStabilityRateBuckets": sorted({_rounded(replay.get("controlStabilityRate")) for replay in replays}),
+        "goalSuccess": goal_progress.get("goal_success_rate"),
+        "requiredProcessCoverage": goal_progress.get("required_process_coverage"),
+        "counterfactualChangeRate": goal_progress.get("counterfactual_tool_selection_change_rate"),
+    }
+
+
+def _domain_evidence(item: dict[str, Any]) -> dict[str, Any]:
+    evidence = item.get("domainEvidence", {})
+    return evidence if isinstance(evidence, dict) else {}
+
+
+def _counterfactual_replays(domain_evidence: dict[str, Any], *, version_contains: str) -> list[dict[str, Any]]:
+    replay_map = domain_evidence.get("counterfactualReplays", {})
+    if not isinstance(replay_map, dict):
+        return []
+    replays: list[dict[str, Any]] = []
+    for replay in replay_map.values():
+        if not isinstance(replay, dict):
+            continue
+        replay_version = str(replay.get("replayVersion") or "")
+        if version_contains and version_contains not in replay_version:
+            continue
+        replays.append(replay)
+    return replays
+
+
+def _goal_progress_signature(item: dict[str, Any]) -> dict[str, float]:
+    metrics = item.get("metrics") if isinstance(item.get("metrics"), dict) else None
+    if metrics is None:
+        final_observation = item.get("finalObservation", {}) if isinstance(item.get("finalObservation"), dict) else {}
+        metrics = final_observation.get("goalProgress", {}) if isinstance(final_observation.get("goalProgress"), dict) else {}
+    return {
+        metric_id: _rounded(metrics.get(metric_id))
+        for metric_id in (
+            "goal_success_rate",
+            "required_process_coverage",
+            "counterfactual_tool_selection_change_rate",
+        )
+    }
+
+
+def _final_eval_signals(item: dict[str, Any]) -> dict[str, Any]:
+    final_observation = item.get("finalObservation", {}) if isinstance(item.get("finalObservation"), dict) else {}
+    signals = final_observation.get("evalSignals", {}) if isinstance(final_observation.get("evalSignals"), dict) else {}
+    return signals
+
+
+def _list_value(value: Any) -> list[Any]:
+    return value if isinstance(value, list) else []
+
+
+def _rounded(value: Any) -> float:
+    try:
+        return round(float(value), 6)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _score_changed_count(replay: dict[str, Any]) -> int:
+    comparisons = replay.get("comparisons", []) if isinstance(replay.get("comparisons"), list) else []
+    return sum(1 for item in comparisons if isinstance(item, dict) and bool(item.get("scoreChanged")))
+
+
+def _comparison_count(replay: dict[str, Any], *, kind: str) -> int:
+    comparisons = replay.get("comparisons", []) if isinstance(replay.get("comparisons"), list) else []
+    return sum(1 for item in comparisons if isinstance(item, dict) and item.get("kind") == kind)
+
+
+def _review_conflict_detected(review_report: dict[str, Any]) -> bool:
+    conflict = review_report.get("conflict", {})
+    return isinstance(conflict, dict) and bool(conflict.get("conflictDetected"))
+
+
+def _arbitration_source_count(review_report: dict[str, Any]) -> int:
+    arbitration = review_report.get("arbitrationLayer", {})
+    if not isinstance(arbitration, dict):
+        return 0
+    sources = arbitration.get("contributing_sources", [])
+    return len(sources) if isinstance(sources, list) else 0
 
 
 def _collect_source_ids(node: Any) -> set[str]:
@@ -343,6 +527,178 @@ def _invariance_metrics(probe: dict[str, Any], *, suite_prefix: str, baseline: s
     return metrics
 
 
+def _group_robustness_metrics(probe: dict[str, Any], *, baseline: str) -> list[dict[str, Any]]:
+    metrics: list[dict[str, Any]] = []
+    for group in probe.get("groups", []) if isinstance(probe.get("groups"), list) else []:
+        if not isinstance(group, dict):
+            continue
+        group_id = str(group.get("groupId") or "unknown_group")
+        metrics.append(
+            metric_summary(
+                "domain_evidence_robustness_score",
+                [float(group.get("overallInvarianceRate") or 0.0)],
+                baseline=baseline,
+                scenario_id=group_id,
+            )
+        )
+    return metrics
+
+
+def _probe_group_id(suite_id: str, item: dict[str, Any]) -> str:
+    if suite_id == "domain":
+        return str(item.get("domainId") or "unknown_domain")
+    return suite_id
+
+
+def _empty_perturbation_stats() -> dict[str, dict[str, int]]:
+    return {perturbation_id: {"stable": 0, "total": 0} for perturbation_id in PERTURBATION_IDS}
+
+
+def _format_groups(group_stats: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    groups: list[dict[str, Any]] = []
+    for group_id, stats in sorted(group_stats.items()):
+        stable = int(stats.get("stable") or 0)
+        total = int(stats.get("total") or 0)
+        perturbation_stats = stats.get("perturbations", {}) if isinstance(stats.get("perturbations"), dict) else {}
+        groups.append(
+            {
+                "groupId": group_id,
+                "stableCount": stable,
+                "total": total,
+                "overallInvarianceRate": round(_safe_ratio(stable, total), 6),
+                "allStable": stable == total and total > 0,
+                "perturbations": _format_perturbation_stats(perturbation_stats),
+            }
+        )
+    return groups
+
+
+def _format_perturbation_stats(perturbation_stats: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for perturbation_id in PERTURBATION_IDS:
+        stats = perturbation_stats.get(perturbation_id, {}) if isinstance(perturbation_stats, dict) else {}
+        stable = int(stats.get("stable") or 0)
+        total = int(stats.get("total") or 0)
+        rows.append(
+            {
+                "perturbationId": perturbation_id,
+                "stableCount": stable,
+                "total": total,
+                "invarianceRate": round(_safe_ratio(stable, total), 6),
+            }
+        )
+    return rows
+
+
+def _signature_kinds(details: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    counts: dict[tuple[str, str], int] = {}
+    for item in details:
+        if not isinstance(item, dict):
+            continue
+        signature = item.get("baseSignature", {}) if isinstance(item.get("baseSignature"), dict) else {}
+        signature_id = str(signature.get("signatureId") or "process_signature.v1")
+        group_id = str(item.get("groupId") or "")
+        key = (group_id, signature_id)
+        counts[key] = counts.get(key, 0) + 1
+    return [
+        {"groupId": group_id, "signatureId": signature_id, "itemCount": count}
+        for (group_id, signature_id), count in sorted(counts.items())
+    ]
+
+
+def _build_strict_gate(
+    *,
+    process_result: dict[str, Any],
+    domain_result: dict[str, Any],
+    process_probe: dict[str, Any],
+    domain_probe: dict[str, Any],
+    total_checks: int,
+    robustness_checks_pass: bool,
+) -> dict[str, Any]:
+    checks: list[dict[str, Any]] = []
+
+    def add_check(check_id: str, passed: bool, *, scope: str, observed: Any, expected: Any) -> None:
+        checks.append(
+            {
+                "checkId": check_id,
+                "scope": scope,
+                "pass": bool(passed),
+                "observed": observed,
+                "expected": expected,
+            }
+        )
+
+    add_check("base.process_eval_ok", bool(process_result.get("ok")), scope="process", observed=bool(process_result.get("ok")), expected=True)
+    add_check("base.domain_eval_ok", bool(domain_result.get("ok")), scope="domain", observed=bool(domain_result.get("ok")), expected=True)
+    add_check("robustness.total_checks_present", total_checks > 0, scope="aggregate", observed=total_checks, expected="> 0")
+    add_check("robustness.all_stable", robustness_checks_pass, scope="aggregate", observed=robustness_checks_pass, expected=True)
+    add_check("process.all_stable", bool(process_probe.get("allStable")), scope="process", observed=process_probe.get("overallInvarianceRate"), expected=1.0)
+    add_check("domain.all_stable", bool(domain_probe.get("allStable")), scope="domain", observed=domain_probe.get("overallInvarianceRate"), expected=1.0)
+
+    for section, probe in (("process", process_probe), ("domain", domain_probe)):
+        for perturbation in probe.get("perturbations", []) if isinstance(probe.get("perturbations"), list) else []:
+            if not isinstance(perturbation, dict):
+                continue
+            perturbation_id = str(perturbation.get("perturbationId") or "unknown")
+            total = int(perturbation.get("total") or 0)
+            rate = float(perturbation.get("invarianceRate") or 0.0)
+            add_check(
+                f"{section}.perturbation.{_safe_check_id(perturbation_id)}",
+                total > 0 and rate >= 1.0,
+                scope=section,
+                observed={"total": total, "invarianceRate": rate},
+                expected={"total": "> 0", "invarianceRate": 1.0},
+            )
+
+    domain_group_ids = {
+        str(group.get("groupId") or "")
+        for group in domain_probe.get("groups", [])
+        if isinstance(group, dict)
+    }
+    for expected_group in EXPECTED_DOMAIN_GROUPS:
+        add_check(
+            f"domain.group_present.{_safe_check_id(expected_group)}",
+            expected_group in domain_group_ids,
+            scope="domain",
+            observed=sorted(domain_group_ids),
+            expected=expected_group,
+        )
+    for group in domain_probe.get("groups", []) if isinstance(domain_probe.get("groups"), list) else []:
+        if not isinstance(group, dict):
+            continue
+        group_id = str(group.get("groupId") or "unknown_group")
+        total = int(group.get("total") or 0)
+        rate = float(group.get("overallInvarianceRate") or 0.0)
+        add_check(
+            f"domain.group_stable.{_safe_check_id(group_id)}",
+            total > 0 and bool(group.get("allStable")) and rate >= 1.0,
+            scope="domain",
+            observed={"total": total, "invarianceRate": rate, "allStable": bool(group.get("allStable"))},
+            expected={"total": "> 0", "invarianceRate": 1.0, "allStable": True},
+        )
+
+    failed_checks = [check for check in checks if not check.get("pass")]
+    return {
+        "gateVersion": STRICT_GATE_VERSION,
+        "enabled": True,
+        "pass": not failed_checks,
+        "thresholds": {
+            "overallInvarianceRate": 1.0,
+            "perPerturbationInvarianceRate": 1.0,
+            "perDomainInvarianceRate": 1.0,
+            "expectedDomainGroups": list(EXPECTED_DOMAIN_GROUPS),
+        },
+        "checkCount": len(checks),
+        "failedCheckCount": len(failed_checks),
+        "failedChecks": failed_checks,
+        "checks": checks,
+    }
+
+
+def _safe_check_id(value: str) -> str:
+    return "".join(char if char.isalnum() else "_" for char in value).strip("_") or "unknown"
+
+
 def _scenario_id(item: dict[str, Any]) -> str:
     if isinstance(item.get("scenario"), dict):
         scenario_id = str(item.get("scenario", {}).get("scenarioId") or "")
@@ -385,6 +741,14 @@ def _export_evidence_robustness_eval(result: dict[str, Any], base_dir: Path) -> 
     _write_json(domain_path, result.get("domain", {}))
     artifacts.append(_artifact_record(domain_path, run_dir, kind="domain_robustness_json"))
 
+    strict_gate_path = run_dir / "strict_gate.json"
+    _write_json(strict_gate_path, result.get("strictGate", {}))
+    artifacts.append(_artifact_record(strict_gate_path, run_dir, kind="strict_gate_json"))
+
+    signature_summary_path = run_dir / "signature_summary.json"
+    _write_json(signature_summary_path, _signature_summary_payload(result))
+    artifacts.append(_artifact_record(signature_summary_path, run_dir, kind="signature_summary_json"))
+
     detail_rows = []
     for section in ("process", "domain"):
         details = result.get(section, {}).get("items", []) if isinstance(result.get(section), dict) else []
@@ -398,11 +762,14 @@ def _export_evidence_robustness_eval(result: dict[str, Any], base_dir: Path) -> 
                     {
                         "suite": section,
                         "scenarioId": item.get("scenarioId"),
+                        "groupId": item.get("groupId"),
                         "baseline": item.get("baseline"),
                         "domainId": item.get("domainId"),
                         "seed": item.get("seed"),
                         "perturbationId": perturbation.get("perturbationId"),
                         "stable": perturbation.get("stable"),
+                        "baseSignatureId": _signature_id(item.get("baseSignature")),
+                        "perturbedSignatureId": _signature_id(perturbation.get("signature")),
                         "baseSignature": item.get("baseSignature"),
                         "perturbedSignature": perturbation.get("signature"),
                     }
@@ -431,3 +798,34 @@ def _export_evidence_robustness_eval(result: dict[str, Any], base_dir: Path) -> 
         "manifest": str(manifest_path),
         "artifactCount": len(artifacts) + 1,
     }
+
+
+def _signature_summary_payload(result: dict[str, Any]) -> dict[str, Any]:
+    process = result.get("process", {}) if isinstance(result.get("process"), dict) else {}
+    domain = result.get("domain", {}) if isinstance(result.get("domain"), dict) else {}
+    return {
+        "signatureSummaryVersion": DOMAIN_SIGNATURE_VERSION,
+        "strictGate": {
+            "gateVersion": result.get("strictGate", {}).get("gateVersion")
+            if isinstance(result.get("strictGate"), dict)
+            else None,
+            "pass": result.get("strictGate", {}).get("pass")
+            if isinstance(result.get("strictGate"), dict)
+            else None,
+            "failedCheckCount": result.get("strictGate", {}).get("failedCheckCount")
+            if isinstance(result.get("strictGate"), dict)
+            else None,
+        },
+        "process": {
+            "groups": process.get("groups", []),
+            "signatureKinds": process.get("signatureKinds", []),
+        },
+        "domain": {
+            "groups": domain.get("groups", []),
+            "signatureKinds": domain.get("signatureKinds", []),
+        },
+    }
+
+
+def _signature_id(signature: Any) -> str | None:
+    return str(signature.get("signatureId")) if isinstance(signature, dict) and signature.get("signatureId") else None

@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: project-status
-last_verified: 2026-05-27
+last_verified: 2026-05-28
 startup_load: after-agent-context
 source_of_truth: true
 scope: current implementation facts, verification state, and work constraints
@@ -9,7 +9,7 @@ scope: current implementation facts, verification state, and work constraints
 
 # 当前项目状态与开发前约束
 
-> 状态更新时间：2026-05-27（Eval narrative route-level replay 已接入 domain suite；Godot 最新窗口复验仍待人工执行）
+> 状态更新时间：2026-05-28（Eval evidence robustness strict gate / 分域签名已落地；Godot 最新窗口复验暂停到后端/eval 主线稳定后再集中处理）
 > 本文记录当前仓库中已核对、命令已检或明确标注人工未验收的事实。长期方向见 `docs/project_vision.md`，研究 framing 见 `docs/research_framing_motivational_delegation.md`，Agent loop 设计见 `docs/agent_loop_architecture.md`。
 
 ## 1. 当前阶段判断
@@ -26,7 +26,7 @@ scope: current implementation facts, verification state, and work constraints
 | 开发线 | 当前事实 | 仍需关注 |
 | --- | --- | --- |
 | 后端 Runtime / Director | Python Agent Server 是权威世界状态入口；已有 `GET /api/world/state`、`POST /api/player/action`、`POST /api/world/tick`、`GET /api/debug.phase2`；规则版 Director v0 与单个 Event Skill `event.starlight_festival_shortage` 已运行；Phase 2 tick 主路径已切到 `MotivationEngine -> ToolExecutor -> ResultObserver`；`motivation.decision_made`、工具完成 / 失败 / 中断、`memory.result_observed` 均带 trace 证据；`schema_registry.v1` 已集中治理主要 schema；`ToolDefinition.served_needs` 与 CapabilityRegistry 显式需求匹配已落地，legacy prefix 仅作未标注工具 fallback；`candidateScores` 已输出 `scoreComponentSourceRefs` / `scoreExplanationRefs` 用于解释裁决分数组件来源。 | 继续扩展 schema 迁移覆盖、失败模式、真实预算策略和更完整竞争上下文裁决；旧 `LifeActionExecutor` 只做回归修复。 |
-| Eval / Research | `scripts/run_agent_eval.py` 已覆盖 rule process suite、stability、stability determinism、domain adapter suite 和 evidence robustness suite；Process Fidelity Eval 包含 Hard Delegation、No Subjective Memory、No Relationship Edge、Shuffled Owner、Evidence-Link Removal、Branna Forgiveness fixture、Counterfactual Replay 和本地 export / archive manifest；process suite 最新 clean five-repeat rule export 为 20/20；coding domain adapter 已覆盖 8 类 repo fixture、源码派生依赖图、`dependency_evidence_chain.v2`、跨文件回归 fixture、reviewer judgment arbitration 和 `coding.domain_counterfactual_replay.v1` 证据移除 replay；narrative domain adapter 已接入 `narrative.domain_counterfactual_replay.v1`；domain suite 已支持 `--seeds`；`scripts/build_eval_reviewer_packet.py` 可从 clean process/domain manifests 生成 manual reviewer 抽样包。 | Eval 是 Phase 2 硬验收线；domain adapter clean deterministic five-repeat export 为 55/55，process suite clean five-repeat export 为 20/20；evidence robustness 示例 export 为 48/48 source perturbation checks；人工 reviewer packet 已到 `manual_review_required` gate，后续需要人工填表或继续补 provider-backed eval。 |
+| Eval / Research | `scripts/run_agent_eval.py` 已覆盖 rule process suite、stability、stability determinism、domain adapter suite 和 evidence robustness suite；Process Fidelity Eval 包含 Hard Delegation、No Subjective Memory、No Relationship Edge、Shuffled Owner、Evidence-Link Removal、Branna Forgiveness fixture、Counterfactual Replay 和本地 export / archive manifest；process suite 最新 clean five-repeat rule export 为 20/20；coding domain adapter 已覆盖 8 类 repo fixture、源码派生依赖图、`dependency_evidence_chain.v2`、跨文件回归 fixture、reviewer judgment arbitration 和 `coding.domain_counterfactual_replay.v1` 证据移除 replay；narrative domain adapter 已接入 `narrative.domain_counterfactual_replay.v1`；domain suite 已支持 `--seeds`；evidence robustness 已升级为 `phase2.evidence_robustness.strict_gate.v1` 严格门禁，并输出 `phase2.evidence_robustness.domain_signature.v2` 的 coding / narrative 分域签名摘要；`scripts/build_eval_reviewer_packet.py` 可从 clean process/domain manifests 生成 manual reviewer 抽样包。 | Eval 是 Phase 2 硬验收线；domain adapter clean deterministic five-repeat export 为 55/55，process suite clean five-repeat export 为 20/20；最新 robustness export `.run/eval-runs/robustness_2026-05-28T02-26-00Z` 为 60/60 source perturbation checks 且 strict gate pass；人工 reviewer packet 已到 `manual_review_required` gate，后续需要人工填表或继续补 provider-backed eval。 |
 | Godot 客户端 | `clients/godot/` 是 Godot 4.x 项目；默认主场景为 `res://scenes/world_main.tscn`；Phase 1 玩家移动、`E` talk、tick NPC 行动、远处事件提示和三场景拼图已收口；Research Dock 三 Tab 已读取 `/api/debug.phase2` 并展示 motivation、subjective memory、relationship edges、heuristics 与 trace timeline；`memory.result_observed` 行、来源跳转按钮、Copy trace JSON、Prev/Next 循环导航、单条 trace 导航提示、Trace Copy 空态 / 成功 tooltip、Phase 2 Debug 错误提示、`[C]` / `[,]` / `[.]` / 左右方括号热键和 NPC 高亮代码已落地。 | 主人已确认 UI 重设计后的整体观感、非全屏滚动、6 NPC 密度、遮挡风险修复，以及 `memory.result_observed` 可发现性和来源跳转按钮；最新 Prev/Next、热键和 `4 中断` 布局补修仍需真实窗口复验。 |
 | Web Debug / LLM | `RuleBasedProvider` 与 OpenAI-compatible `CloudApiProvider` 已接入；`config/models.example.json` 默认 rule fallback；Web Debug 已展示 provider / fallback / cost 总览、Heuristic Library、Arbitration Trace 和 Rashomon Memory。 | 最新成功真实 LLM smoke 是 2026-05-23；2026-05-24 曾触达 CloudApiProvider 但供应商返回 `HTTP 402 Insufficient Balance`，未刷新通过证据；切换 key / profile / prompt 后需单独跑 `npm.cmd run llm:smoke`。 |
 | Content / NPC | 6 名首发 NPC 深度卡已入库；`voiceStyle`、`speechQuirks`、`monologueSeeds`、`giftReactions`、`gossipHooks` 已被 runtime / smoke 覆盖；4 核心 NPC（kai / mira / bram / lena）已有实际 motivation / capability / heuristic seed；tomas / orren 保持 stub。 | 谣言传播仍只记录校验结果，不写入世界状态、关系或记忆扩散；2 名 stub NPC 后续按剧情需要升级。 |
@@ -34,6 +34,8 @@ scope: current implementation facts, verification state, and work constraints
 | 上下文治理 | `AGENTS.md`、`CLAUDE.md`、`docs/agent_context.md`、`docs/current_status.md`、`docs/README.md` 是基础入口；`docs/assistant_continuity.md` 和 `docs/workflows.md` 负责跨助手接续与 workflow 索引；`scripts/build_agent_context.py` 提供 `context:check` / `context:brief` / `context:resume`。 | 状态文档只记录当前事实和验证边界；长历史、过时 handoff 和旧看板留在 `docs/archive/`。 |
 
 ## 3. 最近核对结果
+
+- 2026-05-28 Eval robustness 收紧：`npm.cmd run eval:robustness` 通过，60/60 source perturbation checks，`phase2.evidence_robustness.strict_gate.v1` 的 18 项检查全部通过；domain 分域组 `loomstead.coding.v0` 为 32/32、`loomstead.town.v0` 为 12/12，均为 invariance rate `1.0`；输出 `phase2.evidence_robustness.domain_signature.v2.coding` 与 `.narrative` 签名摘要。`npm.cmd run eval:robustness:export` 生成 `.run/eval-runs/robustness_2026-05-28T02-26-00Z`，artifactCount=7，新增 `strict_gate.json`、`signature_summary.json` 与 manifest `evalGates`；`npm.cmd run eval:archive:check` 通过，`npm.cmd run eval:archive:drift` 写入 drift report 且无 blocking drift；`npm.cmd run paper:tables` 可消费 robustness metrics，但本地 paper generated 文件会随当前 `.run` 内容刷新。
 
 - 2026-05-27 Eval 主线推进：narrative domain 新增 `narrative.domain_counterfactual_replay.v1`，对目标关系边、目标主观记忆、目标学习启发式和完整记忆上下文做 route-level evidence removal replay；`npm.cmd run eval:domain` 为 11/11，aggregate `counterfactual_tool_selection_change_rate=0.645238`，town mean `0.333333`，coding mean `0.762203`；`npm.cmd run eval:domain:export` 生成 `.run/eval-runs/domain_2026-05-27T07-20-04Z`，artifactCount=76，并含 3 个 narrative replay artifact 与既有 coding replay artifact；`npm.cmd run eval:archive:check` 通过；`context:resume` / `context:handoff` 已验证 manual gates 不再截断当前 7 条。
 - 2026-05-27 Eval / Research 接续推进：domain suite 的 `--seeds` 已从 process 线扩展到 cross-domain adapter，`npm.cmd run eval:domain -- --seeds 2` 为 22/22；`npm.cmd run eval:domain:export -- --seeds 2` 生成 `.run/eval-runs/domain_2026-05-27T08-21-49Z`，artifactCount=144，per-scenario / domain evidence 导出按 `_seedXX` 避免覆盖；`npm.cmd run paper:tables` 已刷新 Table 5，显示 coding 16/16、town 6/6、deterministic repeats=2 与 CF route 指标。
@@ -100,8 +102,8 @@ git diff --check
 
 ## 7. 下一轮建议
 
-- Eval 线已新增 source perturbation 自动鲁棒性闭环；下一步可在不进入人工 reviewer 的前提下补 strict fail gate 或分域签名，人工 reviewer packet 暂时保持 `manual_review_required`。
-- Godot trace 下一步只需真实窗口复验：`Prev` / `Next` 循环、逗号/句号/左右方括号热键、Copy 短反馈、`4 中断` filter 和 source link 按钮不溢出，不重开 Phase 1 旧玩法扩写。
+- Eval 线已新增 strict gate 与 coding / narrative 分域签名；下一步可提高 robustness seed 覆盖、promote clean robustness run，或把 strict gate 信号接入更正式的 research claim review。
+- Godot trace 最新窗口复验暂缓；后续等后端 Agent / Eval 主线稳定后再集中做展示层复验和 polish，不重开 Phase 1 旧玩法扩写。
 - Research 线下一步围绕 `.run/eval-runs/domain_2026-05-27T13-29-21Z` 写 claim prose / Table 5 说明，措辞保持 research-preview。
 - Paper 线下一步把 `paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md` 转成 Figure 3 图形草案，并人工修正 artifact 中的 mojibake 标签。
 - LLM / Debug 线只在切换模型、key、profile、prompt 或需要刷新真实成本证据时运行 `npm.cmd run llm:smoke`。
