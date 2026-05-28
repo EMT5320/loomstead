@@ -1,10 +1,10 @@
 \section{Evidence Skeleton}
 
-This section stays at a research-preview evidence level. The current clean exports are \texttt{run\_2026-05-27T13-37-33Z} (process fidelity) and \texttt{domain\_2026-05-27T13-29-21Z} (cross-domain adapter), both with clean git manifests (\texttt{dirty=false}). Generated paper tables under \texttt{paper/generated/} are treated as build guards and claim placeholders, and the prose keeps an interface-evidence scope.
+This section stays at a research-preview evidence level. The current clean exports are \texttt{run\_2026-05-28T07-43-32Z} (process fidelity) and \texttt{domain\_2026-05-28T07-49-46Z} (cross-domain adapter), both with clean git manifests (\texttt{dirty=false}) at \texttt{b1c006f}. Generated paper tables under \texttt{paper/generated/} are treated as build guards and claim placeholders, and the prose keeps an interface-evidence scope.
 
 \subsection{Process-fidelity ablations}
 
-Table~\ref{tab:process-ablation} summarizes \texttt{run\_2026-05-27T13-37-33Z}, which exports 4 scenarios $\times$ 6 baselines $\times$ 5 seeds (120 per-scenario artifacts) with a stable schema and checksum-indexed manifest. At this stage, the table is used as local guardrail evidence for metric wiring and ablation surface integrity. The observed separations between full motivational delegation and ablated settings are reported as preview signals for process-fidelity instrumentation, and they are not promoted to final causal claims. Figure~\ref{fig:trace-evidence-chain} is drafted from \texttt{per\_scenario/pf.branna\_forgiveness\_requires\_memory\_full\_motivational\_delegation\_seed01.json} as an illustrative trace panel pending final rendered-asset curation.
+Table~\ref{tab:process-ablation} summarizes \texttt{run\_2026-05-28T07-43-32Z}, which exports 4 scenarios $\times$ 6 baselines $\times$ 5 seeds (120 per-scenario artifacts) with a stable schema and checksum-indexed manifest. At this stage, the table is used as local guardrail evidence for metric wiring and ablation surface integrity. The observed separations between full motivational delegation and ablated settings are reported as preview signals for process-fidelity instrumentation, and they are not promoted to final causal claims. Figure~\ref{fig:trace-evidence-chain} is drafted from the same clean export, using two curated per-scenario trace lanes plus an aggregate guardrail annotation.
 
 \subsection{Stability runs}
 
@@ -12,6 +12,6 @@ Table~\ref{tab:stability-24h} reports the latest rule-level stability window and
 
 \subsection{Cross-domain adapter}
 
-Table~\ref{tab:domain-adapter} reports \texttt{domain\_2026-05-27T13-29-21Z}, which contains deterministic five-seed exports over 11 scenarios (3 town + 8 coding dry-run fixtures). This suite checks whether GoalSpec, trace envelopes, and evaluation schema stay aligned across domains while Loomstead town remains the primary validation surface. Current coding rows remain interface evidence: they verify artifact plumbing (fixture snapshots, dependency graphs, patches, review reports, counterfactual replay exports), and they do not support strong claims about real-world coding performance.
+Table~\ref{tab:domain-adapter} reports \texttt{domain\_2026-05-28T07-49-46Z}, which contains deterministic five-seed exports over 11 scenarios (3 town + 8 coding dry-run fixtures) and passes 55/55 local checks. The adapter evidence is intentionally contract-level: it checks whether GoalSpec, trace envelopes, artifact manifests, replay exports, and summary metrics stay comparable while Loomstead town remains the primary validation surface. The coding rows verify fixture plumbing (snapshots, dependency graphs, patches, review reports, reviewer-arbitration traces, and counterfactual replay artifacts); they do not support claims about real-world coding-task performance. The current CF route means (coding \texttt{0.762}, town \texttt{0.333}) are reported as route-sensitivity instrumentation, not as human-believability or task-performance scores.
 
 \input{../generated/eval_tables}

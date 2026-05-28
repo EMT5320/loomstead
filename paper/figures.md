@@ -39,13 +39,13 @@
 ## Table 2: Process Fidelity ablation summary
 
 - Goal: compare Full, Hard Delegation, No Subjective Memory, No Relationship Edge, Shuffled Memory Owner, Evidence-Link Removal.
-- Source files: `.run/eval-runs/run_2026-05-27T13-37-33Z/summary.json`, `.run/eval-runs/run_2026-05-27T13-37-33Z/ablation_comparison.json`, `paper/generated/ablation_table.csv`, `paper/generated/eval_summary_tables.md`, `paper/generated/eval_tables.tex`.
+- Source files: `.run/eval-runs/run_2026-05-28T07-43-32Z/summary.json`, `.run/eval-runs/run_2026-05-28T07-43-32Z/ablation_comparison.json`, `paper/generated/ablation_table.csv`, `paper/generated/eval_summary_tables.md`, `paper/generated/eval_tables.tex`.
 - Status: generated from current clean five-repeat process run and included by `paper/latex/sections/05_experiments.tex`.
 
 ## Table 3: Memory causality and trace coverage
 
 - Goal: show relationship memory causal use, causal trace coverage, relationship consistency.
-- Source files: `.run/eval-runs/run_2026-05-27T13-37-33Z/summary.json`, process suite counterfactual replay artifacts.
+- Source files: `.run/eval-runs/run_2026-05-28T07-43-32Z/summary.json`, process suite counterfactual replay artifacts.
 - Status: generated baseline table exists; detailed replay rows pending.
 
 ## Table 4: Stability
@@ -57,7 +57,7 @@
 ## Table 5: Cross-domain adapter
 
 - Goal: town vs coding scenarios, deterministic repeat count, shared metrics, counterfactual route change rate, and fixture-level coding evidence pipeline.
-- Source files: `.run/eval-runs/domain_2026-05-27T13-29-21Z/summary.json`, manifest, `docs/cross_domain_adapter.md`, `paper/generated/eval_tables.tex`.
+- Source files: `.run/eval-runs/domain_2026-05-28T07-49-46Z/summary.json`, manifest, `docs/cross_domain_adapter.md`, `paper/generated/eval_tables.tex`.
 - Status: generated from current clean deterministic five-repeat domain run and included by `paper/latex/sections/05_experiments.tex`; wording should stay at interface / portability evidence.
 
 ## Table 6: Related-work positioning

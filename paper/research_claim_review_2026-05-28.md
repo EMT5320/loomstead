@@ -46,7 +46,7 @@ Evidence level: artifact backed, not final empirical.
 
 Supporting evidence:
 
-- `.run/eval-runs/run_2026-05-27T13-37-33Z/summary.json`.
+- `.run/eval-runs/run_2026-05-28T07-43-32Z/summary.json`.
 - `paper/generated/eval_summary_tables.md`: Full Motivational Delegation aggregate shows `goal_success_rate=1`, `required_process_coverage=1`, `forced_action_rate=0`, `agent_initiated_action_ratio=1`, `process_believability_score=1`, `n=20`.
 
 Counterclaim: the scenarios are deterministic rule fixtures and may overfit the current Process Fidelity predicates.
@@ -71,7 +71,7 @@ Evidence level: artifact backed, not final empirical.
 
 Supporting evidence:
 
-- `.run/eval-runs/run_2026-05-27T13-37-33Z/ablation_comparison.json`.
+- `.run/eval-runs/run_2026-05-28T07-43-32Z/ablation_comparison.json`.
 - `paper/generated/eval_summary_tables.md`: Hard Delegation aggregate shows `goal_success_rate=1`, `shortcut_violation_rate=1`, `forced_action_rate=1`, `agent_initiated_action_ratio=0`, `causal_trace_coverage=0`, `process_believability_score=0.037143`, `n=20`.
 
 Counterclaim: the Hard Delegation baseline is intentionally synthetic and may be weaker than a dynamic task planner with recovery.
@@ -95,7 +95,7 @@ Evidence level: artifact backed, narrow claim.
 
 Supporting evidence:
 
-- `.run/eval-runs/run_2026-05-27T13-37-33Z/summary.json`.
+- `.run/eval-runs/run_2026-05-28T07-43-32Z/summary.json`.
 - Process suite aggregate: Full baseline `relationship_memory_causal_use_rate=1`, `counterfactual_tool_selection_change_rate=0.375`, `causal_trace_coverage=1`.
 - Negative controls show process degradation or trace failure: `no_relationship_edge` has `goal_success_rate=0` and `causal_trace_coverage=0`; `evidence_link_removal` has `shortcut_violation_rate=1` and `causal_trace_coverage=0`.
 
@@ -121,7 +121,7 @@ Evidence level: artifact backed, task-secondary.
 
 Supporting evidence:
 
-- `.run/eval-runs/domain_2026-05-27T13-29-21Z/summary.json`.
+- `.run/eval-runs/domain_2026-05-28T07-49-46Z/summary.json`.
 - `paper/generated/eval_summary_tables.md`: cross-domain aggregate `55/55`, coding `40/40`, town `15/15`, aggregate `counterfactual_tool_selection_change_rate=0.645238`.
 - `docs/cross_domain_adapter.md` records 3 narrative scenarios and 8 coding fixture scenarios.
 
@@ -147,7 +147,7 @@ Evidence level: artifact backed, task-secondary.
 
 Supporting evidence:
 
-- `.run/eval-runs/domain_2026-05-27T13-29-21Z/manifest.json`.
+- `.run/eval-runs/domain_2026-05-28T07-49-46Z/manifest.json`.
 - `docs/cross_domain_adapter.md` scenario inventory lists 8 coding dry-run fixtures.
 - `paper/generated/eval_summary_tables.md` records `loomstead.coding.v0` `n=40` with comparable metric output.
 

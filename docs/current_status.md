@@ -9,7 +9,7 @@ scope: current implementation facts, verification state, and work constraints
 
 # 当前项目状态与开发前约束
 
-> 状态更新时间：2026-05-28（Eval reviewer packet 已用当前 clean process/domain runs 生成；Figure 3 trace wording 已对齐当前 clean process export 并重渲染；Godot 最新窗口复验暂停到后端/eval 主线稳定后再集中处理）
+> 状态更新时间：2026-05-28（Paper generated tables、Table 5 prose 和 claim evidence refs 已对齐当前 clean process/domain runs；Godot 最新窗口复验暂停到后端/eval 主线稳定后再集中处理）
 > 本文记录当前仓库中已核对、命令已检或明确标注人工未验收的事实。长期方向见 `docs/project_vision.md`，研究 framing 见 `docs/research_framing_motivational_delegation.md`，Agent loop 设计见 `docs/agent_loop_architecture.md`。
 
 ## 1. 当前阶段判断
@@ -36,6 +36,7 @@ scope: current implementation facts, verification state, and work constraints
 ## 3. 最近核对结果
 
 - 2026-05-28 Eval reviewer / Figure 3 收紧：基于当前 clean process export `.run/eval-runs/run_2026-05-28T07-43-32Z` 和 current clean domain export `.run/eval-runs/domain_2026-05-28T07-49-46Z` 运行 `npm.cmd run eval:reviewer:packet -- --process-run run_2026-05-28T07-43-32Z --domain-run domain_2026-05-28T07-49-46Z --process-samples 6 --domain-samples 6 --packet-id packet_2026-05-28_manual_reviewer_current_clean`，生成 `.run/eval-reviewer-packets/packet_2026-05-28_manual_reviewer_current_clean`，sampleCount=12，manual gate=`manual_review_required`。Figure 3 Mermaid source、walkthrough、figures index 和 LaTeX caption 已对齐当前 clean process export；`npm.cmd run paper:figures:check` 与 `npm.cmd run paper:figures` 通过并重渲染 `paper/generated/figures/`，其中 Figure 3 输出已与新 source 同步。
+- 2026-05-28 Paper tables / claim prose 对齐：`npm.cmd run paper:tables` 已刷新 `paper/generated/*` 到 latest runs：process=`run_2026-05-28T07-43-32Z`、domain=`domain_2026-05-28T07-49-46Z`、robustness=`robustness_2026-05-28T03-08-43Z`。`paper/latex/sections/05_experiments.tex` 已将 Table 5 说明收紧为 contract-level / interface evidence，并明确 coding rows 不支持真实 coding-task performance claim；`paper/claim_evidence_matrix.md`、`paper/figures.md` 和 `paper/research_claim_review_2026-05-28.md` 已替换旧 2026-05-27 run refs。`npm.cmd run paper:tooling` 显示 Mermaid ready、system TeX available，但 Zotero local API / connector 未启动且 `perl_available=false`；`npm.cmd run research:evidence:check`、`npm.cmd run context:check` 通过，`git diff --check` 无 whitespace error（仅提示 generated CSV 将 CRLF 归一为 LF）。
 - 2026-05-28 Research claim review / robustness drift 说明：新增 `paper/research_claim_review_2026-05-28.md`，审查 C2 / C3 / C4 / C7 / C15 / C16 的证据等级、反论点、缺口和安全措辞；`paper/claim_evidence_matrix.md` 新增 C16，将 latest promoted robustness 记录为 `promoted evidence with caveat`。`npm.cmd run research:evidence:check` 通过，命中 `.run/eval-promoted/robustness_2026-05-28T03-08-43Z/manifest.json`；`npm.cmd run eval:archive:drift` 通过且无 blocking drift。robustness promotion 的 `needs_manual_review` 当前解释为 manifest `scenarioIds` 索引修复引起的 review 级 drift，不是 metric / baseline / strict gate 回退。
 - 2026-05-28 Mermaid / Figure 3 图形链路：新增 `paper/diagrams/trace_evidence_chain_figure3.mmd`，将 Branna forgiveness seed01 trace walkthrough 转成 Mermaid 图形源；新增本地 Mermaid CLI 依赖、`scripts/render_mermaid_figures.ps1`、`npm.cmd run paper:figures` / `paper:figures:check`，脚本会自动发现本机 Chrome / Edge 并把 puppeteer 临时配置写入 `.run/mermaid/`。Figure 3 已补第二条 Tomas repair trace lane 与 process-suite aggregate guardrail annotation；`npm.cmd run paper:figures` 可生成 `paper/generated/figures/*.svg`、`*.png` 与 `*.pdf`，LaTeX 当前直接 include rendered PNG。当前仍需 publication wording review。
 - 2026-05-28 Eval robustness 收紧：`npm.cmd run eval:robustness` 通过，60/60 source perturbation checks，`phase2.evidence_robustness.strict_gate.v1` 的 18 项检查全部通过；domain 分域组 `loomstead.coding.v0` 为 32/32、`loomstead.town.v0` 为 12/12，均为 invariance rate `1.0`；输出 `phase2.evidence_robustness.domain_signature.v2.coding` 与 `.narrative` 签名摘要。`npm.cmd run eval:robustness:export` 生成 `.run/eval-runs/robustness_2026-05-28T02-26-00Z`，artifactCount=7，新增 `strict_gate.json`、`signature_summary.json` 与 manifest `evalGates`；`npm.cmd run eval:archive:check` 通过，`npm.cmd run eval:archive:drift` 写入 drift report 且无 blocking drift；`npm.cmd run paper:tables` 可消费 robustness metrics，但本地 paper generated 文件会随当前 `.run` 内容刷新。
@@ -112,7 +113,7 @@ git diff --check
 
 - Eval 线已新增 strict gate、scenarioIds 索引、coding / narrative 分域签名与 latest promoted robustness evidence 自动检查；promotion drift 说明、research claim review、当前 clean-run reviewer packet 和 Figure 3 trace wording 已补，下一步是人工填写 reviewer_score_sheet，或在需要质量抽样时补少量 provider-backed eval。
 - Godot trace 最新窗口复验暂缓；后续等后端 Agent / Eval 主线稳定后再集中做展示层复验和 polish，不重开 Phase 1 旧玩法扩写。
-- Research 线下一步围绕 `.run/eval-runs/domain_2026-05-28T07-49-46Z` 和 `paper/research_claim_review_2026-05-28.md` 写 claim prose / Table 5 说明，措辞保持 research-preview。
+- Research 线的 current clean run refs、claim evidence matrix 和 Table 5 prose 已对齐；下一步若不等人工 reviewer，可做少量 provider-backed eval / LLM 质量抽样，或继续整理 limitations / related-work 引用。
 - Paper 线已把 `paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md` 对齐到当前 clean process export，并通过 `npm.cmd run paper:figures` 渲染到 `paper/generated/figures/`；下一步只剩 publication-level 视觉层级 / layout polish。
 - LLM / Debug 线只在切换模型、key、profile、prompt 或需要刷新真实成本证据时运行 `npm.cmd run llm:smoke`。
 - 资产线按 `docs/asset_batches/prompt_ready_export.md` 推进前，先结合 `docs/open_questions.md` 的资产范围调整重新排序。

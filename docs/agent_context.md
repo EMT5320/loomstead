@@ -9,7 +9,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 
 # Loomstead 新对话入口
 
-> 更新时间：2026-05-28（Eval reviewer packet 已用当前 clean process/domain runs 生成；Figure 3 trace wording 已对齐当前 clean process export；Godot 最新窗口复验暂缓到展示层集中处理）
+> 更新时间：2026-05-28（Paper generated tables、Table 5 prose 和 claim evidence refs 已对齐当前 clean process/domain runs；Godot 最新窗口复验暂缓到展示层集中处理）
 > 用途：新对话、跨机器切换、子代理任务和多助手接手时的第一入口。
 
 ## 1. 启动路线
@@ -51,9 +51,9 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 
 ## 5. 最近下一步
 
-- Eval 线已让 coding + narrative domain 的 counterfactual route replay 拉开指标，并支持 domain `--seeds`；`eval:robustness` 已接入 strict gate、manifest `evalGates`、scenarioIds 索引和 coding / narrative 分域签名，且已有 clean five-seed promoted regression 候选；research claim review 与 promotion drift 说明已补；当前 clean-run reviewer packet 已生成到 `.run/eval-reviewer-packets/packet_2026-05-28_manual_reviewer_current_clean`，Figure 3 trace wording 已对齐当前 clean process export 并重渲染。下一步是人工填写 reviewer_score_sheet，或在需要质量抽样时补少量 provider-backed eval。
+- Eval 线已让 coding + narrative domain 的 counterfactual route replay 拉开指标，并支持 domain `--seeds`；`eval:robustness` 已接入 strict gate、manifest `evalGates`、scenarioIds 索引和 coding / narrative 分域签名，且已有 clean five-seed promoted regression 候选；research claim review 与 promotion drift 说明已补；当前 clean-run reviewer packet 已生成到 `.run/eval-reviewer-packets/packet_2026-05-28_manual_reviewer_current_clean`，Figure 3、generated tables、claim evidence refs 和 Table 5 prose 已对齐当前 clean process/domain exports。下一步是人工填写 reviewer_score_sheet，或在需要质量抽样时补少量 provider-backed eval。
 - Godot 线暂缓中间态 UI 迭代；真实窗口复验等后端 Agent / Eval 主线稳定后集中处理。
-- Research 线当前 clean domain export 为 `.run/eval-runs/domain_2026-05-28T07-49-46Z`；C2 / C3 / C4 / C7 / C15 / C16 已做 claim review，继续保持 interface evidence / research-preview 口径。
+- Research 线当前 clean domain export 为 `.run/eval-runs/domain_2026-05-28T07-49-46Z`；C2 / C3 / C4 / C7 / C15 / C16 已做 claim review，Table 5 prose 明确保持 contract-level / interface evidence 口径。
 - 不要重新扩 Phase 1 旧玩法线。
 - 主人 2026-05-28 表示真实 provider 余额已充值；切换模型、key、profile、prompt，或需要质量抽样 / provider-backed eval / 真实成本证据时，再单独运行 `npm.cmd run llm:smoke`。
 - 资产线按 `docs/asset_batches/prompt_ready_export.md` 推进，但先按 `docs/open_questions.md` 的资产范围调整重新评估优先级。
