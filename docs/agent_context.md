@@ -52,7 +52,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 ## 5. 最近下一步
 
 - Eval 线已让 coding + narrative domain 的 counterfactual route replay 拉开指标，并支持 domain `--seeds`；`eval:robustness` 已接入 strict gate、manifest `evalGates`、scenarioIds 索引和 coding / narrative 分域签名，且已有 clean five-seed promoted regression 候选；research claim review 与 promotion drift 说明已补；Mermaid figure 本地渲染链路已接入 `npm.cmd run paper:figures`，Figure 3 第二条 trace 与 aggregate annotation 已补。下一步可生成 / 复核人工 reviewer 抽样包，或继续 polish Figure 3 wording。
-- Godot 线暂缓中间态 UI 迭代；真实窗口复验等后端 Agent / Eval 主线稳定后集中处理。
+- Godot 线暂缓中间态 UI 迭代；真实窗口复验等后端 Agent / Eval 主线稳定后集中处理，避免每次新增 trace / 内容 / 字段后反复进入中间态窗口验收和小修循环。
 - Research 线已把 clean domain export `.run/eval-runs/domain_2026-05-27T13-29-21Z` 写入 claim / Table 5 入口，并已对 C2 / C3 / C4 / C7 / C15 / C16 做 claim review；继续保持 interface evidence / research-preview 口径。
 - 不要重新扩 Phase 1 旧玩法线。
 - 切换模型、key、profile 或需要刷新真实成本证据时，再单独运行 `npm.cmd run llm:smoke`。
@@ -87,4 +87,4 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - 状态更新必须区分 `code integrated`、`command checked`、`manual verified`、`manual unverified`。
 - 修改 `docs/current_status.md`、`docs/agent_context.md` 等治理入口时保持短、准、可验证，不复制源设计长文。
 - 多子代理并行时避免同时修改治理入口；由主会话串行合并事实。
-- 家里 / 公司切换时不要提交本机绝对路径、私有 key、临时 overlay 或 `.run/` 中未整理 artifact。
+- 家里 / 公司切换时不要提交本机绝对路径、私有 key 或临时 overlay；已整理的 eval 证据子树可随 Git 同步，未整理 `.run/` 临时产物继续排除。

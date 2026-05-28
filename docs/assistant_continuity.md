@@ -32,6 +32,7 @@ scope: cross-assistant resume, handoff, and evidence protocol
 - 状态文档只写当前事实、验证状态、manual gate 和下一步，不复制源设计长文。
 - 多助手并行时，`docs/current_status.md`、`docs/agent_context.md`、`AGENTS.md` 等治理入口由主会话串行修改。
 - 本机私有 key、模型 overlay、本地绝对路径和未整理 `.run/` artifact 不进入提交态。
+- 家里 / 公司交替开发时，已整理的 eval 证据子树可随 Git 同步：`.run/eval-runs/`、`.run/eval-promoted/`、`.run/eval-reviewer-packets/`、`.run/process-llm-evidence/`；发现本机缺少文档记录的 run 时，先视为 artifact 同步缺口，不默认重跑白天已完成的 eval。
 
 ## 4. 证据等级
 

@@ -33,6 +33,8 @@ scope: current implementation facts, verification state, and work constraints
 | 资产管线 | `assets/manifests/asset_manifest.json` 登记 55 条资产；3 张地点背景、星灯祭 CG、玩家 + 6 NPC 立绘、7 张地图小人和 3 类交互 marker 已进入 Godot；`AssetRegistry` 支持 happy / troubled 回退。 | 表情差分、行动反馈图标和生活行动 UI 小组件仍是 `prompt_ready` backlog；地图小人是否晋级 `source_selected` 仍需主人确认。 |
 | 上下文治理 | `AGENTS.md`、`CLAUDE.md`、`docs/agent_context.md`、`docs/current_status.md`、`docs/README.md` 是基础入口；`docs/assistant_continuity.md` 和 `docs/workflows.md` 负责跨助手接续与 workflow 索引；`scripts/build_agent_context.py` 提供 `context:check` / `context:brief` / `context:resume`。 | 状态文档只记录当前事实和验证边界；长历史、过时 handoff 和旧看板留在 `docs/archive/`。 |
 
+跨环境 artifact 策略（2026-05-28 晚间补充）：家里 / 公司交替开发时，已整理的 eval 证据子树可随 Git 同步，包括 `.run/eval-runs/`、`.run/eval-promoted/`、`.run/eval-reviewer-packets/` 和 `.run/process-llm-evidence/`；Godot 缓存、截图、Mermaid 临时配置、一次性脚本和日志继续作为本地临时产物处理。如果当前机器缺少文档记录的 promoted manifest，优先按 artifact 同步缺口处理，不默认重复运行白天已经完成的 eval。
+
 ## 3. 最近核对结果
 
 - 2026-05-28 Research claim review / robustness drift 说明：新增 `paper/research_claim_review_2026-05-28.md`，审查 C2 / C3 / C4 / C7 / C15 / C16 的证据等级、反论点、缺口和安全措辞；`paper/claim_evidence_matrix.md` 新增 C16，将 latest promoted robustness 记录为 `promoted evidence with caveat`。`npm.cmd run research:evidence:check` 通过，命中 `.run/eval-promoted/robustness_2026-05-28T03-08-43Z/manifest.json`；`npm.cmd run eval:archive:drift` 通过且无 blocking drift。robustness promotion 的 `needs_manual_review` 当前解释为 manifest `scenarioIds` 索引修复引起的 review 级 drift，不是 metric / baseline / strict gate 回退。
@@ -63,6 +65,7 @@ scope: current implementation facts, verification state, and work constraints
 - 后端 Runtime 是权威世界状态修改点；Godot 本地坐标只做表现，不写回权威世界。
 - LLM 输出只生成文本、结构化建议或工具意图；世界状态变更必须经过 Runtime 规则、schema 校验和 fallback。
 - 密钥、私有模型配置、本机绝对路径和临时 overlay 不写入仓库。
+- 已整理的 eval 证据 artifact 可进入提交态以支持家里 / 公司交替开发；未整理 `.run/` 临时产物继续排除。
 - 新增 API、事件类型、schema、eval artifact、Debug 字段或 Godot 消费字段前，先写清数据契约。
 - 未由代码、命令或人工窗口验证的能力必须标注 `manual unverified` 或同等说明。
 - Phase 2 直接使用 MotivationEngine；不并行扩写旧 `LifeActionExecutor`。
@@ -110,7 +113,7 @@ git diff --check
 ## 7. 下一轮建议
 
 - Eval 线已新增 strict gate、scenarioIds 索引、coding / narrative 分域签名与 latest promoted robustness evidence 自动检查；promotion drift 说明、research claim review 和 Mermaid figure 渲染链路已补，下一步可生成 / 复核人工 reviewer 抽样包，或继续 polish Figure 3 的第二条 trace / aggregate annotation。
-- Godot trace 最新窗口复验暂缓；后续等后端 Agent / Eval 主线稳定后再集中做展示层复验和 polish，不重开 Phase 1 旧玩法扩写。
+- Godot trace 最新窗口复验暂缓；后续等后端 Agent / Eval 主线稳定后再集中做展示层复验和 polish，避免每次新增 trace / 内容 / 字段后反复进入中间态窗口验收和小修循环，不重开 Phase 1 旧玩法扩写。
 - Research 线下一步围绕 `.run/eval-runs/domain_2026-05-27T13-29-21Z` 和 `paper/research_claim_review_2026-05-28.md` 写 claim prose / Table 5 说明，措辞保持 research-preview。
 - Paper 线已把 `paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md` 转成 `paper/diagrams/trace_evidence_chain_figure3.mmd` 图形草案，并通过 `npm.cmd run paper:figures` 渲染到 `paper/generated/figures/`；第二条 trace 与 aggregate annotation 已补，下一步是继续人工修正 artifact 中的 mojibake 标签和图形措辞。
 - LLM / Debug 线只在切换模型、key、profile、prompt 或需要刷新真实成本证据时运行 `npm.cmd run llm:smoke`。
