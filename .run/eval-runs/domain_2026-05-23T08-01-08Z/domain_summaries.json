@@ -1,0 +1,19 @@
+{
+  "loomstead.coding.v0": {
+    "passed": 2,
+    "total": 2,
+    "scenarioIds": [
+      "coding.skill_prototype_dryrun",
+      "coding.skill_regression_fix_dryrun"
+    ]
+  },
+  "loomstead.town.v0": {
+    "passed": 3,
+    "total": 3,
+    "scenarioIds": [
+      "narrative.close_friend_traceable",
+      "narrative.repair_trust_memory",
+      "narrative.affiliation_bias_agent_choice"
+    ]
+  }
+}

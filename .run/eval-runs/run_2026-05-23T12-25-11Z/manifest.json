@@ -1,0 +1,553 @@
+{
+  "manifestVersion": "phase2.eval_manifest.v1",
+  "exportKind": "process_fidelity_dataset",
+  "createdAt": "2026-05-23T12:25:11+00:00",
+  "suite": "process_fidelity",
+  "baseline": "full_motivational_delegation",
+  "ok": true,
+  "runDirName": "run_2026-05-23T12-25-11Z",
+  "git": {
+    "commit": "95bd7e369deeb24e5577c0f2444789f54e1f6ed1",
+    "shortCommit": "95bd7e3",
+    "branch": "main",
+    "dirty": false,
+    "statusShort": []
+  },
+  "schemaRegistry": {
+    "registryVersion": "schema_registry.v1",
+    "schemas": [
+      {
+        "id": "schema_registry",
+        "version": "schema_registry.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Runtime schema registry snapshot exposed by /api/debug.phase2.",
+        "producer": "app.runtime.schema_registry",
+        "debugSurface": "phase2.schemaRegistry",
+        "requiredFields": [
+          "registryVersion",
+          "schemas",
+          "versions"
+        ],
+        "notes": []
+      },
+      {
+        "id": "phase2_trace",
+        "version": "phase2.trace.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Unified trace envelope for Phase 2 decision, tool, budget, and memory events.",
+        "producer": "app.runtime.trace_schema",
+        "debugSurface": "phase2.traceSchemaVersion + phase2.recentTraceEvents[]",
+        "requiredFields": [
+          "traceId",
+          "spanId",
+          "worldTime",
+          "eventType",
+          "summary"
+        ],
+        "notes": []
+      },
+      {
+        "id": "capability_resolution",
+        "version": "capability_resolution.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Five-layer tool capability filtering and routing evidence.",
+        "producer": "app.runtime.capability_registry",
+        "debugSurface": "phase2.motivation.items[].capabilityFilters",
+        "requiredFields": [
+          "context",
+          "layers",
+          "allowedToolIds",
+          "rejectedTools",
+          "decisionBudgets"
+        ],
+        "notes": []
+      },
+      {
+        "id": "decision_budget",
+        "version": "decision_budget.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "NPC / feature / tool-cost decision budget policy and usage snapshot.",
+        "producer": "app.runtime.decision_budget",
+        "debugSurface": "phase2.decisionBudget",
+        "requiredFields": [
+          "policy",
+          "items",
+          "providerActuals"
+        ],
+        "notes": []
+      },
+      {
+        "id": "provider_usage_actual",
+        "version": "provider_usage_actual.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Actual provider usage record for tokens, latency, and cost aggregation.",
+        "producer": "app.runtime.decision_budget",
+        "debugSurface": "phase2.decisionBudget.providerActuals + providerUsageRecord",
+        "requiredFields": [
+          "tick",
+          "npcId",
+          "feature",
+          "provider",
+          "tokens",
+          "latencyMs",
+          "cost"
+        ],
+        "notes": []
+      },
+      {
+        "id": "observer_scope",
+        "version": "observer_scope.v1",
+        "owner": "memory",
+        "status": "active",
+        "description": "Result observer visibility scope with participants, location, and exclusions.",
+        "producer": "app.memory.observer",
+        "debugSurface": "phase2.recentTraceEvents[].details.observerScope",
+        "requiredFields": [
+          "visibility",
+          "actorId",
+          "participantIds",
+          "observerIds",
+          "excludedObserverIds"
+        ],
+        "notes": []
+      },
+      {
+        "id": "observer_spatial_model",
+        "version": "observer_spatial_model.v1",
+        "owner": "memory",
+        "status": "active",
+        "description": "Normalized anchor-distance model used by all_in_location visibility.",
+        "producer": "app.memory.observer",
+        "debugSurface": "phase2.recentTraceEvents[].details.observerScope.spatialModel",
+        "requiredFields": [
+          "distanceUnit",
+          "hearingRadius"
+        ],
+        "notes": []
+      },
+      {
+        "id": "motivation_plan",
+        "version": "motivation_plan.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Read-only Godot-compatible life action plan produced by MotivationEngine.",
+        "producer": "app.runtime.agent_runtime",
+        "debugSurface": "world.lifeActionPlan + world.slice.scheduleSnapshotVersion",
+        "requiredFields": [
+          "day",
+          "phase",
+          "selectedActions",
+          "locationBuckets",
+          "policy"
+        ],
+        "notes": []
+      },
+      {
+        "id": "legacy_life_action_plan",
+        "version": "life_action_plan.v1",
+        "owner": "simulation",
+        "status": "legacy_compat",
+        "description": "Legacy life action plan snapshot kept for direct world_state callers.",
+        "producer": "app.simulation.life_action_planner",
+        "debugSurface": "world.lifeActionPlan before AgentRuntime Phase 2 override",
+        "requiredFields": [
+          "day",
+          "phase",
+          "selectedActions",
+          "locationBuckets",
+          "policy"
+        ],
+        "notes": [
+          "AgentRuntime replaces this with motivation_plan.v1 on the current tick/state path."
+        ]
+      },
+      {
+        "id": "motivation_engine",
+        "version": "motivation_engine.v0",
+        "owner": "runtime",
+        "status": "legacy_compat",
+        "description": "MotivationEngine decision snapshot; v0 kept for current debug compatibility.",
+        "producer": "app.runtime.motivation_engine",
+        "debugSurface": "phase2.motivation",
+        "requiredFields": [
+          "items"
+        ],
+        "notes": [
+          "v0 remains stable until decision snapshot shape is promoted after Phase 2 trace hardening."
+        ]
+      },
+      {
+        "id": "need_accumulator",
+        "version": "need_accumulator.v0",
+        "owner": "runtime",
+        "status": "legacy_compat",
+        "description": "Need scoring snapshot used by MotivationEngine.",
+        "producer": "app.runtime.need_accumulator",
+        "debugSurface": "phase2.needAccumulator",
+        "requiredFields": [
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "tool_runtime",
+        "version": "tool_runtime.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Current ToolExecutor action runtime snapshot for selected NPCs.",
+        "producer": "app.runtime.agent_runtime",
+        "debugSurface": "phase2.toolRuntime",
+        "requiredFields": [
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "subjective_memory_store",
+        "version": "subjective_memory_store.v0",
+        "owner": "memory",
+        "status": "legacy_compat",
+        "description": "Subjective memory debug store snapshot.",
+        "producer": "app.memory.subjective_memory",
+        "debugSurface": "phase2.subjectiveMemory",
+        "requiredFields": [
+          "agentId",
+          "count",
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "subjective_memory_recall",
+        "version": "subjective_memory_recall.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Subjective memory recall evidence injected into decision scoring.",
+        "producer": "app.runtime.motivation_engine",
+        "debugSurface": "phase2.motivation.items[].subjectiveMemoryRecall",
+        "requiredFields": [
+          "query",
+          "count",
+          "recordIds",
+          "sourceEventIds"
+        ],
+        "notes": []
+      },
+      {
+        "id": "relationship_edge_store",
+        "version": "relationship_edge_store.v0",
+        "owner": "memory",
+        "status": "legacy_compat",
+        "description": "Relationship edge debug store snapshot with event and trace refs.",
+        "producer": "app.memory.relationship_edges",
+        "debugSurface": "phase2.relationshipEdges",
+        "requiredFields": [
+          "agentId",
+          "count",
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "heuristic_library",
+        "version": "heuristic_library.v0",
+        "owner": "memory",
+        "status": "legacy_compat",
+        "description": "Heuristic memory library snapshot with confidence decay.",
+        "producer": "app.memory.heuristic",
+        "debugSurface": "phase2.heuristics",
+        "requiredFields": [
+          "agentId",
+          "worldTick",
+          "count",
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "heuristic_recall",
+        "version": "heuristic_recall.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Heuristic recall evidence injected into decision scoring.",
+        "producer": "app.runtime.motivation_engine",
+        "debugSurface": "phase2.motivation.items[].heuristicRecall",
+        "requiredFields": [
+          "worldTick",
+          "count",
+          "activeCount",
+          "heuristicIds",
+          "sourceEventIds"
+        ],
+        "notes": []
+      },
+      {
+        "id": "event_skill_outcome",
+        "version": "event_skill_outcome.v1",
+        "owner": "event_skill",
+        "status": "active",
+        "description": "Event skill outcome record shared by API result, event stream, and completed events.",
+        "producer": "app.skills.event_skill_schema",
+        "debugSurface": "eventResult + completedEvents[].resolution.outcomeRecord",
+        "requiredFields": [
+          "recordVersion",
+          "skillId",
+          "eventId",
+          "choice",
+          "summary"
+        ],
+        "notes": []
+      }
+    ],
+    "versions": {
+      "schema_registry": "schema_registry.v1",
+      "phase2_trace": "phase2.trace.v1",
+      "capability_resolution": "capability_resolution.v1",
+      "decision_budget": "decision_budget.v1",
+      "provider_usage_actual": "provider_usage_actual.v1",
+      "observer_scope": "observer_scope.v1",
+      "observer_spatial_model": "observer_spatial_model.v1",
+      "motivation_plan": "motivation_plan.v1",
+      "legacy_life_action_plan": "life_action_plan.v1",
+      "motivation_engine": "motivation_engine.v0",
+      "need_accumulator": "need_accumulator.v0",
+      "tool_runtime": "tool_runtime.v1",
+      "subjective_memory_store": "subjective_memory_store.v0",
+      "subjective_memory_recall": "subjective_memory_recall.v1",
+      "relationship_edge_store": "relationship_edge_store.v0",
+      "heuristic_library": "heuristic_library.v0",
+      "heuristic_recall": "heuristic_recall.v1",
+      "event_skill_outcome": "event_skill_outcome.v1"
+    }
+  },
+  "metricIds": [
+    "agent_initiated_action_ratio",
+    "causal_trace_coverage",
+    "forced_action_rate",
+    "goal_success_rate",
+    "intervention_overreach_rate",
+    "process_believability_score",
+    "relationship_consistency",
+    "relationship_memory_causal_use_rate",
+    "required_process_coverage",
+    "shortcut_violation_rate"
+  ],
+  "baselines": [
+    "evidence_link_removal",
+    "full_motivational_delegation",
+    "hard_delegation",
+    "no_relationship_edge",
+    "no_subjective_memory",
+    "shuffled_memory_owner"
+  ],
+  "scenarioIds": [
+    "pf.affiliation_bias_remains_agent_initiated",
+    "pf.repair_talk_requires_memory_trace",
+    "pf.shared_chat_builds_traceable_trust"
+  ],
+  "artifacts": [
+    {
+      "path": "summary.json",
+      "kind": "summary_json",
+      "bytes": 17756,
+      "sha256": "9e563a613b1aacbec26a1e008b91385bbc48eea7a428c84ad6fe04517980eaa3"
+    },
+    {
+      "path": "ablation_comparison.json",
+      "kind": "ablation_comparison_json",
+      "bytes": 5618,
+      "sha256": "c4b0ba6d2e7153d3c6c91e5838948841c41a4e63dc6fee7b269bfda37a6c14da"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_full_motivational_delegation.json",
+      "kind": "per_scenario_json",
+      "bytes": 18288,
+      "sha256": "1d5129e55d7b1ebf6e7e934b6b573b17401f34cfaf5ffa133b0a95a82cc40c48",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation.json",
+      "kind": "per_scenario_json",
+      "bytes": 17907,
+      "sha256": "16964ede1fddffb39510e19dd38272ccf61e25ec4de6eabaac8f72821a1abc68",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_full_motivational_delegation.json",
+      "kind": "per_scenario_json",
+      "bytes": 16845,
+      "sha256": "fb58edd7af9b9084b4189b2d1b6b429262fb85a125477cbe558e0a20d03c5921",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_hard_delegation.json",
+      "kind": "per_scenario_json",
+      "bytes": 1543,
+      "sha256": "a730b99b5555fa51f8d17bb0d1e1550f23352c017b7a1553c9d632a00ec26389",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_hard_delegation.json",
+      "kind": "per_scenario_json",
+      "bytes": 1560,
+      "sha256": "1acd1469625bea3f48910fb583d3d0ad9ddf80c74b57f387156a782f425e323b",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_hard_delegation.json",
+      "kind": "per_scenario_json",
+      "bytes": 1566,
+      "sha256": "7e089c0629a9aeaa599a506a23b4d2763bd1aac1eaf66a0bacd21728119597d0",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_subjective_memory.json",
+      "kind": "per_scenario_json",
+      "bytes": 15917,
+      "sha256": "06cd4a36ebb9c010c7a7066948d50dff7a7e62b65c803d4af87db1469129fbe0",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_subjective_memory.json",
+      "kind": "per_scenario_json",
+      "bytes": 15342,
+      "sha256": "03b99fbe50e62eb46a2378b5464a663058dfe1f8622b5da169c61cd175641ad9",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_subjective_memory.json",
+      "kind": "per_scenario_json",
+      "bytes": 15072,
+      "sha256": "9716f00859e0a10fb8b9c9b3fcd1f48aa8f3b84a29ccdbd587e231d4ac072692",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_relationship_edge.json",
+      "kind": "per_scenario_json",
+      "bytes": 17218,
+      "sha256": "c3f35e54537aa7b0981c4874c712a6ffc2dd40f1812dd717dcebb6097e0b56d6",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_relationship_edge.json",
+      "kind": "per_scenario_json",
+      "bytes": 16464,
+      "sha256": "863dd47885faf5c8058862a20e74e67442a6fb81d6a588608689e0d99a7773da",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_relationship_edge.json",
+      "kind": "per_scenario_json",
+      "bytes": 15668,
+      "sha256": "5287afbd34b5793498081351fef882d452f1465d2df9514fde9a4027ecc61e86",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_shuffled_memory_owner.json",
+      "kind": "per_scenario_json",
+      "bytes": 17220,
+      "sha256": "9fc0b4e9fa327f93e957d225c99386a4e94b2b791166cdbf6873a88e1b94a91e",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_shuffled_memory_owner.json",
+      "kind": "per_scenario_json",
+      "bytes": 16466,
+      "sha256": "36f0462ee1255eda7cfceac232dc99857ddb2eab6c9eff93827ad183ada3b6a1",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_shuffled_memory_owner.json",
+      "kind": "per_scenario_json",
+      "bytes": 15670,
+      "sha256": "177c078420dff8354d41557b0caad5c3f423fc09c840517ccb02d43945d4a09b",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_evidence_link_removal.json",
+      "kind": "per_scenario_json",
+      "bytes": 17219,
+      "sha256": "bb83442cb273a67934fec04e43009d8cb887a4b36e627b75169a9267b5bffdb8",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_evidence_link_removal.json",
+      "kind": "per_scenario_json",
+      "bytes": 16464,
+      "sha256": "60b08e4175ef4a752d976d46d20f504d2f20c8cc4e4d457cc4e93c2c466f1fa0",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_evidence_link_removal.json",
+      "kind": "per_scenario_json",
+      "bytes": 15668,
+      "sha256": "bef9a2bb4025444e201bba9387caf5adb3a5d73af6e8307049afe487065eda9b",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "intervention_trace.jsonl",
+      "kind": "intervention_trace_jsonl",
+      "bytes": 3745,
+      "sha256": "fc43dcec7607bdc1fdd1c75ef98d07f3759648ac2d0e04b1258e856794ec7e91",
+      "rowCount": 3,
+      "baseline": "hard_delegation"
+    },
+    {
+      "path": "goal_progress_trace.jsonl",
+      "kind": "goal_progress_trace_jsonl",
+      "bytes": 34871,
+      "sha256": "89dde616f91de37fa3ac4a30abaf197ea70c9610bc1e39d8ca58c9e6b0793831",
+      "rowCount": 3,
+      "baseline": "full_motivational_delegation"
+    },
+    {
+      "path": "counterfactual_replay.jsonl",
+      "kind": "counterfactual_replay_jsonl",
+      "bytes": 16142,
+      "sha256": "046e61e6d358f59b947a1892fd1b837b281de75bbbbeee01d2cacc7eff1861ab",
+      "rowCount": 3,
+      "baseline": "full_motivational_delegation"
+    },
+    {
+      "path": "memory_ablation_trace.jsonl",
+      "kind": "memory_ablation_trace_jsonl",
+      "bytes": 9714,
+      "sha256": "028851fec8b978cdaeb7a303270d9e44dc49d0d0dd466e5c9dbcd8492ad0ae01",
+      "rowCount": 12
+    }
+  ],
+  "verification": {
+    "summary": "每个 artifact 提供 bytes / sha256；JSONL artifact 额外提供 rowCount，便于后续复核导出完整性。",
+    "localCommands": [
+      "npm.cmd run eval:process",
+      "npm.cmd run eval:process:export",
+      "npm.cmd run eval:stability",
+      "npm.cmd run eval:stability:export",
+      "npm.cmd run eval:domain",
+      "npm.cmd run eval:domain:export"
+    ]
+  }
+}

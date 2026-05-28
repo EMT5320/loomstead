@@ -1,0 +1,5 @@
+--- a/skills/loomstead-debug/SKILL.md
++++ b/skills/loomstead-debug/SKILL.md
+@@
++Check regression evidence before approving fixes.
++Run npm.cmd run check for runtime-facing skill changes.

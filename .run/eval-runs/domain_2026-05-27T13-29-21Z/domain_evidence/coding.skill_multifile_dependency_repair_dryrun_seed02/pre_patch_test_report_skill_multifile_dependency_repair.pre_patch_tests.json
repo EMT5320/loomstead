@@ -1,0 +1,118 @@
+{
+  "testReportId": "skill_multifile_dependency_repair.pre_patch_tests",
+  "command": "python -m pytest tests/test_skill.py -q",
+  "testRunner": "pytest",
+  "durationMs": 506.144,
+  "exitCode": 1,
+  "testPhase": "pre_patch",
+  "passed": false,
+  "expectedFailure": true,
+  "failureObserved": true,
+  "failingCaseIds": [
+    "pytest_suite"
+  ],
+  "caseResults": [
+    {
+      "caseId": "pytest_suite",
+      "passed": false,
+      "runner": "pytest",
+      "exitCode": 1,
+      "passedCount": 1,
+      "failedCount": 1,
+      "summary": "F.                                                                       [100%]",
+      "parseNote": "JSONDecodeError('Expecting value: line 1 column 1 (char 0)')"
+    }
+  ],
+  "execution": {
+    "executed": true,
+    "testPhase": "pre_patch",
+    "testRunner": "pytest",
+    "workspaceKind": "git_external_repo_checkout",
+    "sourceRepoKind": "deterministic_local_git_repository",
+    "checkoutMethod": "git clone",
+    "command": "python -m pytest tests/test_skill.py -q",
+    "commandTemplate": "python -m pytest tests/test_skill.py -q",
+    "testCommandSource": "metadata.testRunner",
+    "pythonExecutable": "python.exe",
+    "exitCode": 1,
+    "durationMs": 506.144,
+    "stdout": "F.                                                                       [100%]\n================================== FAILURES ===================================\n_____________________ test_slug_uses_formatter_dependency _____________________\n\n    def test_slug_uses_formatter_dependency():\n        ticket = build_ticket('  Mira Bloom  ')\n>       assert ticket == {'ok': True, 'label': 'Mira Bloom', 'slug': 'mira-bloom'}\nE       AssertionError: assert {'label': 'Mi... 'Mira Bloom'} == {'label': 'Mi... 'mira-bloom'}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Differing items:\nE         {'slug': 'Mira Bloom'} != {'slug': 'mira-bloom'}\nE         Use -v to get more diff\n\ntests\\test_skill.py:14: AssertionError\n=========================== short test summary info ===========================\nFAILED tests/test_skill.py::test_slug_uses_formatter_dependency - AssertionEr...\n1 failed, 1 passed in 0.04s\n",
+    "stderr": "",
+    "checkoutSteps": [
+      {
+        "command": "git init --quiet",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git checkout -B main",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "Switched to a new branch 'main'\n"
+      },
+      {
+        "command": "git config user.email fixture@example.invalid",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git config user.name Loomstead Fixture",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git add --all",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "warning: unable to access 'C:/Users/Administrator/.config/git/ignore': Permission denied\n"
+      },
+      {
+        "command": "git commit --quiet -m initial fixture repo",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git clone --quiet <source-repo> <checkout>",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "warning: unable to access 'C:/Users/Administrator/.config/git/ignore': Permission denied\n"
+      }
+    ],
+    "git": {
+      "defaultBranch": "main",
+      "sourceHead": "e81c0fb333511687a1a4b8c70af3a09568252016",
+      "checkoutHead": "e81c0fb333511687a1a4b8c70af3a09568252016",
+      "statusAfterPatch": []
+    },
+    "sourceRepoFiles": [
+      "README.md",
+      "src/__init__.py",
+      "src/formatter.py",
+      "src/workflow.py",
+      "tests/test_skill.py"
+    ],
+    "workspaceFiles": [
+      "README.md",
+      "src/__init__.py",
+      "src/formatter.py",
+      "src/workflow.py",
+      "tests/test_skill.py"
+    ],
+    "workspaceFileHashes": {
+      "README.md": "ba2872f46fc02679b32842490aa76f255c6390d4c36ea971c7d091190037c0b3",
+      "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "src/formatter.py": "09b2625b4e2ddf97d3ba445f1ca60d5d466c2def202cd56043da2b222f1b5073",
+      "src/workflow.py": "7da38f500e8fc115370e0e2f82e3702bbb229524e8e08a64e6768ce69e46f24e",
+      "tests/test_skill.py": "c5b64dd46671433f063076fc57330515c5105cce324060ce0838cc680d6e5895"
+    }
+  },
+  "sourceArtifactId": "pre_patch_fixture_state",
+  "sourceEventIds": [
+    "coding_evt_005"
+  ],
+  "sha256": "0ddd72dc9617db780868aa202b9bb75192d53da7d5739d065450b73757c2e606"
+}

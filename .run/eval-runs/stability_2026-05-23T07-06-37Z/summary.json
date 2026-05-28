@@ -1,0 +1,147 @@
+{
+  "ok": true,
+  "suite": "stability_72h",
+  "baseline": "rule_72h_stability",
+  "passed": null,
+  "total": null,
+  "metrics": [
+    {
+      "metric": "stability_tick_success_rate",
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 72,
+      "baseline": "rule_72h_stability",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "trace_schema_coverage",
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "rule_72h_stability",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "memory_observation_per_tool_result",
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "rule_72h_stability",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "tool_failure_rate",
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "rule_72h_stability",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "tool_interruption_rate",
+      "mean": 0.006897,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "rule_72h_stability",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "active_agent_count",
+      "mean": 6.0,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "rule_72h_stability",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "relationship_edge_count",
+      "mean": 8.0,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "rule_72h_stability",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "heuristic_count",
+      "mean": 18.0,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "rule_72h_stability",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "heuristic_decision_ref_rate",
+      "mean": 0.032407,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "rule_72h_stability",
+      "scenarioId": "aggregate"
+    }
+  ],
+  "ablation_comparison": null,
+  "hours": 72,
+  "ticksCompleted": 72,
+  "checks": {
+    "tick_successful": true,
+    "clock_reached_expected_tick": true,
+    "no_tool_failures": true,
+    "trace_schema_complete": true,
+    "memory_observations_follow_tools": true,
+    "relationship_edges_created": true,
+    "heuristics_created": true,
+    "heuristics_influence_decisions": true,
+    "multi_agent_participation": true
+  },
+  "evidence": {
+    "initialClock": {
+      "day": 1,
+      "hour": 8,
+      "tick": 0,
+      "phase": "morning",
+      "actionBudget": 3,
+      "paused": false,
+      "minute": 0,
+      "_daySeconds": 0.0
+    },
+    "finalClock": {
+      "day": 6,
+      "hour": 10,
+      "tick": 72,
+      "phase": "morning",
+      "actionBudget": 3,
+      "paused": false,
+      "minute": 0,
+      "_daySeconds": 7200.0
+    },
+    "eventTypeCounts": {
+      "budget.decision_consumed": 5,
+      "memory.result_observed": 435,
+      "motivation.decision_made": 432,
+      "npc.action_completed": 432,
+      "npc.action_started": 432,
+      "npc.arrived": 9,
+      "npc.move_progress": 9,
+      "npc.move_started": 9,
+      "tool.execution_completed": 432,
+      "tool.execution_interrupted": 3
+    },
+    "completedToolCount": 432,
+    "failedToolCount": 0,
+    "interruptedToolCount": 3,
+    "memoryObservationCount": 435,
+    "subjectiveMemoryCount": 712,
+    "relationshipEdgeCount": 8,
+    "heuristicCount": 18,
+    "motivationDecisionCount": 432,
+    "heuristicDecisionCount": 14,
+    "activeAgentIds": [
+      "bram",
+      "kai",
+      "lena",
+      "mira",
+      "orren",
+      "tomas"
+    ],
+    "retainedEventStoreCount": 500
+  }
+}

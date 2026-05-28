@@ -1,0 +1,52 @@
+{
+  "initialClock": {
+    "day": 1,
+    "hour": 8,
+    "tick": 0,
+    "phase": "morning",
+    "actionBudget": 3,
+    "paused": false,
+    "minute": 0,
+    "_daySeconds": 0.0
+  },
+  "finalClock": {
+    "day": 2,
+    "hour": 18,
+    "tick": 24,
+    "phase": "evening",
+    "actionBudget": 2,
+    "paused": false,
+    "minute": 0,
+    "_daySeconds": 36000.0
+  },
+  "eventTypeCounts": {
+    "budget.decision_consumed": 5,
+    "memory.result_observed": 147,
+    "motivation.decision_made": 144,
+    "npc.action_completed": 144,
+    "npc.action_started": 144,
+    "npc.arrived": 9,
+    "npc.move_progress": 9,
+    "npc.move_started": 9,
+    "tool.execution_completed": 144,
+    "tool.execution_interrupted": 3
+  },
+  "completedToolCount": 144,
+  "failedToolCount": 0,
+  "interruptedToolCount": 3,
+  "memoryObservationCount": 147,
+  "subjectiveMemoryCount": 280,
+  "relationshipEdgeCount": 8,
+  "heuristicCount": 18,
+  "motivationDecisionCount": 144,
+  "heuristicDecisionCount": 14,
+  "activeAgentIds": [
+    "bram",
+    "kai",
+    "lena",
+    "mira",
+    "orren",
+    "tomas"
+  ],
+  "retainedEventStoreCount": 500
+}

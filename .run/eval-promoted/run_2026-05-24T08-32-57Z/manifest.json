@@ -1,0 +1,622 @@
+{
+  "manifestVersion": "phase2.eval_manifest.v1",
+  "exportKind": "process_fidelity_dataset",
+  "createdAt": "2026-05-24T08:32:57+00:00",
+  "suite": "process_fidelity",
+  "baseline": "full_motivational_delegation",
+  "ok": true,
+  "runDirName": "run_2026-05-24T08-32-57Z",
+  "git": {
+    "commit": "adf2ee4642f1186367fba923afeea1f1f62712f8",
+    "shortCommit": "adf2ee4",
+    "branch": "main",
+    "dirty": false,
+    "statusShort": []
+  },
+  "schemaRegistry": {
+    "registryVersion": "schema_registry.v1",
+    "schemas": [
+      {
+        "id": "schema_registry",
+        "version": "schema_registry.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Runtime schema registry snapshot exposed by /api/debug.phase2.",
+        "producer": "app.runtime.schema_registry",
+        "debugSurface": "phase2.schemaRegistry",
+        "requiredFields": [
+          "registryVersion",
+          "schemas",
+          "versions"
+        ],
+        "notes": []
+      },
+      {
+        "id": "phase2_trace",
+        "version": "phase2.trace.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Unified trace envelope for Phase 2 decision, tool, budget, and memory events.",
+        "producer": "app.runtime.trace_schema",
+        "debugSurface": "phase2.traceSchemaVersion + phase2.recentTraceEvents[]",
+        "requiredFields": [
+          "traceId",
+          "spanId",
+          "worldTime",
+          "eventType",
+          "summary"
+        ],
+        "notes": []
+      },
+      {
+        "id": "capability_resolution",
+        "version": "capability_resolution.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Five-layer tool capability filtering and routing evidence.",
+        "producer": "app.runtime.capability_registry",
+        "debugSurface": "phase2.motivation.items[].capabilityFilters",
+        "requiredFields": [
+          "context",
+          "layers",
+          "allowedToolIds",
+          "rejectedTools",
+          "decisionBudgets"
+        ],
+        "notes": []
+      },
+      {
+        "id": "decision_budget",
+        "version": "decision_budget.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "NPC / feature / tool-cost decision budget policy and usage snapshot.",
+        "producer": "app.runtime.decision_budget",
+        "debugSurface": "phase2.decisionBudget",
+        "requiredFields": [
+          "policy",
+          "items",
+          "providerActuals"
+        ],
+        "notes": []
+      },
+      {
+        "id": "provider_usage_actual",
+        "version": "provider_usage_actual.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Actual provider usage record for tokens, latency, and cost aggregation.",
+        "producer": "app.runtime.decision_budget",
+        "debugSurface": "phase2.decisionBudget.providerActuals + providerUsageRecord",
+        "requiredFields": [
+          "tick",
+          "npcId",
+          "feature",
+          "provider",
+          "tokens",
+          "latencyMs",
+          "cost"
+        ],
+        "notes": []
+      },
+      {
+        "id": "observer_scope",
+        "version": "observer_scope.v1",
+        "owner": "memory",
+        "status": "active",
+        "description": "Result observer visibility scope with participants, location, and exclusions.",
+        "producer": "app.memory.observer",
+        "debugSurface": "phase2.recentTraceEvents[].details.observerScope",
+        "requiredFields": [
+          "visibility",
+          "actorId",
+          "participantIds",
+          "observerIds",
+          "excludedObserverIds"
+        ],
+        "notes": []
+      },
+      {
+        "id": "observer_spatial_model",
+        "version": "observer_spatial_model.v1",
+        "owner": "memory",
+        "status": "active",
+        "description": "Normalized anchor-distance model used by all_in_location visibility.",
+        "producer": "app.memory.observer",
+        "debugSurface": "phase2.recentTraceEvents[].details.observerScope.spatialModel",
+        "requiredFields": [
+          "distanceUnit",
+          "hearingRadius"
+        ],
+        "notes": []
+      },
+      {
+        "id": "motivation_plan",
+        "version": "motivation_plan.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Read-only Godot-compatible life action plan produced by MotivationEngine.",
+        "producer": "app.runtime.agent_runtime",
+        "debugSurface": "world.lifeActionPlan + world.slice.scheduleSnapshotVersion",
+        "requiredFields": [
+          "day",
+          "phase",
+          "selectedActions",
+          "locationBuckets",
+          "policy"
+        ],
+        "notes": []
+      },
+      {
+        "id": "legacy_life_action_plan",
+        "version": "life_action_plan.v1",
+        "owner": "simulation",
+        "status": "legacy_compat",
+        "description": "Legacy life action plan snapshot kept for direct world_state callers.",
+        "producer": "app.simulation.life_action_planner",
+        "debugSurface": "world.lifeActionPlan before AgentRuntime Phase 2 override",
+        "requiredFields": [
+          "day",
+          "phase",
+          "selectedActions",
+          "locationBuckets",
+          "policy"
+        ],
+        "notes": [
+          "AgentRuntime replaces this with motivation_plan.v1 on the current tick/state path."
+        ]
+      },
+      {
+        "id": "motivation_engine",
+        "version": "motivation_engine.v0",
+        "owner": "runtime",
+        "status": "legacy_compat",
+        "description": "MotivationEngine decision snapshot; v0 kept for current debug compatibility.",
+        "producer": "app.runtime.motivation_engine",
+        "debugSurface": "phase2.motivation",
+        "requiredFields": [
+          "items"
+        ],
+        "notes": [
+          "v0 remains stable until decision snapshot shape is promoted after Phase 2 trace hardening."
+        ]
+      },
+      {
+        "id": "need_accumulator",
+        "version": "need_accumulator.v0",
+        "owner": "runtime",
+        "status": "legacy_compat",
+        "description": "Need scoring snapshot used by MotivationEngine.",
+        "producer": "app.runtime.need_accumulator",
+        "debugSurface": "phase2.needAccumulator",
+        "requiredFields": [
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "tool_runtime",
+        "version": "tool_runtime.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Current ToolExecutor action runtime snapshot for selected NPCs.",
+        "producer": "app.runtime.agent_runtime",
+        "debugSurface": "phase2.toolRuntime",
+        "requiredFields": [
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "world_entities",
+        "version": "world_entities.v1",
+        "owner": "world",
+        "status": "active",
+        "description": "Typed WorldEntity snapshot for FarmPlot, Item, Inventory, Shop, Building, Time, and Weather.",
+        "producer": "app.world.entities.schema",
+        "debugSurface": "phase2.worldEntities",
+        "requiredFields": [
+          "count",
+          "byKind",
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "subjective_memory_store",
+        "version": "subjective_memory_store.v1",
+        "owner": "memory",
+        "status": "active",
+        "description": "Subjective memory debug store snapshot with decay and archive metadata.",
+        "producer": "app.memory.subjective_memory",
+        "debugSurface": "phase2.subjectiveMemory",
+        "requiredFields": [
+          "agentId",
+          "count",
+          "activeCount",
+          "archivedCount",
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "subjective_memory_recall",
+        "version": "subjective_memory_recall.v2",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Subjective memory recall evidence injected into decision scoring, including salience after decay.",
+        "producer": "app.runtime.motivation_engine",
+        "debugSurface": "phase2.motivation.items[].subjectiveMemoryRecall",
+        "requiredFields": [
+          "query",
+          "worldTick",
+          "count",
+          "activeCount",
+          "recordIds",
+          "sourceEventIds"
+        ],
+        "notes": []
+      },
+      {
+        "id": "relationship_edge_store",
+        "version": "relationship_edge_store.v0",
+        "owner": "memory",
+        "status": "legacy_compat",
+        "description": "Relationship edge debug store snapshot with event and trace refs.",
+        "producer": "app.memory.relationship_edges",
+        "debugSurface": "phase2.relationshipEdges",
+        "requiredFields": [
+          "agentId",
+          "count",
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "heuristic_library",
+        "version": "heuristic_library.v0",
+        "owner": "memory",
+        "status": "legacy_compat",
+        "description": "Heuristic memory library snapshot with confidence decay.",
+        "producer": "app.memory.heuristic",
+        "debugSurface": "phase2.heuristics",
+        "requiredFields": [
+          "agentId",
+          "worldTick",
+          "count",
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "heuristic_recall",
+        "version": "heuristic_recall.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Heuristic recall evidence injected into decision scoring.",
+        "producer": "app.runtime.motivation_engine",
+        "debugSurface": "phase2.motivation.items[].heuristicRecall",
+        "requiredFields": [
+          "worldTick",
+          "count",
+          "activeCount",
+          "heuristicIds",
+          "sourceEventIds"
+        ],
+        "notes": []
+      },
+      {
+        "id": "event_skill_outcome",
+        "version": "event_skill_outcome.v1",
+        "owner": "event_skill",
+        "status": "active",
+        "description": "Event skill outcome record shared by API result, event stream, and completed events.",
+        "producer": "app.skills.event_skill_schema",
+        "debugSurface": "eventResult + completedEvents[].resolution.outcomeRecord",
+        "requiredFields": [
+          "recordVersion",
+          "skillId",
+          "eventId",
+          "choice",
+          "summary"
+        ],
+        "notes": []
+      }
+    ],
+    "versions": {
+      "schema_registry": "schema_registry.v1",
+      "phase2_trace": "phase2.trace.v1",
+      "capability_resolution": "capability_resolution.v1",
+      "decision_budget": "decision_budget.v1",
+      "provider_usage_actual": "provider_usage_actual.v1",
+      "observer_scope": "observer_scope.v1",
+      "observer_spatial_model": "observer_spatial_model.v1",
+      "motivation_plan": "motivation_plan.v1",
+      "legacy_life_action_plan": "life_action_plan.v1",
+      "motivation_engine": "motivation_engine.v0",
+      "need_accumulator": "need_accumulator.v0",
+      "tool_runtime": "tool_runtime.v1",
+      "world_entities": "world_entities.v1",
+      "subjective_memory_store": "subjective_memory_store.v1",
+      "subjective_memory_recall": "subjective_memory_recall.v2",
+      "relationship_edge_store": "relationship_edge_store.v0",
+      "heuristic_library": "heuristic_library.v0",
+      "heuristic_recall": "heuristic_recall.v1",
+      "event_skill_outcome": "event_skill_outcome.v1"
+    }
+  },
+  "metricIds": [
+    "agent_initiated_action_ratio",
+    "causal_trace_coverage",
+    "forced_action_rate",
+    "goal_success_rate",
+    "intervention_overreach_rate",
+    "process_believability_score",
+    "relationship_consistency",
+    "relationship_memory_causal_use_rate",
+    "required_process_coverage",
+    "shortcut_violation_rate"
+  ],
+  "baselines": [
+    "evidence_link_removal",
+    "full_motivational_delegation",
+    "hard_delegation",
+    "no_relationship_edge",
+    "no_subjective_memory",
+    "shuffled_memory_owner"
+  ],
+  "scenarioIds": [
+    "pf.affiliation_bias_remains_agent_initiated",
+    "pf.branna_forgiveness_requires_memory",
+    "pf.repair_talk_requires_memory_trace",
+    "pf.shared_chat_builds_traceable_trust"
+  ],
+  "artifacts": [
+    {
+      "path": "summary.json",
+      "kind": "summary_json",
+      "bytes": 17991,
+      "sha256": "5913ab624a5d0b04b071404f53690c93702c727038c6ed17a1289baf2e708f31"
+    },
+    {
+      "path": "ablation_comparison.json",
+      "kind": "ablation_comparison_json",
+      "bytes": 5758,
+      "sha256": "6380075442c787019795213b3758f013f718b99fd55ac77e66927d36916f0910"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_full_motivational_delegation.json",
+      "kind": "per_scenario_json",
+      "bytes": 19739,
+      "sha256": "cea305f1f6a9b0519b0b2a27a3ec301d21ccbe8808419abb75f1a962d256c140",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation.json",
+      "kind": "per_scenario_json",
+      "bytes": 17240,
+      "sha256": "9a451aa269dfcf50004fc8c6b57c62e0697cb0e3a8d58aec866f6d76f165ca3b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_full_motivational_delegation.json",
+      "kind": "per_scenario_json",
+      "bytes": 17226,
+      "sha256": "265b366f5fce49d526a6e7d9173e823f1a28abda970736fa0750a6cecbb5f389",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation.json",
+      "kind": "per_scenario_json",
+      "bytes": 19270,
+      "sha256": "329ca6c900f03a0bef35aae2e4b405106d830a9191347975cf3cf41ac8548c7b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_hard_delegation.json",
+      "kind": "per_scenario_json",
+      "bytes": 1572,
+      "sha256": "9426b750b662f482f198f16f1bc80a9fe1ca63287c435c9597cdde03f6514c12",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_hard_delegation.json",
+      "kind": "per_scenario_json",
+      "bytes": 1589,
+      "sha256": "b085b364ee74dc58532936ac2c37b3f80df310c2a14c768e349938f20c0ad92c",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_hard_delegation.json",
+      "kind": "per_scenario_json",
+      "bytes": 1595,
+      "sha256": "0442734c78ea80ef573bee7841bcda71be8ee5a8f6c507d8c6f96072bc462075",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_hard_delegation.json",
+      "kind": "per_scenario_json",
+      "bytes": 1724,
+      "sha256": "2fcb19c71facb3fe4776360917b1927b9300c4b3067e9faebe9a2d3204df7854",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_subjective_memory.json",
+      "kind": "per_scenario_json",
+      "bytes": 18149,
+      "sha256": "42f99925287d2a4c65edbd5e488442fbf406dabd8cb4923710d036990ebf5cf6",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_subjective_memory.json",
+      "kind": "per_scenario_json",
+      "bytes": 15646,
+      "sha256": "e2447952600c30dd670e2d0e87f95569f039436c1d839a0b90425ba500d39442",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_subjective_memory.json",
+      "kind": "per_scenario_json",
+      "bytes": 15636,
+      "sha256": "ead3aa1a3a32a5f24c289475e09fa3a6b19c7e5bf4ae83108b7560ed02c7e894",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_subjective_memory.json",
+      "kind": "per_scenario_json",
+      "bytes": 17284,
+      "sha256": "934450734047ee4c0db9d4effb1cdcbe8f11459a2bbd3d0b1d5d36fadbb95fef",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_relationship_edge.json",
+      "kind": "per_scenario_json",
+      "bytes": 18312,
+      "sha256": "d923a506450535f98892bd39dd4dc3b5fa2c28a118c422f55db945fda34124db",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_relationship_edge.json",
+      "kind": "per_scenario_json",
+      "bytes": 16792,
+      "sha256": "80b080e7a3cc7e903005b7b51af73ad073637305d6c8768549a4ff5edcab87e9",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_relationship_edge.json",
+      "kind": "per_scenario_json",
+      "bytes": 16784,
+      "sha256": "7ad37f27302ca35a4f8ad0f5776f06482398d0f7e8e3f117add7a6f789a403e1",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_relationship_edge.json",
+      "kind": "per_scenario_json",
+      "bytes": 18057,
+      "sha256": "dd64520ab2827eec807e64599148888c0e3a28675b72fbb4c38490448cce40d2",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_shuffled_memory_owner.json",
+      "kind": "per_scenario_json",
+      "bytes": 18315,
+      "sha256": "dcc2e68964ad3c6663c6827d3984f502fd553cf970b3c19d232207fad07e272a",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_shuffled_memory_owner.json",
+      "kind": "per_scenario_json",
+      "bytes": 16795,
+      "sha256": "f6f5eedb43413b8b232f4abc4735123cdb8754231cd87886fdb80f4932d8b5e2",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_shuffled_memory_owner.json",
+      "kind": "per_scenario_json",
+      "bytes": 16787,
+      "sha256": "0706524e105cd850d40cdb08ac9a127cd12e905e65597ea0f786da05d350eeb4",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_shuffled_memory_owner.json",
+      "kind": "per_scenario_json",
+      "bytes": 18060,
+      "sha256": "41bf7aefb56369164dbc7c65fffb3ae778f7d11c8beb399d600f008be4b2b7dc",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_evidence_link_removal.json",
+      "kind": "per_scenario_json",
+      "bytes": 18314,
+      "sha256": "3694ed4a4326b8b49191972f59ad82b1af31c3a765aec833d47a4d92df475500",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_evidence_link_removal.json",
+      "kind": "per_scenario_json",
+      "bytes": 16794,
+      "sha256": "0dd4ac11477818a47740c9bb84f358d95d071b94edfcaacab573d4ba81cdafae",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_evidence_link_removal.json",
+      "kind": "per_scenario_json",
+      "bytes": 16786,
+      "sha256": "f8a980bfbe1647178c5db5d1794d73d20eb93e1d517e545cae4a60dc3fa7e4c1",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_evidence_link_removal.json",
+      "kind": "per_scenario_json",
+      "bytes": 18058,
+      "sha256": "8e42217fbd0456f4a7b7e1ed1dc0fa50cac74134e54362412e32d9ca1e496e62",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "intervention_trace.jsonl",
+      "kind": "intervention_trace_jsonl",
+      "bytes": 5214,
+      "sha256": "a64aa07b94234255038aa3c8a3704a83667f3d6e9a67958c809db287efdf859a",
+      "rowCount": 4,
+      "baseline": "hard_delegation"
+    },
+    {
+      "path": "goal_progress_trace.jsonl",
+      "kind": "goal_progress_trace_jsonl",
+      "bytes": 49726,
+      "sha256": "200e6e0f45a24fc69117eb06d2bc968ebbb929e1a2ff84c68384a1aa500c3871",
+      "rowCount": 4,
+      "baseline": "full_motivational_delegation"
+    },
+    {
+      "path": "counterfactual_replay.jsonl",
+      "kind": "counterfactual_replay_jsonl",
+      "bytes": 25836,
+      "sha256": "97a708a8bc807c473318bad64b707da1560cca2c746692c2b4304720d2675f9c",
+      "rowCount": 4,
+      "baseline": "full_motivational_delegation"
+    },
+    {
+      "path": "memory_ablation_trace.jsonl",
+      "kind": "memory_ablation_trace_jsonl",
+      "bytes": 17976,
+      "sha256": "bcdcc125252cb9cebac0eb0966d5a66fa2eb4ea932d5c6033a92ae9fa1faf270",
+      "rowCount": 16
+    }
+  ],
+  "verification": {
+    "summary": "每个 artifact 提供 bytes / sha256；JSONL artifact 额外提供 rowCount，便于后续复核导出完整性。",
+    "localCommands": [
+      "npm.cmd run eval:process",
+      "npm.cmd run eval:process:export",
+      "npm.cmd run eval:stability",
+      "npm.cmd run eval:stability:export",
+      "npm.cmd run eval:domain",
+      "npm.cmd run eval:domain:export"
+    ]
+  }
+}

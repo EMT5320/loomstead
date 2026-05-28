@@ -1,0 +1,74 @@
+{
+  "replayVersion": "coding.domain_counterfactual_replay.v1",
+  "goalId": "coding.skill_multifile_review_dryrun",
+  "selectedWithEvidence": "review.approve_patch",
+  "featureSnapshot": {
+    "repo_fixture_loaded": true,
+    "non_python_fixture_loaded": false,
+    "implementation_diff": true,
+    "metadata_dependency_updated": true,
+    "pre_patch_failure_observed": false,
+    "post_patch_tests_passed": true,
+    "derived_dependency_graph_recorded": false,
+    "single_file_replay_failed": false,
+    "dependency_chain_confirmed": false,
+    "reviewer_conflict_observed": false,
+    "arbitration_contributing_sources": false,
+    "review_source_links": true,
+    "review_approved": true,
+    "optional_readme_context": true
+  },
+  "comparisonCount": 4,
+  "changedDecisionCount": 3,
+  "criticalChangeCount": 3,
+  "controlStableCount": 1,
+  "changeRate": 0.75,
+  "criticalChangeRate": 1.0,
+  "controlStabilityRate": 1.0,
+  "comparisons": [
+    {
+      "ablationId": "remove_post_patch_tests",
+      "kind": "critical",
+      "removedEvidenceIds": [
+        "post_patch_tests_passed"
+      ],
+      "selectedWithEvidence": "review.approve_patch",
+      "selectedWithoutEvidence": "evaluation.run_external_checkout_tests",
+      "changed": true,
+      "reason": "post-patch checkout test is the final approval gate"
+    },
+    {
+      "ablationId": "remove_metadata_dependency_update",
+      "kind": "critical",
+      "removedEvidenceIds": [
+        "metadata_dependency_updated"
+      ],
+      "selectedWithEvidence": "review.approve_patch",
+      "selectedWithoutEvidence": "implement.sync_metadata_dependency",
+      "changed": true,
+      "reason": "metadata-sensitive skill changes must update the paired dependency file"
+    },
+    {
+      "ablationId": "remove_review_source_links",
+      "kind": "critical",
+      "removedEvidenceIds": [
+        "review_source_links"
+      ],
+      "selectedWithEvidence": "review.approve_patch",
+      "selectedWithoutEvidence": "review.request_source_event_links",
+      "changed": true,
+      "reason": "review approval must stay linked to test/source events"
+    },
+    {
+      "ablationId": "remove_optional_readme_context",
+      "kind": "control",
+      "removedEvidenceIds": [
+        "optional_readme_context"
+      ],
+      "selectedWithEvidence": "review.approve_patch",
+      "selectedWithoutEvidence": "review.approve_patch",
+      "changed": false,
+      "reason": "non-gating context removal should keep the process route stable"
+    }
+  ]
+}

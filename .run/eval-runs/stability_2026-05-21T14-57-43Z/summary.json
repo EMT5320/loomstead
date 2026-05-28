@@ -1,0 +1,58 @@
+{
+  "ok": true,
+  "suite": "stability_24h",
+  "baseline": "rule_24h_stability",
+  "passed": null,
+  "total": null,
+  "metrics": [
+    {
+      "metric": "stability_tick_success_rate",
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 24,
+      "baseline": "rule_24h_stability",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "trace_schema_coverage",
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "rule_24h_stability",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "memory_observation_per_completed_tool",
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "rule_24h_stability",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "tool_failure_rate",
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "rule_24h_stability",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "active_agent_count",
+      "mean": 6.0,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "rule_24h_stability",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "relationship_edge_count",
+      "mean": 19.0,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "rule_24h_stability",
+      "scenarioId": "aggregate"
+    }
+  ],
+  "ablation_comparison": null
+}

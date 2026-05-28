@@ -1,0 +1,85 @@
+{
+  "replayVersion": "coding.domain_counterfactual_replay.v1",
+  "goalId": "coding.skill_reviewer_disagreement_dryrun",
+  "selectedWithEvidence": "review.approve_patch",
+  "featureSnapshot": {
+    "repo_fixture_loaded": true,
+    "non_python_fixture_loaded": false,
+    "implementation_diff": true,
+    "metadata_dependency_updated": false,
+    "pre_patch_failure_observed": false,
+    "post_patch_tests_passed": true,
+    "derived_dependency_graph_recorded": false,
+    "single_file_replay_failed": false,
+    "dependency_chain_confirmed": false,
+    "reviewer_conflict_observed": true,
+    "arbitration_contributing_sources": true,
+    "review_source_links": true,
+    "review_approved": true,
+    "optional_readme_context": true
+  },
+  "comparisonCount": 5,
+  "changedDecisionCount": 4,
+  "criticalChangeCount": 4,
+  "controlStableCount": 1,
+  "changeRate": 0.8,
+  "criticalChangeRate": 1.0,
+  "controlStabilityRate": 1.0,
+  "comparisons": [
+    {
+      "ablationId": "remove_post_patch_tests",
+      "kind": "critical",
+      "removedEvidenceIds": [
+        "post_patch_tests_passed"
+      ],
+      "selectedWithEvidence": "review.approve_patch",
+      "selectedWithoutEvidence": "evaluation.run_external_checkout_tests",
+      "changed": true,
+      "reason": "post-patch checkout test is the final approval gate"
+    },
+    {
+      "ablationId": "remove_review_source_links",
+      "kind": "critical",
+      "removedEvidenceIds": [
+        "review_source_links"
+      ],
+      "selectedWithEvidence": "review.approve_patch",
+      "selectedWithoutEvidence": "review.request_source_event_links",
+      "changed": true,
+      "reason": "review approval must stay linked to test/source events"
+    },
+    {
+      "ablationId": "remove_optional_readme_context",
+      "kind": "control",
+      "removedEvidenceIds": [
+        "optional_readme_context"
+      ],
+      "selectedWithEvidence": "review.approve_patch",
+      "selectedWithoutEvidence": "review.approve_patch",
+      "changed": false,
+      "reason": "non-gating context removal should keep the process route stable"
+    },
+    {
+      "ablationId": "remove_reviewer_conflict",
+      "kind": "critical",
+      "removedEvidenceIds": [
+        "reviewer_conflict_observed"
+      ],
+      "selectedWithEvidence": "review.approve_patch",
+      "selectedWithoutEvidence": "review.collect_reviewer_judgments",
+      "changed": true,
+      "reason": "disagreement scenario must preserve opposing reviewer judgments"
+    },
+    {
+      "ablationId": "remove_arbitration_sources",
+      "kind": "critical",
+      "removedEvidenceIds": [
+        "arbitration_contributing_sources"
+      ],
+      "selectedWithEvidence": "review.approve_patch",
+      "selectedWithoutEvidence": "arbitration.collect_contributing_sources",
+      "changed": true,
+      "reason": "arbitration must cite reviewer judgment sources"
+    }
+  ]
+}

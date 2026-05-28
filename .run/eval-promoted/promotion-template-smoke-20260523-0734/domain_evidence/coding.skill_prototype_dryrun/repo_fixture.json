@@ -1,0 +1,14 @@
+{
+  "fixtureId": "loomstead-debug-skill-fixture.v1",
+  "repoName": "fixture/loomstead-debug-skill",
+  "defaultBranch": "main",
+  "files": {
+    "README.md": "# Skill Fixture\n\nThis fixture represents a tiny external skill repository.\n",
+    "skills/loomstead-debug/SKILL.md": "# Loomstead Debug Skill\n\nUse project docs before changing runtime code.\n"
+  },
+  "fileHashes": {
+    "README.md": "b603311279d95465518b947526822a4d81f2cbef7c4362dd197868b5bb466860",
+    "skills/loomstead-debug/SKILL.md": "cfbc8de80c634321e9aa1bcd78cf7838537c3f0693f6f70f39d8127042ccc201"
+  },
+  "testCommand": "fixture:check_skill_stub loomstead-debug"
+}

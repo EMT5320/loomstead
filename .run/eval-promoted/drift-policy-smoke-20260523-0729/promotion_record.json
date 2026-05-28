@@ -1,0 +1,211 @@
+{
+  "promotionVersion": "phase2.eval_promotion.v1",
+  "promotedAt": "2026-05-23T07:37:39+00:00",
+  "promotionStatus": "needs_manual_review",
+  "sourceRunDir": ".run/eval-runs/domain_2026-05-23T07-25-04Z",
+  "promotedRunDir": ".run/eval-promoted/drift-policy-smoke-20260523-0729",
+  "promotionNote": "drift policy smoke",
+  "suite": "cross_domain_adapter",
+  "baseline": "full_motivational_delegation",
+  "ok": true,
+  "manifestVersion": "phase2.eval_manifest.v1",
+  "manifestSha256": "452499d3fc1fff4eccdd64a93e44944f199bf8118c3d9998a342a231ae087a89",
+  "git": {
+    "shortCommit": "8aaae9c",
+    "branch": "main",
+    "dirty": true
+  },
+  "schemaRegistryVersion": "schema_registry.v1",
+  "metricIds": [
+    "agent_initiated_action_ratio",
+    "causal_trace_coverage",
+    "forced_action_rate",
+    "goal_success_rate",
+    "intervention_overreach_rate",
+    "process_believability_score",
+    "relationship_consistency",
+    "relationship_memory_causal_use_rate",
+    "required_process_coverage",
+    "shortcut_violation_rate"
+  ],
+  "baselines": [
+    "full_motivational_delegation"
+  ],
+  "scenarioIds": [
+    "coding.skill_prototype_dryrun",
+    "narrative.affiliation_bias_agent_choice",
+    "narrative.close_friend_traceable",
+    "narrative.repair_trust_memory"
+  ],
+  "artifactCount": 14,
+  "archiveChecks": {
+    "archiveIndexVersion": "phase2.eval_run_index.v1",
+    "archiveCheckPassed": true,
+    "manifestValid": true,
+    "artifactCount": 14
+  },
+  "driftComparison": {
+    "suite": "cross_domain_adapter",
+    "latestRunDir": ".run/eval-runs/domain_2026-05-23T07-25-04Z",
+    "previousRunDir": ".run/eval-runs/domain_2026-05-23T07-14-38Z",
+    "latestCreatedAt": "2026-05-23T07:25:04+00:00",
+    "previousCreatedAt": "2026-05-23T07:14:38+00:00",
+    "latestGit": {
+      "shortCommit": "8aaae9c",
+      "branch": "main",
+      "dirty": true
+    },
+    "previousGit": {
+      "shortCommit": "8aaae9c",
+      "branch": "main",
+      "dirty": true
+    },
+    "schemaRegistryVersion": {
+      "latest": "schema_registry.v1",
+      "previous": "schema_registry.v1",
+      "changed": false
+    },
+    "exportKind": {
+      "latest": "cross_domain_adapter_dataset",
+      "previous": "cross_domain_adapter_dataset",
+      "changed": false
+    },
+    "ok": {
+      "latest": true,
+      "previous": true,
+      "changed": false
+    },
+    "artifactCountDelta": 0,
+    "metricIds": {
+      "added": [],
+      "removed": [],
+      "unchanged": [
+        "agent_initiated_action_ratio",
+        "causal_trace_coverage",
+        "forced_action_rate",
+        "goal_success_rate",
+        "intervention_overreach_rate",
+        "process_believability_score",
+        "relationship_consistency",
+        "relationship_memory_causal_use_rate",
+        "required_process_coverage",
+        "shortcut_violation_rate"
+      ]
+    },
+    "baselines": {
+      "added": [],
+      "removed": [],
+      "unchanged": [
+        "full_motivational_delegation"
+      ]
+    },
+    "scenarioIds": {
+      "added": [],
+      "removed": [],
+      "unchanged": [
+        "coding.skill_prototype_dryrun",
+        "narrative.affiliation_bias_agent_choice",
+        "narrative.close_friend_traceable",
+        "narrative.repair_trust_memory"
+      ]
+    },
+    "hasDrift": false,
+    "driftSeverity": "none",
+    "requiresManualReview": false,
+    "blocksPromotion": false,
+    "driftPolicy": {
+      "policyVersion": "phase2.eval_drift_policy.v1",
+      "severity": "none",
+      "requiresManualReview": false,
+      "blocksPromotion": false,
+      "reviewReasons": [],
+      "checks": [
+        {
+          "id": "latest_ok_false",
+          "breached": false,
+          "severity": "breaking",
+          "message": "latest run manifest ok=false"
+        },
+        {
+          "id": "ok_changed",
+          "breached": false,
+          "severity": "breaking",
+          "message": "manifest ok 状态变化"
+        },
+        {
+          "id": "schema_registry_changed",
+          "breached": false,
+          "severity": "breaking",
+          "message": "schema registry version 变化"
+        },
+        {
+          "id": "export_kind_changed",
+          "breached": false,
+          "severity": "breaking",
+          "message": "export kind 变化"
+        },
+        {
+          "id": "artifact_count_decreased",
+          "breached": false,
+          "severity": "breaking",
+          "message": "artifact 数量下降"
+        },
+        {
+          "id": "artifact_count_increased",
+          "breached": false,
+          "severity": "review",
+          "message": "artifact 数量增加"
+        },
+        {
+          "id": "metricIds_removed",
+          "breached": false,
+          "severity": "breaking",
+          "message": "metricIds 被移除"
+        },
+        {
+          "id": "metricIds_added",
+          "breached": false,
+          "severity": "review",
+          "message": "metricIds 新增超过免复核阈值"
+        },
+        {
+          "id": "baselines_removed",
+          "breached": false,
+          "severity": "breaking",
+          "message": "baselines 被移除"
+        },
+        {
+          "id": "baselines_added",
+          "breached": false,
+          "severity": "review",
+          "message": "baselines 新增超过免复核阈值"
+        },
+        {
+          "id": "scenarioIds_removed",
+          "breached": false,
+          "severity": "breaking",
+          "message": "scenarioIds 被移除"
+        },
+        {
+          "id": "scenarioIds_added",
+          "breached": false,
+          "severity": "review",
+          "message": "scenarioIds 新增超过免复核阈值"
+        }
+      ]
+    }
+  },
+  "manualReviewItems": [
+    "manifest git.dirty=true；需要说明导出时工作区改动原因，或重新从干净 commit 导出。"
+  ],
+  "paperGradeChecklist": {
+    "okTrue": true,
+    "archiveCheckPassed": true,
+    "gitCleanAtExport": false,
+    "schemaRegistryV1": true,
+    "driftExplained": true,
+    "driftPolicyBlocking": false,
+    "manualWindowVerified": false,
+    "externalModelVerifiedIfNeeded": false
+  }
+}

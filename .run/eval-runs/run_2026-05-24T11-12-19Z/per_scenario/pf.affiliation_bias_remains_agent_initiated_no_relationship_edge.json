@@ -1,0 +1,750 @@
+{
+  "scenario": {
+    "scenarioId": "pf.affiliation_bias_remains_agent_initiated",
+    "description": "Lena 在 affiliation 偏置下仍由 Arbitration 选择社交工具，并保留 trace。",
+    "npcId": "lena",
+    "targetNpcId": "mira",
+    "expectedToolPrefixes": [
+      "social."
+    ],
+    "requiredProcessIds": [
+      "goal_relevant_tool_event",
+      "subjective_memory_refs",
+      "relationship_edge_trace",
+      "causal_trace",
+      "future_behavior_reference"
+    ],
+    "statusOverrides": {
+      "energy": 90,
+      "money": 90,
+      "social": 5
+    },
+    "locationId": "plaza",
+    "anchorId": "plaza_fountain",
+    "maxGameHours": 1,
+    "setupKind": "default"
+  },
+  "baseline": "no_relationship_edge",
+  "ok": false,
+  "metrics": {
+    "goal_success_rate": 0.0,
+    "shortcut_violation_rate": 0.0,
+    "required_process_coverage": 0.8,
+    "forced_action_rate": 0.0,
+    "agent_initiated_action_ratio": 1.0,
+    "intervention_overreach_rate": 0.0,
+    "relationship_memory_causal_use_rate": 0.0,
+    "counterfactual_tool_selection_change_rate": 0.0,
+    "causal_trace_coverage": 0.0,
+    "relationship_consistency": 0.0,
+    "process_believability_score": 0.56
+  },
+  "processChecks": {
+    "goal_relevant_tool_event": true,
+    "subjective_memory_refs": true,
+    "relationship_edge_trace": false,
+    "causal_trace": true,
+    "future_behavior_reference": true,
+    "counterfactual_tool_selection_change": false,
+    "preexisting_harm_memory": false,
+    "subjective_memory_causal_effect": true
+  },
+  "evidence": {
+    "goalToolEvents": [
+      {
+        "eventId": "evt_ef25bb29b1574d7ba8b276b076931374",
+        "createdAt": "2026-05-24T11:12:19.040881+00:00",
+        "traceSchemaVersion": "phase2.trace.v1",
+        "traceId": "evt_a1e781cd01df4d2295375c9f03a0485b",
+        "spanId": "span_de00c6d01db84fc2",
+        "sourceEventId": "evt_a1e781cd01df4d2295375c9f03a0485b",
+        "agentId": "lena",
+        "targetIds": [
+          "mira"
+        ],
+        "worldTime": {
+          "tick": 1,
+          "day": 1,
+          "hour": 9,
+          "minute": 0,
+          "phase": "morning"
+        },
+        "eventType": "tool.execution_completed",
+        "summary": "莉娜 与 米娅 完成了一次社交互动。",
+        "details": {
+          "npcId": "lena",
+          "toolId": "social.chat_with",
+          "interruptedToolId": null,
+          "replacementToolId": null,
+          "targetNpcId": "mira",
+          "targetAnchorId": "plaza_fountain",
+          "targetLocationId": "plaza",
+          "replacementTargetAnchorId": null,
+          "replacementTargetLocationId": null,
+          "reason": null,
+          "interruptUrgency": null,
+          "interruptPriorityThreshold": null,
+          "worldEffectCount": 1,
+          "sourceEventIds": [
+            "evt_a1e781cd01df4d2295375c9f03a0485b"
+          ],
+          "traceRefs": [
+            {
+              "type": "status",
+              "field": "affiliation",
+              "value": 0.9667
+            },
+            {
+              "type": "motivation_profile",
+              "field": "affiliation",
+              "weight": 1.15
+            },
+            {
+              "type": "director_bias",
+              "field": "affiliation",
+              "value": 0.3
+            },
+            {
+              "type": "heuristic_refs",
+              "count": 1,
+              "heuristicIds": [
+                "lena:designer:prefer_lena_chat_for_early_warning"
+              ],
+              "sourceEventIds": [
+                "designer_seed:lena:prefer_lena_chat_for_early_warning"
+              ]
+            },
+            {
+              "type": "motivation_decision_trace",
+              "eventId": "evt_688f0f3e422a4bc78fcb6e5a8c1b5c6f",
+              "traceId": "trace_fedb7b9c62514c40bab4948841ce5879",
+              "spanId": "span_dfe938dbc5494a9c",
+              "selectedToolId": "social.chat_with"
+            }
+          ]
+        }
+      }
+    ],
+    "subjectiveMemoryRefs": [
+      "evt_ef25bb29b1574d7ba8b276b076931374"
+    ],
+    "relationshipSourceIds": [],
+    "heuristicSourceIds": [
+      "designer_seed:lena:avoid_lena_health_risk_noise",
+      "designer_seed:lena:designer_prefer_repair_when_recognition_rises",
+      "designer_seed:lena:prefer_lena_chat_for_early_warning",
+      "designer_seed:lena:prefer_lena_rest_before_collapse",
+      "evt_ef25bb29b1574d7ba8b276b076931374"
+    ],
+    "memoryTraceLinks": [
+      {
+        "eventId": "evt_b6b1a11b904a452c9a6b9b47c3b0602e",
+        "createdAt": "2026-05-24T11:12:19.040881+00:00",
+        "traceSchemaVersion": "phase2.trace.v1",
+        "traceId": "evt_a1e781cd01df4d2295375c9f03a0485b",
+        "spanId": "span_89c7210abe6f446e",
+        "sourceEventId": "evt_ef25bb29b1574d7ba8b276b076931374",
+        "agentId": "lena",
+        "targetIds": [
+          "lena",
+          "mira"
+        ],
+        "worldTime": {
+          "tick": 1,
+          "day": 1,
+          "hour": 9,
+          "minute": 0,
+          "phase": "morning"
+        },
+        "eventType": "memory.result_observed",
+        "summary": "观察到 2 条主观记忆，3 条关系边",
+        "details": {
+          "sourceEventId": "evt_ef25bb29b1574d7ba8b276b076931374",
+          "observerVisibility": "participants_only",
+          "observerCount": 2,
+          "observerScope": {
+            "version": "observer_scope.v1",
+            "visibility": "participants_only",
+            "actorId": "lena",
+            "participantIds": [
+              "lena",
+              "mira"
+            ],
+            "locationId": "plaza",
+            "eventAnchorId": "plaza_fountain",
+            "locationObserverIds": [
+              "mira",
+              "lena",
+              "sana",
+              "rio",
+              "ivy"
+            ],
+            "spatialModel": {
+              "version": "observer_spatial_model.v1",
+              "distanceUnit": "normalized_anchor_screen",
+              "hearingRadius": 0.34
+            },
+            "spatialEvidence": [
+              {
+                "observerId": "lena",
+                "observerLocationId": "plaza",
+                "observerAnchorId": "plaza_fountain",
+                "sameLocation": true,
+                "distanceToEvent": 0.0,
+                "distanceBand": "near",
+                "isActor": true,
+                "isParticipant": true,
+                "visible": true,
+                "reason": "actor_self_observation"
+              },
+              {
+                "observerId": "mira",
+                "observerLocationId": "plaza",
+                "observerAnchorId": "plaza_fountain",
+                "sameLocation": true,
+                "distanceToEvent": 0.0,
+                "distanceBand": "near",
+                "isActor": false,
+                "isParticipant": true,
+                "visible": true,
+                "reason": "explicit_participant"
+              },
+              {
+                "observerId": "sana",
+                "observerLocationId": "plaza",
+                "observerAnchorId": null,
+                "sameLocation": true,
+                "distanceToEvent": null,
+                "distanceBand": "unknown",
+                "isActor": false,
+                "isParticipant": false,
+                "visible": false,
+                "reason": "visibility_scope_participants_only"
+              },
+              {
+                "observerId": "rio",
+                "observerLocationId": "plaza",
+                "observerAnchorId": null,
+                "sameLocation": true,
+                "distanceToEvent": null,
+                "distanceBand": "unknown",
+                "isActor": false,
+                "isParticipant": false,
+                "visible": false,
+                "reason": "visibility_scope_participants_only"
+              },
+              {
+                "observerId": "ivy",
+                "observerLocationId": "plaza",
+                "observerAnchorId": null,
+                "sameLocation": true,
+                "distanceToEvent": null,
+                "distanceBand": "unknown",
+                "isActor": false,
+                "isParticipant": false,
+                "visible": false,
+                "reason": "visibility_scope_participants_only"
+              }
+            ],
+            "observerIds": [
+              "lena",
+              "mira"
+            ],
+            "excludedObserverIds": [
+              "ivy",
+              "rio",
+              "sana"
+            ]
+          },
+          "observers": [
+            "lena",
+            "mira"
+          ],
+          "memoryCount": 2,
+          "relationshipEdgeCount": 3,
+          "heuristicId": "lena:prefer_successful_tool:social.chat_with"
+        }
+      }
+    ],
+    "counterfactualReplay": {
+      "selectedWithRelationshipMemory": "social.chat_with",
+      "selectedWithoutRelationshipEdges": "social.chat_with",
+      "selectedWithoutRelationshipMemory": "social.give_gift",
+      "effect": true,
+      "relationshipEffect": false,
+      "subjectiveMemoryEffect": true,
+      "heuristicEffect": true,
+      "relationshipScoreEffect": false,
+      "relationshipDecisionEffect": false,
+      "subjectiveMemoryScoreEffect": true,
+      "heuristicScoreEffect": true,
+      "subjectiveMemoryToolSelectionEffect": false,
+      "toolSelectionChanged": false,
+      "counterfactualToolSelectionChangeRate": 0.0,
+      "toolSelectionReplay": {
+        "cycleCount": 24,
+        "npcIdsConsidered": [
+          "lena"
+        ],
+        "removedSubjectiveMemoryRecordIds": [
+          "evt_ef25bb29b1574d7ba8b276b076931374:lena"
+        ],
+        "comparisonCount": 24,
+        "changedDecisionCount": 0,
+        "changeRate": 0.0,
+        "comparisons": [
+          {
+            "cycleIndex": 1,
+            "npcId": "lena",
+            "removedSubjectiveMemoryRecordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+            "selectedWithMemory": "social.chat_with",
+            "selectedWithoutMemory": "social.chat_with",
+            "changed": false
+          },
+          {
+            "cycleIndex": 2,
+            "npcId": "lena",
+            "removedSubjectiveMemoryRecordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+            "selectedWithMemory": "social.chat_with",
+            "selectedWithoutMemory": "social.chat_with",
+            "changed": false
+          },
+          {
+            "cycleIndex": 3,
+            "npcId": "lena",
+            "removedSubjectiveMemoryRecordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+            "selectedWithMemory": "social.chat_with",
+            "selectedWithoutMemory": "social.chat_with",
+            "changed": false
+          },
+          {
+            "cycleIndex": 4,
+            "npcId": "lena",
+            "removedSubjectiveMemoryRecordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+            "selectedWithMemory": "social.chat_with",
+            "selectedWithoutMemory": "social.chat_with",
+            "changed": false
+          },
+          {
+            "cycleIndex": 5,
+            "npcId": "lena",
+            "removedSubjectiveMemoryRecordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+            "selectedWithMemory": "social.chat_with",
+            "selectedWithoutMemory": "social.chat_with",
+            "changed": false
+          },
+          {
+            "cycleIndex": 6,
+            "npcId": "lena",
+            "removedSubjectiveMemoryRecordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+            "selectedWithMemory": "social.chat_with",
+            "selectedWithoutMemory": "social.chat_with",
+            "changed": false
+          },
+          {
+            "cycleIndex": 7,
+            "npcId": "lena",
+            "removedSubjectiveMemoryRecordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+            "selectedWithMemory": "social.chat_with",
+            "selectedWithoutMemory": "social.chat_with",
+            "changed": false
+          },
+          {
+            "cycleIndex": 8,
+            "npcId": "lena",
+            "removedSubjectiveMemoryRecordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+            "selectedWithMemory": "social.chat_with",
+            "selectedWithoutMemory": "social.chat_with",
+            "changed": false
+          },
+          {
+            "cycleIndex": 9,
+            "npcId": "lena",
+            "removedSubjectiveMemoryRecordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+            "selectedWithMemory": "social.chat_with",
+            "selectedWithoutMemory": "social.chat_with",
+            "changed": false
+          },
+          {
+            "cycleIndex": 10,
+            "npcId": "lena",
+            "removedSubjectiveMemoryRecordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+            "selectedWithMemory": "social.chat_with",
+            "selectedWithoutMemory": "social.chat_with",
+            "changed": false
+          },
+          {
+            "cycleIndex": 11,
+            "npcId": "lena",
+            "removedSubjectiveMemoryRecordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+            "selectedWithMemory": "social.chat_with",
+            "selectedWithoutMemory": "social.chat_with",
+            "changed": false
+          },
+          {
+            "cycleIndex": 12,
+            "npcId": "lena",
+            "removedSubjectiveMemoryRecordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+            "selectedWithMemory": "social.chat_with",
+            "selectedWithoutMemory": "social.chat_with",
+            "changed": false
+          },
+          {
+            "cycleIndex": 13,
+            "npcId": "lena",
+            "removedSubjectiveMemoryRecordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+            "selectedWithMemory": "social.chat_with",
+            "selectedWithoutMemory": "social.chat_with",
+            "changed": false
+          },
+          {
+            "cycleIndex": 14,
+            "npcId": "lena",
+            "removedSubjectiveMemoryRecordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+            "selectedWithMemory": "social.chat_with",
+            "selectedWithoutMemory": "social.chat_with",
+            "changed": false
+          },
+          {
+            "cycleIndex": 15,
+            "npcId": "lena",
+            "removedSubjectiveMemoryRecordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+            "selectedWithMemory": "social.chat_with",
+            "selectedWithoutMemory": "social.chat_with",
+            "changed": false
+          },
+          {
+            "cycleIndex": 16,
+            "npcId": "lena",
+            "removedSubjectiveMemoryRecordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+            "selectedWithMemory": "social.chat_with",
+            "selectedWithoutMemory": "social.chat_with",
+            "changed": false
+          },
+          {
+            "cycleIndex": 17,
+            "npcId": "lena",
+            "removedSubjectiveMemoryRecordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+            "selectedWithMemory": "social.chat_with",
+            "selectedWithoutMemory": "social.chat_with",
+            "changed": false
+          },
+          {
+            "cycleIndex": 18,
+            "npcId": "lena",
+            "removedSubjectiveMemoryRecordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+            "selectedWithMemory": "social.chat_with",
+            "selectedWithoutMemory": "social.chat_with",
+            "changed": false
+          },
+          {
+            "cycleIndex": 19,
+            "npcId": "lena",
+            "removedSubjectiveMemoryRecordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+            "selectedWithMemory": "social.chat_with",
+            "selectedWithoutMemory": "social.chat_with",
+            "changed": false
+          },
+          {
+            "cycleIndex": 20,
+            "npcId": "lena",
+            "removedSubjectiveMemoryRecordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+            "selectedWithMemory": "social.chat_with",
+            "selectedWithoutMemory": "social.chat_with",
+            "changed": false
+          },
+          {
+            "cycleIndex": 21,
+            "npcId": "lena",
+            "removedSubjectiveMemoryRecordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+            "selectedWithMemory": "social.chat_with",
+            "selectedWithoutMemory": "social.chat_with",
+            "changed": false
+          },
+          {
+            "cycleIndex": 22,
+            "npcId": "lena",
+            "removedSubjectiveMemoryRecordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+            "selectedWithMemory": "social.chat_with",
+            "selectedWithoutMemory": "social.chat_with",
+            "changed": false
+          },
+          {
+            "cycleIndex": 23,
+            "npcId": "lena",
+            "removedSubjectiveMemoryRecordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+            "selectedWithMemory": "social.chat_with",
+            "selectedWithoutMemory": "social.chat_with",
+            "changed": false
+          },
+          {
+            "cycleIndex": 24,
+            "npcId": "lena",
+            "removedSubjectiveMemoryRecordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+            "selectedWithMemory": "social.chat_with",
+            "selectedWithoutMemory": "social.chat_with",
+            "changed": false
+          }
+        ]
+      },
+      "relationshipEdgeRefs": [],
+      "relevantRelationshipEdgeRefs": [],
+      "subjectiveMemoryRefs": [
+        {
+          "recordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+          "sourceEventId": "evt_ef25bb29b1574d7ba8b276b076931374",
+          "emotionalValence": 0.25,
+          "confidence": 0.9,
+          "relevance": 1.0,
+          "tags": [
+            "tool_result",
+            "social.chat_with",
+            "tool.execution_completed"
+          ]
+        }
+      ],
+      "relevantSubjectiveMemoryRefs": [
+        {
+          "recordId": "evt_ef25bb29b1574d7ba8b276b076931374:lena",
+          "sourceEventId": "evt_ef25bb29b1574d7ba8b276b076931374",
+          "emotionalValence": 0.25,
+          "confidence": 0.9,
+          "relevance": 1.0,
+          "tags": [
+            "tool_result",
+            "social.chat_with",
+            "tool.execution_completed"
+          ]
+        }
+      ],
+      "heuristicRefs": [
+        {
+          "heuristicId": "lena:designer:prefer_lena_chat_for_early_warning",
+          "triggerPattern": "designer_seed:prefer_lena_chat_for_early_warning|need=affiliation|tool=social.chat_with",
+          "sourceEventId": "designer_seed:lena:prefer_lena_chat_for_early_warning",
+          "targetKind": "tool",
+          "targetId": "social.chat_with",
+          "weightDelta": 0.06,
+          "confidence": 0.55,
+          "effectiveConfidence": 0.5445,
+          "appliedDelta": 0.03267,
+          "conflictResolution": "none"
+        },
+        {
+          "heuristicId": "lena:prefer_social_when_affiliation_high",
+          "triggerPattern": "prefer_social_when_affiliation_high",
+          "sourceEventId": "evt_ef25bb29b1574d7ba8b276b076931374",
+          "targetKind": "need",
+          "targetId": "affiliation",
+          "weightDelta": 0.05,
+          "confidence": 0.45,
+          "effectiveConfidence": 0.45,
+          "appliedDelta": 0.0225,
+          "conflictResolution": "none"
+        },
+        {
+          "heuristicId": "lena:prefer_successful_tool:social.chat_with",
+          "triggerPattern": "prefer_successful_tool:social.chat_with",
+          "sourceEventId": "evt_ef25bb29b1574d7ba8b276b076931374",
+          "targetKind": "tool",
+          "targetId": "social.chat_with",
+          "weightDelta": 0.03,
+          "confidence": 0.4,
+          "effectiveConfidence": 0.4,
+          "appliedDelta": 0.012,
+          "conflictResolution": "none"
+        }
+      ],
+      "relevantHeuristicRefs": [
+        {
+          "heuristicId": "lena:designer:prefer_lena_chat_for_early_warning",
+          "triggerPattern": "designer_seed:prefer_lena_chat_for_early_warning|need=affiliation|tool=social.chat_with",
+          "sourceEventId": "designer_seed:lena:prefer_lena_chat_for_early_warning",
+          "targetKind": "tool",
+          "targetId": "social.chat_with",
+          "weightDelta": 0.06,
+          "confidence": 0.55,
+          "effectiveConfidence": 0.5445,
+          "appliedDelta": 0.03267,
+          "conflictResolution": "none"
+        },
+        {
+          "heuristicId": "lena:prefer_social_when_affiliation_high",
+          "triggerPattern": "prefer_social_when_affiliation_high",
+          "sourceEventId": "evt_ef25bb29b1574d7ba8b276b076931374",
+          "targetKind": "need",
+          "targetId": "affiliation",
+          "weightDelta": 0.05,
+          "confidence": 0.45,
+          "effectiveConfidence": 0.45,
+          "appliedDelta": 0.0225,
+          "conflictResolution": "none"
+        },
+        {
+          "heuristicId": "lena:prefer_successful_tool:social.chat_with",
+          "triggerPattern": "prefer_successful_tool:social.chat_with",
+          "sourceEventId": "evt_ef25bb29b1574d7ba8b276b076931374",
+          "targetKind": "tool",
+          "targetId": "social.chat_with",
+          "weightDelta": 0.03,
+          "confidence": 0.4,
+          "effectiveConfidence": 0.4,
+          "appliedDelta": 0.012,
+          "conflictResolution": "none"
+        }
+      ],
+      "candidateScoresWithRelationshipMemory": [
+        {
+          "toolId": "social.chat_with",
+          "score": 1.00217,
+          "tierScore": 0.8,
+          "durationScore": 0.045,
+          "relationshipBonus": 0.0,
+          "subjectiveMemoryBonus": 0.09,
+          "subjectiveMemoryRefCount": 1,
+          "heuristicBonus": 0.06717,
+          "heuristicRefCount": 3,
+          "heuristicConflictCount": 0,
+          "decisionBudgetRoute": "llm",
+          "decisionBudgetChannel": "social_strategic_layer",
+          "decisionBudgetRemaining": 6
+        },
+        {
+          "toolId": "social.give_gift",
+          "score": 0.899833,
+          "tierScore": 0.8,
+          "durationScore": 0.045833,
+          "relationshipBonus": 0.0,
+          "subjectiveMemoryBonus": 0.0315,
+          "subjectiveMemoryRefCount": 1,
+          "heuristicBonus": 0.0225,
+          "heuristicRefCount": 1,
+          "heuristicConflictCount": 0,
+          "decisionBudgetRoute": "llm",
+          "decisionBudgetChannel": "social_strategic_layer",
+          "decisionBudgetRemaining": 6
+        }
+      ],
+      "candidateScoresWithoutRelationshipEdges": [
+        {
+          "toolId": "social.chat_with",
+          "score": 1.00217,
+          "tierScore": 0.8,
+          "durationScore": 0.045,
+          "relationshipBonus": 0.0,
+          "subjectiveMemoryBonus": 0.09,
+          "subjectiveMemoryRefCount": 1,
+          "heuristicBonus": 0.06717,
+          "heuristicRefCount": 3,
+          "heuristicConflictCount": 0,
+          "decisionBudgetRoute": "llm",
+          "decisionBudgetChannel": "social_strategic_layer",
+          "decisionBudgetRemaining": 6
+        },
+        {
+          "toolId": "social.give_gift",
+          "score": 0.899833,
+          "tierScore": 0.8,
+          "durationScore": 0.045833,
+          "relationshipBonus": 0.0,
+          "subjectiveMemoryBonus": 0.0315,
+          "subjectiveMemoryRefCount": 1,
+          "heuristicBonus": 0.0225,
+          "heuristicRefCount": 1,
+          "heuristicConflictCount": 0,
+          "decisionBudgetRoute": "llm",
+          "decisionBudgetChannel": "social_strategic_layer",
+          "decisionBudgetRemaining": 6
+        }
+      ],
+      "candidateScoresWithoutRelationshipMemory": [
+        {
+          "toolId": "social.give_gift",
+          "score": 0.845833,
+          "tierScore": 0.8,
+          "durationScore": 0.045833,
+          "relationshipBonus": 0.0,
+          "subjectiveMemoryBonus": 0.0,
+          "subjectiveMemoryRefCount": 0,
+          "heuristicBonus": 0.0,
+          "heuristicRefCount": 0,
+          "heuristicConflictCount": 0,
+          "decisionBudgetRoute": "llm",
+          "decisionBudgetChannel": "social_strategic_layer",
+          "decisionBudgetRemaining": 6
+        },
+        {
+          "toolId": "social.chat_with",
+          "score": 0.845,
+          "tierScore": 0.8,
+          "durationScore": 0.045,
+          "relationshipBonus": 0.0,
+          "subjectiveMemoryBonus": 0.0,
+          "subjectiveMemoryRefCount": 0,
+          "heuristicBonus": 0.0,
+          "heuristicRefCount": 0,
+          "heuristicConflictCount": 0,
+          "decisionBudgetRoute": "llm",
+          "decisionBudgetChannel": "social_strategic_layer",
+          "decisionBudgetRemaining": 6
+        }
+      ],
+      "reasonWithRelationshipMemory": "memory_and_heuristic_weighted_fit",
+      "reasonWithoutRelationshipEdges": "memory_and_heuristic_weighted_fit",
+      "reasonWithoutRelationshipMemory": "highest_rule_tier_fit"
+    },
+    "scenarioSetup": {
+      "kind": "default",
+      "seeded": false
+    },
+    "runtimeAblation": {
+      "agentId": "lena",
+      "targetAgentId": "mira",
+      "subjectiveMemory": "none",
+      "relationshipEdges": "no_relationship_edge"
+    },
+    "subjectiveMemoryAblation": {
+      "mode": "none"
+    },
+    "relationshipAblation": {
+      "mode": "no_relationship_edge",
+      "removedRelationshipCount": 3,
+      "removedDecisionEdgeCount": 3
+    },
+    "traceSchemaVersion": "phase2.trace.v1",
+    "llmDecisionEvidence": {
+      "schemaVersion": "process_llm_evidence.v1",
+      "providerUsageSchemaVersion": "provider_usage_actual.v1",
+      "providerMode": "rule",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated",
+      "baseline": "no_relationship_edge",
+      "seedIndex": 1,
+      "seedCount": 1,
+      "recordCount": 0,
+      "records": [],
+      "providerActuals": {
+        "totals": {
+          "calls": 0,
+          "cloudModeCalls": 0,
+          "cloudCalls": 0,
+          "ruleCalls": 0,
+          "fallbackCalls": 0,
+          "tokens": 0,
+          "promptTokens": 0,
+          "completionTokens": 0,
+          "cacheHitPromptTokens": 0,
+          "cacheMissPromptTokens": 0,
+          "cost": 0.0,
+          "costInput": 0.0,
+          "costOutput": 0.0,
+          "currency": null,
+          "latencyTotalMs": 0,
+          "latencyAvgMs": 0.0,
+          "costEstimatedCalls": 0
+        },
+        "byFeature": {},
+        "recent": []
+      }
+    }
+  }
+}

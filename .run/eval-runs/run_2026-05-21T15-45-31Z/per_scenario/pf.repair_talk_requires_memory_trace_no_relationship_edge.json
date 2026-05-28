@@ -1,0 +1,150 @@
+{
+  "scenario": {
+    "scenarioId": "pf.repair_talk_requires_memory_trace",
+    "description": "Tomas 的修复式交谈必须产生主观记忆和带 source_event_ids 的关系边。",
+    "npcId": "tomas",
+    "targetNpcId": "mira",
+    "expectedToolPrefixes": [
+      "social."
+    ],
+    "requiredProcessIds": [
+      "goal_relevant_tool_event",
+      "subjective_memory_refs",
+      "relationship_edge_trace",
+      "causal_trace",
+      "future_behavior_reference"
+    ],
+    "statusOverrides": {
+      "energy": 90,
+      "money": 90,
+      "social": 5
+    },
+    "locationId": "plaza",
+    "anchorId": "plaza_fountain",
+    "maxGameHours": 1
+  },
+  "baseline": "no_relationship_edge",
+  "ok": false,
+  "metrics": {
+    "goal_success_rate": 0.0,
+    "shortcut_violation_rate": 0.0,
+    "required_process_coverage": 0.6,
+    "forced_action_rate": 0.0,
+    "agent_initiated_action_ratio": 1.0,
+    "intervention_overreach_rate": 0.0,
+    "relationship_memory_causal_use_rate": 0.0,
+    "causal_trace_coverage": 0.0,
+    "relationship_consistency": 0.0,
+    "process_believability_score": 0.52
+  },
+  "processChecks": {
+    "goal_relevant_tool_event": true,
+    "subjective_memory_refs": true,
+    "relationship_edge_trace": false,
+    "causal_trace": true,
+    "future_behavior_reference": false
+  },
+  "evidence": {
+    "goalToolEvents": [
+      {
+        "eventId": "evt_421188fc1e124a29a7bf6a40338537f9",
+        "createdAt": "2026-05-21T15:45:31.810557+00:00",
+        "traceSchemaVersion": "phase2.trace.v1",
+        "traceId": "evt_2c4bdb43292f4006b21d603e42d7680b",
+        "spanId": "span_9c057c608d614666",
+        "sourceEventId": "evt_2c4bdb43292f4006b21d603e42d7680b",
+        "agentId": "tomas",
+        "targetIds": [
+          "mira"
+        ],
+        "worldTime": {
+          "tick": 1,
+          "day": 1,
+          "hour": 9,
+          "minute": 0,
+          "phase": "morning"
+        },
+        "eventType": "tool.execution_completed",
+        "summary": "托玛 与 米娅 完成了一次社交互动。"
+      }
+    ],
+    "subjectiveMemoryRefs": [
+      "evt_421188fc1e124a29a7bf6a40338537f9"
+    ],
+    "relationshipSourceIds": [],
+    "memoryTraceLinks": [
+      {
+        "eventId": "evt_51334a9268fa4b909e3e13613e94189b",
+        "createdAt": "2026-05-21T15:45:31.810557+00:00",
+        "traceSchemaVersion": "phase2.trace.v1",
+        "traceId": "evt_2c4bdb43292f4006b21d603e42d7680b",
+        "spanId": "span_f2a0f4627e9c4d52",
+        "sourceEventId": "evt_421188fc1e124a29a7bf6a40338537f9",
+        "agentId": "tomas",
+        "targetIds": [
+          "mira",
+          "tomas"
+        ],
+        "worldTime": {
+          "tick": 1,
+          "day": 1,
+          "hour": 9,
+          "minute": 0,
+          "phase": "morning"
+        },
+        "eventType": "memory.result_observed",
+        "summary": "观察到 2 条主观记忆，2 条关系边"
+      }
+    ],
+    "counterfactualReplay": {
+      "selectedWithRelationshipMemory": "social.give_gift",
+      "selectedWithoutRelationshipMemory": "social.give_gift",
+      "effect": false,
+      "relationshipEdgeRefs": [],
+      "relevantRelationshipEdgeRefs": [],
+      "candidateScoresWithRelationshipMemory": [
+        {
+          "toolId": "social.give_gift",
+          "score": 0.845833,
+          "tierScore": 0.8,
+          "durationScore": 0.045833,
+          "relationshipBonus": 0.0
+        },
+        {
+          "toolId": "social.chat_with",
+          "score": 0.845,
+          "tierScore": 0.8,
+          "durationScore": 0.045,
+          "relationshipBonus": 0.0
+        }
+      ],
+      "candidateScoresWithoutRelationshipMemory": [
+        {
+          "toolId": "social.give_gift",
+          "score": 0.845833,
+          "tierScore": 0.8,
+          "durationScore": 0.045833,
+          "relationshipBonus": 0.0
+        },
+        {
+          "toolId": "social.chat_with",
+          "score": 0.845,
+          "tierScore": 0.8,
+          "durationScore": 0.045,
+          "relationshipBonus": 0.0
+        }
+      ],
+      "reasonWithRelationshipMemory": "highest_rule_tier_fit",
+      "reasonWithoutRelationshipMemory": "highest_rule_tier_fit"
+    },
+    "subjectiveMemoryAblation": {
+      "mode": "none"
+    },
+    "relationshipAblation": {
+      "mode": "no_relationship_edge",
+      "removedRelationshipCount": 2,
+      "removedDecisionEdgeCount": 2
+    },
+    "traceSchemaVersion": "phase2.trace.v1"
+  }
+}

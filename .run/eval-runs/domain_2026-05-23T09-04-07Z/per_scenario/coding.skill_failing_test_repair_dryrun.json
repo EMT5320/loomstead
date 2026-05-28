@@ -1,0 +1,767 @@
+{
+  "domainId": "loomstead.coding.v0",
+  "scenarioId": "coding.skill_failing_test_repair_dryrun",
+  "baseline": "full_motivational_delegation",
+  "ok": true,
+  "metrics": {
+    "goal_success_rate": 1.0,
+    "shortcut_violation_rate": 0.0,
+    "required_process_coverage": 1.0,
+    "forced_action_rate": 0.0,
+    "agent_initiated_action_ratio": 1.0,
+    "intervention_overreach_rate": 0.0,
+    "relationship_memory_causal_use_rate": 1.0,
+    "causal_trace_coverage": 1.0,
+    "relationship_consistency": 1.0,
+    "process_believability_score": 1.0
+  },
+  "allowedInterventions": [
+    "event_skill_load",
+    "constraint_injection",
+    "evaluation_checkpoint"
+  ],
+  "appliedInterventionCount": 3,
+  "appliedEventCount": 3,
+  "stepEventCount": 5,
+  "milestones": [
+    {
+      "id": "repo_fixture_loaded",
+      "domainId": "loomstead.coding.v0",
+      "predicate": "external repo fixture is loaded before design"
+    },
+    {
+      "id": "design_review_loaded",
+      "domainId": "loomstead.coding.v0",
+      "predicate": "design review event is loaded before implementation"
+    },
+    {
+      "id": "implementation_diff",
+      "domainId": "loomstead.coding.v0",
+      "predicate": "implementer creates an artifact diff"
+    },
+    {
+      "id": "pre_patch_failure_observed",
+      "domainId": "loomstead.coding.v0",
+      "predicate": "evaluation checkpoint records the failing test before implementation"
+    },
+    {
+      "id": "external_repo_checkout_tested",
+      "domainId": "loomstead.coding.v0",
+      "predicate": "evaluation checkpoint checks out external repo and runs its test command"
+    },
+    {
+      "id": "review_completed",
+      "domainId": "loomstead.coding.v0",
+      "predicate": "reviewer records approval with source evidence"
+    },
+    {
+      "id": "failure_pattern_memory",
+      "domainId": "loomstead.coding.v0",
+      "predicate": "review cites a prior failure or constraint memory"
+    }
+  ],
+  "initialObservation": {
+    "tick": 0,
+    "worldSummary": {
+      "artifactCount": 0.0,
+      "prePatchTestReportCount": 0.0,
+      "testReportCount": 0.0,
+      "reviewReportCount": 0.0,
+      "constraintCount": 0.0,
+      "repoFixtureId": "loomstead-debug-failing-test-fixture.v1",
+      "repoFileRefs": [
+        "README.md",
+        "check_skill.py",
+        "docs/review_rubric.md",
+        "skills/loomstead-debug/SKILL.md",
+        "skills/loomstead-debug/metadata.json"
+      ],
+      "artifactRefs": [],
+      "prePatchTestReportRefs": [],
+      "testReportRefs": [],
+      "reviewReportRefs": []
+    },
+    "agentSummaries": {
+      "pm": {
+        "role": "PM",
+        "state": "scoping"
+      },
+      "architect": {
+        "role": "Architect",
+        "state": "waiting"
+      },
+      "implementer": {
+        "role": "Implementer",
+        "state": "waiting"
+      },
+      "reviewer": {
+        "role": "Reviewer",
+        "state": "waiting"
+      }
+    },
+    "recentEvents": [
+      {
+        "id": "coding_evt_000",
+        "type": "domain.goal_loaded",
+        "payload": {
+          "domainId": "loomstead.coding.v0",
+          "goalId": "coding.skill_failing_test_repair_dryrun"
+        }
+      },
+      {
+        "id": "coding_evt_001",
+        "type": "coding.repo_fixture_loaded",
+        "payload": {
+          "repoFixtureId": "loomstead-debug-failing-test-fixture.v1",
+          "fileCount": 5,
+          "metadataPath": null,
+          "reviewRubricPath": null,
+          "testCommand": "python check_skill.py"
+        }
+      }
+    ],
+    "goalProgress": {
+      "goal_success_rate": 0.0,
+      "shortcut_violation_rate": 0.0,
+      "required_process_coverage": 0.142857,
+      "forced_action_rate": 0.0,
+      "agent_initiated_action_ratio": 1.0,
+      "intervention_overreach_rate": 0.0,
+      "relationship_memory_causal_use_rate": 0.0,
+      "causal_trace_coverage": 0.0,
+      "relationship_consistency": 0.0,
+      "process_believability_score": 0.428571
+    },
+    "evalSignals": {
+      "eventCount": 2.0
+    }
+  },
+  "finalObservation": {
+    "tick": 5,
+    "worldSummary": {
+      "artifactCount": 1.0,
+      "prePatchTestReportCount": 1.0,
+      "testReportCount": 1.0,
+      "reviewReportCount": 1.0,
+      "constraintCount": 1.0,
+      "repoFixtureId": "loomstead-debug-failing-test-fixture.v1",
+      "repoFileRefs": [
+        "README.md",
+        "check_skill.py",
+        "docs/review_rubric.md",
+        "skills/loomstead-debug/SKILL.md",
+        "skills/loomstead-debug/metadata.json"
+      ],
+      "artifactRefs": [
+        "skill_failing_test_repair.patch"
+      ],
+      "prePatchTestReportRefs": [
+        "skill_failing_test_repair.pre_patch_tests"
+      ],
+      "testReportRefs": [
+        "skill_failing_test_repair.tests"
+      ],
+      "reviewReportRefs": [
+        "skill_failing_test_repair.review"
+      ]
+    },
+    "agentSummaries": {
+      "pm": {
+        "role": "PM",
+        "state": "scoping"
+      },
+      "architect": {
+        "role": "Architect",
+        "state": "design_reviewed"
+      },
+      "implementer": {
+        "role": "Implementer",
+        "state": "diff_created"
+      },
+      "reviewer": {
+        "role": "Reviewer",
+        "state": "approved"
+      }
+    },
+    "recentEvents": [
+      {
+        "id": "coding_evt_000",
+        "type": "domain.goal_loaded",
+        "payload": {
+          "domainId": "loomstead.coding.v0",
+          "goalId": "coding.skill_failing_test_repair_dryrun"
+        }
+      },
+      {
+        "id": "coding_evt_001",
+        "type": "coding.repo_fixture_loaded",
+        "payload": {
+          "repoFixtureId": "loomstead-debug-failing-test-fixture.v1",
+          "fileCount": 5,
+          "metadataPath": null,
+          "reviewRubricPath": null,
+          "testCommand": "python check_skill.py"
+        }
+      },
+      {
+        "id": "coding_evt_002",
+        "tick": 0,
+        "type": "domain.intervention_applied",
+        "payload": {
+          "domainId": "loomstead.coding.v0",
+          "intervention": {
+            "interventionId": "coding.skill_failing_test_repair_dryrun.intervention.01",
+            "interventionType": "event_skill_load",
+            "targetAgents": [
+              "pm",
+              "architect",
+              "implementer",
+              "reviewer"
+            ],
+            "payload": {
+              "goalId": "coding.skill_failing_test_repair_dryrun",
+              "constraintId": null
+            },
+            "expiresAtTick": null,
+            "reason": "Cross-domain adapter dry-run for coding.skill_failing_test_repair_dryrun"
+          },
+          "shortcutMutationApplied": false
+        }
+      },
+      {
+        "id": "coding_evt_003",
+        "tick": 0,
+        "type": "domain.intervention_applied",
+        "payload": {
+          "domainId": "loomstead.coding.v0",
+          "intervention": {
+            "interventionId": "coding.skill_failing_test_repair_dryrun.intervention.02",
+            "interventionType": "constraint_injection",
+            "targetAgents": [
+              "pm",
+              "architect",
+              "implementer",
+              "reviewer"
+            ],
+            "payload": {
+              "goalId": "coding.skill_failing_test_repair_dryrun",
+              "constraintId": "must_run_tests"
+            },
+            "expiresAtTick": null,
+            "reason": "Cross-domain adapter dry-run for coding.skill_failing_test_repair_dryrun"
+          },
+          "shortcutMutationApplied": false
+        }
+      },
+      {
+        "id": "coding_evt_004",
+        "tick": 0,
+        "type": "domain.intervention_applied",
+        "payload": {
+          "domainId": "loomstead.coding.v0",
+          "intervention": {
+            "interventionId": "coding.skill_failing_test_repair_dryrun.intervention.03",
+            "interventionType": "evaluation_checkpoint",
+            "targetAgents": [
+              "pm",
+              "architect",
+              "implementer",
+              "reviewer"
+            ],
+            "payload": {
+              "goalId": "coding.skill_failing_test_repair_dryrun",
+              "constraintId": null
+            },
+            "expiresAtTick": null,
+            "reason": "Cross-domain adapter dry-run for coding.skill_failing_test_repair_dryrun"
+          },
+          "shortcutMutationApplied": false
+        }
+      },
+      {
+        "id": "coding_evt_005",
+        "tick": 1,
+        "type": "coding.design_review_loaded",
+        "payload": {
+          "agentId": "architect",
+          "designDocRef": "design.skill_prototype.v1",
+          "repoFixtureId": "loomstead-debug-failing-test-fixture.v1",
+          "acceptedConstraints": [
+            "must_run_tests"
+          ],
+          "reviewRubricPath": null
+        }
+      },
+      {
+        "id": "coding_evt_006",
+        "tick": 2,
+        "type": "coding.pre_patch_tests_failed",
+        "payload": {
+          "agentId": "reviewer",
+          "testReportId": "skill_failing_test_repair.pre_patch_tests",
+          "expectedFailure": true,
+          "failureObserved": true,
+          "failingCaseIds": [
+            "requires_failing_test_evidence",
+            "requires_eval_domain_after_repair"
+          ],
+          "exitCode": 1,
+          "workspaceKind": "git_external_repo_checkout",
+          "sourceEventIds": [
+            "coding_evt_005"
+          ],
+          "testReportSha256": "e1d7aa0494346db06ee783ccaa9b7b89457438c95a0b97e776d1e4f0190645ae"
+        }
+      },
+      {
+        "id": "coding_evt_007",
+        "tick": 3,
+        "type": "coding.implementation_diff_created",
+        "payload": {
+          "agentId": "implementer",
+          "artifactId": "skill_failing_test_repair.patch",
+          "sourceEventIds": [
+            "coding_evt_005"
+          ],
+          "artifactSha256": "87f11d36556576e1a7c8de46e27eb23620104c3e16ae3097be95cdc739c48265",
+          "changedFiles": [
+            "skills/loomstead-debug/SKILL.md"
+          ]
+        }
+      },
+      {
+        "id": "coding_evt_008",
+        "tick": 4,
+        "type": "coding.tests_executed",
+        "payload": {
+          "agentId": "reviewer",
+          "testReportId": "skill_failing_test_repair.tests",
+          "passed": true,
+          "exitCode": 0,
+          "workspaceKind": "git_external_repo_checkout",
+          "sourceArtifactId": "skill_failing_test_repair.patch",
+          "sourceEventIds": [
+            "coding_evt_007"
+          ],
+          "testReportSha256": "edb9b17172fb3a9f41c95896c50b917975eb38e6630f2f0936a995aa1fc409f3"
+        }
+      },
+      {
+        "id": "coding_evt_009",
+        "tick": 5,
+        "type": "coding.review_completed",
+        "payload": {
+          "agentId": "reviewer",
+          "reviewReportId": "skill_failing_test_repair.review",
+          "status": "approved",
+          "sourceTestReportId": "skill_failing_test_repair.tests",
+          "sourceEventIds": [
+            "coding_evt_006",
+            "coding_evt_008"
+          ],
+          "citedMemoryIds": [
+            "prior_failure.skip_tests",
+            "prior_failure.failing_test_first"
+          ],
+          "reviewReportSha256": "f3ad78ac864fec3e1792241ef95c649ea6b5045dfdc2615929d5862dcd26b679"
+        }
+      }
+    ],
+    "goalProgress": {
+      "goal_success_rate": 1.0,
+      "shortcut_violation_rate": 0.0,
+      "required_process_coverage": 1.0,
+      "forced_action_rate": 0.0,
+      "agent_initiated_action_ratio": 1.0,
+      "intervention_overreach_rate": 0.0,
+      "relationship_memory_causal_use_rate": 1.0,
+      "causal_trace_coverage": 1.0,
+      "relationship_consistency": 1.0,
+      "process_believability_score": 1.0
+    },
+    "evalSignals": {
+      "eventCount": 10.0
+    }
+  },
+  "domainEvidence": {
+    "repoFixture": {
+      "fixtureId": "loomstead-debug-failing-test-fixture.v1",
+      "repoName": "fixture/loomstead-debug-skill",
+      "defaultBranch": "main",
+      "files": {
+        "README.md": "# Skill Fixture\n\nThis fixture represents a tiny external skill repository.\n",
+        "skills/loomstead-debug/SKILL.md": "# Loomstead Debug Skill\n\nUse project docs before changing runtime code.\n",
+        "skills/loomstead-debug/metadata.json": "{\n  \"id\": \"loomstead-debug\",\n  \"qualityGates\": [\n    \"manual_review\"\n  ],\n  \"requiresReviewRubric\": false,\n  \"version\": \"0.1.0\"\n}\n",
+        "docs/review_rubric.md": "# Review Rubric\n\n- Confirm existing doc guidance remains intact.\n",
+        "check_skill.py": "from __future__ import annotations\nimport json\nfrom pathlib import Path\n\nEXPECTATIONS = '[{\"caseId\": \"loads_skill_md\", \"type\": \"startswith\", \"value\": \"# Loomstead Debug Skill\"}, {\"caseId\": \"keeps_existing_doc_guidance\", \"type\": \"contains\", \"value\": \"Use project docs\"}, {\"caseId\": \"requires_failing_test_evidence\", \"type\": \"contains\", \"value\": \"failing test evidence before repair\"}, {\"caseId\": \"requires_eval_domain_after_repair\", \"type\": \"contains\", \"value\": \"eval:domain\"}]'\nexpectations = json.loads(EXPECTATIONS)\nrepo_root = Path(__file__).resolve().parent\n\ndef read_text(rel_path):\n    path = repo_root / rel_path\n    return path.read_text(encoding='utf-8') if path.exists() else ''\n\ndef read_json(rel_path):\n    text = read_text(rel_path)\n    return json.loads(text) if text else None\n\ndef get_field(payload, dotted):\n    current = payload\n    for part in str(dotted).split('.'):\n        if not isinstance(current, dict) or part not in current:\n            return None\n        current = current[part]\n    return current\n\ncases = []\nfor item in expectations:\n    value = str(item.get('value', ''))\n    check_type = item.get('type')\n    rel_path = Path(str(item.get('path') or 'skills/loomstead-debug/SKILL.md'))\n    file_text = read_text(rel_path)\n    if check_type == 'startswith':\n        passed = file_text.startswith(value)\n    elif check_type == 'contains':\n        passed = value in file_text\n    elif check_type == 'json_field_equals':\n        payload = read_json(rel_path)\n        passed = get_field(payload, item.get('field')) == item.get('value')\n    elif check_type == 'json_array_contains':\n        payload = read_json(rel_path)\n        actual = get_field(payload, item.get('field'))\n        passed = isinstance(actual, list) and item.get('value') in actual\n    else:\n        passed = False\n    cases.append({'caseId': item.get('caseId', 'unknown_case'), 'passed': passed})\nprint(json.dumps({'caseResults': cases}, ensure_ascii=False))\nraise SystemExit(0 if all(item['passed'] for item in cases) else 1)\n"
+      },
+      "fileHashes": {
+        "README.md": "b603311279d95465518b947526822a4d81f2cbef7c4362dd197868b5bb466860",
+        "skills/loomstead-debug/SKILL.md": "cfbc8de80c634321e9aa1bcd78cf7838537c3f0693f6f70f39d8127042ccc201",
+        "skills/loomstead-debug/metadata.json": "3fed5d3f9e7609cbf31878e8b83c173efc55c50dcc2dd7afc6db2538b34786cb",
+        "docs/review_rubric.md": "d9559858a56896b5cb0f6864c5b01a108428f0dcb760b84393847969a8196df3",
+        "check_skill.py": "cd7c4b35b076a5d7750899983df38528605804ef0dafad48051074dceed26c49"
+      },
+      "targetPath": "skills/loomstead-debug/SKILL.md",
+      "targetPaths": [
+        "skills/loomstead-debug/SKILL.md"
+      ],
+      "artifactId": "skill_failing_test_repair.patch",
+      "prePatchTestReportId": "skill_failing_test_repair.pre_patch_tests",
+      "testReportId": "skill_failing_test_repair.tests",
+      "reviewReportId": "skill_failing_test_repair.review",
+      "metadataPath": null,
+      "reviewRubricPath": null,
+      "testCommand": "python check_skill.py",
+      "testCommandSource": "repo_fixture",
+      "plannedAdditions": [
+        "Add failing test evidence before repair.",
+        "Run eval:domain after the repair passes."
+      ],
+      "plannedFileUpdates": [],
+      "testExpectations": [
+        {
+          "caseId": "loads_skill_md",
+          "type": "startswith",
+          "value": "# Loomstead Debug Skill"
+        },
+        {
+          "caseId": "keeps_existing_doc_guidance",
+          "type": "contains",
+          "value": "Use project docs"
+        },
+        {
+          "caseId": "requires_failing_test_evidence",
+          "type": "contains",
+          "value": "failing test evidence before repair"
+        },
+        {
+          "caseId": "requires_eval_domain_after_repair",
+          "type": "contains",
+          "value": "eval:domain"
+        }
+      ],
+      "requiresPrePatchFailure": true,
+      "sourceRepoKind": "deterministic_local_git_repository"
+    },
+    "artifacts": {
+      "skill_failing_test_repair.patch": {
+        "artifactId": "skill_failing_test_repair.patch",
+        "kind": "repo_patch",
+        "repoFixtureId": "loomstead-debug-failing-test-fixture.v1",
+        "path": "skills/loomstead-debug/SKILL.md",
+        "status": "created",
+        "sourceEventIds": [
+          "coding_evt_005"
+        ],
+        "changedFiles": [
+          "skills/loomstead-debug/SKILL.md"
+        ],
+        "baseFileSha256": "cfbc8de80c634321e9aa1bcd78cf7838537c3f0693f6f70f39d8127042ccc201",
+        "patchedFileSha256": "c4fc6ef43f1a416a3f6472cda82b8338c6a68dde946361afcb256c28dff231a0",
+        "fileSha256": {
+          "skills/loomstead-debug/SKILL.md": {
+            "base": "cfbc8de80c634321e9aa1bcd78cf7838537c3f0693f6f70f39d8127042ccc201",
+            "patched": "c4fc6ef43f1a416a3f6472cda82b8338c6a68dde946361afcb256c28dff231a0"
+          }
+        },
+        "patchText": "--- a/skills/loomstead-debug/SKILL.md\n+++ b/skills/loomstead-debug/SKILL.md\n@@ -1,3 +1,5 @@\n # Loomstead Debug Skill\n \n Use project docs before changing runtime code.\n+Add failing test evidence before repair.\n+Run eval:domain after the repair passes.",
+        "patchedFiles": {
+          "README.md": "# Skill Fixture\n\nThis fixture represents a tiny external skill repository.\n",
+          "skills/loomstead-debug/SKILL.md": "# Loomstead Debug Skill\n\nUse project docs before changing runtime code.\nAdd failing test evidence before repair.\nRun eval:domain after the repair passes.\n",
+          "skills/loomstead-debug/metadata.json": "{\n  \"id\": \"loomstead-debug\",\n  \"qualityGates\": [\n    \"manual_review\"\n  ],\n  \"requiresReviewRubric\": false,\n  \"version\": \"0.1.0\"\n}\n",
+          "docs/review_rubric.md": "# Review Rubric\n\n- Confirm existing doc guidance remains intact.\n",
+          "check_skill.py": "from __future__ import annotations\nimport json\nfrom pathlib import Path\n\nEXPECTATIONS = '[{\"caseId\": \"loads_skill_md\", \"type\": \"startswith\", \"value\": \"# Loomstead Debug Skill\"}, {\"caseId\": \"keeps_existing_doc_guidance\", \"type\": \"contains\", \"value\": \"Use project docs\"}, {\"caseId\": \"requires_failing_test_evidence\", \"type\": \"contains\", \"value\": \"failing test evidence before repair\"}, {\"caseId\": \"requires_eval_domain_after_repair\", \"type\": \"contains\", \"value\": \"eval:domain\"}]'\nexpectations = json.loads(EXPECTATIONS)\nrepo_root = Path(__file__).resolve().parent\n\ndef read_text(rel_path):\n    path = repo_root / rel_path\n    return path.read_text(encoding='utf-8') if path.exists() else ''\n\ndef read_json(rel_path):\n    text = read_text(rel_path)\n    return json.loads(text) if text else None\n\ndef get_field(payload, dotted):\n    current = payload\n    for part in str(dotted).split('.'):\n        if not isinstance(current, dict) or part not in current:\n            return None\n        current = current[part]\n    return current\n\ncases = []\nfor item in expectations:\n    value = str(item.get('value', ''))\n    check_type = item.get('type')\n    rel_path = Path(str(item.get('path') or 'skills/loomstead-debug/SKILL.md'))\n    file_text = read_text(rel_path)\n    if check_type == 'startswith':\n        passed = file_text.startswith(value)\n    elif check_type == 'contains':\n        passed = value in file_text\n    elif check_type == 'json_field_equals':\n        payload = read_json(rel_path)\n        passed = get_field(payload, item.get('field')) == item.get('value')\n    elif check_type == 'json_array_contains':\n        payload = read_json(rel_path)\n        actual = get_field(payload, item.get('field'))\n        passed = isinstance(actual, list) and item.get('value') in actual\n    else:\n        passed = False\n    cases.append({'caseId': item.get('caseId', 'unknown_case'), 'passed': passed})\nprint(json.dumps({'caseResults': cases}, ensure_ascii=False))\nraise SystemExit(0 if all(item['passed'] for item in cases) else 1)\n"
+        },
+        "sha256": "87f11d36556576e1a7c8de46e27eb23620104c3e16ae3097be95cdc739c48265"
+      }
+    },
+    "prePatchTestReports": {
+      "skill_failing_test_repair.pre_patch_tests": {
+        "testReportId": "skill_failing_test_repair.pre_patch_tests",
+        "command": "python check_skill.py",
+        "testPhase": "pre_patch",
+        "passed": false,
+        "expectedFailure": true,
+        "failureObserved": true,
+        "failingCaseIds": [
+          "requires_failing_test_evidence",
+          "requires_eval_domain_after_repair"
+        ],
+        "caseResults": [
+          {
+            "caseId": "loads_skill_md",
+            "passed": true
+          },
+          {
+            "caseId": "keeps_existing_doc_guidance",
+            "passed": true
+          },
+          {
+            "caseId": "requires_failing_test_evidence",
+            "passed": false
+          },
+          {
+            "caseId": "requires_eval_domain_after_repair",
+            "passed": false
+          }
+        ],
+        "execution": {
+          "executed": true,
+          "testPhase": "pre_patch",
+          "workspaceKind": "git_external_repo_checkout",
+          "sourceRepoKind": "deterministic_local_git_repository",
+          "checkoutMethod": "git clone",
+          "command": "python check_skill.py",
+          "commandTemplate": "python check_skill.py",
+          "testCommandSource": "repo_fixture",
+          "pythonExecutable": "python.exe",
+          "exitCode": 1,
+          "durationMs": 472.547,
+          "stdout": "{\"caseResults\": [{\"caseId\": \"loads_skill_md\", \"passed\": true}, {\"caseId\": \"keeps_existing_doc_guidance\", \"passed\": true}, {\"caseId\": \"requires_failing_test_evidence\", \"passed\": false}, {\"caseId\": \"requires_eval_domain_after_repair\", \"passed\": false}]}\n",
+          "stderr": "",
+          "checkoutSteps": [
+            {
+              "command": "git init --quiet",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "git checkout -B main",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "Switched to a new branch 'main'\n"
+            },
+            {
+              "command": "git config user.email fixture@example.invalid",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "git config user.name Loomstead Fixture",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "git add --all",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "warning: unable to access 'C:/Users/Administrator/.config/git/ignore': Permission denied\n"
+            },
+            {
+              "command": "git commit --quiet -m initial fixture repo",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "git clone --quiet <source-repo> <checkout>",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "warning: unable to access 'C:/Users/Administrator/.config/git/ignore': Permission denied\n"
+            }
+          ],
+          "git": {
+            "defaultBranch": "main",
+            "sourceHead": "d0c55d0667ee24c9e364e95950dfc7e5981c8551",
+            "checkoutHead": "d0c55d0667ee24c9e364e95950dfc7e5981c8551",
+            "statusAfterPatch": []
+          },
+          "sourceRepoFiles": [
+            "README.md",
+            "check_skill.py",
+            "docs/review_rubric.md",
+            "skills/loomstead-debug/SKILL.md",
+            "skills/loomstead-debug/metadata.json"
+          ],
+          "workspaceFiles": [
+            "README.md",
+            "check_skill.py",
+            "docs/review_rubric.md",
+            "skills/loomstead-debug/SKILL.md",
+            "skills/loomstead-debug/metadata.json"
+          ],
+          "workspaceFileHashes": {
+            "README.md": "b603311279d95465518b947526822a4d81f2cbef7c4362dd197868b5bb466860",
+            "skills/loomstead-debug/SKILL.md": "cfbc8de80c634321e9aa1bcd78cf7838537c3f0693f6f70f39d8127042ccc201",
+            "skills/loomstead-debug/metadata.json": "3fed5d3f9e7609cbf31878e8b83c173efc55c50dcc2dd7afc6db2538b34786cb",
+            "docs/review_rubric.md": "d9559858a56896b5cb0f6864c5b01a108428f0dcb760b84393847969a8196df3",
+            "check_skill.py": "cd7c4b35b076a5d7750899983df38528605804ef0dafad48051074dceed26c49"
+          }
+        },
+        "sourceArtifactId": "pre_patch_fixture_state",
+        "sourceEventIds": [
+          "coding_evt_005"
+        ],
+        "sha256": "e1d7aa0494346db06ee783ccaa9b7b89457438c95a0b97e776d1e4f0190645ae"
+      }
+    },
+    "testReports": {
+      "skill_failing_test_repair.tests": {
+        "testReportId": "skill_failing_test_repair.tests",
+        "command": "python check_skill.py",
+        "testPhase": "post_patch",
+        "passed": true,
+        "caseResults": [
+          {
+            "caseId": "loads_skill_md",
+            "passed": true
+          },
+          {
+            "caseId": "keeps_existing_doc_guidance",
+            "passed": true
+          },
+          {
+            "caseId": "requires_failing_test_evidence",
+            "passed": true
+          },
+          {
+            "caseId": "requires_eval_domain_after_repair",
+            "passed": true
+          }
+        ],
+        "execution": {
+          "executed": true,
+          "testPhase": "post_patch",
+          "workspaceKind": "git_external_repo_checkout",
+          "sourceRepoKind": "deterministic_local_git_repository",
+          "checkoutMethod": "git clone",
+          "command": "python check_skill.py",
+          "commandTemplate": "python check_skill.py",
+          "testCommandSource": "repo_fixture",
+          "pythonExecutable": "python.exe",
+          "exitCode": 0,
+          "durationMs": 444.69,
+          "stdout": "{\"caseResults\": [{\"caseId\": \"loads_skill_md\", \"passed\": true}, {\"caseId\": \"keeps_existing_doc_guidance\", \"passed\": true}, {\"caseId\": \"requires_failing_test_evidence\", \"passed\": true}, {\"caseId\": \"requires_eval_domain_after_repair\", \"passed\": true}]}\n",
+          "stderr": "",
+          "checkoutSteps": [
+            {
+              "command": "git init --quiet",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "git checkout -B main",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "Switched to a new branch 'main'\n"
+            },
+            {
+              "command": "git config user.email fixture@example.invalid",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "git config user.name Loomstead Fixture",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "git add --all",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "warning: unable to access 'C:/Users/Administrator/.config/git/ignore': Permission denied\n"
+            },
+            {
+              "command": "git commit --quiet -m initial fixture repo",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "git clone --quiet <source-repo> <checkout>",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "warning: unable to access 'C:/Users/Administrator/.config/git/ignore': Permission denied\n"
+            }
+          ],
+          "git": {
+            "defaultBranch": "main",
+            "sourceHead": "09e5ce0bc65b9ff113133205e97c2caf89cd7676",
+            "checkoutHead": "09e5ce0bc65b9ff113133205e97c2caf89cd7676",
+            "statusAfterPatch": [
+              " M skills/loomstead-debug/SKILL.md"
+            ]
+          },
+          "sourceRepoFiles": [
+            "README.md",
+            "check_skill.py",
+            "docs/review_rubric.md",
+            "skills/loomstead-debug/SKILL.md",
+            "skills/loomstead-debug/metadata.json"
+          ],
+          "workspaceFiles": [
+            "README.md",
+            "check_skill.py",
+            "docs/review_rubric.md",
+            "skills/loomstead-debug/SKILL.md",
+            "skills/loomstead-debug/metadata.json"
+          ],
+          "workspaceFileHashes": {
+            "README.md": "b603311279d95465518b947526822a4d81f2cbef7c4362dd197868b5bb466860",
+            "skills/loomstead-debug/SKILL.md": "c4fc6ef43f1a416a3f6472cda82b8338c6a68dde946361afcb256c28dff231a0",
+            "skills/loomstead-debug/metadata.json": "3fed5d3f9e7609cbf31878e8b83c173efc55c50dcc2dd7afc6db2538b34786cb",
+            "docs/review_rubric.md": "d9559858a56896b5cb0f6864c5b01a108428f0dcb760b84393847969a8196df3",
+            "check_skill.py": "cd7c4b35b076a5d7750899983df38528605804ef0dafad48051074dceed26c49"
+          }
+        },
+        "sourceArtifactId": "skill_failing_test_repair.patch",
+        "sourceEventIds": [
+          "coding_evt_007"
+        ],
+        "sha256": "edb9b17172fb3a9f41c95896c50b917975eb38e6630f2f0936a995aa1fc409f3"
+      }
+    },
+    "reviewReports": {
+      "skill_failing_test_repair.review": {
+        "reviewReportId": "skill_failing_test_repair.review",
+        "status": "approved",
+        "sourcePrePatchTestReportId": "skill_failing_test_repair.pre_patch_tests",
+        "sourceTestReportId": "skill_failing_test_repair.tests",
+        "sourceEventIds": [
+          "coding_evt_006",
+          "coding_evt_008"
+        ],
+        "repoFixtureId": "loomstead-debug-failing-test-fixture.v1",
+        "reviewRubricPath": null,
+        "metadataPath": null,
+        "citedMemoryIds": [
+          "prior_failure.skip_tests",
+          "prior_failure.failing_test_first"
+        ],
+        "checklist": [
+          {
+            "id": "repo_fixture_loaded",
+            "passed": true
+          },
+          {
+            "id": "design_before_diff",
+            "passed": true
+          },
+          {
+            "id": "pre_patch_failure_observed",
+            "passed": true
+          },
+          {
+            "id": "external_checkout_tests_before_review",
+            "passed": true
+          },
+          {
+            "id": "failure_memory_cited",
+            "passed": true
+          }
+        ],
+        "sha256": "f3ad78ac864fec3e1792241ef95c649ea6b5045dfdc2615929d5862dcd26b679"
+      }
+    },
+    "dependencies": {
+      "repoFixtureId": "loomstead-debug-failing-test-fixture.v1"
+    }
+  }
+}
