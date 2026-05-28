@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Check local paper-writing tooling: Zotero, LaTeX, Perl, and Codex plugins."""
+"""Check local paper-writing tooling: Zotero, LaTeX, Mermaid, Perl, and Codex plugins."""
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import urllib.error
 import urllib.request
@@ -18,6 +19,12 @@ KNOWN_MIKTEX_BIN_DIRS = [
     Path(r"C:\Program Files\MiKTeX\miktex\bin\x64"),
     Path.home() / "AppData" / "Local" / "Programs" / "MiKTeX" / "miktex" / "bin" / "x64",
     Path.home() / "AppData" / "Local" / "Programs" / "MiKTeX" / "miktex" / "bin",
+]
+BROWSER_CANDIDATES = [
+    Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe"),
+    Path(r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"),
+    Path(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"),
+    Path(r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"),
 ]
 
 
@@ -57,6 +64,29 @@ def find_plugin_skill(pattern: str) -> list[str]:
     return [str(path) for path in cache.rglob(pattern)]
 
 
+def detect_local_mmdc() -> dict[str, Any]:
+    """Detect the project-local Mermaid CLI installed by npm."""
+
+    candidates = [ROOT / "node_modules" / ".bin" / "mmdc.cmd", ROOT / "node_modules" / ".bin" / "mmdc"]
+    path = shutil.which("mmdc")
+    local_path = next((str(candidate) for candidate in candidates if candidate.exists()), None)
+    return {"found": bool(path or local_path), "path": path, "local_path": local_path}
+
+
+def detect_browser() -> dict[str, Any]:
+    """Detect a browser usable by Puppeteer / Mermaid CLI."""
+
+    env_path = None
+    for key in ["PUPPETEER_EXECUTABLE_PATH", "CHROME_BIN"]:
+        value = os.environ.get(key)
+        if value and Path(value).exists():
+            env_path = value
+            break
+    command_path = shutil.which("chrome") or shutil.which("msedge")
+    known_path = next((str(candidate) for candidate in BROWSER_CANDIDATES if candidate.exists()), None)
+    return {"found": bool(env_path or command_path or known_path), "env_path": env_path, "path": command_path, "known_path": known_path}
+
+
 def build_report() -> dict[str, Any]:
     """Build a structured status report for terminal and CI-style checks."""
 
@@ -80,6 +110,8 @@ def build_report() -> dict[str, Any]:
     zotero_skills = find_plugin_skill("zotero/SKILL.md")
     bundled_tectonic = find_plugin_skill("tectonic.exe")
     paper_main = ROOT / "paper" / "latex" / "main.tex"
+    mmdc = detect_local_mmdc()
+    browser = detect_browser()
     return {
         "commands": commands,
         "zotero": {
@@ -91,6 +123,10 @@ def build_report() -> dict[str, Any]:
             "codex_compile_skill": latex_skills,
             "bundled_tectonic": bundled_tectonic,
             "main_tex_exists": paper_main.exists(),
+        },
+        "mermaid": {
+            "mmdc": mmdc,
+            "browser": browser,
         },
         "ready": {
             "zotero_local_api": zotero_api.get("ok") is True,
@@ -104,6 +140,9 @@ def build_report() -> dict[str, Any]:
             "biber_available": commands["biber"]["found"],
             "paper_main_tex_exists": paper_main.exists(),
             "bundled_tectonic_available": bool(bundled_tectonic),
+            "mermaid_cli_available": mmdc["found"],
+            "mermaid_browser_available": browser["found"],
+            "mermaid_render_ready": mmdc["found"] and browser["found"],
         },
     }
 

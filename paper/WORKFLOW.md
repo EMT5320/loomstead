@@ -21,9 +21,10 @@ Routine refresh:
 npm.cmd run eval:archive:check
 npm.cmd run eval:archive:drift
 python scripts/paper_extract_eval_tables.py
+npm.cmd run paper:figures
 ```
 
-This refreshes `paper/generated/eval_summary_tables.md`, `paper/generated/ablation_table.csv`, `paper/generated/latest_runs.json`, `paper/generated/manifest_inventory.md`, and `paper/generated/eval_tables.tex`.
+This refreshes `paper/generated/eval_summary_tables.md`, `paper/generated/ablation_table.csv`, `paper/generated/latest_runs.json`, `paper/generated/manifest_inventory.md`, `paper/generated/eval_tables.tex`, and Mermaid-rendered assets under `paper/generated/figures/`.
 
 When new evidence is needed:
 
@@ -75,6 +76,7 @@ Build outputs live under `paper/latex/build/`; source files stay under `paper/la
 python scripts/check_paper_tooling.py --json
 python -m compileall scripts
 python scripts/paper_extract_eval_tables.py
+npm.cmd run paper:figures
 latexmk -pdf -cd -interaction=nonstopmode -halt-on-error -outdir=build paper/latex/main.tex
 npm.cmd run paper:check
 git diff --check

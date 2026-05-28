@@ -5,24 +5,30 @@
 - Goal: show Godot Client, Python Agent Server, Director, Event Skill, NPC loop, ToolExecutor, memory stores, Debug / Eval export.
 - Source files: `docs/agent_loop_architecture.md`, `README.md`, `backend/app/runtime/`, `backend/app/memory/`.
 - Draft source: `paper/diagrams/system_overview.mmd`.
-- LaTeX status: boxed placeholder included in `paper/latex/sections/03_system.tex`.
-- Status: draft source ready; rendered PDF/SVG asset pending.
+- Rendered assets: `paper/generated/figures/system_overview.svg`, `paper/generated/figures/system_overview.png`.
+- LaTeX status: rendered PNG included in `paper/latex/sections/03_system.tex`.
+- Status: draft source and rendered assets ready; publication-quality visual polish pending.
 
 ## Figure 2: Motivational Delegation loop
 
 - Goal: show user goal -> GoalSpec -> indirect intervention -> NPC arbitration -> tool execution -> observation -> eval checkpoint.
 - Source files: `docs/research_framing_motivational_delegation.md`, `docs/cross_domain_adapter.md`.
 - Draft source: `paper/diagrams/motivational_delegation_loop.mmd`.
-- LaTeX status: boxed placeholder included in `paper/latex/sections/04_motivational_delegation.tex`.
-- Status: draft source ready; rendered PDF/SVG asset pending.
+- Rendered assets: `paper/generated/figures/motivational_delegation_loop.svg`, `paper/generated/figures/motivational_delegation_loop.png`.
+- LaTeX status: rendered PNG included in `paper/latex/sections/04_motivational_delegation.tex`.
+- Status: draft source and rendered assets ready; publication-quality visual polish pending.
 
 ## Figure 3: Trace evidence chain
 
 - Goal: visualize `intervention -> event -> subjective memory -> relationship edge / heuristic -> later decision -> outcome`.
 - Source files: `GET /api/debug.phase2`, `paper/generated/manifest_inventory.md`, process trace artifacts.
+- Draft source: `paper/diagrams/trace_evidence_chain_figure3.mmd`.
 - Draft walkthrough: `paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md`.
 - Draft artifact source: `.run/eval-runs/run_2026-05-27T13-37-33Z/per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed01.json`.
-- Status: walkthrough draft extracted from clean process artifact; still requires manual figure curation and publication-quality wording review.
+- Second trace source: `.run/eval-runs/run_2026-05-25T07-34-53Z/per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation.json`.
+- Rendered assets: `paper/generated/figures/trace_evidence_chain_figure3.svg`, `paper/generated/figures/trace_evidence_chain_figure3.png`, `paper/generated/figures/trace_evidence_chain_figure3.pdf`.
+- LaTeX status: rendered PNG included in `paper/latex/sections/04_process_fidelity_eval.tex`.
+- Status: editable Mermaid source and rendered assets ready with two curated trace examples plus aggregate guardrail annotation; publication-quality wording review remains pending.
 
 ## Table 1: Metric families
 

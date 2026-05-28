@@ -9,7 +9,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 
 # Loomstead 新对话入口
 
-> 更新时间：2026-05-28（Eval robustness strict gate / 分域签名已接入；Godot 最新窗口复验暂缓到展示层集中处理）
+> 更新时间：2026-05-28（Eval robustness strict gate / 分域签名已接入；Research claim review 与 robustness drift 说明已补；Godot 最新窗口复验暂缓到展示层集中处理）
 > 用途：新对话、跨机器切换、子代理任务和多助手接手时的第一入口。
 
 ## 1. 启动路线
@@ -32,7 +32,9 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - Phase 2（骨架建立期）首轮已落地，当前主线是 trace / eval 收紧和可解释证据复用。
 - 后端权威路径已切到 `MotivationEngine -> ToolExecutor -> ResultObserver`，`/api/world/tick`、`/api/debug.phase2`、`phase2.trace.v1` 和 `schema_registry.v1` 是核心观察入口；arbitration `candidateScores` 已输出组件级来源和解释引用。
 - CapabilityRegistry 已从 legacy tool-prefix 路由推进到 `ToolDefinition.served_needs` 显式需求匹配，并保留 legacy fallback；`scripts/check_capability_served_needs.py` 已进入 `npm.cmd run check`。
-- Process Fidelity Eval 已包含 rule process suite、stability / determinism、memory / relationship ablation、counterfactual replay、domain adapter suite、evidence robustness suite 和 eval archive manifest；process suite 最新 clean five-repeat rule export 为 20/20；coding adapter 当前 8 个 fixture，已覆盖源码派生依赖图、dependency evidence chain v2、跨文件回归、reviewer judgment arbitration 和 `coding.domain_counterfactual_replay.v1`；narrative adapter 已接入 `narrative.domain_counterfactual_replay.v1`，domain suite 最新 clean deterministic five-repeat export 为 55/55，aggregate counterfactual mean 为 `0.645238`、town mean 为 `0.333333`；robustness 已升级为 strict gate，manifest scenarioIds 已覆盖 process / coding / narrative 场景，最新 clean five-seed export `.run/eval-runs/robustness_2026-05-28T03-08-43Z` 为 300/300 source perturbation checks，coding / narrative 分域 invariance rate 均为 `1.0`，并已 promote 为 regression 候选（`needs_manual_review` 仅因 drift policy 要求说明 scenario/gate 摘要变化）。
+- Process Fidelity Eval 已包含 rule process suite、stability / determinism、memory / relationship ablation、counterfactual replay、domain adapter suite、evidence robustness suite 和 eval archive manifest。
+- 最新 clean 证据：process suite five-repeat 为 20/20；domain suite five-repeat 为 55/55，aggregate counterfactual mean 为 `0.645238`、town mean 为 `0.333333`；robustness five-seed 为 300/300 source perturbation checks，coding / narrative 分域 invariance rate 均为 `1.0`。
+- Robustness 已 promote 为 regression 候选；`paper/research_claim_review_2026-05-28.md` 已记录 claim review 与 drift 说明，当前 promotion 仍是 `needs_manual_review`，原因是 scenarioIds 索引补齐触发零容忍 drift policy，而非 strict gate / metric / baseline 回退。
 - Godot Research Dock 已接入 Phase 2 debug 摘要、trace timeline、来源跳转按钮、Copy trace JSON、Trace Copy 空态 / tooltip / 成功反馈、Phase 2 Debug 错误提示、Prev/Next 循环导航、单条 trace 提示、`[C]` / `[,]` / `[.]` / 左右方括号热键、NPC 高亮和三 Tab UI；`memory.result_observed` 行与来源跳转可发现性已通过真实窗口复验，最新导航和中断布局补修仍待真实窗口复验。
 - Web Debug 已有 provider / fallback / cost 总览、Heuristic Library、Arbitration Trace 和 Rashomon Memory 三卡片。
 - 6 名首发 NPC 深度卡已入库；4 核心 NPC（kai / mira / bram / lena）已有实际 motivation / capability / heuristic seed，tomas / orren 保持 stub。
@@ -49,9 +51,9 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 
 ## 5. 最近下一步
 
-- Eval 线已让 coding + narrative domain 的 counterfactual route replay 拉开指标，并支持 domain `--seeds`；`eval:robustness` 已接入 strict gate、manifest `evalGates`、scenarioIds 索引和 coding / narrative 分域签名，且已有 clean five-seed promoted regression 候选。下一步可接入 research claim review 或补 promotion drift 说明。
+- Eval 线已让 coding + narrative domain 的 counterfactual route replay 拉开指标，并支持 domain `--seeds`；`eval:robustness` 已接入 strict gate、manifest `evalGates`、scenarioIds 索引和 coding / narrative 分域签名，且已有 clean five-seed promoted regression 候选；research claim review 与 promotion drift 说明已补；Mermaid figure 本地渲染链路已接入 `npm.cmd run paper:figures`，Figure 3 第二条 trace 与 aggregate annotation 已补。下一步可生成 / 复核人工 reviewer 抽样包，或继续 polish Figure 3 wording。
 - Godot 线暂缓中间态 UI 迭代；真实窗口复验等后端 Agent / Eval 主线稳定后集中处理。
-- Research 线已把 clean domain export `.run/eval-runs/domain_2026-05-27T13-29-21Z` 写入 claim / Table 5 入口，保持 interface evidence 口径。
+- Research 线已把 clean domain export `.run/eval-runs/domain_2026-05-27T13-29-21Z` 写入 claim / Table 5 入口，并已对 C2 / C3 / C4 / C7 / C15 / C16 做 claim review；继续保持 interface evidence / research-preview 口径。
 - 不要重新扩 Phase 1 旧玩法线。
 - 切换模型、key、profile 或需要刷新真实成本证据时，再单独运行 `npm.cmd run llm:smoke`。
 - 资产线按 `docs/asset_batches/prompt_ready_export.md` 推进，但先按 `docs/open_questions.md` 的资产范围调整重新评估优先级。

@@ -1,0 +1,50 @@
+%% Loomstead Figure 3 draft source.
+%% Curated from two process-fidelity trace examples plus aggregate guardrails.
+%% Render with npm.cmd run paper:figures.
+flowchart TB
+  subgraph TraceA["Trace A: Branna forgiveness seed01"]
+    direction LR
+    ASetup["Setup\nseeded harm memory\nrecord: ...:bram:harm"]
+    ADecision["Decision\nrepair context\nrefs: harm memory + heuristic"]
+    ATool["Tool event\nsocial.chat_with(player)\nevent: evt_aa1170..."]
+    ABridge["Observation bridge\nmemory.result_observed\n2 memories / 3 edges"]
+    AEvidence["Evidence\ntrust=0.52, affection=0.53\nheuristic refs present"]
+    AReplay["Replay\nwith memory: chat_with\nwithout memory: give_gift\nchanged=true"]
+    AOutcome["Outcome\ngoal/process/trace=1.0\ncausal use=1.0"]
+    ASetup --> ADecision --> ATool --> ABridge --> AEvidence --> AReplay --> AOutcome
+    ASetup -. "source memory" .-> AEvidence
+    ATool -. "sourceEventId" .-> ABridge
+  end
+
+  subgraph TraceB["Trace B: Tomas repair trace seed01"]
+    direction LR
+    BSetup["Setup\npf.repair_talk_requires_memory_trace\nTomas -> Mira at plaza"]
+    BDecision["Decision\naffiliation + director bias\nselected social.give_gift"]
+    BTool["Tool event\nsocial.give_gift(Mira)\nevent: evt_b4d123..."]
+    BBridge["Observation bridge\nmemory.result_observed\n2 memories / 2 edges"]
+    BEvidence["Evidence\ntrust=0.52, affection=0.54\nrecord: ...:tomas"]
+    BReplay["Replay\nwith memory: give_gift\nwithout memory: chat_with\n24/24 decisions changed"]
+    BOutcome["Outcome\ngoal/process/trace=1.0\nCF change rate=1.0"]
+    BSetup --> BDecision --> BTool --> BBridge --> BEvidence --> BReplay --> BOutcome
+    BTool -. "sourceEventId" .-> BBridge
+    BEvidence -. "memory removed" .-> BReplay
+  end
+
+  Aggregate["Aggregate guardrail\nlatest process full baseline\nn=20, 5 seeds x 4 scenarios\nCF selection change mean=0.375\ntrace coverage=1.0\nforced=0 / initiated=1"]
+
+  AOutcome --> Aggregate
+  BOutcome --> Aggregate
+
+  classDef setup fill:#fff5df,stroke:#8a5a10,color:#222222;
+  classDef action fill:#e8f1ff,stroke:#2f5f9f,color:#222222;
+  classDef evidence fill:#e9f8ed,stroke:#2d7a46,color:#222222;
+  classDef replay fill:#f2e8ff,stroke:#6542a6,color:#222222;
+  classDef outcome fill:#fff0f0,stroke:#9b3a3a,color:#222222;
+  classDef aggregate fill:#f4f4f4,stroke:#5f6368,color:#222222;
+
+  class ASetup,BSetup setup;
+  class ADecision,ATool,BDecision,BTool action;
+  class ABridge,AEvidence,BBridge,BEvidence evidence;
+  class AReplay,BReplay replay;
+  class AOutcome,BOutcome outcome;
+  class Aggregate aggregate;

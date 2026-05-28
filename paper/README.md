@@ -23,6 +23,7 @@ paper/
 |-- references.bib
 |-- diagrams/
 |-- generated/
+|   |-- figures/
 |   |-- eval_tables.tex
 |-- lit_review/
 |   |-- prior_related_work_inventory.md
@@ -43,6 +44,7 @@ paper/
 ```powershell
 python scripts/check_paper_tooling.py --json
 python scripts/paper_extract_eval_tables.py
+npm.cmd run paper:figures
 python -m compileall scripts
 latexmk -pdf -cd -interaction=nonstopmode -halt-on-error -outdir=build paper/latex/main.tex
 npm.cmd run paper:check
@@ -57,3 +59,4 @@ git diff --check
 - Keep the town slice as the primary validation domain.
 - Use the coding adapter as secondary portability evidence.
 - Keep `paper/references.bib` and `paper/latex/references.bib` synchronized until the Zotero export path is automated.
+- Mermaid figure sources live in `paper/diagrams/`; render them with `npm.cmd run paper:figures` into `paper/generated/figures/`.
