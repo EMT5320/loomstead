@@ -22,11 +22,11 @@ scope: manual reviewer sampling packet generation for process/domain eval artifa
 
 ```powershell
 python scripts/build_eval_reviewer_packet.py `
-  --process-run run_2026-05-27T13-37-33Z `
-  --domain-run domain_2026-05-27T13-29-21Z `
-  --process-samples 3 `
-  --domain-samples 3 `
-  --packet-id packet_2026-05-27_manual_reviewer_seeded
+  --process-run run_2026-05-28T07-43-32Z `
+  --domain-run domain_2026-05-28T07-49-46Z `
+  --process-samples 6 `
+  --domain-samples 6 `
+  --packet-id packet_2026-05-28_manual_reviewer_current_clean
 ```
 
 可选参数：

@@ -1,65 +1,56 @@
-# Figure 3 Trace Walkthrough Draft (research-preview)
+# Figure 3 Trace Walkthrough (research-preview)
 
 ## Scope and evidence level
 
 - Intended figure: Figure 3 (`intervention -> event -> subjective memory -> relationship/heuristic -> later decision -> outcome`)
 - Claim level target: L2 local guardrail evidence (per `paper/claim_policy.md`)
-- This draft uses one clean exported artifact for the primary Branna trace, one older local trace artifact for a second illustrative lane, and aggregate metrics from the latest generated paper tables. Wording stays at interface/research-preview level.
+- This walkthrough uses the current clean process export for both trace lanes and aggregate metrics from the generated paper tables. Wording stays at interface/research-preview level.
 
 ## Source artifact
 
-- Run: `.run/eval-runs/run_2026-05-27T13-37-33Z`
-- Manifest: `.run/eval-runs/run_2026-05-27T13-37-33Z/manifest.json`
+- Run: `.run/eval-runs/run_2026-05-28T07-43-32Z`
+- Manifest: `.run/eval-runs/run_2026-05-28T07-43-32Z/manifest.json`
   - `ok=true`
-  - `git.shortCommit=71e9f07`
+  - `git.shortCommit=b1c006f`
   - `git.dirty=false`
   - `seedCount=5`
 - Per-scenario file:
-  - `.run/eval-runs/run_2026-05-27T13-37-33Z/per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed01.json`
+  - `.run/eval-runs/run_2026-05-28T07-43-32Z/per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed01.json`
 - Second trace source:
-  - `.run/eval-runs/run_2026-05-25T07-34-53Z/per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation.json`
-  - `ok=true`, `git.shortCommit=a4581b2`, `git.dirty=false`, `seedCount=1`
+  - `.run/eval-runs/run_2026-05-28T07-43-32Z/per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed01.json`
+  - Same manifest: `ok=true`, `git.shortCommit=b1c006f`, `git.dirty=false`, `seedCount=5`
 
 ## Candidate trace chain for Figure 3
 
 Graphical draft source: `paper/diagrams/trace_evidence_chain_figure3.mmd`.
 
-The figure source uses curated labels from the evidence below. It intentionally avoids raw artifact event summaries because the source artifact contains mojibake-like strings.
+The figure source uses curated labels from the evidence below. It avoids relying on raw event-summary text so the rendered figure stays stable across artifact locale and encoding differences.
 
 ### Trace A: Branna forgiveness
 
 1. **Intervention/setup anchor**
    - `scenarioId=pf.branna_forgiveness_requires_memory`
    - `setupKind=forgiveness_memory`
-   - Seeded harm memory:
-     - `harmEventId=evt_485d0da457cd4ad1b4a992914c672653`
-     - `recordId=evt_485d0da457cd4ad1b4a992914c672653:bram:harm`
+   - Seeded harm memory: `harmEventId=evt_23610b252185405b98964b4dd06abf8f`, `recordId=evt_23610b252185405b98964b4dd06abf8f:bram:harm`
 
 2. **Tool event (goal-relevant action)**
    - `eventType=tool.execution_completed`
-   - `eventId=evt_aa11706eb4b4408b9f92df85fd7546a4`
+   - `eventId=evt_1d1e79ac8322464fb5bdf2ea9f16f779`
    - `toolId=social.chat_with`
    - `targetNpcId=player`
-   - Trace refs include:
-     - subjective memory refs (`count=1`)
-     - heuristic refs (`count=1`)
-     - motivation decision trace (`eventId=evt_f3aae51dfcdc4ba5a4f09580ea98f4fe`)
+   - Trace refs include subjective memory refs (`count=1`), heuristic refs (`count=1`), and motivation decision trace (`eventId=evt_41f9c18817c84abea138bde5e6cc2b99`).
 
 3. **Observed memory result (trace-link bridge)**
    - `eventType=memory.result_observed`
-   - `eventId=evt_6223740588d04bb5a242b7063554154e`
-   - `sourceEventId=evt_aa11706eb4b4408b9f92df85fd7546a4`
+   - `eventId=evt_dc118721774042e481de495af597288f`
+   - `sourceEventId=evt_1d1e79ac8322464fb5bdf2ea9f16f779`
    - `observerVisibility=participants_only`
    - `memoryCount=2`
    - `relationshipEdgeCount=3`
 
 4. **Subjective memory + relationship + heuristic evidence**
-   - Subjective memory records include:
-     - `evt_485d0da457cd4ad1b4a992914c672653:bram:harm` (negative valence)
-     - `evt_aa11706eb4b4408b9f92df85fd7546a4:bram` (current interaction)
-   - Relationship edges include:
-     - `bram::player::trust` (`strength=0.52`)
-     - `bram::player::affection` (`strength=0.53`)
+   - Subjective memory records include `evt_23610b252185405b98964b4dd06abf8f:bram:harm` (negative valence) and `evt_1d1e79ac8322464fb5bdf2ea9f16f779:bram` (current interaction).
+   - Relationship edges include `bram::player::trust` (`strength=0.52`) and `bram::player::affection` (`strength=0.53`).
    - Heuristic refs include designer seed and preference heuristics.
 
 5. **Later decision and counterfactual replay**
@@ -90,25 +81,23 @@ The figure source uses curated labels from the evidence below. It intentionally 
 
 2. **Tool event (goal-relevant action)**
    - `eventType=tool.execution_completed`
-   - `eventId=evt_b4d123eedf23465a9035ca036c6a4628`
+   - `eventId=evt_64b6f17377694f12a1ee184d2deaa46a`
    - `toolId=social.give_gift`
    - `targetNpcId=mira`
-   - Motivation decision trace selected `social.give_gift` (`eventId=evt_e63f41812e5c4feab539ea941ecca886`).
+   - Motivation decision trace selected `social.give_gift` (`eventId=evt_4391fca1d95a44bea6948de1e3537ca0`).
 
 3. **Observed memory result (trace-link bridge)**
    - `eventType=memory.result_observed`
-   - `eventId=evt_e9f54b17ff5c44989a15b9eaf52e83d5`
-   - `sourceEventId=evt_b4d123eedf23465a9035ca036c6a4628`
+   - `eventId=evt_79220d486b674ff6988532ee8e6ac407`
+   - `sourceEventId=evt_64b6f17377694f12a1ee184d2deaa46a`
    - `observerVisibility=participants_only`
    - `memoryCount=2`
    - `relationshipEdgeCount=2`
 
 4. **Subjective memory + relationship + heuristic evidence**
-   - Subjective memory record: `evt_b4d123eedf23465a9035ca036c6a4628:tomas`.
-   - Relationship edges include:
-     - `mira::tomas::trust` (`strength=0.52`)
-     - `mira::tomas::affection` (`strength=0.54`)
-   - Heuristic refs include `tomas:prefer_social_when_affiliation_high` and `tomas:prefer_successful_tool:social.give_gift`.
+   - Subjective memory record: `evt_64b6f17377694f12a1ee184d2deaa46a:tomas`.
+   - Relationship edges include `mira::tomas::trust` (`strength=0.52`) and `mira::tomas::affection` (`strength=0.54`).
+   - Heuristic refs include `designer_seed:tomas:designer_prefer_open_shop_money_anxiety` and `tomas:prefer_successful_tool:social.give_gift`.
 
 5. **Later decision and counterfactual replay**
    - With memory: `social.give_gift`
@@ -130,7 +119,7 @@ The figure source uses curated labels from the evidence below. It intentionally 
 ### Aggregate guardrail annotation
 
 1. **Process suite aggregate**
-   - Source: `paper/generated/eval_summary_tables.md` and `.run/eval-runs/run_2026-05-27T13-37-33Z/summary.json`.
+   - Source: `paper/generated/eval_summary_tables.md` and `.run/eval-runs/run_2026-05-28T07-43-32Z/summary.json`.
    - Full Motivational Delegation process aggregate: `n=20` (`5 seeds x 4 scenarios`).
    - `counterfactual_tool_selection_change_rate=0.375`.
    - `causal_trace_coverage=1.0`.
@@ -140,6 +129,6 @@ The figure source uses curated labels from the evidence below. It intentionally 
 ## Figure drafting notes (manual follow-up required)
 
 - Mermaid graph source is ready at `paper/diagrams/trace_evidence_chain_figure3.mmd` and is referenced by the LaTeX Figure 3 placeholder.
-- Aggregate guardrail annotation and a second trace lane have been added to the Mermaid source.
-- The event summaries in the artifact include mojibake-like strings; final rendered labels should continue to use curated wording instead of raw summary text.
-- Publication-ready Figure 3 still needs wording review and may later swap Trace B for a matching latest clean five-seed artifact if that local run is restored.
+- Both trace lanes now point at the same current clean five-seed process export.
+- Rendered labels should continue to use curated wording instead of raw summary text.
+- Publication-ready Figure 3 may still need visual hierarchy/layout polish before external release.

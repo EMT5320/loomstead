@@ -1,36 +1,36 @@
-%% Loomstead Figure 3 draft source.
-%% Curated from two process-fidelity trace examples plus aggregate guardrails.
+%% Loomstead Figure 3 source.
+%% Curated from current clean process-fidelity trace examples plus aggregate guardrails.
 %% Render with npm.cmd run paper:figures.
 flowchart TB
-  subgraph TraceA["Trace A: Branna forgiveness seed01"]
+  subgraph TraceA["Trace A: Branna forgiveness (seed01)"]
     direction LR
-    ASetup["Setup\nseeded harm memory\nrecord: ...:bram:harm"]
-    ADecision["Decision\nrepair context\nrefs: harm memory + heuristic"]
-    ATool["Tool event\nsocial.chat_with(player)\nevent: evt_aa1170..."]
+    ASetup["Setup\nharm memory seeded\nrecord: evt_23610...:harm"]
+    ADecision["Decision\nrepair via affiliation\nmemory + heuristic refs"]
+    ATool["Tool event\nsocial.chat_with(player)\nevent: evt_1d1e79..."]
     ABridge["Observation bridge\nmemory.result_observed\n2 memories / 3 edges"]
-    AEvidence["Evidence\ntrust=0.52, affection=0.53\nheuristic refs present"]
-    AReplay["Replay\nwith memory: chat_with\nwithout memory: give_gift\nchanged=true"]
-    AOutcome["Outcome\ngoal/process/trace=1.0\ncausal use=1.0"]
+    AEvidence["Evidence\ntrust=0.52, affection=0.53\nsource links matched"]
+    AReplay["Replay\nwith memory: chat_with\nremove current memory: give_gift\n24/48 changed"]
+    AOutcome["Outcome\ngoal/process/trace=1.0\nCF change rate=0.5"]
     ASetup --> ADecision --> ATool --> ABridge --> AEvidence --> AReplay --> AOutcome
     ASetup -. "source memory" .-> AEvidence
     ATool -. "sourceEventId" .-> ABridge
   end
 
-  subgraph TraceB["Trace B: Tomas repair trace seed01"]
+  subgraph TraceB["Trace B: Tomas repair gift (seed01)"]
     direction LR
-    BSetup["Setup\npf.repair_talk_requires_memory_trace\nTomas -> Mira at plaza"]
-    BDecision["Decision\naffiliation + director bias\nselected social.give_gift"]
-    BTool["Tool event\nsocial.give_gift(Mira)\nevent: evt_b4d123..."]
+    BSetup["Setup\nrepair trace scenario\nTomas to Mira at plaza"]
+    BDecision["Decision\naffiliation context\nselected social.give_gift"]
+    BTool["Tool event\nsocial.give_gift(Mira)\nevent: evt_64b6f1..."]
     BBridge["Observation bridge\nmemory.result_observed\n2 memories / 2 edges"]
-    BEvidence["Evidence\ntrust=0.52, affection=0.54\nrecord: ...:tomas"]
-    BReplay["Replay\nwith memory: give_gift\nwithout memory: chat_with\n24/24 decisions changed"]
+    BEvidence["Evidence\ntrust=0.52, affection=0.54\nrecord: evt_64b6...:tomas"]
+    BReplay["Replay\nwith memory: give_gift\nremove memory: chat_with\n24/24 changed"]
     BOutcome["Outcome\ngoal/process/trace=1.0\nCF change rate=1.0"]
     BSetup --> BDecision --> BTool --> BBridge --> BEvidence --> BReplay --> BOutcome
     BTool -. "sourceEventId" .-> BBridge
     BEvidence -. "memory removed" .-> BReplay
   end
 
-  Aggregate["Aggregate guardrail\nlatest process full baseline\nn=20, 5 seeds x 4 scenarios\nCF selection change mean=0.375\ntrace coverage=1.0\nforced=0 / initiated=1"]
+  Aggregate["Aggregate guardrail\nprocess clean export run_2026-05-28T07-43-32Z\nn=20, 5 seeds x 4 scenarios\nCF selection change mean=0.375\ntrace coverage=1.0\nforced=0 / initiated=1.0"]
 
   AOutcome --> Aggregate
   BOutcome --> Aggregate
