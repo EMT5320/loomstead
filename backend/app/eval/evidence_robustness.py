@@ -10,6 +10,7 @@ from app.eval.process_fidelity import metric_summary
 from app.eval.runner import (
     BASELINE_FULL,
     _artifact_record,
+    _git_snapshot,
     _summary_only,
     _timestamp_slug,
     _unique_run_dir,
@@ -725,6 +726,7 @@ def _stable_short_hash(value: str) -> str:
 
 def _export_evidence_robustness_eval(result: dict[str, Any], base_dir: Path) -> dict[str, Any]:
     created_at = _utc_timestamp()
+    git_snapshot = _git_snapshot()
     run_dir = _unique_run_dir(base_dir / f"robustness_{_timestamp_slug(created_at)}")
     run_dir.mkdir(parents=True, exist_ok=True)
     artifacts: list[dict[str, Any]] = []
@@ -792,6 +794,7 @@ def _export_evidence_robustness_eval(result: dict[str, Any], base_dir: Path) -> 
         artifacts=artifacts,
         created_at=created_at,
         export_kind="evidence_robustness_dataset",
+        git_snapshot=git_snapshot,
     )
     return {
         "runDir": str(run_dir),

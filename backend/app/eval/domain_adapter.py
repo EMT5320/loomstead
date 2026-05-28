@@ -9,6 +9,7 @@ from app.domain.coding import CODING_GOAL_IDS, CodingDomainAdapter
 from app.domain.narrative import NARRATIVE_GOAL_IDS, NarrativeDomainAdapter
 from app.eval.runner import (
     _artifact_record,
+    _git_snapshot,
     _summary_only,
     _timestamp_slug,
     _unique_run_dir,
@@ -199,6 +200,7 @@ def _domain_summary(items: list[dict[str, Any]]) -> dict[str, Any]:
 def _export_cross_domain_adapter_eval(result: dict[str, Any], base_dir: Path) -> dict[str, Any]:
     """导出跨域 adapter 证据，复用 Eval manifest 字段保持归档格式一致。"""
     created_at = _utc_timestamp()
+    git_snapshot = _git_snapshot()
     run_dir = _unique_run_dir(base_dir / f"domain_{_timestamp_slug(created_at)}")
     per_scenario_dir = run_dir / "per_scenario"
     per_scenario_dir.mkdir(parents=True, exist_ok=True)
@@ -247,6 +249,7 @@ def _export_cross_domain_adapter_eval(result: dict[str, Any], base_dir: Path) ->
         artifacts=artifacts,
         created_at=created_at,
         export_kind="cross_domain_adapter_dataset",
+        git_snapshot=git_snapshot,
     )
     return {
         "runDir": str(run_dir),

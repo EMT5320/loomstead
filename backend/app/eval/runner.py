@@ -1592,6 +1592,7 @@ def _safe_ratio(numerator: int | float, denominator: int | float) -> float:
 
 def _export_process_eval(result: dict[str, Any], base_dir: Path) -> dict[str, Any]:
     created_at = _utc_timestamp()
+    git_snapshot = _git_snapshot()
     run_dir = _unique_run_dir(base_dir / f"run_{_timestamp_slug(created_at)}")
     per_scenario_dir = run_dir / "per_scenario"
     per_scenario_dir.mkdir(parents=True, exist_ok=True)
@@ -1666,6 +1667,7 @@ def _export_process_eval(result: dict[str, Any], base_dir: Path) -> dict[str, An
         artifacts=artifacts,
         created_at=created_at,
         export_kind="process_fidelity_dataset",
+        git_snapshot=git_snapshot,
     )
     return {
         "runDir": str(run_dir),
@@ -1676,6 +1678,7 @@ def _export_process_eval(result: dict[str, Any], base_dir: Path) -> dict[str, An
 
 def _export_stability_eval(result: dict[str, Any], base_dir: Path) -> dict[str, Any]:
     created_at = _utc_timestamp()
+    git_snapshot = _git_snapshot()
     run_dir = _unique_run_dir(base_dir / f"stability_{_timestamp_slug(created_at)}")
     run_dir.mkdir(parents=True, exist_ok=True)
     artifacts: list[dict[str, Any]] = []
@@ -1702,6 +1705,7 @@ def _export_stability_eval(result: dict[str, Any], base_dir: Path) -> dict[str, 
         artifacts=artifacts,
         created_at=created_at,
         export_kind="stability_dataset",
+        git_snapshot=git_snapshot,
     )
     return {
         "runDir": str(run_dir),
@@ -1804,6 +1808,7 @@ def _write_eval_manifest(
     artifacts: list[dict[str, Any]],
     created_at: str,
     export_kind: str,
+    git_snapshot: dict[str, Any] | None = None,
 ) -> Path:
     """写入 Eval 数据集 manifest，固定 run 元数据、schema 版本和 artifact 校验信息。"""
     manifest = {
@@ -1816,7 +1821,7 @@ def _write_eval_manifest(
         "seedCount": result.get("seedCount"),
         "ok": result.get("ok"),
         "runDirName": run_dir.name,
-        "git": _git_snapshot(),
+        "git": git_snapshot if git_snapshot is not None else _git_snapshot(),
         "schemaRegistry": schema_registry_snapshot(),
         "metricIds": _metric_ids(result.get("metrics")),
         "baselines": _baseline_names(result),
