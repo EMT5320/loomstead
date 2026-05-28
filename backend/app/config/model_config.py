@@ -6,6 +6,8 @@ import os
 from pathlib import Path
 from typing import Any
 
+from app.config.env_compat import loom_env
+
 
 DEFAULT_CONFIG: dict[str, Any] = {
     "activeProvider": "rule",
@@ -32,7 +34,7 @@ class ModelConfigStore:
     """模型配置中心，负责按功能和 NPC 解析最终模型 Profile。"""
 
     def __init__(self, config_path: str | None = None) -> None:
-        self.config_path = Path(config_path or os.getenv("AGENT_TOWN_MODEL_CONFIG", "config/models.json"))
+        self.config_path = Path(config_path or loom_env("LOOMSTEAD_MODEL_CONFIG") or "config/models.json")
         self.local_config_path = self.config_path.with_name("models.local.json")
         self.config = self._load_config()
 
@@ -67,7 +69,7 @@ class ModelConfigStore:
 
     def active_provider(self) -> str:
         """读取当前全局 Provider 模式，环境变量拥有最高优先级。"""
-        return os.getenv("AGENT_TOWN_PROVIDER", self.config.get("activeProvider", "rule"))
+        return loom_env("LOOMSTEAD_PROVIDER") or self.config.get("activeProvider", "rule")
 
     def resolve_profile(self, agent_id: str | None = None, feature: str = "agent_decision") -> dict[str, Any]:
         """按 NPC > 功能 > 默认 的顺序选择模型 Profile。"""
@@ -174,7 +176,7 @@ class ModelConfigStore:
             return True
         env_configured = bool(os.getenv(str(env_name))) if env_name else False
         if profile.get("provider") == "cloud":
-            env_configured = env_configured or bool(os.getenv("AGENT_TOWN_API_KEY")) or bool(os.getenv("OPENAI_API_KEY"))
+            env_configured = env_configured or bool(loom_env("LOOMSTEAD_API_KEY")) or bool(os.getenv("OPENAI_API_KEY"))
         return has_inline_key or env_configured
 
     def _looks_like_inline_secret(self, value: Any) -> bool:
@@ -208,8 +210,9 @@ class ModelConfigStore:
     def _apply_env_overrides(self, profile: dict[str, Any]) -> dict[str, Any]:
         """兼容早期环境变量，方便主人临时覆盖模型。"""
         if profile.get("provider") == "cloud":
-            profile["baseUrl"] = os.getenv("AGENT_TOWN_BASE_URL", profile.get("baseUrl", "https://api.deepseek.com"))
-            profile["model"] = os.getenv("AGENT_TOWN_MODEL", profile.get("model", "deepseek-v4-flash"))
-            if os.getenv("AGENT_TOWN_TEMPERATURE"):
-                profile["temperature"] = float(os.getenv("AGENT_TOWN_TEMPERATURE", "0.8"))
+            profile["baseUrl"] = loom_env("LOOMSTEAD_BASE_URL") or profile.get("baseUrl", "https://api.deepseek.com")
+            profile["model"] = loom_env("LOOMSTEAD_MODEL") or profile.get("model", "deepseek-v4-flash")
+            override_temperature = loom_env("LOOMSTEAD_TEMPERATURE")
+            if override_temperature:
+                profile["temperature"] = float(override_temperature)
         return profile

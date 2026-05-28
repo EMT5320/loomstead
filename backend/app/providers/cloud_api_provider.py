@@ -7,6 +7,8 @@ from typing import Any, Callable
 from urllib.error import HTTPError
 import urllib.request
 
+from app.config.env_compat import loom_env
+
 
 MILLION_TOKENS = 1_000_000
 
@@ -51,12 +53,12 @@ class CloudApiProvider:
             profile.get("apiKey")
             or inline_api_key
             or os.getenv(str(api_key_env))
-            or os.getenv("AGENT_TOWN_API_KEY")
+            or loom_env("LOOMSTEAD_API_KEY")
             or os.getenv("OPENAI_API_KEY")
         )
         if not api_key:
             safe_api_key_env = "[redacted-inline-secret]" if self._looks_like_inline_secret(api_key_env) else api_key_env
-            raise RuntimeError(f"CloudApiProvider 缺少 API Key，请设置 {safe_api_key_env}、AGENT_TOWN_API_KEY 或 OPENAI_API_KEY。")
+            raise RuntimeError(f"CloudApiProvider 缺少 API Key，请设置 {safe_api_key_env}、LOOMSTEAD_API_KEY (兼容 AGENT_TOWN_API_KEY) 或 OPENAI_API_KEY。")
 
         base_url = str(profile.get("baseUrl") or "https://api.deepseek.com").rstrip("/")
         model = str(profile.get("model") or "deepseek-chat")

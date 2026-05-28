@@ -61,14 +61,14 @@ PowerShell 示例：
 
 ```powershell
 $env:DEEPSEEK_API_KEY = "你的真实 key"
-# 或使用项目统一兜底变量：
-$env:AGENT_TOWN_API_KEY = "你的真实 key"
+# 或使用项目统一兜底变量（推荐使用 LOOMSTEAD_ 前缀，旧 AGENT_TOWN_ 仍兼容）：
+$env:LOOMSTEAD_API_KEY = "你的真实 key"
 # 如需临时覆盖兼容 OpenAI-compatible 地址或模型，可按需设置：
-$env:AGENT_TOWN_BASE_URL = "https://api.deepseek.com"
-$env:AGENT_TOWN_MODEL = "请按官方文档复核后的模型名"
+$env:LOOMSTEAD_BASE_URL = "https://api.deepseek.com"
+$env:LOOMSTEAD_MODEL = "请按官方文档复核后的模型名"
 ```
 
-当前环境变量前缀仍保留 `AGENT_TOWN_*`，用于兼容既有脚本、本机配置和 smoke 流程。Phase 2 骨架重构时可迁移到 `LOOMSTEAD_*`，并保留兼容 shim。
+当前环境变量前缀已迁移为 `LOOMSTEAD_*`；旧 `AGENT_TOWN_*` 前缀仍作 fallback 保留，方便既有脚本、本机配置和 smoke 流程平滑过渡。新增脚本优先使用 `LOOMSTEAD_*`。
 
 ### 方式 B：本地覆盖文件
 
@@ -147,9 +147,9 @@ npm.cmd run smoke
 4. 需要强制真实云端 smoke 成功时，使用：
 
    ```powershell
-   $env:AGENT_TOWN_REQUIRE_REAL_LLM_SMOKE = "1"
+   $env:LOOMSTEAD_REQUIRE_REAL_LLM_SMOKE = "1"
    npm.cmd run smoke
-   Remove-Item Env:\AGENT_TOWN_REQUIRE_REAL_LLM_SMOKE
+   Remove-Item Env:\LOOMSTEAD_REQUIRE_REAL_LLM_SMOKE
    ```
 
 5. 观察 `[llm-smoke]` 摘要：只展示 profile、model、tokens、latency、cost、fallbackReason、rawTextLength 和 messageCount。

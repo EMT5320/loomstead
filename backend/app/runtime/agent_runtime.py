@@ -3910,7 +3910,7 @@ class AgentRuntime:
     def _safe_error_message(self, error: Exception, *, profile: dict[str, Any] | None = None) -> str:
         """保留错误摘要，避免把请求头或密钥写入事件流。"""
         message = str(error)
-        for env_name in ("OPENAI_API_KEY", "DEEPSEEK_API_KEY", "AGENT_TOWN_API_KEY"):
+        for env_name in ("OPENAI_API_KEY", "DEEPSEEK_API_KEY", "LOOMSTEAD_API_KEY", "AGENT_TOWN_API_KEY"):
             secret = os.getenv(env_name)
             if secret:
                 message = message.replace(secret, "[REDACTED_SECRET]")
