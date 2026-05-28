@@ -7,6 +7,7 @@
 - Commands checked this session:
   - `npm.cmd run research:evidence:check`: pass, latest promoted robustness manifest `.run/eval-promoted/robustness_2026-05-28T03-08-43Z/manifest.json`.
   - `npm.cmd run eval:archive:drift`: pass, no blocking drift; 2 comparisons require manual review under the zero-tolerance drift policy.
+- Reviewer-packet status: manual sampling gate still pending; no paper-side sentence should treat reviewer packet as human-confirmed evidence.
 
 ## Robustness Drift Review
 
@@ -182,9 +183,9 @@ Counterclaim: source perturbation robustness does not prove the scenario set is 
 Gaps:
 
 - Machine promotion status still `needs_manual_review`.
-- Human reviewer sampling pending.
+- Reviewer packet manual sampling pending.
 - True provider and human-believability evidence pending.
 
 Recommended wording:
 
-> The latest promoted robustness run is a regression guardrail candidate for evidence-link stability across process, coding, and narrative fixtures; the only recorded promotion caveat is a reviewed scenario-indexing drift, not a failing metric or baseline regression.
+> The latest promoted robustness run is a regression guardrail candidate for evidence-link stability across process, coding, and narrative fixtures; promotion remains `needs_manual_review`, reviewer-packet manual sampling is still pending, and the recorded drift caveat is scenario-indexing coverage repair.

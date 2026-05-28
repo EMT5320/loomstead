@@ -718,6 +718,13 @@ def assert_phase2_decision_budget_routing() -> dict:
     ):
         raise RuntimeError("Arbitration candidateScores 应记录预算路由的组件来源")
 
+    decision_trace_events: list[dict] = []
+    enriched_decisions = runtime._record_phase2_decision_events([decision], tick_events=decision_trace_events)
+    decision = enriched_decisions[0]
+    decision_trace_event_id = str(decision.get("decisionTraceEventId") or "")
+    if not decision_trace_event_id or not decision_trace_events:
+        raise RuntimeError("预算路由 smoke 应先写入 motivation.decision_made 来源事件")
+
     planned = runtime.tool_executor.plan_action(world, decision)
     if planned.get("decisionBudget", {}).get("route") != "rule_fallback":
         raise RuntimeError("ToolExecutor plan_action 应携带 decisionBudget.route")
@@ -727,6 +734,12 @@ def assert_phase2_decision_budget_routing() -> dict:
         raise RuntimeError("工具开始执行时应写入 budget.decision_fallback 事件")
     if not fallback_event.get("feature") or not isinstance(fallback_event.get("costBreakdown"), dict):
         raise RuntimeError("预算事件应携带 feature 和 costBreakdown")
+    if fallback_event.get("traceSchemaVersion") != versions["phase2_trace"]:
+        raise RuntimeError("预算事件应接入 Phase 2 trace envelope")
+    if decision_trace_event_id not in fallback_event.get("sourceEventIds", []):
+        raise RuntimeError("预算事件应能回跳到 motivation.decision_made 来源事件")
+    if not any(isinstance(ref, dict) and ref.get("eventId") == decision_trace_event_id for ref in fallback_event.get("traceRefs", [])):
+        raise RuntimeError("预算事件应保留 motivation decision traceRefs")
     debug_budget = runtime.decision_budget.debug_snapshot(world, npc_ids=[npc_id])
     remaining = debug_budget["items"][0]["remaining"].get("social_strategic_layer")
     if remaining != 0:

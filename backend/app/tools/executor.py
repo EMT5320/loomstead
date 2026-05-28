@@ -491,8 +491,11 @@ class ToolExecutor:
         if not budget:
             return None
         state["decisionBudget"] = deepcopy(budget)
-        return {
-            "type": str(budget.get("eventType") or "budget.decision_consumed"),
+        event_type = str(budget.get("eventType") or "budget.decision_consumed")
+        source_event_id = self._decision_source_event_id(state.get("contributingSources"))
+        trace_refs = [dict(item) for item in state.get("contributingSources", []) if isinstance(item, dict)][-10:]
+        payload = {
+            "version": budget.get("version"),
             "npcId": npc_id,
             "toolId": tool_id,
             "channel": budget.get("channel"),
@@ -507,8 +510,24 @@ class ToolExecutor:
             "remainingBefore": budget.get("remainingBefore"),
             "featureRemaining": budget.get("featureRemaining"),
             "featureRemainingBefore": budget.get("featureRemainingBefore"),
+            "sourceEventIds": self._source_ids(source_event_id),
+            "traceRefs": trace_refs,
             "source": "motivation_engine",
         }
+        # 预算事件也接入统一 trace envelope，方便 Debug / Eval 从预算回跳到决策来源。
+        traced = with_trace_payload(
+            payload,
+            build_trace_envelope(
+                event_type=event_type,
+                summary=f"{npc_id} {event_type}：{tool_id}",
+                world_time=world_time_payload(world),
+                trace_id=self._decision_trace_id(state.get("contributingSources")) or source_event_id,
+                source_event_id=source_event_id,
+                agent_id=npc_id,
+                target_ids=self._target_ids_from_completion(state),
+            ),
+        )
+        return {"type": event_type, **traced}
 
     def _apply_tool_effect(self, world: dict[str, Any], agent: dict[str, Any], completion: dict[str, Any]) -> str:
         tool_id = str(completion.get("toolId") or "")
