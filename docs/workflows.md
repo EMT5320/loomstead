@@ -155,7 +155,7 @@ npm.cmd run context:handoff
 
 - `next-step-planner`：只针对一个 lane 生成下一步计划，避免 scope 漂移。
 - `research:brief`：npm script，输出当前 claim、最新 promoted eval、drift 状态和 manual unverified 列表。
-- `research:evidence:check`：npm script，检查 promoted run 的 manifest、schema、rowCount、hash 和 LLM evidence 字段完整性。
+- `research:evidence:check`：npm script，检查 latest promoted robustness run 的 strict gate、scenarioIds、domain signatures 和关键 artifact 完整性。
 
 ## 建议执行节奏
 

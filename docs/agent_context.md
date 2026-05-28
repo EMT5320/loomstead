@@ -74,7 +74,7 @@ scope: new-session entrypoint, boundaries, commands, and next steps
 - 常规离线门禁：`npm.cmd run check; npm.cmd run smoke`。
 - 后端 trace / schema：`npm.cmd run schema:check`。
 - Eval：`npm.cmd run eval:process; npm.cmd run eval:stability; npm.cmd run eval:stability:determinism; npm.cmd run eval:domain; npm.cmd run eval:robustness`。
-- Eval archive：`npm.cmd run eval:archive:check; npm.cmd run eval:archive:drift`。
+- Eval archive / research evidence：`npm.cmd run eval:archive:check; npm.cmd run eval:archive:drift; npm.cmd run research:evidence:check`。
 - Eval reviewer：`npm.cmd run eval:reviewer:packet -- --process-run run_2026-05-27T13-37-33Z --domain-run domain_2026-05-27T13-29-21Z`。
 - Godot 环境：`npm.cmd run client:env; npm.cmd run client:run:check`。
 - 内容 / 资产：`npm.cmd run content:check; npm.cmd run asset:check`。
