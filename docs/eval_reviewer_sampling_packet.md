@@ -51,3 +51,10 @@ python scripts/build_eval_reviewer_packet.py `
 4. 在 PR 或研究记录中回填人工结论。
 
 脚本阶段不自动生成最终评分、通过结论或论文 claim。
+
+## 5. Paper 使用边界
+
+- 抽样包是人工审核输入，可以在论文或 claim review 中表述为 `manual reviewer packet generated`。
+- 在 `reviewer_score_sheet.csv` 完成人工打分前，不能把抽样包写成 human-reviewed evidence。
+- `manual_review_required` / `needs_manual_review` 保持为 pending gate，不等价于 metric 失败或 robustness strict gate 回退。
+- 论文 claim 若引用该包，应同时注明 human-believability 仍待人工 reviewer 填表确认。

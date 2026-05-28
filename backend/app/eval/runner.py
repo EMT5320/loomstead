@@ -48,6 +48,8 @@ PROCESS_PROVIDER_MODES = ("rule", "cloud", "mixed")
 PROCESS_LLM_EVIDENCE_VERSION = "process_llm_evidence.v1"
 PROCESS_LLM_EVIDENCE_CACHE_PATH = Path(".run") / "process-llm-evidence" / "latest.json"
 STABILITY_TRACE_TYPES = {
+    "budget.decision_consumed",
+    "budget.decision_fallback",
     "motivation.decision_made",
     "tool.execution_completed",
     "tool.execution_failed",
@@ -158,6 +160,10 @@ def run_stability_scenarios(
     interrupted_tool_count = 0
     memory_observation_count = 0
     motivation_decision_count = 0
+    budget_decision_count = 0
+    budget_trace_schema_ok_count = 0
+    budget_source_link_count = 0
+    budget_trace_ref_count = 0
     heuristic_decision_count = 0
     active_agent_ids: set[str] = set()
 
@@ -177,6 +183,14 @@ def run_stability_scenarios(
                     trace_event_count += 1
                     if payload.get("traceSchemaVersion") == require_schema_version("phase2_trace"):
                         trace_schema_ok_count += 1
+                if event_type in {"budget.decision_consumed", "budget.decision_fallback"}:
+                    budget_decision_count += 1
+                    if payload.get("traceSchemaVersion") == require_schema_version("phase2_trace"):
+                        budget_trace_schema_ok_count += 1
+                    if payload.get("sourceEventIds"):
+                        budget_source_link_count += 1
+                    if _budget_event_has_decision_trace_ref(payload):
+                        budget_trace_ref_count += 1
                 if event_type == "motivation.decision_made":
                     motivation_decision_count += 1
                     if payload.get("heuristicRefs"):
@@ -211,11 +225,17 @@ def run_stability_scenarios(
     trace_schema_coverage = _safe_ratio(trace_schema_ok_count, trace_event_count)
     memory_observation_ratio = _safe_ratio(memory_observation_count, tool_result_count)
     heuristic_decision_ratio = _safe_ratio(heuristic_decision_count, motivation_decision_count)
+    budget_source_link_ratio = _safe_ratio(budget_source_link_count, budget_decision_count)
+    budget_trace_ref_ratio = _safe_ratio(budget_trace_ref_count, budget_decision_count)
     checks = {
         "tick_successful": sum(tick_success_values) == float(hours),
         "clock_reached_expected_tick": int(runtime.world.get("clock", {}).get("tick", 0)) >= hours,
         "no_tool_failures": failed_tool_count == 0,
         "trace_schema_complete": trace_event_count > 0 and trace_schema_coverage >= 1.0,
+        "budget_trace_links_decision": budget_decision_count > 0
+        and budget_trace_schema_ok_count == budget_decision_count
+        and budget_source_link_count == budget_decision_count
+        and budget_trace_ref_count == budget_decision_count,
         "memory_observations_follow_tools": tool_result_count > 0 and memory_observation_count >= tool_result_count,
         "relationship_edges_created": relationship_edge_count > 0,
         "heuristics_created": heuristic_count > 0,
@@ -232,6 +252,8 @@ def run_stability_scenarios(
         metric_summary("relationship_edge_count", [float(relationship_edge_count)], baseline=baseline),
         metric_summary("heuristic_count", [float(heuristic_count)], baseline=baseline),
         metric_summary("heuristic_decision_ref_rate", [heuristic_decision_ratio], baseline=baseline),
+        metric_summary("budget_decision_source_link_rate", [budget_source_link_ratio], baseline=baseline),
+        metric_summary("budget_decision_trace_ref_rate", [budget_trace_ref_ratio], baseline=baseline),
     ]
     result = {
         "ok": all(checks.values()),
@@ -253,6 +275,10 @@ def run_stability_scenarios(
             "relationshipEdgeCount": relationship_edge_count,
             "heuristicCount": heuristic_count,
             "motivationDecisionCount": motivation_decision_count,
+            "budgetDecisionCount": budget_decision_count,
+            "budgetTraceSchemaOkCount": budget_trace_schema_ok_count,
+            "budgetSourceLinkCount": budget_source_link_count,
+            "budgetTraceRefCount": budget_trace_ref_count,
             "heuristicDecisionCount": heuristic_decision_count,
             "activeAgentIds": sorted(active_agent_ids),
             "retainedEventStoreCount": len(runtime.event_store.list()),
@@ -346,6 +372,64 @@ def _stability_baseline(hours: int) -> str:
     if int(hours) == DEFAULT_STABILITY_HOURS:
         return BASELINE_STABILITY_24H
     return f"rule_{int(hours)}h_stability"
+
+
+def _budget_event_has_decision_trace_ref(payload: dict[str, Any]) -> bool:
+    """确认预算事件可通过 traceRefs 回跳到 motivation.decision_made。"""
+    source_ids = {str(item) for item in payload.get("sourceEventIds", []) if str(item)}
+    if not source_ids:
+        return False
+    for ref in payload.get("traceRefs", []):
+        if not isinstance(ref, dict):
+            continue
+        if ref.get("type") == "motivation_decision_trace" and str(ref.get("eventId") or "") in source_ids:
+            return True
+    return False
+
+
+def _summarize_budget_trace_events(events: list[dict[str, Any]]) -> dict[str, Any]:
+    """压缩 Process Eval 中的预算 trace 证据，避免 artifact 带入完整事件流。"""
+    schema_version = require_schema_version("phase2_trace")
+    compact_events: list[dict[str, Any]] = []
+    trace_schema_ok_count = 0
+    source_link_count = 0
+    trace_ref_count = 0
+    for event in events:
+        details = event.get("details", {}) if isinstance(event.get("details"), dict) else {}
+        source_event_ids = [str(item) for item in details.get("sourceEventIds", []) if str(item)]
+        if not source_event_ids and event.get("sourceEventId"):
+            source_event_ids = [str(event.get("sourceEventId"))]
+        trace_refs = [dict(ref) for ref in details.get("traceRefs", []) if isinstance(ref, dict)]
+        trace_schema_ok = event.get("traceSchemaVersion") == schema_version
+        has_source_link = bool(source_event_ids)
+        has_trace_ref = _budget_event_has_decision_trace_ref(
+            {"sourceEventIds": source_event_ids, "traceRefs": trace_refs}
+        )
+        trace_schema_ok_count += 1 if trace_schema_ok else 0
+        source_link_count += 1 if has_source_link else 0
+        trace_ref_count += 1 if has_trace_ref else 0
+        compact_events.append(
+            {
+                "eventId": event.get("eventId"),
+                "eventType": event.get("eventType"),
+                "agentId": event.get("agentId"),
+                "toolId": details.get("toolId"),
+                "route": details.get("route"),
+                "sourceEventIds": source_event_ids,
+                "traceSchemaOk": trace_schema_ok,
+                "hasDecisionTraceRef": has_trace_ref,
+            }
+        )
+    event_count = len(events)
+    return {
+        "eventCount": event_count,
+        "traceSchemaOkCount": trace_schema_ok_count,
+        "sourceLinkCount": source_link_count,
+        "traceRefCount": trace_ref_count,
+        "sourceLinkRate": round(_safe_ratio(source_link_count, event_count), 6),
+        "traceRefRate": round(_safe_ratio(trace_ref_count, event_count), 6),
+        "events": compact_events,
+    }
 
 
 def apply_scenario_setup(world: dict[str, Any], scenario: EvalScenario) -> None:
@@ -638,6 +722,15 @@ def _run_runtime_process_scenario(
     )
     snapshot = runtime.get_phase2_debug_snapshot({"agentId": scenario.npc_id, "limit": 50})
     recent_trace_events = snapshot.get("recentTraceEvents", []) if isinstance(snapshot.get("recentTraceEvents"), list) else []
+    decision_budget_trace = _summarize_budget_trace_events(
+        [
+            event
+            for event in recent_trace_events
+            if isinstance(event, dict)
+            and str(event.get("eventType") or "") in {"budget.decision_consumed", "budget.decision_fallback"}
+            and str(event.get("agentId") or "") == scenario.npc_id
+        ]
+    )
     subjective_items = _debug_items(snapshot.get("subjectiveMemory", {}))
     ablated_subjective_memory = _apply_subjective_memory_ablation(
         mode=subjective_memory_ablation,
@@ -741,6 +834,11 @@ def _run_runtime_process_scenario(
         "counterfactual_tool_selection_change": bool(counterfactual_replay["toolSelectionChanged"]),
         "preexisting_harm_memory": _has_preexisting_harm_memory(subjective_items),
         "subjective_memory_causal_effect": bool(counterfactual_replay["subjectiveMemoryEffect"]),
+        "decision_budget_trace": bool(decision_budget_trace["eventCount"])
+        and decision_budget_trace["traceSchemaOkCount"] == decision_budget_trace["eventCount"],
+        "decision_budget_source_link": bool(decision_budget_trace["eventCount"])
+        and decision_budget_trace["sourceLinkCount"] == decision_budget_trace["eventCount"]
+        and decision_budget_trace["traceRefCount"] == decision_budget_trace["eventCount"],
     }
     goal_relevant_state_changes = max(1, len(relationship_items))
     state_changes_with_source = sum(1 for edge in relationship_items if edge.get("sourceEventIds"))
@@ -779,6 +877,7 @@ def _run_runtime_process_scenario(
             "relationshipAblation": ablated_relationships["evidence"],
             "traceSchemaVersion": snapshot.get("traceSchemaVersion"),
             "llmDecisionEvidence": llm_decision_evidence,
+            "decisionBudgetTrace": decision_budget_trace,
         },
     }
 
