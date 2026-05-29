@@ -31,12 +31,12 @@ scope: 当前实现事实、验证状态、人工验收边界
 | Content / NPC | 6 名首发 NPC 深度卡入库；`voiceStyle`、`speechQuirks`、`monologueSeeds`、`giftReactions`、`gossipHooks` 已被 runtime / smoke 覆盖；4 核心（kai / mira / bram / lena）已有 motivation profile / capability preferences / heuristic seed；tomas / orren 仍是 stub。Gossip 仍只记录 `gossip.propagation_validated`，未真正写入记忆 / 关系扩散。 |
 | 资产 | `assets/manifests/asset_manifest.json` 登记 55 条资产；3 张地点背景、星灯祭 CG、玩家 + 6 NPC 立绘、7 张地图小人、3 类交互 marker 已进入 Godot；`AssetRegistry` 支持 happy / troubled fallback；表情差分、行动反馈图标和生活行动 UI 小组件仍是 `prompt_ready` backlog。 |
 | 上下文治理 | `docs/context_governance.md` 是治理协议；`AGENTS.md` / `CLAUDE.md` / `docs/agent_context.md` / 本文 / `docs/phase_checkpoints.md` 是当前事实入口；`scripts/build_agent_context.py` 提供 `context:check` / `context:brief` / `context:resume`；旧设计文档（agentic_game_design / gameplay_system_architecture / game_content_storyline / npc_deep_card_spec）已归档至 `docs/archive/`。 |
-| 跨环境 artifact | 双环境只同步已整理证据子树：`.run/eval-promoted/`、`.run/eval-reviewer-packets/`、`.run/process-llm-evidence/`。`.run/eval-runs/` 已回归本地滚动区（`.gitignore` 忽略），跨机复盘靠 `eval:archive:promote` 把被 claim 引用的 run 复制到 `eval-promoted`。`git rm --cached` 不删本机工作区文件，产出机器的 archive / drift / promote 命令照常；另一台机器只消费 promoted 子树。Godot 缓存、截图、Mermaid 临时配置、一次性脚本和日志继续按本地临时产物处理。 |
+| 跨环境 artifact | 双环境只同步已整理证据子树：`.run/eval-promoted/`、`.run/eval-reviewer-packets/`、`.run/process-llm-evidence/` 中的命名证据文件。`.run/eval-runs/` 已回归本地滚动区（`.gitignore` 忽略），`.run/process-llm-evidence/latest*.json` 也是本地 cache（`.gitignore` 忽略）；跨机复盘靠 `eval:archive:promote` 把被 claim 引用的 run 复制到 `eval-promoted`，并用 `cloud-*.json` / summary 命名 artifact 固定 provider usage。Godot 缓存、截图、Mermaid 临时配置、一次性脚本和日志继续按本地临时产物处理。 |
 
 ## 3. 当前缺口
 
-- **真实 LLM evidence**：cloud provider 已跑通 Branna Forgiveness（`pf.branna_forgiveness_requires_memory`）1 GoalSpec × 5 seed × 5 baseline，0 fallback，token / cost / latency 记录在 `.run/process-llm-evidence/latest.json`（另有 `latest.local-office-2026-05-29.json` 单 seed 跨机记录）。仍缺：cloud run 的 process fidelity / ablation 结论尚未 promote 进 claim matrix；3 process-constrained GoalSpec 仅覆盖 1 个（Close Friend / Festival 未跑 cloud）；C2/C3/C4 claim level 升级待主人显式确认。
-- **证据指针**：`paper/claim_evidence_matrix.md` 引用的 4 个 run（`run_2026-05-28T07-43-32Z`、`stability_2026-05-25T07-34-55Z`、`domain_2026-05-28T07-49-46Z`、`domain_2026-05-27T13-29-21Z`）已 promote 到 `.run/eval-promoted/` 并完成 matrix 路径迁移，跨机证据链固定。§2 “最新 clean evidence” 的 05-27 组是 rule suite five-repeat 快照，与 matrix 引用的 export run 属不同口径，保留并存。
+- **真实 LLM evidence**：cloud provider usage 已覆盖 4 个 Process Fidelity GoalSpec × 5 seed × 5 baseline，共 100 次 `CloudApiProvider` 调用、0 fallback、约 189,949 tokens / 0.02972032 USD。命名证据：`.run/process-llm-evidence/cloud-branna-forgiveness-2026-05-29.json`、`.run/process-llm-evidence/cloud-3goalspec-2026-05-29.json`、`.run/process-llm-evidence/cloud-4goalspec-summary-2026-05-29.json`；单 seed 跨机记录另存为 `cloud-branna-forgiveness-local-office-2026-05-29.json`。已通过 `eval:process:export` + `eval:archive:promote` 进入 `.run/eval-promoted/run_2026-05-29T13-57-50Z`，其 manifest `llmEvidence.recordCount=100`。C2/C3/C4 claim level 升级仍待主人显式确认。
+- **证据指针**：`paper/claim_evidence_matrix.md` 当前引用 promoted artifact；Process Fidelity 最新 paper 表来自 `.run/eval-promoted/run_2026-05-29T13-57-50Z`，domain / stability / robustness 仍引用已 promote 的 05-25 / 05-28 证据。§2 “最新 clean evidence” 的 05-27 组是 rule suite five-repeat 快照；05-29 process promotion 额外携带 cloud `llmEvidence`，但 `promotionStatus=needs_manual_review`（导出时工作区 dirty、promotion note 为空、drift policy 要求解释 metric / baseline / scenario / artifact 变化）。
 - **人工 reviewer 抽样**：packet 已生成，停在 `manual_review_required` gate，等待人工填表。
 - **真实 Godot 窗口复验**：最新 Trace 导航 / 中断布局补修代码已落地，真实窗口复验**暂缓**到后端 / Eval 主线稳定后集中处理（治理协议 §3.1：避免每次新增字段后反复进入中间态窗口验收和小修循环）。
 - **Phase 4 候选**：gossip 真扩散、玩家行为传播、emergence scenario 仍未启动。
@@ -56,7 +56,7 @@ scope: 当前实现事实、验证状态、人工验收边界
 ## 5. 人工验收
 
 - `manual verified`：2026-05-21 Phase 1 收口；2026-05-25 UI 重设计观感与可读性；2026-05-26 Trace `memory.result_observed` 可发现性 + 来源跳转。
-- `manual unverified`：最新 Trace 导航 / 中断布局补修真实窗口复验；真实 LLM cloud 证据的 process fidelity / ablation 指标结论人工未核对（provider usage artifact 已落地，见 §3）；`.run/eval-promoted/stability_2026-05-25T07-34-55Z` promotion 的 drift 人工说明（`needs_manual_review`）；`prompt_ready` 资产生成与登记。
+- `manual unverified`：最新 Trace 导航 / 中断布局补修真实窗口复验；真实 LLM cloud evidence 的 claim-level 解读与 `.run/eval-promoted/run_2026-05-29T13-57-50Z` promotion manual note 仍需主人确认；`.run/eval-promoted/stability_2026-05-25T07-34-55Z` promotion 的 drift 人工说明（`needs_manual_review`）；`prompt_ready` 资产生成与登记。
 
 ## 6. 当前可运行命令
 
@@ -90,4 +90,4 @@ git diff --check
 
 ## 7. 下一步
 
-`P2.skeleton` checkpoint 待主人选定方向。详见 `docs/phase_checkpoints.md` 候选 A/B/C/D。浮浮酱推荐 `B → A`。
+`P2.skeleton` 的 B 线 cloud evidence 已完成本轮 artifact 收口；下一步建议主人确认 C2/C3/C4 claim level 口径，然后切到 A 求职展示线。详见 `docs/phase_checkpoints.md`。

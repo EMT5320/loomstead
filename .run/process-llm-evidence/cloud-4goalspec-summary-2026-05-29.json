@@ -1,0 +1,143 @@
+{
+  "schemaVersion": "process_llm_evidence.v1",
+  "providerUsageSchemaVersion": "provider_usage_actual.v1",
+  "source": "combined_named_cloud_artifacts_2026_05_29",
+  "providerMode": "cloud",
+  "seedCount": 5,
+  "recordCount": 100,
+  "cloudCallCount": 100,
+  "fallbackCount": 0,
+  "totals": {
+    "calls": 100,
+    "tokens": 189949,
+    "promptTokens": 167610,
+    "completionTokens": 22339,
+    "latencyTotalMs": 308612,
+    "latencyAvgMs": 3086.12,
+    "cost": 0.02972032,
+    "currency": "USD"
+  },
+  "byScenario": {
+    "pf.affiliation_bias_remains_agent_initiated": {
+      "calls": 25,
+      "tokens": 53497,
+      "promptTokens": 47782,
+      "completionTokens": 5715,
+      "latencyTotalMs": 68009,
+      "latencyAvgMs": 2720.36,
+      "cost": 0.00828968,
+      "currency": "USD"
+    },
+    "pf.branna_forgiveness_requires_memory": {
+      "calls": 25,
+      "tokens": 45614,
+      "promptTokens": 41041,
+      "completionTokens": 4573,
+      "latencyTotalMs": 95682,
+      "latencyAvgMs": 3827.28,
+      "cost": 0.00702618,
+      "currency": "USD"
+    },
+    "pf.repair_talk_requires_memory_trace": {
+      "calls": 25,
+      "tokens": 37287,
+      "promptTokens": 30382,
+      "completionTokens": 6905,
+      "latencyTotalMs": 82484,
+      "latencyAvgMs": 3299.36,
+      "cost": 0.00618688,
+      "currency": "USD"
+    },
+    "pf.shared_chat_builds_traceable_trust": {
+      "calls": 25,
+      "tokens": 53551,
+      "promptTokens": 48405,
+      "completionTokens": 5146,
+      "latencyTotalMs": 62437,
+      "latencyAvgMs": 2497.48,
+      "cost": 0.00821758,
+      "currency": "USD"
+    }
+  },
+  "byBaseline": {
+    "evidence_link_removal": {
+      "calls": 20,
+      "tokens": 38193,
+      "promptTokens": 33682,
+      "completionTokens": 4511,
+      "latencyTotalMs": 63286,
+      "latencyAvgMs": 3164.3,
+      "cost": 0.00597856,
+      "currency": "USD"
+    },
+    "full_motivational_delegation": {
+      "calls": 20,
+      "tokens": 38083,
+      "promptTokens": 33957,
+      "completionTokens": 4126,
+      "latencyTotalMs": 57752,
+      "latencyAvgMs": 2887.6,
+      "cost": 0.00590926,
+      "currency": "USD"
+    },
+    "no_relationship_edge": {
+      "calls": 20,
+      "tokens": 38118,
+      "promptTokens": 33252,
+      "completionTokens": 4866,
+      "latencyTotalMs": 65214,
+      "latencyAvgMs": 3260.7,
+      "cost": 0.00601776,
+      "currency": "USD"
+    },
+    "no_subjective_memory": {
+      "calls": 20,
+      "tokens": 37305,
+      "promptTokens": 32705,
+      "completionTokens": 4600,
+      "latencyTotalMs": 61724,
+      "latencyAvgMs": 3086.2,
+      "cost": 0.0058667,
+      "currency": "USD"
+    },
+    "shuffled_memory_owner": {
+      "calls": 20,
+      "tokens": 38250,
+      "promptTokens": 34014,
+      "completionTokens": 4236,
+      "latencyTotalMs": 60636,
+      "latencyAvgMs": 3031.8,
+      "cost": 0.00594804,
+      "currency": "USD"
+    }
+  },
+  "sourceArtifacts": [
+    {
+      "path": ".run/process-llm-evidence/cloud-branna-forgiveness-2026-05-29.json",
+      "sha256": "86a389dca6cd2d33737e8d3cefa1788c7756079f0457d993c475da269cfebea0",
+      "recordCount": 25,
+      "cloudCallCount": 25,
+      "fallbackCount": 0,
+      "scenarioIds": [
+        "pf.branna_forgiveness_requires_memory"
+      ]
+    },
+    {
+      "path": ".run/process-llm-evidence/cloud-3goalspec-2026-05-29.json",
+      "sha256": "0f558a04b1495d3a96cc9688a0047e74ef5d637bf497a741753719ede99166de",
+      "recordCount": 75,
+      "cloudCallCount": 75,
+      "fallbackCount": 0,
+      "scenarioIds": [
+        "pf.affiliation_bias_remains_agent_initiated",
+        "pf.repair_talk_requires_memory_trace",
+        "pf.shared_chat_builds_traceable_trust"
+      ]
+    }
+  ],
+  "summarySchemaVersion": "process_llm_evidence_summary.v1",
+  "notes": [
+    "This summary intentionally omits per-call records; use sourceArtifacts or promoted llm_evidence.json for trace-level audit.",
+    "latest.json is a local cache input for eval:process:export and should not be treated as the cross-environment source of truth."
+  ]
+}

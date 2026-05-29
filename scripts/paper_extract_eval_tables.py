@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Extract paper-ready Markdown and CSV tables from local eval exports."""
+"""Extract paper-ready Markdown and CSV tables from promoted eval exports."""
 
 from __future__ import annotations
 
@@ -7,12 +7,13 @@ import argparse
 import csv
 import datetime as dt
 import json
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_RUNS_DIR = ROOT / ".run" / "eval-runs"
+DEFAULT_RUNS_DIR = ROOT / ".run" / "eval-promoted"
 DEFAULT_OUT_DIR = ROOT / "paper" / "generated"
 SELECTED_METRICS = [
     "goal_success_rate",
@@ -98,7 +99,7 @@ def parse_time(value: str | None, fallback: float) -> tuple[int, float | str]:
 
 
 def discover_runs(runs_dir: Path) -> list[dict[str, Any]]:
-    """Read every run directory that contains a manifest."""
+    """Read every promoted run directory that contains a manifest."""
 
     runs: list[dict[str, Any]] = []
     if not runs_dir.exists():
@@ -429,11 +430,31 @@ def write_manifest_inventory(latest: dict[str, dict[str, Any]], out_dir: Path) -
 def write_latest_json(latest: dict[str, dict[str, Any]], out_dir: Path) -> None:
     """Write a machine-readable summary for future plotting scripts."""
 
+    def compact_llm_evidence(value: Any) -> Any:
+        """Keep provider evidence summaries here; full per-call records stay in artifacts."""
+
+        if not isinstance(value, dict):
+            return value
+        compact = {key: val for key, val in value.items() if key != "records"}
+        records = value.get("records")
+        if isinstance(records, list):
+            compact["recordsOmitted"] = len(records)
+            compact["recordsArtifactHint"] = "llm_evidence.json"
+        return compact
+
+    def compact_payload(value: dict[str, Any]) -> dict[str, Any]:
+        """Avoid duplicating large llmEvidence records in generated paper indexes."""
+
+        payload = deepcopy(value)
+        if isinstance(payload.get("llmEvidence"), dict):
+            payload["llmEvidence"] = compact_llm_evidence(payload["llmEvidence"])
+        return payload
+
     payload = {
         suite: {
             "runDirName": run["runDirName"],
-            "manifest": run["manifest"],
-            "summary": run["summary"],
+            "manifest": compact_payload(run["manifest"]),
+            "summary": compact_payload(run["summary"]),
         }
         for suite, run in sorted(latest.items())
     }
@@ -442,7 +463,7 @@ def write_latest_json(latest: dict[str, dict[str, Any]], out_dir: Path) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--runs-dir", type=Path, default=DEFAULT_RUNS_DIR, help="Eval run export directory.")
+    parser.add_argument("--runs-dir", type=Path, default=DEFAULT_RUNS_DIR, help="Promoted eval run directory.")
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR, help="Paper generated-table output directory.")
     parser.add_argument("--json", action="store_true", help="Print latest suite summary JSON.")
     return parser.parse_args()

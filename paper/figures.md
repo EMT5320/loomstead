@@ -24,8 +24,8 @@
 - Source files: `GET /api/debug.phase2`, `paper/generated/manifest_inventory.md`, process trace artifacts.
 - Draft source: `paper/diagrams/trace_evidence_chain_figure3.mmd`.
 - Draft walkthrough: `paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md`.
-- Draft artifact source: `.run/eval-runs/run_2026-05-28T07-43-32Z/per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed01.json`.
-- Second trace source: `.run/eval-runs/run_2026-05-28T07-43-32Z/per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed01.json`.
+- Draft artifact source: `.run/eval-promoted/run_2026-05-29T13-57-50Z/per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed01.json`.
+- Second trace source: `.run/eval-promoted/run_2026-05-29T13-57-50Z/per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed01.json`.
 - Rendered assets: `paper/generated/figures/trace_evidence_chain_figure3.svg`, `paper/generated/figures/trace_evidence_chain_figure3.png`, `paper/generated/figures/trace_evidence_chain_figure3.pdf`.
 - LaTeX status: rendered PNG included in `paper/latex/sections/04_process_fidelity_eval.tex`.
 - Status: editable Mermaid source and rendered assets ready with two current clean-run trace examples plus aggregate guardrail annotation; publication-quality visual polish remains pending.
@@ -39,13 +39,13 @@
 ## Table 2: Process Fidelity ablation summary
 
 - Goal: compare Full, Hard Delegation, No Subjective Memory, No Relationship Edge, Shuffled Memory Owner, Evidence-Link Removal.
-- Source files: `.run/eval-runs/run_2026-05-28T07-43-32Z/summary.json`, `.run/eval-runs/run_2026-05-28T07-43-32Z/ablation_comparison.json`, `paper/generated/ablation_table.csv`, `paper/generated/eval_summary_tables.md`, `paper/generated/eval_tables.tex`.
+- Source files: `.run/eval-promoted/run_2026-05-29T13-57-50Z/summary.json`, `.run/eval-promoted/run_2026-05-29T13-57-50Z/ablation_comparison.json`, `paper/generated/ablation_table.csv`, `paper/generated/eval_summary_tables.md`, `paper/generated/eval_tables.tex`.
 - Status: generated from current clean five-repeat process run and included by `paper/latex/sections/05_experiments.tex`.
 
 ## Table 3: Memory causality and trace coverage
 
 - Goal: show relationship memory causal use, causal trace coverage, relationship consistency.
-- Source files: `.run/eval-runs/run_2026-05-28T07-43-32Z/summary.json`, process suite counterfactual replay artifacts.
+- Source files: `.run/eval-promoted/run_2026-05-29T13-57-50Z/summary.json`, process suite counterfactual replay artifacts.
 - Status: generated baseline table exists; detailed replay rows pending.
 
 ## Table 4: Stability
@@ -57,7 +57,7 @@
 ## Table 5: Cross-domain adapter
 
 - Goal: town vs coding scenarios, deterministic repeat count, shared metrics, counterfactual route change rate, and fixture-level coding evidence pipeline.
-- Source files: `.run/eval-runs/domain_2026-05-28T07-49-46Z/summary.json`, manifest, `docs/cross_domain_adapter.md`, `paper/generated/eval_tables.tex`.
+- Source files: `.run/eval-promoted/domain_2026-05-28T07-49-46Z/summary.json`, manifest, `docs/cross_domain_adapter.md`, `paper/generated/eval_tables.tex`.
 - Status: generated from current clean deterministic five-repeat domain run and included by `paper/latex/sections/05_experiments.tex`; wording should stay at interface / portability evidence.
 
 ## Table 6: Related-work positioning

@@ -1,0 +1,64 @@
+{
+  "scenario": {
+    "scenarioId": "pf.affiliation_bias_remains_agent_initiated",
+    "description": "Lena 在 affiliation 偏置下仍由 Arbitration 选择社交工具，并保留 trace。",
+    "npcId": "lena",
+    "targetNpcId": "mira",
+    "expectedToolPrefixes": [
+      "social."
+    ],
+    "requiredProcessIds": [
+      "goal_relevant_tool_event",
+      "subjective_memory_refs",
+      "relationship_edge_trace",
+      "causal_trace",
+      "future_behavior_reference"
+    ],
+    "statusOverrides": {
+      "energy": 90,
+      "money": 90,
+      "social": 5
+    },
+    "locationId": "plaza",
+    "anchorId": "plaza_fountain",
+    "maxGameHours": 1,
+    "setupKind": "default"
+  },
+  "baseline": "hard_delegation",
+  "ok": true,
+  "metrics": {
+    "goal_success_rate": 1.0,
+    "shortcut_violation_rate": 1.0,
+    "required_process_coverage": 0.2,
+    "forced_action_rate": 1.0,
+    "agent_initiated_action_ratio": 0.0,
+    "intervention_overreach_rate": 1.0,
+    "relationship_memory_causal_use_rate": 0.0,
+    "counterfactual_tool_selection_change_rate": 0.0,
+    "causal_trace_coverage": 0.0,
+    "relationship_consistency": 0.0,
+    "process_believability_score": 0.04
+  },
+  "processChecks": {
+    "goal_relevant_tool_event": true,
+    "subjective_memory_refs": false,
+    "relationship_edge_trace": false,
+    "causal_trace": false,
+    "future_behavior_reference": false
+  },
+  "evidence": {
+    "delegation": {
+      "assignee": "lena",
+      "targetNpcId": "mira",
+      "requiredActions": [
+        "social.chat_with"
+      ],
+      "policy": "hard_delegation"
+    }
+  },
+  "seed": {
+    "seedIndex": 2,
+    "seedId": "pf.affiliation_bias_remains_agent_initiated:hard_delegation:seed_02",
+    "deterministicHash": "84ebec16014519e4"
+  }
+}

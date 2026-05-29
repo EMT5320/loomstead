@@ -14,9 +14,9 @@ scope: eval export manifest indexing, archive validation, and local retention po
 ## 1. 当前边界
 
 - 本地导出根目录：`.run/eval-runs/`。
-- 家里 / 公司交替开发时，研究证据子树可进入 Git 候选：`.run/eval-runs/`、`.run/eval-promoted/`、`.run/eval-reviewer-packets/`、`.run/process-llm-evidence/`。
-- `.run/` 下的 Godot 缓存、截图、Mermaid 临时配置、一次性脚本和日志仍按临时产物处理，不进入提交态。
-- 如果文档指向的 promoted manifest 在当前机器缺失，优先判断为跨环境 artifact 未同步；除非明确需要刷新指标，不应只为补本机文件重复运行已完成的 eval。
+- 家里 / 公司交替开发时，只有已整理证据子树进入 Git 候选：`.run/eval-promoted/`、`.run/eval-reviewer-packets/`、`.run/process-llm-evidence/` 中的命名 `cloud-*.json` / summary artifact。`.run/eval-runs/` 和 `.run/process-llm-evidence/latest*.json` 都是本地滚动/缓存区。
+- `.run/` 下的 Godot 缓存、截图、Mermaid 临时配置、一次性脚本、日志和 mutable latest cache 仍按临时产物处理，不进入提交态。
+- 如果文档指向的 promoted manifest 或命名 cloud artifact 在当前机器缺失，优先判断为跨环境 artifact 未同步；除非明确需要刷新指标，不应只为补本机文件重复运行已完成的 eval。
 - 每个有效 run 必须包含 `manifest.json`，manifest 版本为 `phase2.eval_manifest.v1`。
 - `manifest.json` 是唯一索引入口；artifact 文件只通过 manifest 的相对路径读取。
 - `scripts/index_eval_runs.py` 只索引和校验，不自动删除 run。

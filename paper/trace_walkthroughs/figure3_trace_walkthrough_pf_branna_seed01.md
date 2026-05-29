@@ -8,16 +8,16 @@
 
 ## Source artifact
 
-- Run: `.run/eval-runs/run_2026-05-28T07-43-32Z`
-- Manifest: `.run/eval-runs/run_2026-05-28T07-43-32Z/manifest.json`
+- Run: `.run/eval-promoted/run_2026-05-29T13-57-50Z`
+- Manifest: `.run/eval-promoted/run_2026-05-29T13-57-50Z/manifest.json`
   - `ok=true`
   - `git.shortCommit=b1c006f`
   - `git.dirty=false`
   - `seedCount=5`
 - Per-scenario file:
-  - `.run/eval-runs/run_2026-05-28T07-43-32Z/per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed01.json`
+  - `.run/eval-promoted/run_2026-05-29T13-57-50Z/per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed01.json`
 - Second trace source:
-  - `.run/eval-runs/run_2026-05-28T07-43-32Z/per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed01.json`
+  - `.run/eval-promoted/run_2026-05-29T13-57-50Z/per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed01.json`
   - Same manifest: `ok=true`, `git.shortCommit=b1c006f`, `git.dirty=false`, `seedCount=5`
 
 ## Candidate trace chain for Figure 3
@@ -119,7 +119,7 @@ The figure source uses curated labels from the evidence below. It avoids relying
 ### Aggregate guardrail annotation
 
 1. **Process suite aggregate**
-   - Source: `paper/generated/eval_summary_tables.md` and `.run/eval-runs/run_2026-05-28T07-43-32Z/summary.json`.
+   - Source: `paper/generated/eval_summary_tables.md` and `.run/eval-promoted/run_2026-05-29T13-57-50Z/summary.json`.
    - Full Motivational Delegation process aggregate: `n=20` (`5 seeds x 4 scenarios`).
    - `counterfactual_tool_selection_change_rate=0.375`.
    - `causal_trace_coverage=1.0`.

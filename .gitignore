@@ -16,6 +16,8 @@ exports/
 !.run/eval-reviewer-packets/**
 !.run/process-llm-evidence/
 !.run/process-llm-evidence/**
+# Mutable "latest" cache files are machine-local inputs for export/promotion.
+.run/process-llm-evidence/latest*.json
 
 __pycache__/
 *.pyc

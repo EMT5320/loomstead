@@ -54,36 +54,36 @@ _Additional artifacts omitted from preview: 331._
 
 ## process_fidelity
 
-- run: `run_2026-05-28T07-43-32Z`
+- run: `run_2026-05-29T13-57-50Z`
 - exportKind: `process_fidelity_dataset`
 - ok: `True`
-- git: `b1c006f` dirty=`False`
-- artifactCount: `126`
+- git: `25c053d` dirty=`True`
+- artifactCount: `127`
 
 | Path | Kind | Bytes | Rows | SHA256 |
 | --- | --- | --- | --- | --- |
-| summary.json | summary_json | 21105 |  | 2e5c42f432b48f39f4944b6e948085e24d600dc38d0c8aab59f6cc6b347c3915 |
-| ablation_comparison.json | ablation_comparison_json | 6851 |  | 98bcc4c51bbc03320f68759a17c8dbc160354d045d764ad81e408e3ca7bcb158 |
-| per_scenario/pf.shared_chat_builds_traceable_trust_full_motivational_delegation_seed01.json | per_scenario_json | 55823 |  | a14c06776abd961a431145894ae7e5a10dfea1840f1f28c51bc623984dea54ec |
-| per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed01.json | per_scenario_json | 42710 |  | 26b765d6fdd88995ddb39526cbef5222eb4f9e7a31107666db87b8f619cd8de4 |
-| per_scenario/pf.affiliation_bias_remains_agent_initiated_full_motivational_delegation_seed01.json | per_scenario_json | 44560 |  | 62350b23e0c31c9eea090106616921cdb224bffc4331336c624c07cb9a37523a |
-| per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed01.json | per_scenario_json | 54665 |  | 77717a475ef39909e06d75ff011c81ac33a3e97125a54e37b1c7014cd2c483e3 |
-| per_scenario/pf.shared_chat_builds_traceable_trust_full_motivational_delegation_seed02.json | per_scenario_json | 55823 |  | bbc40858db8b0290d2bd7fe8392b6f1b1bcbd68b111253f73c1c156b1f0bed1e |
-| per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed02.json | per_scenario_json | 42710 |  | 78585a4932bb4142257f721f2694010cde66fd49e5af0f2550997e88ba7675ba |
-| per_scenario/pf.affiliation_bias_remains_agent_initiated_full_motivational_delegation_seed02.json | per_scenario_json | 44560 |  | df78cbc9d0082bf1d6e4564ad25a7703432b7b08a04bae782bc0f85573a9b39c |
-| per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed02.json | per_scenario_json | 54665 |  | cc65194f27f2d5d33f1cf81f297550896a9c51d713d8f94e32c1243dc9fb2b6f |
-| per_scenario/pf.shared_chat_builds_traceable_trust_full_motivational_delegation_seed03.json | per_scenario_json | 55823 |  | 2c3e38e0f4c9c9535af4f7b7ebff74b37d5846af3e4a4ee89c1024400cd12fb8 |
-| per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed03.json | per_scenario_json | 42710 |  | 777178123f677054dcaea979451b281ec6f6980710e4b32ff1275760ee7c4505 |
-| per_scenario/pf.affiliation_bias_remains_agent_initiated_full_motivational_delegation_seed03.json | per_scenario_json | 44560 |  | c2d5335c7e9f5541bb07ef057553915a46edc4432fe6d532a62c73a05463b449 |
-| per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed03.json | per_scenario_json | 54665 |  | 605e3ba96d1864a4ce3c5fca6a65faccfc8cf1710bd8a3233ce4c78069e1f577 |
-| per_scenario/pf.shared_chat_builds_traceable_trust_full_motivational_delegation_seed04.json | per_scenario_json | 55823 |  | 9e07c3af560f8e273b87973215302e64c1f56ac1d65d00861ff63cc311a15379 |
-| per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed04.json | per_scenario_json | 42710 |  | b3841c7f3b05195a9b17e0791d5f43844e925e3517b0993bc829db79c65af64b |
-| per_scenario/pf.affiliation_bias_remains_agent_initiated_full_motivational_delegation_seed04.json | per_scenario_json | 44560 |  | 980e7d0b5f3d015a717914ef78f3c34d85ef54d0c250db1d2c332c5c56e737a2 |
-| per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed04.json | per_scenario_json | 54665 |  | 0db98114a862d9f049459272154ddadb9fc787aa6e9fd116d67be782437a7d64 |
-| per_scenario/pf.shared_chat_builds_traceable_trust_full_motivational_delegation_seed05.json | per_scenario_json | 55823 |  | 7629206cfcb8b4bdd581739ab8cf12d625b0953b597a42310f04c4bddad9e2cd |
-| per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed05.json | per_scenario_json | 42710 |  | 1306960cdd15a29ff2ba87c89165f961277d77f7b0121dc2626a82e206c187bc |
+| summary.json | summary_json | 210864 |  | 728674d097462e731253ffbe7aec0233fca572c49e9176f70518c451091267a4 |
+| ablation_comparison.json | ablation_comparison_json | 6851 |  | 751d6a1c5e6605521d21f436407f76921c565b8fff1a976774811d813c5321d3 |
+| per_scenario/pf.shared_chat_builds_traceable_trust_full_motivational_delegation_seed01.json | per_scenario_json | 56541 |  | afab6af1fdbad261540de175deb6a95297f59052e2dd380d6b01df8413282522 |
+| per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed01.json | per_scenario_json | 43429 |  | 4683ac96427e39fadf36f01b4422698d136c297f88a376c651c5907fcc0de570 |
+| per_scenario/pf.affiliation_bias_remains_agent_initiated_full_motivational_delegation_seed01.json | per_scenario_json | 45278 |  | 2093248fe683e8c9ee701a5c5ee9cd63456774c2754b24a99a1e21a2ef3e5df1 |
+| per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed01.json | per_scenario_json | 55383 |  | 0bb30e2906ce24de427deb4abde66583f721dafe91780ef658f4408133e54dab |
+| per_scenario/pf.shared_chat_builds_traceable_trust_full_motivational_delegation_seed02.json | per_scenario_json | 56541 |  | 0e492ecb210093ffbfd8de51fedddcbad09d7b41e0e2bd3878ae2aab8f1c6510 |
+| per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed02.json | per_scenario_json | 43429 |  | 24db35c9d4f4ad4c0740824420ca2e592188a2bdbc9e0e599935e155835e9c38 |
+| per_scenario/pf.affiliation_bias_remains_agent_initiated_full_motivational_delegation_seed02.json | per_scenario_json | 45278 |  | 806f2a312a5507cd8b27bb78cd1f8b51b0225225967db9ea1c62eb9b07a0b14a |
+| per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed02.json | per_scenario_json | 55383 |  | e22a52c2620844cabcd94f0900051c6a1734e91dedb8f48b8792b87c0fff32e7 |
+| per_scenario/pf.shared_chat_builds_traceable_trust_full_motivational_delegation_seed03.json | per_scenario_json | 56541 |  | e44ccdcd923f8dea266089b6ae61e4a3fc6b9928f2c61b941c5166c3cf15d0e8 |
+| per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed03.json | per_scenario_json | 43429 |  | 2ce5edb3d3a16a8e65e5502f9085015980e40ab6b81aec42f90ca3878fe3418e |
+| per_scenario/pf.affiliation_bias_remains_agent_initiated_full_motivational_delegation_seed03.json | per_scenario_json | 45278 |  | 40c6a245f93d7560aa819ad55b7dd1cdfe74329f384aa4949cdcee203ff4f972 |
+| per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed03.json | per_scenario_json | 55383 |  | 0b5f9101c2d43fa176713d34ba575970062389c4fe1d804a4ac3e08650179c2c |
+| per_scenario/pf.shared_chat_builds_traceable_trust_full_motivational_delegation_seed04.json | per_scenario_json | 56541 |  | 37cddee96d43ebfe57f205dc72a86b9f4e042d52bd730f377d37e5d28071f5af |
+| per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed04.json | per_scenario_json | 43429 |  | 63a84dd53fab95a66f7aba259dc372a6402d649a52ab614091c82e89c9928166 |
+| per_scenario/pf.affiliation_bias_remains_agent_initiated_full_motivational_delegation_seed04.json | per_scenario_json | 45278 |  | 640f2705709c7ef29359b2f933aa292b6960ed1c03afef0f9f528ba73e1e4441 |
+| per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed04.json | per_scenario_json | 55383 |  | 5873b2e37591c0c5ecb174fc0e46900458d84c3a7a8e79e42d7b82305f9d7330 |
+| per_scenario/pf.shared_chat_builds_traceable_trust_full_motivational_delegation_seed05.json | per_scenario_json | 56541 |  | 58ea64082d3d876ee1643539de48ad90fd7c026c459ff729c478fb5ba99485c7 |
+| per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed05.json | per_scenario_json | 43429 |  | b1bdf5aaeaa5d70bc35a16356aca35a6bb31f8b99c4837787b666904934cd1cf |
 
-_Additional artifacts omitted from preview: 106._
+_Additional artifacts omitted from preview: 107._
 
 ## stability_24h
 

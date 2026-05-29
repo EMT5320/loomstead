@@ -31,7 +31,7 @@ scope: 阶段推进 checkpoint 板与 exit criteria
 - ✅ ResearchFraming / DomainAdapter / ProcessFidelityEval 三项研究护栏文档落地
 - ✅ 4 核心 NPC 接入 motivation profile / capability preferences / heuristic seeds
 - ✅ Godot ObserverPanel 三 Tab + trace 导航代码
-- ⚠️ 真实 LLM 跑通的 Process Fidelity / Hard Delegation evidence：cloud 已跑通 Branna Forgiveness 1 GoalSpec × 5 seed × 5 baseline（0 fallback，见 current_status §3），但 cloud ablation 结论 promote 与 claim 升级仍待 B 线处理
+- ✅ 真实 LLM 跑通的 Process Fidelity / Hard Delegation evidence：cloud provider usage 已覆盖 4 个 GoalSpec × 5 seed × 5 baseline（100 calls，0 fallback），并 promote 到 `.run/eval-promoted/run_2026-05-29T13-57-50Z`；claim 升级和 promotion manual note 仍待主人确认
 - ⚠️ 人工 reviewer 抽样填表（packet 已生成，待人工执行）
 - ⚠️ Godot 真实窗口最新 Trace 补修复验
 
@@ -44,8 +44,8 @@ A. **求职展示线**（1-2 周）
    - 触发 `P_demo.exit`
 
 B. **真实 LLM 证据线**（推荐，含主人协助）
-   - cloud 1 GoalSpec × 5 seed × 5 baseline 已跑通；剩 promote cloud ablation 结论 + 扩 Close Friend / Festival
-   - 把 C2/C3/C4 升到 final empirical（claim 升级待主人确认）
+   - cloud 4 GoalSpec × 5 seed × 5 baseline 已跑通并 promote；剩主人确认 C2/C3/C4 claim level 与 promotion manual note
+   - 若主人确认，可把 C2/C3/C4 升到 final empirical 或 promoted with caveat；若暂不升级，则维持 partial empirical + cloud-backed caveat
    - 触发 `P2.exit` 的研究向硬验收
 
 C. **Phase 4 玩家成为变量线**（4-6 天）
@@ -66,7 +66,7 @@ E. **Eval Framework 加固延续**（不推荐）
 
 ### 浮浮酱推荐
 
-**B 然后 A**：B 解锁论文 / 简历的关键 claim 升级，且只需要 1-2 天；完成后立刻切到 A 把已有强支撑（trace、Process Fidelity 数据、Hard Delegation vs Full 对比）剪成 30-60 秒短 demo。这两条配合可在 2-3 周内同时推进求职展示与论文目标。
+**确认 claim 口径后转 A**：B 线的 cloud evidence artifact 已收口到 promoted run；现在最有推进价值的是由主人确认 C2/C3/C4 是否升级，然后切到 A 把已有强支撑（trace、Process Fidelity 数据、Hard Delegation vs Full 对比、cloud provider usage）剪成 30-60 秒短 demo。
 
 ## P_demo.exit —— 求职展示线收口
 
@@ -86,7 +86,7 @@ E. **Eval Framework 加固延续**（不推荐）
 
 ### Exit criteria（候选，待主人正式选定 B 后定稿）
 
-- 至少 1 个 GoalSpec 跑通 ≥ 5 seed × 3 baseline 真实 provider，manifest `llmEvidence` 已写入
+- 至少 4 个 GoalSpec 跑通 5 seed × 5 baseline 真实 provider，promoted manifest `llmEvidence` 已写入
 - claim_evidence_matrix C2 / C3 / C4 升级为 final empirical 或 promoted with caveat
 - ablation_comparison 包含 Full vs Hard Delegation vs No Subjective Memory vs No Relationship Edge 四对比
 - 真实 provider 跑通后 24h 内不重复 export 同 suite（避免治理 §3.2 违规）

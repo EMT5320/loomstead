@@ -15,7 +15,7 @@ hard_delegation,counterfactual_tool_selection_change_rate,0.0,0.0,20
 hard_delegation,shortcut_violation_rate,1.0,0.0,20
 no_subjective_memory,goal_success_rate,1.0,0.0,20
 no_subjective_memory,required_process_coverage,0.742857,0.098974,20
-no_subjective_memory,process_believability_score,0.948571,0.019795,20
+no_subjective_memory,process_believability_score,0.948572,0.019795,20
 no_subjective_memory,causal_trace_coverage,1.0,0.0,20
 no_subjective_memory,relationship_memory_causal_use_rate,1.0,0.0,20
 no_subjective_memory,counterfactual_tool_selection_change_rate,0.0,0.0,20

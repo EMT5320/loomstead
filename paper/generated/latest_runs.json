@@ -4375,23 +4375,43 @@
     }
   },
   "process_fidelity": {
-    "runDirName": "run_2026-05-28T07-43-32Z",
+    "runDirName": "run_2026-05-29T13-57-50Z",
     "manifest": {
       "manifestVersion": "phase2.eval_manifest.v1",
       "exportKind": "process_fidelity_dataset",
-      "createdAt": "2026-05-28T07:43:32+00:00",
+      "createdAt": "2026-05-29T13:57:50+00:00",
       "suite": "process_fidelity",
       "baseline": "full_motivational_delegation",
       "providerMode": "rule",
       "seedCount": 5,
       "ok": true,
-      "runDirName": "run_2026-05-28T07-43-32Z",
+      "runDirName": "run_2026-05-29T13-57-50Z",
       "git": {
-        "commit": "b1c006fbf141f2d19122ef3cd517778029cc7290",
-        "shortCommit": "b1c006f",
+        "commit": "25c053d80265c0a0859ed5dde3ec829beee7d649",
+        "shortCommit": "25c053d",
         "branch": "main",
-        "dirty": false,
-        "statusShort": []
+        "dirty": true,
+        "statusShort": [
+          "M .gitignore",
+          "D  .run/process-llm-evidence/latest.json",
+          "D  .run/process-llm-evidence/latest.local-office-2026-05-29.json",
+          " M docs/agent_context.md",
+          " M docs/current_status.md",
+          " M docs/eval_dataset_archive.md",
+          " M docs/phase_checkpoints.md",
+          " M paper/claim_evidence_matrix.md",
+          " M paper/figures.md",
+          " M paper/generated/ablation_table.csv",
+          " M paper/generated/eval_summary_tables.md",
+          " M paper/generated/latest_runs.json",
+          " M paper/generated/manifest_inventory.md",
+          " M paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md",
+          " M scripts/paper_extract_eval_tables.py",
+          "?? .run/eval-promoted/run_2026-05-29T13-49-06Z/",
+          "?? .run/process-llm-evidence/cloud-4goalspec-summary-2026-05-29.json",
+          "?? .run/process-llm-evidence/cloud-branna-forgiveness-local-office-2026-05-29.json",
+          "?? paper/research_claim_review_2026-05-29.md"
+        ]
       },
       "schemaRegistry": {
         "registryVersion": "schema_registry.v1",
@@ -4755,197 +4775,318 @@
       "llmEvidence": {
         "schemaVersion": "process_llm_evidence.v1",
         "providerUsageSchemaVersion": "provider_usage_actual.v1",
-        "source": "current_run",
-        "providerMode": "rule",
+        "source": "latest_cache",
+        "providerMode": "cloud",
         "seedCount": 5,
-        "recordCount": 0,
-        "cloudCallCount": 0,
+        "recordCount": 100,
+        "cloudCallCount": 100,
         "fallbackCount": 0,
         "totals": {
-          "calls": 0,
-          "tokens": 0,
-          "promptTokens": 0,
-          "completionTokens": 0,
-          "latencyTotalMs": 0,
-          "latencyAvgMs": 0.0,
-          "cost": 0.0,
-          "currency": null
+          "calls": 100,
+          "tokens": 189949,
+          "promptTokens": 167610,
+          "completionTokens": 22339,
+          "latencyTotalMs": 308612,
+          "latencyAvgMs": 3086.12,
+          "cost": 0.02972032,
+          "currency": "USD"
         },
-        "byScenario": {},
-        "byBaseline": {},
-        "records": []
+        "byScenario": {
+          "pf.affiliation_bias_remains_agent_initiated": {
+            "calls": 25,
+            "tokens": 53497,
+            "promptTokens": 47782,
+            "completionTokens": 5715,
+            "latencyTotalMs": 68009,
+            "latencyAvgMs": 2720.36,
+            "cost": 0.00828968,
+            "currency": "USD"
+          },
+          "pf.branna_forgiveness_requires_memory": {
+            "calls": 25,
+            "tokens": 45614,
+            "promptTokens": 41041,
+            "completionTokens": 4573,
+            "latencyTotalMs": 95682,
+            "latencyAvgMs": 3827.28,
+            "cost": 0.00702618,
+            "currency": "USD"
+          },
+          "pf.repair_talk_requires_memory_trace": {
+            "calls": 25,
+            "tokens": 37287,
+            "promptTokens": 30382,
+            "completionTokens": 6905,
+            "latencyTotalMs": 82484,
+            "latencyAvgMs": 3299.36,
+            "cost": 0.00618688,
+            "currency": "USD"
+          },
+          "pf.shared_chat_builds_traceable_trust": {
+            "calls": 25,
+            "tokens": 53551,
+            "promptTokens": 48405,
+            "completionTokens": 5146,
+            "latencyTotalMs": 62437,
+            "latencyAvgMs": 2497.48,
+            "cost": 0.00821758,
+            "currency": "USD"
+          }
+        },
+        "byBaseline": {
+          "evidence_link_removal": {
+            "calls": 20,
+            "tokens": 38193,
+            "promptTokens": 33682,
+            "completionTokens": 4511,
+            "latencyTotalMs": 63286,
+            "latencyAvgMs": 3164.3,
+            "cost": 0.00597856,
+            "currency": "USD"
+          },
+          "full_motivational_delegation": {
+            "calls": 20,
+            "tokens": 38083,
+            "promptTokens": 33957,
+            "completionTokens": 4126,
+            "latencyTotalMs": 57752,
+            "latencyAvgMs": 2887.6,
+            "cost": 0.00590926,
+            "currency": "USD"
+          },
+          "no_relationship_edge": {
+            "calls": 20,
+            "tokens": 38118,
+            "promptTokens": 33252,
+            "completionTokens": 4866,
+            "latencyTotalMs": 65214,
+            "latencyAvgMs": 3260.7,
+            "cost": 0.00601776,
+            "currency": "USD"
+          },
+          "no_subjective_memory": {
+            "calls": 20,
+            "tokens": 37305,
+            "promptTokens": 32705,
+            "completionTokens": 4600,
+            "latencyTotalMs": 61724,
+            "latencyAvgMs": 3086.2,
+            "cost": 0.0058667,
+            "currency": "USD"
+          },
+          "shuffled_memory_owner": {
+            "calls": 20,
+            "tokens": 38250,
+            "promptTokens": 34014,
+            "completionTokens": 4236,
+            "latencyTotalMs": 60636,
+            "latencyAvgMs": 3031.8,
+            "cost": 0.00594804,
+            "currency": "USD"
+          }
+        },
+        "sourceArtifacts": [
+          {
+            "path": ".run/process-llm-evidence/cloud-branna-forgiveness-2026-05-29.json",
+            "sha256": "86a389dca6cd2d33737e8d3cefa1788c7756079f0457d993c475da269cfebea0",
+            "recordCount": 25,
+            "cloudCallCount": 25,
+            "fallbackCount": 0,
+            "scenarioIds": [
+              "pf.branna_forgiveness_requires_memory"
+            ]
+          },
+          {
+            "path": ".run/process-llm-evidence/cloud-3goalspec-2026-05-29.json",
+            "sha256": "0f558a04b1495d3a96cc9688a0047e74ef5d637bf497a741753719ede99166de",
+            "recordCount": 75,
+            "cloudCallCount": 75,
+            "fallbackCount": 0,
+            "scenarioIds": [
+              "pf.affiliation_bias_remains_agent_initiated",
+              "pf.repair_talk_requires_memory_trace",
+              "pf.shared_chat_builds_traceable_trust"
+            ]
+          }
+        ],
+        "cache": {
+          "loadedFrom": ".run/process-llm-evidence/latest.json",
+          "originalSource": "combined_named_cloud_artifacts_2026_05_29"
+        },
+        "recordsOmitted": 100,
+        "recordsArtifactHint": "llm_evidence.json"
       },
       "evalGates": {},
       "artifacts": [
         {
           "path": "summary.json",
           "kind": "summary_json",
-          "bytes": 21105,
-          "sha256": "2e5c42f432b48f39f4944b6e948085e24d600dc38d0c8aab59f6cc6b347c3915"
+          "bytes": 210864,
+          "sha256": "728674d097462e731253ffbe7aec0233fca572c49e9176f70518c451091267a4"
         },
         {
           "path": "ablation_comparison.json",
           "kind": "ablation_comparison_json",
           "bytes": 6851,
-          "sha256": "98bcc4c51bbc03320f68759a17c8dbc160354d045d764ad81e408e3ca7bcb158"
+          "sha256": "751d6a1c5e6605521d21f436407f76921c565b8fff1a976774811d813c5321d3"
         },
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_full_motivational_delegation_seed01.json",
           "kind": "per_scenario_json",
-          "bytes": 55823,
-          "sha256": "a14c06776abd961a431145894ae7e5a10dfea1840f1f28c51bc623984dea54ec",
+          "bytes": 56541,
+          "sha256": "afab6af1fdbad261540de175deb6a95297f59052e2dd380d6b01df8413282522",
           "baseline": "full_motivational_delegation",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed01.json",
           "kind": "per_scenario_json",
-          "bytes": 42710,
-          "sha256": "26b765d6fdd88995ddb39526cbef5222eb4f9e7a31107666db87b8f619cd8de4",
+          "bytes": 43429,
+          "sha256": "4683ac96427e39fadf36f01b4422698d136c297f88a376c651c5907fcc0de570",
           "baseline": "full_motivational_delegation",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_full_motivational_delegation_seed01.json",
           "kind": "per_scenario_json",
-          "bytes": 44560,
-          "sha256": "62350b23e0c31c9eea090106616921cdb224bffc4331336c624c07cb9a37523a",
+          "bytes": 45278,
+          "sha256": "2093248fe683e8c9ee701a5c5ee9cd63456774c2754b24a99a1e21a2ef3e5df1",
           "baseline": "full_motivational_delegation",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
           "path": "per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed01.json",
           "kind": "per_scenario_json",
-          "bytes": 54665,
-          "sha256": "77717a475ef39909e06d75ff011c81ac33a3e97125a54e37b1c7014cd2c483e3",
+          "bytes": 55383,
+          "sha256": "0bb30e2906ce24de427deb4abde66583f721dafe91780ef658f4408133e54dab",
           "baseline": "full_motivational_delegation",
           "scenarioId": "pf.branna_forgiveness_requires_memory"
         },
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_full_motivational_delegation_seed02.json",
           "kind": "per_scenario_json",
-          "bytes": 55823,
-          "sha256": "bbc40858db8b0290d2bd7fe8392b6f1b1bcbd68b111253f73c1c156b1f0bed1e",
+          "bytes": 56541,
+          "sha256": "0e492ecb210093ffbfd8de51fedddcbad09d7b41e0e2bd3878ae2aab8f1c6510",
           "baseline": "full_motivational_delegation",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed02.json",
           "kind": "per_scenario_json",
-          "bytes": 42710,
-          "sha256": "78585a4932bb4142257f721f2694010cde66fd49e5af0f2550997e88ba7675ba",
+          "bytes": 43429,
+          "sha256": "24db35c9d4f4ad4c0740824420ca2e592188a2bdbc9e0e599935e155835e9c38",
           "baseline": "full_motivational_delegation",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_full_motivational_delegation_seed02.json",
           "kind": "per_scenario_json",
-          "bytes": 44560,
-          "sha256": "df78cbc9d0082bf1d6e4564ad25a7703432b7b08a04bae782bc0f85573a9b39c",
+          "bytes": 45278,
+          "sha256": "806f2a312a5507cd8b27bb78cd1f8b51b0225225967db9ea1c62eb9b07a0b14a",
           "baseline": "full_motivational_delegation",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
           "path": "per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed02.json",
           "kind": "per_scenario_json",
-          "bytes": 54665,
-          "sha256": "cc65194f27f2d5d33f1cf81f297550896a9c51d713d8f94e32c1243dc9fb2b6f",
+          "bytes": 55383,
+          "sha256": "e22a52c2620844cabcd94f0900051c6a1734e91dedb8f48b8792b87c0fff32e7",
           "baseline": "full_motivational_delegation",
           "scenarioId": "pf.branna_forgiveness_requires_memory"
         },
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_full_motivational_delegation_seed03.json",
           "kind": "per_scenario_json",
-          "bytes": 55823,
-          "sha256": "2c3e38e0f4c9c9535af4f7b7ebff74b37d5846af3e4a4ee89c1024400cd12fb8",
+          "bytes": 56541,
+          "sha256": "e44ccdcd923f8dea266089b6ae61e4a3fc6b9928f2c61b941c5166c3cf15d0e8",
           "baseline": "full_motivational_delegation",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed03.json",
           "kind": "per_scenario_json",
-          "bytes": 42710,
-          "sha256": "777178123f677054dcaea979451b281ec6f6980710e4b32ff1275760ee7c4505",
+          "bytes": 43429,
+          "sha256": "2ce5edb3d3a16a8e65e5502f9085015980e40ab6b81aec42f90ca3878fe3418e",
           "baseline": "full_motivational_delegation",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_full_motivational_delegation_seed03.json",
           "kind": "per_scenario_json",
-          "bytes": 44560,
-          "sha256": "c2d5335c7e9f5541bb07ef057553915a46edc4432fe6d532a62c73a05463b449",
+          "bytes": 45278,
+          "sha256": "40c6a245f93d7560aa819ad55b7dd1cdfe74329f384aa4949cdcee203ff4f972",
           "baseline": "full_motivational_delegation",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
           "path": "per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed03.json",
           "kind": "per_scenario_json",
-          "bytes": 54665,
-          "sha256": "605e3ba96d1864a4ce3c5fca6a65faccfc8cf1710bd8a3233ce4c78069e1f577",
+          "bytes": 55383,
+          "sha256": "0b5f9101c2d43fa176713d34ba575970062389c4fe1d804a4ac3e08650179c2c",
           "baseline": "full_motivational_delegation",
           "scenarioId": "pf.branna_forgiveness_requires_memory"
         },
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_full_motivational_delegation_seed04.json",
           "kind": "per_scenario_json",
-          "bytes": 55823,
-          "sha256": "9e07c3af560f8e273b87973215302e64c1f56ac1d65d00861ff63cc311a15379",
+          "bytes": 56541,
+          "sha256": "37cddee96d43ebfe57f205dc72a86b9f4e042d52bd730f377d37e5d28071f5af",
           "baseline": "full_motivational_delegation",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed04.json",
           "kind": "per_scenario_json",
-          "bytes": 42710,
-          "sha256": "b3841c7f3b05195a9b17e0791d5f43844e925e3517b0993bc829db79c65af64b",
+          "bytes": 43429,
+          "sha256": "63a84dd53fab95a66f7aba259dc372a6402d649a52ab614091c82e89c9928166",
           "baseline": "full_motivational_delegation",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_full_motivational_delegation_seed04.json",
           "kind": "per_scenario_json",
-          "bytes": 44560,
-          "sha256": "980e7d0b5f3d015a717914ef78f3c34d85ef54d0c250db1d2c332c5c56e737a2",
+          "bytes": 45278,
+          "sha256": "640f2705709c7ef29359b2f933aa292b6960ed1c03afef0f9f528ba73e1e4441",
           "baseline": "full_motivational_delegation",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
           "path": "per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed04.json",
           "kind": "per_scenario_json",
-          "bytes": 54665,
-          "sha256": "0db98114a862d9f049459272154ddadb9fc787aa6e9fd116d67be782437a7d64",
+          "bytes": 55383,
+          "sha256": "5873b2e37591c0c5ecb174fc0e46900458d84c3a7a8e79e42d7b82305f9d7330",
           "baseline": "full_motivational_delegation",
           "scenarioId": "pf.branna_forgiveness_requires_memory"
         },
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_full_motivational_delegation_seed05.json",
           "kind": "per_scenario_json",
-          "bytes": 55823,
-          "sha256": "7629206cfcb8b4bdd581739ab8cf12d625b0953b597a42310f04c4bddad9e2cd",
+          "bytes": 56541,
+          "sha256": "58ea64082d3d876ee1643539de48ad90fd7c026c459ff729c478fb5ba99485c7",
           "baseline": "full_motivational_delegation",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed05.json",
           "kind": "per_scenario_json",
-          "bytes": 42710,
-          "sha256": "1306960cdd15a29ff2ba87c89165f961277d77f7b0121dc2626a82e206c187bc",
+          "bytes": 43429,
+          "sha256": "b1bdf5aaeaa5d70bc35a16356aca35a6bb31f8b99c4837787b666904934cd1cf",
           "baseline": "full_motivational_delegation",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_full_motivational_delegation_seed05.json",
           "kind": "per_scenario_json",
-          "bytes": 44560,
-          "sha256": "521ff0bc8f4ee880ca19f02621f786eff4517095fdf6117b2d678b8cd3eaaa00",
+          "bytes": 45278,
+          "sha256": "5d69737418cb0876b8919c10f0c9640a5af2c3b49abf21a722f251d89a79488f",
           "baseline": "full_motivational_delegation",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
           "path": "per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed05.json",
           "kind": "per_scenario_json",
-          "bytes": 54665,
-          "sha256": "f714ecad4975f9d8344c031d13a9dab031b37a115524d5cacc6d8773b638636b",
+          "bytes": 55383,
+          "sha256": "6f6e651edde894bcb1117e3ad087e77c8925d2f538d4b27389609c80a5508815",
           "baseline": "full_motivational_delegation",
           "scenarioId": "pf.branna_forgiveness_requires_memory"
         },
@@ -5112,640 +5253,640 @@
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_subjective_memory_seed01.json",
           "kind": "per_scenario_json",
-          "bytes": 34522,
-          "sha256": "00cfa9a1e89f2afd2daa07bd41f1df2285a8678a12a449d8abab1298fe79806d",
+          "bytes": 35240,
+          "sha256": "a07f01ec557634ba05d7e432831c30a5e8ebb72c5518afe58739172d46004b64",
           "baseline": "no_subjective_memory",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_subjective_memory_seed01.json",
           "kind": "per_scenario_json",
-          "bytes": 30391,
-          "sha256": "8b92cf823cdfba5e8e151fcda1490de2ca0cfa820ddc9e518e5b36b52bbdc90b",
+          "bytes": 31110,
+          "sha256": "371c2e93ad11f3ed26a1d3df11db87ff50ef41f3a6700eacc882be333b4a1326",
           "baseline": "no_subjective_memory",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_subjective_memory_seed01.json",
           "kind": "per_scenario_json",
-          "bytes": 33252,
-          "sha256": "19be74004ffd7d22b1649a222208750c9ca3c01650bf0eef898cf0377a1d539b",
+          "bytes": 33970,
+          "sha256": "b5b11f7db8db68e6fc6c5969803b528cec54645e27f69897f702aa8162e33faf",
           "baseline": "no_subjective_memory",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
           "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_subjective_memory_seed01.json",
           "kind": "per_scenario_json",
-          "bytes": 32808,
-          "sha256": "3671d97ea97b50e539c60d7a07e07a4e3b8dc447bd13c681ca4144f0f41bf113",
+          "bytes": 33526,
+          "sha256": "8d48d8e485889d923a3cc2a1e64210f39b2126f2ed17fed77573b5d942013db4",
           "baseline": "no_subjective_memory",
           "scenarioId": "pf.branna_forgiveness_requires_memory"
         },
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_subjective_memory_seed02.json",
           "kind": "per_scenario_json",
-          "bytes": 34522,
-          "sha256": "a72b85ad987fafe353846bbdb45224ec83aebb459e2701a6f75696fc0adb34ff",
+          "bytes": 35240,
+          "sha256": "c598bb8e7098534970b80499a24f2a7c6e3cee858319dd85f6f642e12f34147b",
           "baseline": "no_subjective_memory",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_subjective_memory_seed02.json",
           "kind": "per_scenario_json",
-          "bytes": 30391,
-          "sha256": "270a0c669422d9fe81fc612900065d5b514de3b294aa3676dea5e1cc9194571b",
+          "bytes": 31110,
+          "sha256": "ef492fe67c7babb4a55cf822ec1725df4af0f1268f2f1c81839f768f97c6b77f",
           "baseline": "no_subjective_memory",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_subjective_memory_seed02.json",
           "kind": "per_scenario_json",
-          "bytes": 33252,
-          "sha256": "5fb8bbefe004aa7f47509758bc43b27b210ce6ecefd15b59d41263114cc87f39",
+          "bytes": 33970,
+          "sha256": "14a4a387109488786d1ec6f593395dd79ef8207032d909ca9665f65da1a99c60",
           "baseline": "no_subjective_memory",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
           "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_subjective_memory_seed02.json",
           "kind": "per_scenario_json",
-          "bytes": 32808,
-          "sha256": "d6bac2f55ad4856bac6da6f9229b69c8c35c2f9adf70fc005715e9f004a8f4f7",
+          "bytes": 33526,
+          "sha256": "bd6b3ae5faf2f208274dc576607e3460aa3f022d37615c9640caeada3064235e",
           "baseline": "no_subjective_memory",
           "scenarioId": "pf.branna_forgiveness_requires_memory"
         },
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_subjective_memory_seed03.json",
           "kind": "per_scenario_json",
-          "bytes": 34522,
-          "sha256": "e3553a512849d9694b3f297eb9f970867bdf342958aa072ce95239654d727752",
+          "bytes": 35240,
+          "sha256": "19f61fe0e533a5c4a08dac6d51ca7007ca763311cb369be6442e56a8a0e4f8ed",
           "baseline": "no_subjective_memory",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_subjective_memory_seed03.json",
           "kind": "per_scenario_json",
-          "bytes": 30391,
-          "sha256": "6a2afddc6426b9cd91afd6fd863588fd421d91cfe7368eff854c334329a3d66e",
+          "bytes": 31110,
+          "sha256": "a2d4f724c629ea8a61e984493d744166263e3f045e85a764526a9a904fab3085",
           "baseline": "no_subjective_memory",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_subjective_memory_seed03.json",
           "kind": "per_scenario_json",
-          "bytes": 33252,
-          "sha256": "ec3b484687a4a2b2c86800747790283b6fa0505972704be34ac5e6f2699245a3",
+          "bytes": 33970,
+          "sha256": "57de9949b2f73a93ddc2e19f668a2218c4b513de4e8985b89dcf04bde6dd4992",
           "baseline": "no_subjective_memory",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
           "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_subjective_memory_seed03.json",
           "kind": "per_scenario_json",
-          "bytes": 32808,
-          "sha256": "0c812ee3d90c1c9d04af403c9fd787e530c0e939af0538c8c5d38064d6271617",
+          "bytes": 33526,
+          "sha256": "4165af219f4e1fab64df7b0af41a858ee0b4494c97af2659cbecab42a16dc946",
           "baseline": "no_subjective_memory",
           "scenarioId": "pf.branna_forgiveness_requires_memory"
         },
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_subjective_memory_seed04.json",
           "kind": "per_scenario_json",
-          "bytes": 34522,
-          "sha256": "116b0567f01cebf3f67eeac9fa67bd5c7239dff99baeb946f0cb3ac2af105d9c",
+          "bytes": 35240,
+          "sha256": "590d47a7106575983c90780c06f386ba8076931bf47c2b69f54501069089ffe9",
           "baseline": "no_subjective_memory",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_subjective_memory_seed04.json",
           "kind": "per_scenario_json",
-          "bytes": 30391,
-          "sha256": "fb6b0c5c6fada32b4749773ebd843ee00694d4ed7ac08466b8cf42242071a749",
+          "bytes": 31110,
+          "sha256": "263c15b433b306b7c0facd0fa8fadcd1eec41e8d8007f775dff90e8d158bb2a1",
           "baseline": "no_subjective_memory",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_subjective_memory_seed04.json",
           "kind": "per_scenario_json",
-          "bytes": 33252,
-          "sha256": "27264acf89c21e580aeed874035e60946de68a46c26c11ff6470f98a2356be21",
+          "bytes": 33970,
+          "sha256": "3f3b340733509a673b9206ef1b30c56c6bf6a269fddacedae19fd64332bab32d",
           "baseline": "no_subjective_memory",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
           "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_subjective_memory_seed04.json",
           "kind": "per_scenario_json",
-          "bytes": 32808,
-          "sha256": "dd406342217bc35daf05e161ed6306c2dc0fd45813a15d177526cda4b616ee33",
+          "bytes": 33526,
+          "sha256": "a4d328aab7b5db4d337297deaa5dc510184cb750bdcd47e1b7023677cb5d80a7",
           "baseline": "no_subjective_memory",
           "scenarioId": "pf.branna_forgiveness_requires_memory"
         },
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_subjective_memory_seed05.json",
           "kind": "per_scenario_json",
-          "bytes": 34522,
-          "sha256": "9e0373a29e90997f096cb000cfac188c1414ea76f1eb4f5f16e31f773502921a",
+          "bytes": 35240,
+          "sha256": "43db0917c3953b966ffba37e0a1b0093065304d2a7c011306593bd38b1ccbfcc",
           "baseline": "no_subjective_memory",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_subjective_memory_seed05.json",
           "kind": "per_scenario_json",
-          "bytes": 30391,
-          "sha256": "4ec23645159b2577dcc97a54f0c8101f724ba45538cddaa3670ce4324f2b6b75",
+          "bytes": 31110,
+          "sha256": "7f765474b0960d751c34941cb63d5cbd8927870f1d5281a4866c0984f48c79ea",
           "baseline": "no_subjective_memory",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_subjective_memory_seed05.json",
           "kind": "per_scenario_json",
-          "bytes": 33252,
-          "sha256": "5eb30858fe1d00f66869291ed981b92803190867cfee50c060c1690a56dce7e1",
+          "bytes": 33970,
+          "sha256": "a3598060e26874f5745cf4c054ffa22741e4236033bad248d405faec2a35d257",
           "baseline": "no_subjective_memory",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
           "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_subjective_memory_seed05.json",
           "kind": "per_scenario_json",
-          "bytes": 32808,
-          "sha256": "afce44a1eb6e6190f8343d4919d6ac10bba13091de5c30e13c5506e5f56afbd9",
+          "bytes": 33526,
+          "sha256": "6c0fd784ffe8a3dcbe17b64a2b9d5ffc088a77a4ae6d7918f851bb0a29b2edf0",
           "baseline": "no_subjective_memory",
           "scenarioId": "pf.branna_forgiveness_requires_memory"
         },
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_relationship_edge_seed01.json",
           "kind": "per_scenario_json",
-          "bytes": 52159,
-          "sha256": "7773f92ffd12b2804298f7734e4b6c375554be959855026961b4b669ad28089c",
+          "bytes": 52877,
+          "sha256": "615504261c61bd4ef197f85188a3ad85a9f907af6d9ffc2891bd8d35b890206a",
           "baseline": "no_relationship_edge",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_relationship_edge_seed01.json",
           "kind": "per_scenario_json",
-          "bytes": 39704,
-          "sha256": "95f3e81fcdd23d5d59340ba286a82a3c9874fdf8d63a6e684ec261de03de4609",
+          "bytes": 40423,
+          "sha256": "e3b3b64fafeae85c6892d424cb2e6d8adc18b13e02e0a48d96d10ecb3e0273af",
           "baseline": "no_relationship_edge",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_relationship_edge_seed01.json",
           "kind": "per_scenario_json",
-          "bytes": 41545,
-          "sha256": "4313048312d9f7a9b83c4251b275f0a4e248c8f465c34eef0bbef9e46add5e16",
+          "bytes": 42263,
+          "sha256": "b7bb2a285a92007e288a9177b17619394cedf2d32289abb8c916262c68bd37b8",
           "baseline": "no_relationship_edge",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
           "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_relationship_edge_seed01.json",
           "kind": "per_scenario_json",
-          "bytes": 51580,
-          "sha256": "ec974011b7ab2c4fa7335e45af364f75e36973d32fbf10b04b245a3c4e0594be",
+          "bytes": 52298,
+          "sha256": "85ef0f4be13daa2e4cb83322565327a12ccebfb20e33a08d669571041b32ab8a",
           "baseline": "no_relationship_edge",
           "scenarioId": "pf.branna_forgiveness_requires_memory"
         },
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_relationship_edge_seed02.json",
           "kind": "per_scenario_json",
-          "bytes": 52159,
-          "sha256": "1794c381ed3305603ab5022c83e9ae5a8191a222a1241b4296c30b27880fb60a",
+          "bytes": 52877,
+          "sha256": "2961388342ce2899eaae2851af7bbc240f8155c2730800cccf04b277b38b627e",
           "baseline": "no_relationship_edge",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_relationship_edge_seed02.json",
           "kind": "per_scenario_json",
-          "bytes": 39704,
-          "sha256": "475ef55e6bb42acd0d4c44f2aa6bd345f368f6e2e805ae11179ac9e0b8662014",
+          "bytes": 40423,
+          "sha256": "d9868d17a2286f5d20ce6c8d3cf3dc4ed0cb2e324825bb3801694b1fe71f93d4",
           "baseline": "no_relationship_edge",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_relationship_edge_seed02.json",
           "kind": "per_scenario_json",
-          "bytes": 41545,
-          "sha256": "9f79ed053ef887b6e2bf19248efd3c1c3fff233c3c57eaa5cfc69007031364e5",
+          "bytes": 42263,
+          "sha256": "dad2d1daa48f3cac51bc4ee4b4e8ce9ddbf183293b6fe5634bd8ee47287b0b2d",
           "baseline": "no_relationship_edge",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
           "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_relationship_edge_seed02.json",
           "kind": "per_scenario_json",
-          "bytes": 51580,
-          "sha256": "4ca719b50afd4fcfa89dbd40518c4d384c48762c77ca07275b34172b7da3db72",
+          "bytes": 52298,
+          "sha256": "ce35442c76283c4aedae7124b770ee875f3f1720265381e25aed0e783d613d8e",
           "baseline": "no_relationship_edge",
           "scenarioId": "pf.branna_forgiveness_requires_memory"
         },
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_relationship_edge_seed03.json",
           "kind": "per_scenario_json",
-          "bytes": 52159,
-          "sha256": "b82030179cc4680c9c648eb1d2567552da55dbd00773038d4c3fda33447b3dbe",
+          "bytes": 52877,
+          "sha256": "409f1766ea5dc072984aef51ddb2576fcb6273c2ffaaf0e30b34f97a438d5345",
           "baseline": "no_relationship_edge",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_relationship_edge_seed03.json",
           "kind": "per_scenario_json",
-          "bytes": 39704,
-          "sha256": "93894567b7cbbff1f0ce3f498c837f7db9d63487bf50bc7a1c40e202338817a5",
+          "bytes": 40423,
+          "sha256": "fe24b7d5c25e96f25c456112a2e35861eea44f992526fed2af66108d7bbbec1c",
           "baseline": "no_relationship_edge",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_relationship_edge_seed03.json",
           "kind": "per_scenario_json",
-          "bytes": 41545,
-          "sha256": "fe220e89323c01fc568ca820424a608c9ea42050482e067739becd928b3ec308",
+          "bytes": 42263,
+          "sha256": "00d04f8543c4410da534c9abbb9666a26c137398e685f732bf9ed73f6401a5f7",
           "baseline": "no_relationship_edge",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
           "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_relationship_edge_seed03.json",
           "kind": "per_scenario_json",
-          "bytes": 51580,
-          "sha256": "0784da5ae1e8c76d807736de00bcb765b4e794610258b45ee137b3c75ab2793b",
+          "bytes": 52298,
+          "sha256": "c5906a15e148d642d107906608194dd5a8064ea514d174ddf489413c9deb1b40",
           "baseline": "no_relationship_edge",
           "scenarioId": "pf.branna_forgiveness_requires_memory"
         },
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_relationship_edge_seed04.json",
           "kind": "per_scenario_json",
-          "bytes": 52159,
-          "sha256": "6780caedc4f81e16edeb8df1dec3117223c32ed3d314c4b34fb4aaa18c146edd",
+          "bytes": 52877,
+          "sha256": "d15672b257868ac894572be610195e091c1de1f6b22c5b25c2b3cb47a0648d11",
           "baseline": "no_relationship_edge",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_relationship_edge_seed04.json",
           "kind": "per_scenario_json",
-          "bytes": 39704,
-          "sha256": "e17f6aad12e8d074d5e7f660b65f4c484b04d8fead323d261949babd60d30fae",
+          "bytes": 40423,
+          "sha256": "2159f8d64c48156aeb48822c06ecf355a99648103b826d25b3fe433520340534",
           "baseline": "no_relationship_edge",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_relationship_edge_seed04.json",
           "kind": "per_scenario_json",
-          "bytes": 41545,
-          "sha256": "a4ac2858ba8ef33a9570ca54e9318037445850909be4f732453a3f49f4ca4d6f",
+          "bytes": 42263,
+          "sha256": "c34ac3e83eb0bdc90a09fafd10696e6c871d8a800383f23dc7fe906054a4c63b",
           "baseline": "no_relationship_edge",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
           "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_relationship_edge_seed04.json",
           "kind": "per_scenario_json",
-          "bytes": 51580,
-          "sha256": "f8a8ea52be457c6c8258e55374255dae3e1adb22ce456e53da25e057b7d600f6",
+          "bytes": 52298,
+          "sha256": "5fa2c85d2b1ecbfe05956a1cec29ade41bfc048ce37f1631e69289efce94c20e",
           "baseline": "no_relationship_edge",
           "scenarioId": "pf.branna_forgiveness_requires_memory"
         },
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_relationship_edge_seed05.json",
           "kind": "per_scenario_json",
-          "bytes": 52159,
-          "sha256": "9fc5f8ec0ba14dd6edf6b8e0e0a850afa9ea1cb965639fc05d9c6dfeff6c8f38",
+          "bytes": 52877,
+          "sha256": "140dc13f22312e2a54a526c6dff725bf51125346b02b19e42b6c08ada9c3db47",
           "baseline": "no_relationship_edge",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_relationship_edge_seed05.json",
           "kind": "per_scenario_json",
-          "bytes": 39704,
-          "sha256": "92e54a9dd54617e01bd2f317493e6c9df1b73d0f0e4678ba99c13878d7baae72",
+          "bytes": 40423,
+          "sha256": "26fe7a96245b644fb2623ec104c95a12da8bfa599ea302be1ad102301db92a9b",
           "baseline": "no_relationship_edge",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_relationship_edge_seed05.json",
           "kind": "per_scenario_json",
-          "bytes": 41545,
-          "sha256": "f05ff655df1330dc5f370125387273b11802980b87e16d89629209d9ef01e76e",
+          "bytes": 42263,
+          "sha256": "11b0ff67ab6be47f854cb721277fb152d14bb4750f69354cf0d0389e35090e9a",
           "baseline": "no_relationship_edge",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
           "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_relationship_edge_seed05.json",
           "kind": "per_scenario_json",
-          "bytes": 51580,
-          "sha256": "1a76cdbb706e99a3ae2eb7f619c62855e6db4b1b61c266b17af31fbc85e1fe80",
+          "bytes": 52298,
+          "sha256": "a4ef48a0739b2b5f24b7bccd74e74c8d7b58fa39638f4ec2ca4fbb8f29306e05",
           "baseline": "no_relationship_edge",
           "scenarioId": "pf.branna_forgiveness_requires_memory"
         },
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_shuffled_memory_owner_seed01.json",
           "kind": "per_scenario_json",
-          "bytes": 52164,
-          "sha256": "55011461bb48052f3d763469a64ee2b543a5bcf20e878af65a609c32759ec7a1",
+          "bytes": 52882,
+          "sha256": "d8bec4521f680849c0d1fa484ffe2478d8deb34b5b984030f53f2b3780f3fb3c",
           "baseline": "shuffled_memory_owner",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_shuffled_memory_owner_seed01.json",
           "kind": "per_scenario_json",
-          "bytes": 39709,
-          "sha256": "2e1b7e6f69640251b7a8361b60975d93cc9cbcf7361ac3a7dc9084ad669f44ad",
+          "bytes": 40428,
+          "sha256": "a314340ad4918df68f52492d657c178e92db29677aaae45d73460f0a19691621",
           "baseline": "shuffled_memory_owner",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_shuffled_memory_owner_seed01.json",
           "kind": "per_scenario_json",
-          "bytes": 41550,
-          "sha256": "5ad2e94b230a6f44687194506e34dae7b6cd6da711710e84102e6b5005344f04",
+          "bytes": 42268,
+          "sha256": "f35a2f20c4d79543ac2f3c1dce9422277e77be2191d0420cf144a2009ff32229",
           "baseline": "shuffled_memory_owner",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
           "path": "per_scenario/pf.branna_forgiveness_requires_memory_shuffled_memory_owner_seed01.json",
           "kind": "per_scenario_json",
-          "bytes": 51585,
-          "sha256": "8faa6e603c0d89817f90716cb1f23243bfa45e0e72fa7a3ad9ac2772273cfed1",
+          "bytes": 52303,
+          "sha256": "f80defcf29e726d6e0857461ae788f3db0643ce14b46aa7f5f36d436f2df9f6c",
           "baseline": "shuffled_memory_owner",
           "scenarioId": "pf.branna_forgiveness_requires_memory"
         },
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_shuffled_memory_owner_seed02.json",
           "kind": "per_scenario_json",
-          "bytes": 52164,
-          "sha256": "8126ff0fd6340a7e2ce5869ae00490085867300b0f63272bfa74ca95c6048162",
+          "bytes": 52882,
+          "sha256": "006ac9b275c4ab6791dfa0bd7b096e7b7b1efaf1cafe06e9e102fa2b77e6b500",
           "baseline": "shuffled_memory_owner",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_shuffled_memory_owner_seed02.json",
           "kind": "per_scenario_json",
-          "bytes": 39709,
-          "sha256": "d739f261d52bebe12769031858b5fe24a074e089f8224faddeff846ed55571d7",
+          "bytes": 40428,
+          "sha256": "43211f23e917fc023c5efc6b54f2db9a4c0ae344c6bc5b50db0b28a8fa9bc9c3",
           "baseline": "shuffled_memory_owner",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_shuffled_memory_owner_seed02.json",
           "kind": "per_scenario_json",
-          "bytes": 41550,
-          "sha256": "8b0e815db32e0e66f689935c208a074ed8e73d0a3720fdaa7cb76db27f5cf851",
+          "bytes": 42268,
+          "sha256": "0c583f9a85ce1ef2b513604bedc68f52f50ab4d278c889bd50b108c4e4ad8b61",
           "baseline": "shuffled_memory_owner",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
           "path": "per_scenario/pf.branna_forgiveness_requires_memory_shuffled_memory_owner_seed02.json",
           "kind": "per_scenario_json",
-          "bytes": 51585,
-          "sha256": "01416ee8067aba159e0cf62129044610bec090f406c7ee3d476f52640a9bdd99",
+          "bytes": 52303,
+          "sha256": "22261579a9b7e3f38c88d658e9b6ecc82edc3ef228bd3e466903a60c10c37dab",
           "baseline": "shuffled_memory_owner",
           "scenarioId": "pf.branna_forgiveness_requires_memory"
         },
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_shuffled_memory_owner_seed03.json",
           "kind": "per_scenario_json",
-          "bytes": 52164,
-          "sha256": "ca8185d5873835facf55c60929e1603b377ca6467db6fe8fa3cf7e43fb5a8918",
+          "bytes": 52882,
+          "sha256": "329d0b211a57edd6f1df22600c12273440efffe589bc304cb68062e81fbb832e",
           "baseline": "shuffled_memory_owner",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_shuffled_memory_owner_seed03.json",
           "kind": "per_scenario_json",
-          "bytes": 39709,
-          "sha256": "ce71475a0045787e2997d5a485cd58a97d8b9f131ae328633bc3611a416d8534",
+          "bytes": 40428,
+          "sha256": "195743771fd5cbf9c2acd885f5038ed659ef64b89ee98af7213076fd34525392",
           "baseline": "shuffled_memory_owner",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_shuffled_memory_owner_seed03.json",
           "kind": "per_scenario_json",
-          "bytes": 41550,
-          "sha256": "ec89ca7e3eeccb935cacc42b443e474364cf10404a10b4249c21973fd26d5683",
+          "bytes": 42268,
+          "sha256": "3cacd3dc4096c2aa0205165a70f0fb7c0760a8a4820d39fb477971e32b193b96",
           "baseline": "shuffled_memory_owner",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
           "path": "per_scenario/pf.branna_forgiveness_requires_memory_shuffled_memory_owner_seed03.json",
           "kind": "per_scenario_json",
-          "bytes": 51585,
-          "sha256": "c0b3d6ff25ecb0e5baa66bc192822c2689f261f31075da926ee9341009f58311",
+          "bytes": 52303,
+          "sha256": "200149b611fe9a9c5a3790dde180d2df50838da97cecdee7a31934c53728e018",
           "baseline": "shuffled_memory_owner",
           "scenarioId": "pf.branna_forgiveness_requires_memory"
         },
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_shuffled_memory_owner_seed04.json",
           "kind": "per_scenario_json",
-          "bytes": 52164,
-          "sha256": "2b4bd16ed4f51958ec0d589054bb644e4c1e0c2be4846bca365170427774684c",
+          "bytes": 52882,
+          "sha256": "37d15cd5eaab608a384086aa9ddaebca2ce6e5025bba0d64ddfbbd301af7db59",
           "baseline": "shuffled_memory_owner",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_shuffled_memory_owner_seed04.json",
           "kind": "per_scenario_json",
-          "bytes": 39709,
-          "sha256": "208c75ef493f27281236a2b2566b672107a96800aa3cea89dbca8441875132c8",
+          "bytes": 40428,
+          "sha256": "7cc2831b3153ea56e8328a0f66c6dcf74c1c551c7dc54f5b9cf2ae8df5806b49",
           "baseline": "shuffled_memory_owner",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_shuffled_memory_owner_seed04.json",
           "kind": "per_scenario_json",
-          "bytes": 41550,
-          "sha256": "9ee275b3589fdad1d7fd63b47af8bbdc9ee27e0299156eabf9a4e93378d8d39c",
+          "bytes": 42268,
+          "sha256": "4e92fd9d1347af83f2414a8a7d9544de3e7dc35d8ff550bd63e566025fb2bed7",
           "baseline": "shuffled_memory_owner",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
           "path": "per_scenario/pf.branna_forgiveness_requires_memory_shuffled_memory_owner_seed04.json",
           "kind": "per_scenario_json",
-          "bytes": 51585,
-          "sha256": "eedcd2d2abcb72ea8e72c64b060bcb2eb4feb57f05c24901ba0fae7d1992a180",
+          "bytes": 52303,
+          "sha256": "267d542382d7cdb091633eb2eef6d70ea28942497b564b70081afd2d2095e99e",
           "baseline": "shuffled_memory_owner",
           "scenarioId": "pf.branna_forgiveness_requires_memory"
         },
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_shuffled_memory_owner_seed05.json",
           "kind": "per_scenario_json",
-          "bytes": 52164,
-          "sha256": "71561b9ed5ce3c1c4469544233c0ce8557367536f17bf0abb079dbe18e1b5aa6",
+          "bytes": 52882,
+          "sha256": "37e5c56c428e6d78b3fb63f651874e2b8229f5c9899dd893243b9f7aeee66eb7",
           "baseline": "shuffled_memory_owner",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_shuffled_memory_owner_seed05.json",
           "kind": "per_scenario_json",
-          "bytes": 39709,
-          "sha256": "753244e4983daee8b1a41bbb023ca38ad7d27e14bb0aec2654df8bdc4dbf1d16",
+          "bytes": 40428,
+          "sha256": "5d3ab219f15cc9a5ffcd0a229a97ec4b8b616e0417db1a19e203dc3276298791",
           "baseline": "shuffled_memory_owner",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_shuffled_memory_owner_seed05.json",
           "kind": "per_scenario_json",
-          "bytes": 41550,
-          "sha256": "d02db9f09cfbe0342f84349a8b63a7bb73faa98cbb1f213d4df5ab5b1c1fbefb",
+          "bytes": 42268,
+          "sha256": "3bd3e5579c7735d43b9f9b7d88f2c6fb05c06dc2ea36c310618d1d9f0f3d1b73",
           "baseline": "shuffled_memory_owner",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
           "path": "per_scenario/pf.branna_forgiveness_requires_memory_shuffled_memory_owner_seed05.json",
           "kind": "per_scenario_json",
-          "bytes": 51585,
-          "sha256": "f62dc1a906c7bee837b809128cb6a4907968c44e03d5a9a57b430f2b7d98351d",
+          "bytes": 52303,
+          "sha256": "69751b0b37cbb72c40576d5c9a17bcce1d6d4ca68ce43821200b739519e04e94",
           "baseline": "shuffled_memory_owner",
           "scenarioId": "pf.branna_forgiveness_requires_memory"
         },
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_evidence_link_removal_seed01.json",
           "kind": "per_scenario_json",
-          "bytes": 52163,
-          "sha256": "c03b19a50830302d0403b1b11d2a3c2b45db2f350521cf455b882d5031582945",
+          "bytes": 52881,
+          "sha256": "2e90b2e3d28bf6ed0587b07bd063278772245da5800285ed7525834fcaed241c",
           "baseline": "evidence_link_removal",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_evidence_link_removal_seed01.json",
           "kind": "per_scenario_json",
-          "bytes": 39707,
-          "sha256": "84a6f5dcd125ef6779a7d4146d0f8cd1e5e1e5e4650f7c8af254afcd769810c7",
+          "bytes": 40426,
+          "sha256": "c0141777866d1c5f8a917a7149a1e58f176f5120f7cb2c91e5955734497aa5b6",
           "baseline": "evidence_link_removal",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_evidence_link_removal_seed01.json",
           "kind": "per_scenario_json",
-          "bytes": 41548,
-          "sha256": "c0b11f980cfb55b2f63671b75aa8c6446e3f1061dc0b7d32733dabc57956f3e5",
+          "bytes": 42266,
+          "sha256": "a29ae561adc63b70491ac47338838f04b4d063ea4b5a10ba7aa94b63270c438b",
           "baseline": "evidence_link_removal",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
           "path": "per_scenario/pf.branna_forgiveness_requires_memory_evidence_link_removal_seed01.json",
           "kind": "per_scenario_json",
-          "bytes": 51583,
-          "sha256": "aaa73b513a290a02b6a498e5db3ab3e67b7b127cf8bfa91d5790a880592eacaf",
+          "bytes": 52301,
+          "sha256": "663b6fdbea112b8890b1c3efafe38210b074e23c513711172dd4f9411e022971",
           "baseline": "evidence_link_removal",
           "scenarioId": "pf.branna_forgiveness_requires_memory"
         },
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_evidence_link_removal_seed02.json",
           "kind": "per_scenario_json",
-          "bytes": 52163,
-          "sha256": "5580352798577e5d08e7a8929b37a8421fb616274256ac4aa3ec9e282d624398",
+          "bytes": 52881,
+          "sha256": "2547bb0f9f76126f72c6d7d022191c5c74dee713968e5f8131ddf802d29c5f16",
           "baseline": "evidence_link_removal",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_evidence_link_removal_seed02.json",
           "kind": "per_scenario_json",
-          "bytes": 39707,
-          "sha256": "a2b8dec3ad68f46f088009a87562b90137febc8791505b798fec56f44b77e067",
+          "bytes": 40426,
+          "sha256": "179930a002bafa9d18e4f2a42b517b5c852a970a45260aba6c76634491bf56b3",
           "baseline": "evidence_link_removal",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_evidence_link_removal_seed02.json",
           "kind": "per_scenario_json",
-          "bytes": 41548,
-          "sha256": "d44dd7524e50dab0ecf553cd17b0ede8468971c2288c9e12dcdf62b3941bc447",
+          "bytes": 42266,
+          "sha256": "473e233dc7f95b78f4663ac8c6b361b1c04a54d95e25a9f10f3d8a4e41ab880f",
           "baseline": "evidence_link_removal",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
           "path": "per_scenario/pf.branna_forgiveness_requires_memory_evidence_link_removal_seed02.json",
           "kind": "per_scenario_json",
-          "bytes": 51583,
-          "sha256": "a803b130ed13e201048f0a63a38b1340500ea39da7d1ec9efb617413ef5fbbf6",
+          "bytes": 52301,
+          "sha256": "cea4cef7ec08c794eb27a0f9f819d83dd163d5d7a59f28981b4007d139d1127e",
           "baseline": "evidence_link_removal",
           "scenarioId": "pf.branna_forgiveness_requires_memory"
         },
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_evidence_link_removal_seed03.json",
           "kind": "per_scenario_json",
-          "bytes": 52163,
-          "sha256": "50d164c8adb341a57196f90b1db0066f2f204e9b8b728e39038b52dac29131e5",
+          "bytes": 52881,
+          "sha256": "f90899aee3de0dd6eddf9cbab7e335662da8ded6eceac0722b9fa7443eb25faa",
           "baseline": "evidence_link_removal",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_evidence_link_removal_seed03.json",
           "kind": "per_scenario_json",
-          "bytes": 39707,
-          "sha256": "9552e414c78581b6b05b4a0b4665a0795c20c6b86ec50c140bd7f31673063eb9",
+          "bytes": 40426,
+          "sha256": "779cf54631445242ff48963cc0d681f6eb8d1d7fecb8e4d3ac0f3b0312163ac1",
           "baseline": "evidence_link_removal",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_evidence_link_removal_seed03.json",
           "kind": "per_scenario_json",
-          "bytes": 41548,
-          "sha256": "7ba79a77feaf631ee2d45247a42be17597d0319b20568c444c17a4351a0acf66",
+          "bytes": 42266,
+          "sha256": "fcd831108f02aea754bcf498805e52bf7e612727da5e2e73d7effe7a0d23fe1f",
           "baseline": "evidence_link_removal",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
           "path": "per_scenario/pf.branna_forgiveness_requires_memory_evidence_link_removal_seed03.json",
           "kind": "per_scenario_json",
-          "bytes": 51583,
-          "sha256": "3777bf7ff5dfa8514326b1aaaa2960f9722de7381551b549ba9ee897414ef58a",
+          "bytes": 52301,
+          "sha256": "043313ca39aadb2e277d7681927791dbaa9ab63240c98028af88009ab50725ac",
           "baseline": "evidence_link_removal",
           "scenarioId": "pf.branna_forgiveness_requires_memory"
         },
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_evidence_link_removal_seed04.json",
           "kind": "per_scenario_json",
-          "bytes": 52163,
-          "sha256": "1d568deeb9271e128536331df59f708ba3cad8e0c792b04d20cadb6758648b0e",
+          "bytes": 52881,
+          "sha256": "1bb725d95b418e237bb77c6a62fc649dfc67448d95c31fcae3cf8e351d24f869",
           "baseline": "evidence_link_removal",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_evidence_link_removal_seed04.json",
           "kind": "per_scenario_json",
-          "bytes": 39707,
-          "sha256": "64d31b84f069508939750c22f4a5c9e524386c69e08f6092b591f609fc7d0b00",
+          "bytes": 40426,
+          "sha256": "feb4ef0ed410609467c24dfa1220eac46f33e04fcc1001bd59789cb8c39ed807",
           "baseline": "evidence_link_removal",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_evidence_link_removal_seed04.json",
           "kind": "per_scenario_json",
-          "bytes": 41548,
-          "sha256": "e83218070d11f6014398798d4f60922de7538c38d75e8a5086130227cc3a40e8",
+          "bytes": 42266,
+          "sha256": "64593f0f8491e04e907d72db933517846aa34a9b34c369d81d0c4c33e94776ed",
           "baseline": "evidence_link_removal",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
           "path": "per_scenario/pf.branna_forgiveness_requires_memory_evidence_link_removal_seed04.json",
           "kind": "per_scenario_json",
-          "bytes": 51583,
-          "sha256": "ba60410b696195ee299028a87c6403c598b73d5cbc60f272c29b8d05afe63491",
+          "bytes": 52301,
+          "sha256": "13e2132405aea28d557db7b1329eb863dfa84dfb833f6cfca13a90b381365891",
           "baseline": "evidence_link_removal",
           "scenarioId": "pf.branna_forgiveness_requires_memory"
         },
         {
           "path": "per_scenario/pf.shared_chat_builds_traceable_trust_evidence_link_removal_seed05.json",
           "kind": "per_scenario_json",
-          "bytes": 52163,
-          "sha256": "5554a9e0a7c728d0836856d4887bfe02fbd4561f9ec5979d6cd3bb3681700da0",
+          "bytes": 52881,
+          "sha256": "baea2abd909ac4738aee172a27a8e3cd1156e4e1bd133e0eecdf331636bf721c",
           "baseline": "evidence_link_removal",
           "scenarioId": "pf.shared_chat_builds_traceable_trust"
         },
         {
           "path": "per_scenario/pf.repair_talk_requires_memory_trace_evidence_link_removal_seed05.json",
           "kind": "per_scenario_json",
-          "bytes": 39707,
-          "sha256": "0223890f25b5ddffc652612d40039834a117334140d8c1f4d9017469bebb1117",
+          "bytes": 40426,
+          "sha256": "0dc123b6c644f584bb3701b4ae38873737ad55c51a894ade972c7b9efbc8aec4",
           "baseline": "evidence_link_removal",
           "scenarioId": "pf.repair_talk_requires_memory_trace"
         },
         {
           "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_evidence_link_removal_seed05.json",
           "kind": "per_scenario_json",
-          "bytes": 41548,
-          "sha256": "ff02731183798c0d1cb2e18883925558ffbab5a295bbbea292c92981fb3b49b9",
+          "bytes": 42266,
+          "sha256": "f88711f76acb3b9f42c2d0a760a19fed845638698cc4e8afb8b29eab2de4b14a",
           "baseline": "evidence_link_removal",
           "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
         },
         {
           "path": "per_scenario/pf.branna_forgiveness_requires_memory_evidence_link_removal_seed05.json",
           "kind": "per_scenario_json",
-          "bytes": 51583,
-          "sha256": "81ebaac9f21ca83dcb4772e615d66c57ddbcfc4c811cbed663e65e95b6c3095c",
+          "bytes": 52301,
+          "sha256": "5a75945a6186b4a0c06c0ebefe4567c5ffbe2bbfbf7cd1e180bf9847a4a15e8b",
           "baseline": "evidence_link_removal",
           "scenarioId": "pf.branna_forgiveness_requires_memory"
         },
@@ -5760,8 +5901,8 @@
         {
           "path": "goal_progress_trace.jsonl",
           "kind": "goal_progress_trace_jsonl",
-          "bytes": 637230,
-          "sha256": "263774dc48d91bc80d76f72fdd30707fdf51ec9f8dcf04ab352f51c007a6cfd9",
+          "bytes": 647315,
+          "sha256": "1dfee0ca1c72a39f5fce19ba88303420ebe9c7519bcb94ba138b5ef08e05580d",
           "rowCount": 20,
           "baseline": "full_motivational_delegation"
         },
@@ -5769,16 +5910,22 @@
           "path": "counterfactual_replay.jsonl",
           "kind": "counterfactual_replay_jsonl",
           "bytes": 477550,
-          "sha256": "578cfcc3578c8955a0f44dafbe6428e4c91eb0e32cc0cb9ea9718c48fc1a8fd7",
+          "sha256": "9a01e189e33b84273f173ffc8d3108f5b450088ed29675b2da4a98c021ee10c8",
           "rowCount": 20,
           "baseline": "full_motivational_delegation"
         },
         {
           "path": "memory_ablation_trace.jsonl",
           "kind": "memory_ablation_trace_jsonl",
-          "bytes": 109500,
-          "sha256": "5614b9bc1979912924e0ba8c1a4abe7699fd703bda3a6be8c0ffcef1ab0520a5",
+          "bytes": 114940,
+          "sha256": "2da0008863ae6a9681ab54b0a32f1eb547c1d52d80a8c46b76cce303a6ca32f9",
           "rowCount": 80
+        },
+        {
+          "path": "llm_evidence.json",
+          "kind": "llm_evidence_json",
+          "bytes": 179482,
+          "sha256": "be77904acf072e039c31baa8fae09dad3a0c83bf93f5ee4e2b241593e2f5a6b6"
         }
       ],
       "verification": {
@@ -6060,7 +6207,7 @@
         },
         {
           "metric": "process_believability_score",
-          "mean": 0.948571,
+          "mean": 0.948572,
           "std": 0.019795,
           "n": 20,
           "baseline": "no_subjective_memory",
@@ -6420,7 +6567,7 @@
               "n": 20
             },
             "process_believability_score": {
-              "mean": 0.948571,
+              "mean": 0.948572,
               "std": 0.019795,
               "n": 20
             },
@@ -6570,7 +6717,7 @@
           "no_subjective_memory": {
             "goal_success_rate": 0.0,
             "required_process_coverage": -0.257143,
-            "process_believability_score": -0.051429,
+            "process_believability_score": -0.051428,
             "causal_trace_coverage": 0.0,
             "relationship_memory_causal_use_rate": 0.0,
             "counterfactual_tool_selection_change_rate": -0.375,
@@ -6610,25 +6757,146 @@
       "llmEvidence": {
         "schemaVersion": "process_llm_evidence.v1",
         "providerUsageSchemaVersion": "provider_usage_actual.v1",
-        "source": "current_run",
-        "providerMode": "rule",
+        "source": "latest_cache",
+        "providerMode": "cloud",
         "seedCount": 5,
-        "recordCount": 0,
-        "cloudCallCount": 0,
+        "recordCount": 100,
+        "cloudCallCount": 100,
         "fallbackCount": 0,
         "totals": {
-          "calls": 0,
-          "tokens": 0,
-          "promptTokens": 0,
-          "completionTokens": 0,
-          "latencyTotalMs": 0,
-          "latencyAvgMs": 0.0,
-          "cost": 0.0,
-          "currency": null
+          "calls": 100,
+          "tokens": 189949,
+          "promptTokens": 167610,
+          "completionTokens": 22339,
+          "latencyTotalMs": 308612,
+          "latencyAvgMs": 3086.12,
+          "cost": 0.02972032,
+          "currency": "USD"
         },
-        "byScenario": {},
-        "byBaseline": {},
-        "records": []
+        "byScenario": {
+          "pf.affiliation_bias_remains_agent_initiated": {
+            "calls": 25,
+            "tokens": 53497,
+            "promptTokens": 47782,
+            "completionTokens": 5715,
+            "latencyTotalMs": 68009,
+            "latencyAvgMs": 2720.36,
+            "cost": 0.00828968,
+            "currency": "USD"
+          },
+          "pf.branna_forgiveness_requires_memory": {
+            "calls": 25,
+            "tokens": 45614,
+            "promptTokens": 41041,
+            "completionTokens": 4573,
+            "latencyTotalMs": 95682,
+            "latencyAvgMs": 3827.28,
+            "cost": 0.00702618,
+            "currency": "USD"
+          },
+          "pf.repair_talk_requires_memory_trace": {
+            "calls": 25,
+            "tokens": 37287,
+            "promptTokens": 30382,
+            "completionTokens": 6905,
+            "latencyTotalMs": 82484,
+            "latencyAvgMs": 3299.36,
+            "cost": 0.00618688,
+            "currency": "USD"
+          },
+          "pf.shared_chat_builds_traceable_trust": {
+            "calls": 25,
+            "tokens": 53551,
+            "promptTokens": 48405,
+            "completionTokens": 5146,
+            "latencyTotalMs": 62437,
+            "latencyAvgMs": 2497.48,
+            "cost": 0.00821758,
+            "currency": "USD"
+          }
+        },
+        "byBaseline": {
+          "evidence_link_removal": {
+            "calls": 20,
+            "tokens": 38193,
+            "promptTokens": 33682,
+            "completionTokens": 4511,
+            "latencyTotalMs": 63286,
+            "latencyAvgMs": 3164.3,
+            "cost": 0.00597856,
+            "currency": "USD"
+          },
+          "full_motivational_delegation": {
+            "calls": 20,
+            "tokens": 38083,
+            "promptTokens": 33957,
+            "completionTokens": 4126,
+            "latencyTotalMs": 57752,
+            "latencyAvgMs": 2887.6,
+            "cost": 0.00590926,
+            "currency": "USD"
+          },
+          "no_relationship_edge": {
+            "calls": 20,
+            "tokens": 38118,
+            "promptTokens": 33252,
+            "completionTokens": 4866,
+            "latencyTotalMs": 65214,
+            "latencyAvgMs": 3260.7,
+            "cost": 0.00601776,
+            "currency": "USD"
+          },
+          "no_subjective_memory": {
+            "calls": 20,
+            "tokens": 37305,
+            "promptTokens": 32705,
+            "completionTokens": 4600,
+            "latencyTotalMs": 61724,
+            "latencyAvgMs": 3086.2,
+            "cost": 0.0058667,
+            "currency": "USD"
+          },
+          "shuffled_memory_owner": {
+            "calls": 20,
+            "tokens": 38250,
+            "promptTokens": 34014,
+            "completionTokens": 4236,
+            "latencyTotalMs": 60636,
+            "latencyAvgMs": 3031.8,
+            "cost": 0.00594804,
+            "currency": "USD"
+          }
+        },
+        "sourceArtifacts": [
+          {
+            "path": ".run/process-llm-evidence/cloud-branna-forgiveness-2026-05-29.json",
+            "sha256": "86a389dca6cd2d33737e8d3cefa1788c7756079f0457d993c475da269cfebea0",
+            "recordCount": 25,
+            "cloudCallCount": 25,
+            "fallbackCount": 0,
+            "scenarioIds": [
+              "pf.branna_forgiveness_requires_memory"
+            ]
+          },
+          {
+            "path": ".run/process-llm-evidence/cloud-3goalspec-2026-05-29.json",
+            "sha256": "0f558a04b1495d3a96cc9688a0047e74ef5d637bf497a741753719ede99166de",
+            "recordCount": 75,
+            "cloudCallCount": 75,
+            "fallbackCount": 0,
+            "scenarioIds": [
+              "pf.affiliation_bias_remains_agent_initiated",
+              "pf.repair_talk_requires_memory_trace",
+              "pf.shared_chat_builds_traceable_trust"
+            ]
+          }
+        ],
+        "cache": {
+          "loadedFrom": ".run/process-llm-evidence/latest.json",
+          "originalSource": "combined_named_cloud_artifacts_2026_05_29"
+        },
+        "recordsOmitted": 100,
+        "recordsArtifactHint": "llm_evidence.json"
       }
     }
   },
