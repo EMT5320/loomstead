@@ -95,6 +95,8 @@ git diff -- config/models.json config/models.example.json config/models.local.ex
 
 `pricing.source` 记录价格来源快照。供应商价格可能调整，真实成本以供应商账单为准。
 
+运行时还会对 cloud 结构化功能应用最低输出预算，避免 NPC 专属低预算 profile 截断 JSON：`dialogue=1100`、`event_reaction=900`、`night_reflection=1200`。profile 可以配置更高的 `maxTokens`；供应商硬上限仍由 `maxOutputTokensLimit` 或 Provider 内置上限裁剪。
+
 ## Debug 验收字段
 
 三条 LLM 验证路径的 debug 记录需要包含：

@@ -72,6 +72,11 @@ from app.tools import ToolExecutor
 
 
 CLIENT_CONTEXT_FIELDS = ("memoryEvidence", "relationshipEvidence", "playerProfile", "currentObjective", "availableInteractions")
+_STRUCTURED_FEATURE_MIN_MAX_TOKENS = {
+    FEATURE_DIALOGUE: 1100,
+    FEATURE_EVENT_REACTION: 900,
+    FEATURE_NIGHT_REFLECTION: 1200,
+}
 
 
 class _SafeFormatDict(dict[str, Any]):
@@ -3656,6 +3661,14 @@ class AgentRuntime:
         call_profile = dict(profile)
         if feature in {FEATURE_DIALOGUE, FEATURE_EVENT_REACTION, FEATURE_NIGHT_REFLECTION} and call_profile.get("provider") == "cloud":
             call_profile.setdefault("responseFormat", {"type": "json_object"})
+            min_max_tokens = _STRUCTURED_FEATURE_MIN_MAX_TOKENS.get(feature)
+            if min_max_tokens:
+                try:
+                    configured_max_tokens = int(call_profile.get("maxTokens") or 0)
+                except (TypeError, ValueError):
+                    configured_max_tokens = 0
+                if configured_max_tokens < min_max_tokens:
+                    call_profile["maxTokens"] = min_max_tokens
         return call_profile
 
     def _parse_structured_provider_result(
