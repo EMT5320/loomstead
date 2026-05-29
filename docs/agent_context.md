@@ -28,8 +28,8 @@ scope: 新对话入口、当前边界、最近下一步
 ## 3. 当前阶段
 
 - Phase 1（活着的世界）已收口；`world_main.tscn` 是默认完成基线。
-- Phase 2（骨架建立期）rule-level scaffold 已超额完成，正在 `P2.skeleton` checkpoint，等待主人选定下一阶段方向。
-- 候选方向见 `docs/phase_checkpoints.md` §P2.skeleton。B 真实 LLM 证据线已完成本轮 artifact 收口；浮浮酱推荐主人确认 claim 口径后转 A 求职展示线。
+- Phase 2（骨架建立期）rule-level scaffold 已超额完成；B 真实 LLM 证据线已完成本轮 artifact 收口。
+- `P2.exit` 研究向硬验收已通过 promoted-with-caveat 口径；当前进入 `P_demo.exit` 求职展示线。
 - 不再扩 Phase 1 旧玩法线；不在已稳定基础设施层（manifest / archive / promote / drift / strict gate）继续无 trigger 加固。
 
 ## 4. 当前边界
@@ -42,12 +42,10 @@ scope: 新对话入口、当前边界、最近下一步
 - 新增 schema、事件字段、Debug 字段、eval artifact、Godot 消费字段前先明确数据契约。
 - claim level 升级只能由主人显式确认；AI 助手只能维持或降级。
 
-## 5. 最近下一步（待主人选定方向）
+## 5. 最近下一步
 
-按治理协议 §5 输出 checkpoint review 后停下：
-
-- B 真实 LLM 证据线：4 个 Process Fidelity GoalSpec × 5 seed × 5 baseline 的 cloud provider usage 已整理并 promote 到 `.run/eval-promoted/run_2026-05-29T13-57-50Z`；剩主人确认 C2/C3/C4 claim level，以及 promotion 的 `needs_manual_review` 人工说明。推荐随后转 A 求职展示线。
-- A 求职展示线：60 秒 demo 录屏 + 技术博客主文 + README portfolio 化
+- B 真实 LLM 证据线：4 个 Process Fidelity GoalSpec × 5 seed × 5 baseline 的 cloud provider usage 已整理并 promote 到 `.run/eval-promoted/run_2026-05-29T13-57-50Z`；C2/C3/C4 已获主人确认使用 `promoted with caveat`，promotion note 已写入，机器状态仍保留 git.dirty / drift caveat。
+- A 求职展示线（进行中）：README portfolio 化初版、`paper/blog_main.md` 初稿、`docs/demo_capture_plan.md` 60 秒录屏脚本已落地；下一步是人工录制/截图素材与 README 进一步视觉化。
 - C Phase 4 玩家成为变量线：gossip 真扩散 + 1 跨日 emergence scenario
 - D Phase 3 内容深度线：4 核心 NPC 完整数据 + 5 作物 / 25 物品 / 30 工具
 

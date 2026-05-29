@@ -23,7 +23,7 @@
   },
   "sourceRunDir": ".run/eval-runs/run_2026-05-29T13-57-50Z",
   "promotedRunDir": ".run/eval-promoted/run_2026-05-29T13-57-50Z",
-  "promotionNote": "",
+  "promotionNote": "Owner reviewed on 2026-05-29: C2/C3/C4 may be cited as promoted with caveat. The export dirty state came from the same closure pass that fixed cross-environment evidence policy and promoted the cloud-backed process run. The drift caveat reflects expected metric/baseline/scenario/artifact expansion for the 4-GoalSpec, 5-seed, 5-baseline Process Fidelity evidence bundle. Human believability/process review and broader scenario coverage remain required before final empirical wording.",
   "suite": "process_fidelity",
   "baseline": "full_motivational_delegation",
   "ok": true,
@@ -458,7 +458,6 @@
     }
   },
   "manualReviewItems": [
-    "promotion note 为空；请按 论文证据 模板补充人工备注。",
     "manifest git.dirty=true；需要说明导出时工作区改动原因，或重新从干净 commit 导出。",
     "drift policy 要求人工复核；需要说明 metric / baseline / scenario / artifact 变化原因。"
   ],
@@ -471,5 +470,15 @@
     "driftPolicyBlocking": false,
     "manualWindowVerified": false,
     "externalModelVerifiedIfNeeded": true
+  },
+  "manualReviewResolution": {
+    "ownerReviewedAt": "2026-05-29",
+    "claimLevelDecision": "C2/C3/C4 promoted with caveat",
+    "remainingCaveats": [
+      "promotionStatus remains needs_manual_review at machine-record level",
+      "manifest git.dirty=true at export time",
+      "drift policy still requires explicit interpretation for paper-grade use",
+      "human believability/process review remains pending"
+    ]
   }
 }

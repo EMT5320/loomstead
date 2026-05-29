@@ -7,18 +7,16 @@
 - suite: `process_fidelity`
 - baseline: `full_motivational_delegation`
 - manifestSha256: `81c91fe3d8bc6384c965f2a8d7882a35384588ce5a3b2a68094d469241beb8ca`
-- note: -
+- note: Owner reviewed on 2026-05-29: C2/C3/C4 may be cited as promoted with caveat. The export dirty state came from the same closure pass that fixed cross-environment evidence policy and promoted the cloud-backed process run. The drift caveat reflects expected metric/baseline/scenario/artifact expansion for the 4-GoalSpec, 5-seed, 5-baseline Process Fidelity evidence bundle. Human believability/process review and broader scenario coverage remain required before final empirical wording.
 
-## Purpose note prompts
+## Owner review resolution
 
-- 说明该 run 支撑的研究问题或表格编号。
-- 记录 baseline / ablation 与主要指标解读。
-- 补充 llmEvidence：provider_usage_actual.v1 记录、token / latency / cost / fallback 与 final selectedToolId。
-- 说明 drift policy、git dirty 和人工窗口验收状态。
+- ownerReviewedAt: `2026-05-29`
+- claimLevelDecision: `C2/C3/C4 promoted with caveat`
+- final empirical wording: pending human believability/process review and broader scenario coverage
 
 ## Manual review items
 
-- promotion note 为空；请按 论文证据 模板补充人工备注。
 - manifest git.dirty=true；需要说明导出时工作区改动原因，或重新从干净 commit 导出。
 - drift policy 要求人工复核；需要说明 metric / baseline / scenario / artifact 变化原因。
 
@@ -33,13 +31,12 @@
 - manualWindowVerified: False
 - externalModelVerifiedIfNeeded: True
 
-## LLM evidence
+## LLM evidence summary
 
 ```json
 {
   "schemaVersion": "process_llm_evidence.v1",
   "providerUsageSchemaVersion": "provider_usage_actual.v1",
-  "source": "latest_cache",
   "providerMode": "cloud",
   "seedCount": 5,
   "recordCount": 100,
@@ -54,183 +51,10 @@
     "latencyAvgMs": 3086.12,
     "cost": 0.02972032,
     "currency": "USD"
-  },
-  "records": [
-    {
-      "scenarioId": "pf.branna_forgiveness_requires_memory",
-      "baseline": "full_motivational_delegation",
-      "seedIndex": 1,
-      "provider": "CloudApiProvider",
-      "providerMode": "cloud",
-      "model": "deepseek-v4-flash",
-      "tokens": 1793,
-      "latencyMs": 2714,
-      "cost": 0.00026012,
-      "fallbackReason": null,
-      "finalSelectedToolId": "social.chat_with",
-      "providerUsageVersion": "provider_usage_actual.v1"
-    },
-    {
-      "scenarioId": "pf.branna_forgiveness_requires_memory",
-      "baseline": "full_motivational_delegation",
-      "seedIndex": 2,
-      "provider": "CloudApiProvider",
-      "providerMode": "cloud",
-      "model": "deepseek-v4-flash",
-      "tokens": 1878,
-      "latencyMs": 2999,
-      "cost": 0.0002842,
-      "fallbackReason": null,
-      "finalSelectedToolId": "social.chat_with",
-      "providerUsageVersion": "provider_usage_actual.v1"
-    },
-    {
-      "scenarioId": "pf.branna_forgiveness_requires_memory",
-      "baseline": "full_motivational_delegation",
-      "seedIndex": 3,
-      "provider": "CloudApiProvider",
-      "providerMode": "cloud",
-      "model": "deepseek-v4-flash",
-      "tokens": 1905,
-      "latencyMs": 3863,
-      "cost": 0.00029162,
-      "fallbackReason": null,
-      "finalSelectedToolId": "social.chat_with",
-      "providerUsageVersion": "provider_usage_actual.v1"
-    },
-    {
-      "scenarioId": "pf.branna_forgiveness_requires_memory",
-      "baseline": "full_motivational_delegation",
-      "seedIndex": 4,
-      "provider": "CloudApiProvider",
-      "providerMode": "cloud",
-      "model": "deepseek-v4-flash",
-      "tokens": 1922,
-      "latencyMs": 3779,
-      "cost": 0.00029806,
-      "fallbackReason": null,
-      "finalSelectedToolId": "social.chat_with",
-      "providerUsageVersion": "provider_usage_actual.v1"
-    },
-    {
-      "scenarioId": "pf.branna_forgiveness_requires_memory",
-      "baseline": "full_motivational_delegation",
-      "seedIndex": 5,
-      "provider": "CloudApiProvider",
-      "providerMode": "cloud",
-      "model": "deepseek-v4-flash",
-      "tokens": 1848,
-      "latencyMs": 2924,
-      "cost": 0.00027692,
-      "fallbackReason": null,
-      "finalSelectedToolId": "social.chat_with",
-      "providerUsageVersion": "provider_usage_actual.v1"
-    },
-    {
-      "scenarioId": "pf.branna_forgiveness_requires_memory",
-      "baseline": "no_subjective_memory",
-      "seedIndex": 1,
-      "provider": "CloudApiProvider",
-      "providerMode": "cloud",
-      "model": "deepseek-v4-flash",
-      "tokens": 1641,
-      "latencyMs": 3421,
-      "cost": 0.00025228,
-      "fallbackReason": null,
-      "finalSelectedToolId": "social.chat_with",
-      "providerUsageVersion": "provider_usage_actual.v1"
-    },
-    {
-      "scenarioId": "pf.branna_forgiveness_requires_memory",
-      "baseline": "no_subjective_memory",
-      "seedIndex": 2,
-      "provider": "CloudApiProvider",
-      "providerMode": "cloud",
-      "model": "deepseek-v4-flash",
-      "tokens": 1571,
-      "latencyMs": 2895,
-      "cost": 0.00023324,
-      "fallbackReason": null,
-      "finalSelectedToolId": "social.chat_with",
-      "providerUsageVersion": "provider_usage_actual.v1"
-    },
-    {
-      "scenarioId": "pf.branna_forgiveness_requires_memory",
-      "baseline": "no_subjective_memory",
-      "seedIndex": 3,
-      "provider": "CloudApiProvider",
-      "providerMode": "cloud",
-      "model": "deepseek-v4-flash",
-      "tokens": 1810,
-      "latencyMs": 4974,
-      "cost": 0.00029974,
-      "fallbackReason": null,
-      "finalSelectedToolId": "social.chat_with",
-      "providerUsageVersion": "provider_usage_actual.v1"
-    },
-    {
-      "scenarioId": "pf.branna_forgiveness_requires_memory",
-      "baseline": "no_subjective_memory",
-      "seedIndex": 4,
-      "provider": "CloudApiProvider",
-      "providerMode": "cloud",
-      "model": "deepseek-v4-flash",
-      "tokens": 1593,
-      "latencyMs": 3051,
-      "cost": 0.00023856,
-      "fallbackReason": null,
-      "finalSelectedToolId": "social.chat_with",
-      "providerUsageVersion": "provider_usage_actual.v1"
-    },
-    {
-      "scenarioId": "pf.branna_forgiveness_requires_memory",
-      "baseline": "no_subjective_memory",
-      "seedIndex": 5,
-      "provider": "CloudApiProvider",
-      "providerMode": "cloud",
-      "model": "deepseek-v4-flash",
-      "tokens": 1702,
-      "latencyMs": 4244,
-      "cost": 0.00026866,
-      "fallbackReason": null,
-      "finalSelectedToolId": "social.chat_with",
-      "providerUsageVersion": "provider_usage_actual.v1"
-    },
-    {
-      "scenarioId": "pf.branna_forgiveness_requires_memory",
-      "baseline": "no_relationship_edge",
-      "seedIndex": 1,
-      "provider": "CloudApiProvider",
-      "providerMode": "cloud",
-      "model": "deepseek-v4-flash",
-      "tokens": 1723,
-      "latencyMs": 3550,
-      "cost": 0.00025956,
-      "fallbackReason": null,
-      "finalSelectedToolId": "social.chat_with",
-      "providerUsageVersion": "provider_usage_actual.v1"
-    },
-    {
-      "scenarioId": "pf.branna_forgiveness_requires_memory",
-      "baseline": "no_relationship_edge",
-      "seedIndex": 2,
-      "provider": "CloudApiProvider",
-      "providerMode": "cloud",
-      "model": "deepseek-v4-flash",
-      "tokens": 1750,
-      "latencyMs": 3381,
-      "cost": 0.0002674,
-      "fallbackReason": null,
-      "finalSelectedToolId": "social.chat_with",
-      "providerUsageVersion": "provider_usage_actual.v1"
-    }
-  ]
+  }
 }
 ```
 
-## Purpose checklist
+## Remaining caveat for external use
 
-- [ ] 确认 schema 与论文方法描述一致。
-- [ ] 确认导出 artifact 可复现。
-- [ ] 确认真实模型或人工窗口证据已单独记录。
-- [ ] 确认 llmEvidence 中的真实模型调用和 fallback_reason 已人工复核。
+This run can support `promoted with caveat` wording for `C2`/`C3`/`C4`. It should not be presented as final empirical evidence until human process ratings, Godot window review, and broader scenario coverage are recorded.

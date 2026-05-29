@@ -7,7 +7,7 @@ This directory keeps the Loomstead paper workflow tied to concrete repository ev
 - Working title: **Loomstead: Motivational Delegation for Process-Constrained Goals in Persistent Multi-Agent Narratives**
 - Target shape: research preview / workshop / arXiv technical report draft.
 - Core claim: a Director can shape motivation, opportunity, information, event pressure, resources, and constraints while autonomous NPCs choose actions through their own memory, relationships, heuristics, and tool capabilities.
-- Evidence boundary: current results are rule-level scaffolding evidence from Process Fidelity, baseline / ablation, 24h / 72h stability, cross-domain adapter exports, and manifest checks. More seeds, LLM-backed runs, human believability scoring, and real Godot observer-mode validation remain open.
+- Evidence boundary: `C2`/`C3`/`C4` are owner-approved as promoted-with-caveat claims, backed by the 2026-05-29 cloud Process Fidelity bundle. Human believability scoring, broader scenario coverage, and real Godot observer-mode validation remain open.
 - Current drafting policy: skeleton first. Keep claims narrow, reserve contribution slots, and fill strong empirical language only after the matching evidence is promoted.
 
 ## Directory layout
@@ -17,6 +17,7 @@ paper/
 |-- README.md
 |-- WORKFLOW.md
 |-- outline.md
+|-- blog_main.md
 |-- claim_evidence_matrix.md
 |-- figures.md
 |-- claim_policy.md

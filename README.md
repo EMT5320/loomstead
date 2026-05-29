@@ -6,7 +6,13 @@
 
 > An explainable multi-agent narrative runtime for motivational delegation and process fidelity evaluation.
 
-`Loomstead` uses a playable Godot town slice as the primary validation domain for studying process-constrained goals in persistent multi-agent narratives. The project focuses on how a Director can shape motivation, opportunity, information, resources, event pressure, and constraints so autonomous NPC agents weave believable social processes instead of receiving hard task assignments or direct state edits.
+`Loomstead` uses a playable Godot town slice as the primary validation domain for studying process-constrained goals in persistent multi-agent narratives. The project focuses on how a Director can shape motivation, opportunity, information, resources, event pressure, and constraints while autonomous NPC agents retain action selection through legal tools and subjective state.
+
+## 30-second portfolio path
+
+- **Watch the system shape**: run the Godot town slice and open the observer dock to see NPC motivation, subjective memory, relationship edges, heuristics, and trace events in one view. See the [60-second demo capture plan](docs/demo_capture_plan.md).
+- **Read the research spine**: start with [Motivational Delegation](docs/research_framing_motivational_delegation.md), [Process Fidelity Eval](docs/process_fidelity_eval_spec.md), and the owner-approved [claim evidence matrix](paper/claim_evidence_matrix.md).
+- **Inspect the strongest current evidence**: `C2`/`C3`/`C4` are now **promoted with caveat**, backed by `.run/eval-promoted/run_2026-05-29T13-57-50Z` and 100 cloud-provider arbitration records. Final empirical wording still requires human process ratings and broader scenario coverage.
 
 Short research tagline:
 
@@ -45,9 +51,18 @@ Core axes:
 
 ## Entry points
 
+### Fast external read
+
+Start here if you want the shortest portfolio / paper-review path:
+
+1. [Blog-style technical overview](paper/blog_main.md): problem, method, evidence, and caveats in one narrative.
+2. [Figure 3 trace walkthrough](paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md): a concrete trace chain from setup to memory, relationship evidence, later decision, and outcome.
+3. [Figure and table plan](paper/figures.md): rendered diagrams and current table targets.
+4. [60-second demo capture plan](docs/demo_capture_plan.md): local recording script for the Godot + Debug showcase.
+
 ### For research readers
 
-Start here if you care about the research claim, evaluation setup, baselines, or future dataset:
+Start here if you care about the claim surface, evaluation setup, baselines, or future dataset:
 
 1. [Research framing](docs/research_framing_motivational_delegation.md): narrative-primary / task-secondary, Motivational Delegation, Process Fidelity, rebuttal map.
 2. [Process Fidelity Eval spec](docs/process_fidelity_eval_spec.md): metrics, Hard Delegation baseline, ablation protocol, GoalSpec schema, dataset outputs.
@@ -65,6 +80,12 @@ Start here if you want to run, modify, or validate the project locally:
 4. [Model profile guide](docs/model_profile_template_guide.md): local model config, provider routing, and real LLM smoke workflow.
 
 ## Current stage
+
+Current showcase status:
+
+- Phase 2 research skeleton is artifact backed by promoted eval runs, Debug traces, and Godot observer-mode integration.
+- The latest cloud-backed Process Fidelity bundle covers 4 GoalSpecs × 5 seeds × 5 baselines, with 100 cloud-provider calls and 0 fallback.
+- `C2`/`C3`/`C4` use promoted-with-caveat wording; human believability review, final Godot window capture, and broader scenario coverage remain open.
 
 ### Phase 1: living world slice
 

@@ -50,6 +50,7 @@ scope: 文档分层索引与渐进式读取路线
 - [`current_status.md`](./current_status.md)：当前实现事实。
 - [`assistant_continuity.md`](./assistant_continuity.md)：跨助手接续协议。
 - [`workflows.md`](./workflows.md)：workflow 索引。
+- [`demo_capture_plan.md`](./demo_capture_plan.md)：求职展示线 60 秒录屏脚本与人工验收边界。
 - [`eval_dataset_archive.md`](./eval_dataset_archive.md)：Eval 归档操作流程。
 - [`eval_reviewer_sampling_packet.md`](./eval_reviewer_sampling_packet.md)：Reviewer packet 操作流程。
 - [`model_profile_template_guide.md`](./model_profile_template_guide.md)：模型 profile 配置流程。
@@ -70,6 +71,7 @@ scope: 文档分层索引与渐进式读取路线
 ### Godot 客户端
 - [`production_roadmap.md`](./production_roadmap.md)
 - [`game_client_environment.md`](./game_client_environment.md)
+- [`demo_capture_plan.md`](./demo_capture_plan.md)
 - [`../clients/godot/README.md`](../clients/godot/README.md)
 
 ### LLM / Debug / Eval

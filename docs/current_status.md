@@ -16,7 +16,7 @@ scope: 当前实现事实、验证状态、人工验收边界
 - 项目名：`Loomstead`，narrative-primary 的可解释多 Agent 叙事运行时与研究环境。
 - 技术骨架：Godot 4.x 客户端 + Python Agent Server + Web Debug / 研究控制台。
 - Phase 1（活着的世界）已收口（2026-05-21 主人确认），`world_main.tscn` 为默认完成基线。
-- Phase 2（骨架建立期）rule-level scaffold 已超额完成，正在 `P2.skeleton` checkpoint，等待主人选定下一阶段方向（候选见 `docs/phase_checkpoints.md`）。
+- Phase 2（骨架建立期）rule-level scaffold 已超额完成；`P2.exit` 研究向硬验收已通过 promoted-with-caveat 口径。当前进入 `P_demo.exit` 求职展示线。
 
 ## 2. 当前已验证事实
 
@@ -35,12 +35,12 @@ scope: 当前实现事实、验证状态、人工验收边界
 
 ## 3. 当前缺口
 
-- **真实 LLM evidence**：cloud provider usage 已覆盖 4 个 Process Fidelity GoalSpec × 5 seed × 5 baseline，共 100 次 `CloudApiProvider` 调用、0 fallback、约 189,949 tokens / 0.02972032 USD。命名证据：`.run/process-llm-evidence/cloud-branna-forgiveness-2026-05-29.json`、`.run/process-llm-evidence/cloud-3goalspec-2026-05-29.json`、`.run/process-llm-evidence/cloud-4goalspec-summary-2026-05-29.json`；单 seed 跨机记录另存为 `cloud-branna-forgiveness-local-office-2026-05-29.json`。已通过 `eval:process:export` + `eval:archive:promote` 进入 `.run/eval-promoted/run_2026-05-29T13-57-50Z`，其 manifest `llmEvidence.recordCount=100`。C2/C3/C4 claim level 升级仍待主人显式确认。
-- **证据指针**：`paper/claim_evidence_matrix.md` 当前引用 promoted artifact；Process Fidelity 最新 paper 表来自 `.run/eval-promoted/run_2026-05-29T13-57-50Z`，domain / stability / robustness 仍引用已 promote 的 05-25 / 05-28 证据。§2 “最新 clean evidence” 的 05-27 组是 rule suite five-repeat 快照；05-29 process promotion 额外携带 cloud `llmEvidence`，但 `promotionStatus=needs_manual_review`（导出时工作区 dirty、promotion note 为空、drift policy 要求解释 metric / baseline / scenario / artifact 变化）。
+- **真实 LLM evidence**：cloud provider usage 已覆盖 4 个 Process Fidelity GoalSpec × 5 seed × 5 baseline，共 100 次 `CloudApiProvider` 调用、0 fallback、约 189,949 tokens / 0.02972032 USD。命名证据：`.run/process-llm-evidence/cloud-branna-forgiveness-2026-05-29.json`、`.run/process-llm-evidence/cloud-3goalspec-2026-05-29.json`、`.run/process-llm-evidence/cloud-4goalspec-summary-2026-05-29.json`；单 seed 跨机记录另存为 `cloud-branna-forgiveness-local-office-2026-05-29.json`。已通过 `eval:process:export` + `eval:archive:promote` 进入 `.run/eval-promoted/run_2026-05-29T13-57-50Z`，其 manifest `llmEvidence.recordCount=100`。C2/C3/C4 已由主人确认升级为 `promoted with caveat`。
+- **证据指针**：`paper/claim_evidence_matrix.md` 当前引用 promoted artifact；Process Fidelity 最新 paper 表来自 `.run/eval-promoted/run_2026-05-29T13-57-50Z`，domain / stability / robustness 仍引用已 promote 的 05-25 / 05-28 证据。05-29 process promotion 额外携带 cloud `llmEvidence`；promotion note 已写入主人确认口径，但 `promotionStatus=needs_manual_review` 仍保留机器层面的 git.dirty 与 drift caveat。
 - **人工 reviewer 抽样**：packet 已生成，停在 `manual_review_required` gate，等待人工填表。
 - **真实 Godot 窗口复验**：最新 Trace 导航 / 中断布局补修代码已落地，真实窗口复验**暂缓**到后端 / Eval 主线稳定后集中处理（治理协议 §3.1：避免每次新增字段后反复进入中间态窗口验收和小修循环）。
 - **Phase 4 候选**：gossip 真扩散、玩家行为传播、emergence scenario 仍未启动。
-- **30 秒可分享 demo 物料**：愿景 §"作品集传播优先"原则要求每条核心能力都有可分享 demo，当前为零。
+- **求职展示线**：README 顶部 portfolio 入口、`paper/blog_main.md` 技术博客初稿和 `docs/demo_capture_plan.md` 60 秒录屏脚本已落地；最终视频 / GIF / 截图仍待人工窗口录制。
 
 ## 4. 开发前硬约束
 
@@ -55,8 +55,8 @@ scope: 当前实现事实、验证状态、人工验收边界
 
 ## 5. 人工验收
 
-- `manual verified`：2026-05-21 Phase 1 收口；2026-05-25 UI 重设计观感与可读性；2026-05-26 Trace `memory.result_observed` 可发现性 + 来源跳转。
-- `manual unverified`：最新 Trace 导航 / 中断布局补修真实窗口复验；真实 LLM cloud evidence 的 claim-level 解读与 `.run/eval-promoted/run_2026-05-29T13-57-50Z` promotion manual note 仍需主人确认；`.run/eval-promoted/stability_2026-05-25T07-34-55Z` promotion 的 drift 人工说明（`needs_manual_review`）；`prompt_ready` 资产生成与登记。
+- `manual verified`：2026-05-21 Phase 1 收口；2026-05-25 UI 重设计观感与可读性；2026-05-26 Trace `memory.result_observed` 可发现性 + 来源跳转；2026-05-29 C2/C3/C4 `promoted with caveat` claim-level 口径。
+- `manual unverified`：最新 Trace 导航 / 中断布局补修真实窗口复验；`.run/eval-promoted/run_2026-05-29T13-57-50Z` 机器层 promotion status 仍是 `needs_manual_review`（git.dirty / drift caveat 已写说明）；`.run/eval-promoted/stability_2026-05-25T07-34-55Z` promotion 的 drift 人工说明；`prompt_ready` 资产生成与登记；求职展示线最终视频 / GIF / 截图。
 
 ## 6. 当前可运行命令
 
@@ -90,4 +90,4 @@ git diff --check
 
 ## 7. 下一步
 
-`P2.skeleton` 的 B 线 cloud evidence 已完成本轮 artifact 收口；下一步建议主人确认 C2/C3/C4 claim level 口径，然后切到 A 求职展示线。详见 `docs/phase_checkpoints.md`。
+`P_demo.exit` 求职展示线进行中；下一步优先录制 / 截取 60 秒 Godot + Trace 展示素材，并把 README / 博客中的占位链接替换为实际视频或 GIF。详见 `docs/demo_capture_plan.md` 与 `docs/phase_checkpoints.md`。

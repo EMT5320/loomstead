@@ -4,21 +4,22 @@
 
 - Intended figure: Figure 3 (`intervention -> event -> subjective memory -> relationship/heuristic -> later decision -> outcome`)
 - Claim level target: L2 local guardrail evidence (per `paper/claim_policy.md`)
-- This walkthrough uses the current clean process export for both trace lanes and aggregate metrics from the generated paper tables. Wording stays at interface/research-preview level.
+- This walkthrough uses the current promoted process export for both trace lanes and aggregate metrics from the generated paper tables. Wording stays at interface/research-preview level.
 
 ## Source artifact
 
 - Run: `.run/eval-promoted/run_2026-05-29T13-57-50Z`
 - Manifest: `.run/eval-promoted/run_2026-05-29T13-57-50Z/manifest.json`
   - `ok=true`
-  - `git.shortCommit=b1c006f`
-  - `git.dirty=false`
+  - `git.shortCommit=25c053d`
+  - `git.dirty=true`
+  - Dirty export caveat is documented in the promoted run `PROMOTION.md`; the owner approved promoted-with-caveat claim wording on 2026-05-29.
   - `seedCount=5`
 - Per-scenario file:
   - `.run/eval-promoted/run_2026-05-29T13-57-50Z/per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed01.json`
 - Second trace source:
   - `.run/eval-promoted/run_2026-05-29T13-57-50Z/per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed01.json`
-  - Same manifest: `ok=true`, `git.shortCommit=b1c006f`, `git.dirty=false`, `seedCount=5`
+  - Same manifest: `ok=true`, `git.shortCommit=25c053d`, `git.dirty=true`, `seedCount=5`, with the same promoted-with-caveat note in `PROMOTION.md`.
 
 ## Candidate trace chain for Figure 3
 
@@ -124,11 +125,11 @@ The figure source uses curated labels from the evidence below. It avoids relying
    - `counterfactual_tool_selection_change_rate=0.375`.
    - `causal_trace_coverage=1.0`.
    - `forced_action_rate=0`, `agent_initiated_action_ratio=1.0`.
-   - This annotation is a local guardrail summary, not a publication-level causal claim.
+   - This annotation is a promoted-with-caveat guardrail summary, with final empirical wording still pending human process review.
 
 ## Figure drafting notes (manual follow-up required)
 
 - Mermaid graph source is ready at `paper/diagrams/trace_evidence_chain_figure3.mmd` and is referenced by the LaTeX Figure 3 placeholder.
-- Both trace lanes now point at the same current clean five-seed process export.
+- Both trace lanes now point at the same current promoted five-seed process export.
 - Rendered labels should continue to use curated wording instead of raw summary text.
 - Publication-ready Figure 3 may still need visual hierarchy/layout polish before external release.
