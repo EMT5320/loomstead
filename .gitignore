@@ -6,11 +6,10 @@ node_modules/
 # 实验导出
 exports/
 
-# 跨家里 / 公司环境需要复用的研究证据纳入 Git 候选；
-# 其他 .run 临时文件继续忽略，避免把 Godot 缓存、截图和一次性临时文件混入提交。
+# 跨家里 / 公司双环境只同步已整理的研究证据：promoted / reviewer-packets / llm-evidence。
+# .run/eval-runs/ 是本地滚动导出区，只在产出 run 的机器本地保留；跨机复盘靠 eval:archive:promote
+# 把被 claim 引用的 run 复制到 eval-promoted。避免把滚动 run、Godot 缓存、截图和一次性临时文件混入提交。
 .run/*
-!.run/eval-runs/
-!.run/eval-runs/**
 !.run/eval-promoted/
 !.run/eval-promoted/**
 !.run/eval-reviewer-packets/

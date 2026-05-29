@@ -57,6 +57,18 @@ VALID_STATUSES = {"active", "snapshot", "archive"}
 VALID_STARTUP_LOADS = {"first-read", "after-agent-context", "index", "on-demand"}
 MANUAL_GATE_MAX_ITEMS = 10
 
+# brief / resume 提取依赖的标题锚点，必须与目标文档保持同步，避免提取静默退化为 fallback。
+BRIEF_RESUME_HEADINGS = [
+    ("docs/project_vision.md", "## 一句话定位"),
+    ("docs/current_status.md", "## 1. 当前阶段"),
+    ("docs/current_status.md", "## 5. 人工验收"),
+    ("docs/agent_context.md", "## 3. 当前阶段"),
+    ("docs/agent_context.md", "## 5. 最近下一步"),
+    ("docs/agent_context.md", "## 6. 按开发线读取"),
+    ("docs/agent_context.md", "## 7. 验证命令"),
+    ("docs/agent_context.md", "## 8. 协作约束"),
+]
+
 # 这些过期短语如果出现在 active 文档中，通常代表口径没有跟随当前事实更新。
 STALE_ACTIVE_PATTERNS = [
     "温暖绘本风",
@@ -179,11 +191,22 @@ def parse_frontmatter(text: str) -> dict[str, str]:
     return metadata
 
 
+def heading_matches(line: str, heading: str) -> bool:
+    """判断标题行是否匹配目标 heading，允许标题带括号或破折号等补充后缀。"""
+    stripped = line.strip()
+    if stripped == heading:
+        return True
+    if stripped.startswith(heading):
+        suffix = stripped[len(heading):]
+        return suffix[:1] in {"（", "(", " ", "\u3000", "—", "-", "：", ":"}
+    return False
+
+
 def extract_section_after_heading(text: str, heading: str, max_lines: int = 2) -> str:
     """提取某个 Markdown 标题下的首段文本。"""
     lines = text.splitlines()
     for index, line in enumerate(lines):
-        if line.strip() == heading:
+        if heading_matches(line, heading):
             collected: list[str] = []
             for next_line in lines[index + 1 :]:
                 stripped = next_line.strip()
@@ -202,7 +225,7 @@ def extract_bullet_section(text: str, heading: str, max_items: int = 6) -> list[
     lines = text.splitlines()
     heading_level = len(heading) - len(heading.lstrip("#"))
     for index, line in enumerate(lines):
-        if line.strip() == heading:
+        if heading_matches(line, heading):
             collected: list[str] = []
             for next_line in lines[index + 1 :]:
                 stripped = next_line.strip()
@@ -335,6 +358,18 @@ def find_active_doc_stale_patterns() -> list[str]:
     return errors
 
 
+def find_brief_resume_heading_gaps() -> list[str]:
+    """检查 brief / resume 依赖的标题锚点是否仍存在于目标文档。"""
+    warnings: list[str] = []
+    for relative_path, heading in BRIEF_RESUME_HEADINGS:
+        text = read_text(relative_path)
+        if not any(heading_matches(line, heading) for line in text.splitlines()):
+            warnings.append(
+                f"{relative_path} 缺少 brief/resume 锚点标题 `{heading}`，context:brief/resume 会退化为 fallback"
+            )
+    return warnings
+
+
 def validate_context() -> tuple[list[str], list[str]]:
     """检查上下文治理入口、关键文档和基础一致性。"""
     errors: list[str] = []
@@ -387,6 +422,8 @@ def validate_context() -> tuple[list[str], list[str]]:
     if "人工未验收" not in current_status_text and "manual unverified" not in current_status_text:
         warnings.append("docs/current_status.md 未出现人工未验收标记，请确认人工验收边界是否仍清晰")
 
+    warnings.extend(find_brief_resume_heading_gaps())
+
     return errors, warnings
 
 
@@ -417,7 +454,7 @@ def build_brief() -> str:
     status = read_text("docs/current_status.md")
 
     one_liner = extract_section_after_heading(vision, "## 一句话定位", max_lines=1)
-    phase_items = extract_bullet_section(status, "## 1. 当前阶段判断", max_items=6)
+    phase_items = extract_bullet_section(status, "## 1. 当前阶段", max_items=6)
     next_steps = extract_bullet_section(agent_context, "## 5. 最近下一步", max_items=5)
     collaboration_notes = extract_bullet_section(agent_context, "## 8. 协作约束", max_items=5)
 
@@ -433,7 +470,7 @@ def build_brief() -> str:
             "",
             format_block(
                 phase_items,
-                extract_section_after_heading(status, "## 1. 当前阶段判断", max_lines=2)
+                extract_section_after_heading(status, "## 1. 当前阶段", max_lines=2)
                 or "- 未能从 `docs/current_status.md` 提取阶段判断。",
             ),
             "",
@@ -464,9 +501,9 @@ def build_resume() -> str:
     dirty = run_git_command(["status", "--short"])
     recent_commits = run_git_command(["log", "--oneline", "-3"])
     one_liner = extract_section_after_heading(vision, "## 一句话定位", max_lines=1)
-    current_state = extract_bullet_section(agent_context, "## 3. 当前状态摘要", max_items=5)
+    current_state = extract_bullet_section(agent_context, "## 3. 当前阶段", max_items=5)
     next_steps = extract_bullet_section(agent_context, "## 5. 最近下一步", max_items=4)
-    manual_gates = extract_bullet_section(status, "## 5. 人工验收与本机门禁", max_items=MANUAL_GATE_MAX_ITEMS)
+    manual_gates = extract_bullet_section(status, "## 5. 人工验收", max_items=MANUAL_GATE_MAX_ITEMS)
     lane_routes = extract_bullet_section(agent_context, "## 6. 按开发线读取", max_items=7)
     validation = extract_bullet_section(agent_context, "## 7. 验证命令", max_items=10)
 
@@ -534,7 +571,7 @@ def build_handoff() -> str:
     lanes = detect_lanes(dirty_paths)
     commands = unique_commands(lanes)
     next_steps = extract_bullet_section(agent_context, "## 5. 最近下一步", max_items=4)
-    manual_gates = extract_bullet_section(status, "## 5. 人工验收与本机门禁", max_items=MANUAL_GATE_MAX_ITEMS)
+    manual_gates = extract_bullet_section(status, "## 5. 人工验收", max_items=MANUAL_GATE_MAX_ITEMS)
 
     lane_lines = [f"- {lane}" for lane, _ in lanes]
     command_lines = [f"- `{command}`" for command in commands]

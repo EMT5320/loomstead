@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: context-governance
-last_verified: 2026-05-28
+last_verified: 2026-05-29
 startup_load: first-read
 source_of_truth: true
 scope: 新对话入口、当前边界、最近下一步
@@ -46,7 +46,7 @@ scope: 新对话入口、当前边界、最近下一步
 
 按治理协议 §5 输出 checkpoint review 后停下：
 
-- B 真实 LLM 证据线（推荐）：1 GoalSpec × 5 seed × 3 baseline 真实 provider 证据，升级 C2/C3/C4 claim level
+- B 真实 LLM 证据线（推荐）：Branna Forgiveness 1 GoalSpec × 5 seed × 5 baseline cloud 证据已跑通（见 current_status §3）；剩 promote cloud ablation 结论 + 扩 Close Friend / Festival 两个 GoalSpec + 待主人确认升 C2/C3/C4 claim level
 - A 求职展示线：60 秒 demo 录屏 + 技术博客主文 + README portfolio 化
 - C Phase 4 玩家成为变量线：gossip 真扩散 + 1 跨日 emergence scenario
 - D Phase 3 内容深度线：4 核心 NPC 完整数据 + 5 作物 / 25 物品 / 30 工具
@@ -90,4 +90,4 @@ git diff --check
 - 状态文档区分 `code integrated` / `command checked` / `artifact backed` / `manual verified` / `manual unverified`。
 - 自管理层文档不复制源设计长文，不堆历史流水；超过软上限触发"是否拆分"检讨。
 - 多子代理并行时治理入口（本文、`current_status.md`、`AGENTS.md`、`context_governance.md`）由主会话串行修改。
-- 跨家里 / 公司同步时 `.run/eval-promoted/` / `.run/eval-reviewer-packets/` / `.run/process-llm-evidence/` 可随 Git 同步；`.run/eval-runs/` 滚动导出区按本地临时产物处理。
+- 跨家里 / 公司同步时 `.run/eval-promoted/` / `.run/eval-reviewer-packets/` / `.run/process-llm-evidence/` 可随 Git 同步；`.run/eval-runs/` 是本地滚动导出区，只在产出机器本地保留，跨机复盘靠 `eval:archive:promote` 把被 claim 引用的 run 复制到 `eval-promoted`。

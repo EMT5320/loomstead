@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: planning
-last_verified: 2026-05-28
+last_verified: 2026-05-29
 startup_load: on-demand
 source_of_truth: true
 scope: 阶段推进 checkpoint 板与 exit criteria
@@ -31,7 +31,7 @@ scope: 阶段推进 checkpoint 板与 exit criteria
 - ✅ ResearchFraming / DomainAdapter / ProcessFidelityEval 三项研究护栏文档落地
 - ✅ 4 核心 NPC 接入 motivation profile / capability preferences / heuristic seeds
 - ✅ Godot ObserverPanel 三 Tab + trace 导航代码
-- ⚠️ 真实 LLM 跑通的 Process Fidelity / Hard Delegation evidence（5/24 因 API 余额中断，至今未刷新）
+- ⚠️ 真实 LLM 跑通的 Process Fidelity / Hard Delegation evidence：cloud 已跑通 Branna Forgiveness 1 GoalSpec × 5 seed × 5 baseline（0 fallback，见 current_status §3），但 cloud ablation 结论 promote 与 claim 升级仍待 B 线处理
 - ⚠️ 人工 reviewer 抽样填表（packet 已生成，待人工执行）
 - ⚠️ Godot 真实窗口最新 Trace 补修复验
 
@@ -43,9 +43,9 @@ A. **求职展示线**（1-2 周）
    - README portfolio 化
    - 触发 `P_demo.exit`
 
-B. **真实 LLM 证据线**（1-2 天，含主人协助）
-   - 跑通 1 GoalSpec × 5 seed × 3 baseline 真实 provider 证据
-   - 把 C2/C3/C4 升到 final empirical
+B. **真实 LLM 证据线**（推荐，含主人协助）
+   - cloud 1 GoalSpec × 5 seed × 5 baseline 已跑通；剩 promote cloud ablation 结论 + 扩 Close Friend / Festival
+   - 把 C2/C3/C4 升到 final empirical（claim 升级待主人确认）
    - 触发 `P2.exit` 的研究向硬验收
 
 C. **Phase 4 玩家成为变量线**（4-6 天）

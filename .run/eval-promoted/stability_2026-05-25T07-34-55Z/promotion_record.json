@@ -1,0 +1,324 @@
+{
+  "promotionVersion": "phase2.eval_promotion.v1",
+  "promotionTemplateVersion": "phase2.eval_promotion_template.v1",
+  "promotedAt": "2026-05-29T03:02:31+00:00",
+  "promotionStatus": "needs_manual_review",
+  "promotionPurpose": "paper",
+  "promotionTemplate": {
+    "templateVersion": "phase2.eval_promotion_template.v1",
+    "purpose": "paper",
+    "purposeLabel": "论文证据",
+    "requiredNotes": [
+      "说明该 run 支撑的研究问题或表格编号。",
+      "记录 baseline / ablation 与主要指标解读。",
+      "补充 llmEvidence：provider_usage_actual.v1 记录、token / latency / cost / fallback 与 final selectedToolId。",
+      "说明 drift policy、git dirty 和人工窗口验收状态。"
+    ],
+    "extraChecklist": [
+      "确认 schema 与论文方法描述一致。",
+      "确认导出 artifact 可复现。",
+      "确认真实模型或人工窗口证据已单独记录。",
+      "确认 llmEvidence 中的真实模型调用和 fallback_reason 已人工复核。"
+    ]
+  },
+  "sourceRunDir": ".run/eval-runs/stability_2026-05-25T07-34-55Z",
+  "promotedRunDir": ".run/eval-promoted/stability_2026-05-25T07-34-55Z",
+  "promotionNote": "支撑 claim matrix C6：rule runtime 24h stability 窗口。",
+  "suite": "stability_24h",
+  "baseline": "rule_24h_stability",
+  "ok": true,
+  "manifestVersion": "phase2.eval_manifest.v1",
+  "manifestSha256": "56243e2883d9cb5b4d67c424550217e0470edf57d1d6c458fc83bc71fb336ed5",
+  "git": {
+    "shortCommit": "a4581b2",
+    "branch": "main",
+    "dirty": false
+  },
+  "schemaRegistryVersion": "schema_registry.v1",
+  "metricIds": [
+    "active_agent_count",
+    "heuristic_count",
+    "heuristic_decision_ref_rate",
+    "memory_observation_per_tool_result",
+    "relationship_edge_count",
+    "stability_tick_success_rate",
+    "tool_failure_rate",
+    "tool_interruption_rate",
+    "trace_schema_coverage"
+  ],
+  "baselines": [
+    "rule_24h_stability"
+  ],
+  "scenarioIds": [
+    "hour_01",
+    "hour_02",
+    "hour_03",
+    "hour_04",
+    "hour_05",
+    "hour_06",
+    "hour_07",
+    "hour_08",
+    "hour_09",
+    "hour_10",
+    "hour_11",
+    "hour_12",
+    "hour_13",
+    "hour_14",
+    "hour_15",
+    "hour_16",
+    "hour_17",
+    "hour_18",
+    "hour_19",
+    "hour_20",
+    "hour_21",
+    "hour_22",
+    "hour_23",
+    "hour_24"
+  ],
+  "llmEvidence": {
+    "schemaVersion": null,
+    "providerUsageSchemaVersion": null,
+    "source": null,
+    "providerMode": null,
+    "seedCount": null,
+    "recordCount": 0,
+    "cloudCallCount": 0,
+    "fallbackCount": 0,
+    "totals": {},
+    "records": []
+  },
+  "evalGates": {
+    "strictGate": {
+      "gateVersion": null,
+      "pass": null,
+      "failedCheckCount": 0,
+      "failedCheckIds": []
+    },
+    "signatureKindIds": {},
+    "domainGroups": []
+  },
+  "artifactCount": 3,
+  "archiveChecks": {
+    "archiveIndexVersion": "phase2.eval_run_index.v1",
+    "archiveCheckPassed": true,
+    "manifestValid": true,
+    "artifactCount": 3
+  },
+  "driftComparison": {
+    "suite": "stability_24h",
+    "latestRunDir": ".run/eval-runs/stability_2026-05-28T15-00-36Z",
+    "previousRunDir": ".run/eval-runs/stability_2026-05-25T07-34-55Z",
+    "latestCreatedAt": "2026-05-28T15:00:36+00:00",
+    "previousCreatedAt": "2026-05-25T07:34:55+00:00",
+    "latestGit": {
+      "shortCommit": "df4fd6c",
+      "branch": "main",
+      "dirty": false
+    },
+    "previousGit": {
+      "shortCommit": "a4581b2",
+      "branch": "main",
+      "dirty": false
+    },
+    "schemaRegistryVersion": {
+      "latest": "schema_registry.v1",
+      "previous": "schema_registry.v1",
+      "changed": false
+    },
+    "exportKind": {
+      "latest": "stability_dataset",
+      "previous": "stability_dataset",
+      "changed": false
+    },
+    "ok": {
+      "latest": true,
+      "previous": true,
+      "changed": false
+    },
+    "evalGates": {
+      "latest": {
+        "strictGate": {
+          "gateVersion": null,
+          "pass": null,
+          "failedCheckCount": 0,
+          "failedCheckIds": []
+        },
+        "signatureKindIds": {},
+        "domainGroups": []
+      },
+      "previous": {
+        "strictGate": {
+          "gateVersion": null,
+          "pass": null,
+          "failedCheckCount": 0,
+          "failedCheckIds": []
+        },
+        "signatureKindIds": {},
+        "domainGroups": []
+      },
+      "changed": false
+    },
+    "artifactCountDelta": 0,
+    "metricIds": {
+      "added": [
+        "budget_decision_source_link_rate",
+        "budget_decision_trace_ref_rate"
+      ],
+      "removed": [],
+      "unchanged": [
+        "active_agent_count",
+        "heuristic_count",
+        "heuristic_decision_ref_rate",
+        "memory_observation_per_tool_result",
+        "relationship_edge_count",
+        "stability_tick_success_rate",
+        "tool_failure_rate",
+        "tool_interruption_rate",
+        "trace_schema_coverage"
+      ]
+    },
+    "baselines": {
+      "added": [],
+      "removed": [],
+      "unchanged": [
+        "rule_24h_stability"
+      ]
+    },
+    "scenarioIds": {
+      "added": [],
+      "removed": [],
+      "unchanged": [
+        "hour_01",
+        "hour_02",
+        "hour_03",
+        "hour_04",
+        "hour_05",
+        "hour_06",
+        "hour_07",
+        "hour_08",
+        "hour_09",
+        "hour_10",
+        "hour_11",
+        "hour_12",
+        "hour_13",
+        "hour_14",
+        "hour_15",
+        "hour_16",
+        "hour_17",
+        "hour_18",
+        "hour_19",
+        "hour_20",
+        "hour_21",
+        "hour_22",
+        "hour_23",
+        "hour_24"
+      ]
+    },
+    "hasDrift": true,
+    "driftSeverity": "review",
+    "requiresManualReview": true,
+    "blocksPromotion": false,
+    "driftPolicy": {
+      "policyVersion": "phase2.eval_drift_policy.v1",
+      "severity": "review",
+      "requiresManualReview": true,
+      "blocksPromotion": false,
+      "reviewReasons": [
+        "metricIds 新增超过免复核阈值"
+      ],
+      "checks": [
+        {
+          "id": "latest_ok_false",
+          "breached": false,
+          "severity": "breaking",
+          "message": "latest run manifest ok=false"
+        },
+        {
+          "id": "ok_changed",
+          "breached": false,
+          "severity": "breaking",
+          "message": "manifest ok 状态变化"
+        },
+        {
+          "id": "eval_gate_changed",
+          "breached": false,
+          "severity": "review",
+          "message": "eval gate 或 signature 摘要变化"
+        },
+        {
+          "id": "schema_registry_changed",
+          "breached": false,
+          "severity": "breaking",
+          "message": "schema registry version 变化"
+        },
+        {
+          "id": "export_kind_changed",
+          "breached": false,
+          "severity": "breaking",
+          "message": "export kind 变化"
+        },
+        {
+          "id": "artifact_count_decreased",
+          "breached": false,
+          "severity": "breaking",
+          "message": "artifact 数量下降"
+        },
+        {
+          "id": "artifact_count_increased",
+          "breached": false,
+          "severity": "review",
+          "message": "artifact 数量增加"
+        },
+        {
+          "id": "metricIds_removed",
+          "breached": false,
+          "severity": "breaking",
+          "message": "metricIds 被移除"
+        },
+        {
+          "id": "metricIds_added",
+          "breached": true,
+          "severity": "review",
+          "message": "metricIds 新增超过免复核阈值"
+        },
+        {
+          "id": "baselines_removed",
+          "breached": false,
+          "severity": "breaking",
+          "message": "baselines 被移除"
+        },
+        {
+          "id": "baselines_added",
+          "breached": false,
+          "severity": "review",
+          "message": "baselines 新增超过免复核阈值"
+        },
+        {
+          "id": "scenarioIds_removed",
+          "breached": false,
+          "severity": "breaking",
+          "message": "scenarioIds 被移除"
+        },
+        {
+          "id": "scenarioIds_added",
+          "breached": false,
+          "severity": "review",
+          "message": "scenarioIds 新增超过免复核阈值"
+        }
+      ]
+    }
+  },
+  "manualReviewItems": [
+    "drift policy 要求人工复核；需要说明 metric / baseline / scenario / artifact 变化原因。"
+  ],
+  "paperGradeChecklist": {
+    "okTrue": true,
+    "archiveCheckPassed": true,
+    "gitCleanAtExport": true,
+    "schemaRegistryV1": true,
+    "driftExplained": false,
+    "driftPolicyBlocking": false,
+    "manualWindowVerified": false,
+    "externalModelVerifiedIfNeeded": false
+  }
+}
