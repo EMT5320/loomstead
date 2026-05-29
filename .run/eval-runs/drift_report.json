@@ -1,6 +1,6 @@
 {
   "reportVersion": "phase2.eval_run_drift.v1",
-  "createdAt": "2026-05-25T14:08:35+00:00",
+  "createdAt": "2026-05-29T01:13:43+00:00",
   "policy": {
     "policyVersion": "phase2.eval_drift_policy.v1",
     "thresholds": {
@@ -24,19 +24,20 @@
       ],
       "review": [
         "metric / baseline / scenario id 新增",
-        "artifact 数量增加"
+        "artifact 数量增加",
+        "eval gate 或 signature 摘要变化"
       ]
     }
   },
   "summary": {
-    "suiteCount": 4,
-    "comparisonCount": 4,
-    "changedComparisonCount": 1,
-    "manualReviewComparisonCount": 1,
+    "suiteCount": 5,
+    "comparisonCount": 5,
+    "changedComparisonCount": 2,
+    "manualReviewComparisonCount": 2,
     "blockingComparisonCount": 0,
     "severityCounts": {
       "none": 3,
-      "review": 1,
+      "review": 2,
       "breaking": 0
     },
     "singleRunSuites": []
@@ -44,19 +45,19 @@
   "comparisons": [
     {
       "suite": "cross_domain_adapter",
-      "latestRunDir": ".run/eval-runs/domain_2026-05-24T10-17-19Z",
-      "previousRunDir": ".run/eval-runs/domain_2026-05-24T10-14-56Z",
-      "latestCreatedAt": "2026-05-24T10:17:19+00:00",
-      "previousCreatedAt": "2026-05-24T10:14:56+00:00",
+      "latestRunDir": ".run/eval-runs/domain_2026-05-28T07-49-46Z",
+      "previousRunDir": ".run/eval-runs/domain_2026-05-27T13-29-21Z",
+      "latestCreatedAt": "2026-05-28T07:49:46+00:00",
+      "previousCreatedAt": "2026-05-27T13:29:21+00:00",
       "latestGit": {
-        "shortCommit": "e02370d",
+        "shortCommit": "b1c006f",
         "branch": "main",
-        "dirty": true
+        "dirty": false
       },
       "previousGit": {
-        "shortCommit": "e02370d",
+        "shortCommit": "f85d429",
         "branch": "main",
-        "dirty": true
+        "dirty": false
       },
       "schemaRegistryVersion": {
         "latest": "schema_registry.v1",
@@ -71,6 +72,29 @@
       "ok": {
         "latest": true,
         "previous": true,
+        "changed": false
+      },
+      "evalGates": {
+        "latest": {
+          "strictGate": {
+            "gateVersion": null,
+            "pass": null,
+            "failedCheckCount": 0,
+            "failedCheckIds": []
+          },
+          "signatureKindIds": {},
+          "domainGroups": []
+        },
+        "previous": {
+          "strictGate": {
+            "gateVersion": null,
+            "pass": null,
+            "failedCheckCount": 0,
+            "failedCheckIds": []
+          },
+          "signatureKindIds": {},
+          "domainGroups": []
+        },
         "changed": false
       },
       "artifactCountDelta": 0,
@@ -102,7 +126,9 @@
         "added": [],
         "removed": [],
         "unchanged": [
+          "coding.skill_cross_file_regression_dryrun",
           "coding.skill_failing_test_repair_dryrun",
+          "coding.skill_javascript_smoke_dryrun",
           "coding.skill_multifile_dependency_repair_dryrun",
           "coding.skill_multifile_review_dryrun",
           "coding.skill_prototype_dryrun",
@@ -137,6 +163,12 @@
             "message": "manifest ok 状态变化"
           },
           {
+            "id": "eval_gate_changed",
+            "breached": false,
+            "severity": "review",
+            "message": "eval gate 或 signature 摘要变化"
+          },
+          {
             "id": "schema_registry_changed",
             "breached": false,
             "severity": "breaking",
@@ -200,18 +232,254 @@
       }
     },
     {
-      "suite": "process_fidelity",
-      "latestRunDir": ".run/eval-runs/run_2026-05-24T11-12-19Z",
-      "previousRunDir": ".run/eval-runs/run_2026-05-24T08-32-57Z",
-      "latestCreatedAt": "2026-05-24T11:12:19+00:00",
-      "previousCreatedAt": "2026-05-24T08:32:57+00:00",
+      "suite": "evidence_robustness",
+      "latestRunDir": ".run/eval-runs/robustness_2026-05-28T03-08-43Z",
+      "previousRunDir": ".run/eval-runs/robustness_2026-05-28T02-55-13Z",
+      "latestCreatedAt": "2026-05-28T03:08:43+00:00",
+      "previousCreatedAt": "2026-05-28T02:55:13+00:00",
       "latestGit": {
-        "shortCommit": "68d2e22",
+        "shortCommit": "c283f81",
+        "branch": "main",
+        "dirty": false
+      },
+      "previousGit": {
+        "shortCommit": "3d66186",
+        "branch": "main",
+        "dirty": false
+      },
+      "schemaRegistryVersion": {
+        "latest": "schema_registry.v1",
+        "previous": "schema_registry.v1",
+        "changed": false
+      },
+      "exportKind": {
+        "latest": "evidence_robustness_dataset",
+        "previous": "evidence_robustness_dataset",
+        "changed": false
+      },
+      "ok": {
+        "latest": true,
+        "previous": true,
+        "changed": false
+      },
+      "evalGates": {
+        "latest": {
+          "strictGate": {
+            "gateVersion": "phase2.evidence_robustness.strict_gate.v1",
+            "pass": true,
+            "failedCheckCount": 0,
+            "failedCheckIds": []
+          },
+          "signatureKindIds": {
+            "process": [
+              "process_signature.v1"
+            ],
+            "domain": [
+              "phase2.evidence_robustness.domain_signature.v2.coding",
+              "phase2.evidence_robustness.domain_signature.v2.narrative"
+            ]
+          },
+          "domainGroups": [
+            {
+              "groupId": "loomstead.coding.v0",
+              "total": 160,
+              "overallInvarianceRate": 1.0,
+              "allStable": true
+            },
+            {
+              "groupId": "loomstead.town.v0",
+              "total": 60,
+              "overallInvarianceRate": 1.0,
+              "allStable": true
+            }
+          ]
+        },
+        "previous": {
+          "strictGate": {
+            "gateVersion": "phase2.evidence_robustness.strict_gate.v1",
+            "pass": true,
+            "failedCheckCount": 0,
+            "failedCheckIds": []
+          },
+          "signatureKindIds": {
+            "process": [
+              "process_signature.v1"
+            ],
+            "domain": [
+              "phase2.evidence_robustness.domain_signature.v2.coding",
+              "phase2.evidence_robustness.domain_signature.v2.narrative"
+            ]
+          },
+          "domainGroups": [
+            {
+              "groupId": "loomstead.coding.v0",
+              "total": 160,
+              "overallInvarianceRate": 1.0,
+              "allStable": true
+            },
+            {
+              "groupId": "loomstead.town.v0",
+              "total": 60,
+              "overallInvarianceRate": 1.0,
+              "allStable": true
+            }
+          ]
+        },
+        "changed": false
+      },
+      "artifactCountDelta": 0,
+      "metricIds": {
+        "added": [],
+        "removed": [],
+        "unchanged": [
+          "domain_evidence_invariance.source_order_shuffle",
+          "domain_evidence_invariance.source_variation_duplicate",
+          "domain_evidence_invariance.source_variation_irrelevant",
+          "domain_evidence_invariance.source_variation_weak_noise",
+          "domain_evidence_robustness_score",
+          "evidence_robustness_score",
+          "process_evidence_invariance.source_order_shuffle",
+          "process_evidence_invariance.source_variation_duplicate",
+          "process_evidence_invariance.source_variation_irrelevant",
+          "process_evidence_invariance.source_variation_weak_noise",
+          "process_evidence_robustness_score"
+        ]
+      },
+      "baselines": {
+        "added": [],
+        "removed": [],
+        "unchanged": [
+          "full_motivational_delegation"
+        ]
+      },
+      "scenarioIds": {
+        "added": [
+          "coding.skill_cross_file_regression_dryrun",
+          "coding.skill_failing_test_repair_dryrun",
+          "coding.skill_javascript_smoke_dryrun",
+          "coding.skill_multifile_dependency_repair_dryrun",
+          "coding.skill_multifile_review_dryrun",
+          "coding.skill_prototype_dryrun",
+          "coding.skill_regression_fix_dryrun",
+          "coding.skill_reviewer_disagreement_dryrun",
+          "narrative.affiliation_bias_agent_choice",
+          "narrative.close_friend_traceable",
+          "narrative.repair_trust_memory",
+          "pf.affiliation_bias_remains_agent_initiated",
+          "pf.branna_forgiveness_requires_memory",
+          "pf.repair_talk_requires_memory_trace",
+          "pf.shared_chat_builds_traceable_trust"
+        ],
+        "removed": [],
+        "unchanged": []
+      },
+      "hasDrift": true,
+      "driftSeverity": "review",
+      "requiresManualReview": true,
+      "blocksPromotion": false,
+      "driftPolicy": {
+        "policyVersion": "phase2.eval_drift_policy.v1",
+        "severity": "review",
+        "requiresManualReview": true,
+        "blocksPromotion": false,
+        "reviewReasons": [
+          "scenarioIds 新增超过免复核阈值"
+        ],
+        "checks": [
+          {
+            "id": "latest_ok_false",
+            "breached": false,
+            "severity": "breaking",
+            "message": "latest run manifest ok=false"
+          },
+          {
+            "id": "ok_changed",
+            "breached": false,
+            "severity": "breaking",
+            "message": "manifest ok 状态变化"
+          },
+          {
+            "id": "eval_gate_changed",
+            "breached": false,
+            "severity": "review",
+            "message": "eval gate 或 signature 摘要变化"
+          },
+          {
+            "id": "schema_registry_changed",
+            "breached": false,
+            "severity": "breaking",
+            "message": "schema registry version 变化"
+          },
+          {
+            "id": "export_kind_changed",
+            "breached": false,
+            "severity": "breaking",
+            "message": "export kind 变化"
+          },
+          {
+            "id": "artifact_count_decreased",
+            "breached": false,
+            "severity": "breaking",
+            "message": "artifact 数量下降"
+          },
+          {
+            "id": "artifact_count_increased",
+            "breached": false,
+            "severity": "review",
+            "message": "artifact 数量增加"
+          },
+          {
+            "id": "metricIds_removed",
+            "breached": false,
+            "severity": "breaking",
+            "message": "metricIds 被移除"
+          },
+          {
+            "id": "metricIds_added",
+            "breached": false,
+            "severity": "review",
+            "message": "metricIds 新增超过免复核阈值"
+          },
+          {
+            "id": "baselines_removed",
+            "breached": false,
+            "severity": "breaking",
+            "message": "baselines 被移除"
+          },
+          {
+            "id": "baselines_added",
+            "breached": false,
+            "severity": "review",
+            "message": "baselines 新增超过免复核阈值"
+          },
+          {
+            "id": "scenarioIds_removed",
+            "breached": false,
+            "severity": "breaking",
+            "message": "scenarioIds 被移除"
+          },
+          {
+            "id": "scenarioIds_added",
+            "breached": true,
+            "severity": "review",
+            "message": "scenarioIds 新增超过免复核阈值"
+          }
+        ]
+      }
+    },
+    {
+      "suite": "process_fidelity",
+      "latestRunDir": ".run/eval-runs/run_2026-05-28T09-19-34Z",
+      "previousRunDir": ".run/eval-runs/run_2026-05-28T08-55-51Z",
+      "latestCreatedAt": "2026-05-28T09:19:34+00:00",
+      "previousCreatedAt": "2026-05-28T08:55:51+00:00",
+      "latestGit": {
+        "shortCommit": "e678f4d",
         "branch": "main",
         "dirty": true
       },
       "previousGit": {
-        "shortCommit": "adf2ee4",
+        "shortCommit": "e678f4d",
         "branch": "main",
         "dirty": false
       },
@@ -230,15 +498,37 @@
         "previous": true,
         "changed": false
       },
-      "artifactCountDelta": 1,
+      "evalGates": {
+        "latest": {
+          "strictGate": {
+            "gateVersion": null,
+            "pass": null,
+            "failedCheckCount": 0,
+            "failedCheckIds": []
+          },
+          "signatureKindIds": {},
+          "domainGroups": []
+        },
+        "previous": {
+          "strictGate": {
+            "gateVersion": null,
+            "pass": null,
+            "failedCheckCount": 0,
+            "failedCheckIds": []
+          },
+          "signatureKindIds": {},
+          "domainGroups": []
+        },
+        "changed": false
+      },
+      "artifactCountDelta": 0,
       "metricIds": {
-        "added": [
-          "counterfactual_tool_selection_change_rate"
-        ],
+        "added": [],
         "removed": [],
         "unchanged": [
           "agent_initiated_action_ratio",
           "causal_trace_coverage",
+          "counterfactual_tool_selection_change_rate",
           "forced_action_rate",
           "goal_success_rate",
           "intervention_overreach_rate",
@@ -265,25 +555,19 @@
         "added": [],
         "removed": [],
         "unchanged": [
-          "pf.affiliation_bias_remains_agent_initiated",
-          "pf.branna_forgiveness_requires_memory",
-          "pf.repair_talk_requires_memory_trace",
-          "pf.shared_chat_builds_traceable_trust"
+          "pf.branna_forgiveness_requires_memory"
         ]
       },
-      "hasDrift": true,
-      "driftSeverity": "review",
-      "requiresManualReview": true,
+      "hasDrift": false,
+      "driftSeverity": "none",
+      "requiresManualReview": false,
       "blocksPromotion": false,
       "driftPolicy": {
         "policyVersion": "phase2.eval_drift_policy.v1",
-        "severity": "review",
-        "requiresManualReview": true,
+        "severity": "none",
+        "requiresManualReview": false,
         "blocksPromotion": false,
-        "reviewReasons": [
-          "artifact 数量增加",
-          "metricIds 新增超过免复核阈值"
-        ],
+        "reviewReasons": [],
         "checks": [
           {
             "id": "latest_ok_false",
@@ -296,6 +580,12 @@
             "breached": false,
             "severity": "breaking",
             "message": "manifest ok 状态变化"
+          },
+          {
+            "id": "eval_gate_changed",
+            "breached": false,
+            "severity": "review",
+            "message": "eval gate 或 signature 摘要变化"
           },
           {
             "id": "schema_registry_changed",
@@ -317,7 +607,7 @@
           },
           {
             "id": "artifact_count_increased",
-            "breached": true,
+            "breached": false,
             "severity": "review",
             "message": "artifact 数量增加"
           },
@@ -329,7 +619,7 @@
           },
           {
             "id": "metricIds_added",
-            "breached": true,
+            "breached": false,
             "severity": "review",
             "message": "metricIds 新增超过免复核阈值"
           },
@@ -362,19 +652,19 @@
     },
     {
       "suite": "stability_24h",
-      "latestRunDir": ".run/eval-runs/stability_2026-05-23T12-25-24Z",
-      "previousRunDir": ".run/eval-runs/stability_2026-05-23T06-37-22Z",
-      "latestCreatedAt": "2026-05-23T12:25:24+00:00",
-      "previousCreatedAt": "2026-05-23T06:37:22+00:00",
+      "latestRunDir": ".run/eval-runs/stability_2026-05-28T15-00-36Z",
+      "previousRunDir": ".run/eval-runs/stability_2026-05-25T07-34-55Z",
+      "latestCreatedAt": "2026-05-28T15:00:36+00:00",
+      "previousCreatedAt": "2026-05-25T07:34:55+00:00",
       "latestGit": {
-        "shortCommit": "95bd7e3",
+        "shortCommit": "df4fd6c",
         "branch": "main",
         "dirty": false
       },
       "previousGit": {
-        "shortCommit": "0ebee42",
+        "shortCommit": "a4581b2",
         "branch": "main",
-        "dirty": true
+        "dirty": false
       },
       "schemaRegistryVersion": {
         "latest": "schema_registry.v1",
@@ -391,9 +681,35 @@
         "previous": true,
         "changed": false
       },
+      "evalGates": {
+        "latest": {
+          "strictGate": {
+            "gateVersion": null,
+            "pass": null,
+            "failedCheckCount": 0,
+            "failedCheckIds": []
+          },
+          "signatureKindIds": {},
+          "domainGroups": []
+        },
+        "previous": {
+          "strictGate": {
+            "gateVersion": null,
+            "pass": null,
+            "failedCheckCount": 0,
+            "failedCheckIds": []
+          },
+          "signatureKindIds": {},
+          "domainGroups": []
+        },
+        "changed": false
+      },
       "artifactCountDelta": 0,
       "metricIds": {
-        "added": [],
+        "added": [
+          "budget_decision_source_link_rate",
+          "budget_decision_trace_ref_rate"
+        ],
         "removed": [],
         "unchanged": [
           "active_agent_count",
@@ -444,16 +760,18 @@
           "hour_24"
         ]
       },
-      "hasDrift": false,
-      "driftSeverity": "none",
-      "requiresManualReview": false,
+      "hasDrift": true,
+      "driftSeverity": "review",
+      "requiresManualReview": true,
       "blocksPromotion": false,
       "driftPolicy": {
         "policyVersion": "phase2.eval_drift_policy.v1",
-        "severity": "none",
-        "requiresManualReview": false,
+        "severity": "review",
+        "requiresManualReview": true,
         "blocksPromotion": false,
-        "reviewReasons": [],
+        "reviewReasons": [
+          "metricIds 新增超过免复核阈值"
+        ],
         "checks": [
           {
             "id": "latest_ok_false",
@@ -466,6 +784,12 @@
             "breached": false,
             "severity": "breaking",
             "message": "manifest ok 状态变化"
+          },
+          {
+            "id": "eval_gate_changed",
+            "breached": false,
+            "severity": "review",
+            "message": "eval gate 或 signature 摘要变化"
           },
           {
             "id": "schema_registry_changed",
@@ -499,7 +823,7 @@
           },
           {
             "id": "metricIds_added",
-            "breached": false,
+            "breached": true,
             "severity": "review",
             "message": "metricIds 新增超过免复核阈值"
           },
@@ -559,6 +883,29 @@
       "ok": {
         "latest": true,
         "previous": true,
+        "changed": false
+      },
+      "evalGates": {
+        "latest": {
+          "strictGate": {
+            "gateVersion": null,
+            "pass": null,
+            "failedCheckCount": 0,
+            "failedCheckIds": []
+          },
+          "signatureKindIds": {},
+          "domainGroups": []
+        },
+        "previous": {
+          "strictGate": {
+            "gateVersion": null,
+            "pass": null,
+            "failedCheckCount": 0,
+            "failedCheckIds": []
+          },
+          "signatureKindIds": {},
+          "domainGroups": []
+        },
         "changed": false
       },
       "artifactCountDelta": 0,
@@ -684,6 +1031,12 @@
             "breached": false,
             "severity": "breaking",
             "message": "manifest ok 状态变化"
+          },
+          {
+            "id": "eval_gate_changed",
+            "breached": false,
+            "severity": "review",
+            "message": "eval gate 或 signature 摘要变化"
           },
           {
             "id": "schema_registry_changed",
