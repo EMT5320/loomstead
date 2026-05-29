@@ -79,7 +79,7 @@ scope: long-term product vision, differentiation, and success criteria
 - **Player State Agent**：只总结玩家风格与历史选择，帮助世界理解玩家形象，不替玩家操作。
 - **Debug / Explainability Layer**：记录导演、Skill、NPC、工具、记忆和关系变化的完整链路。
 
-设计师负责提供土壤、舞台、规则和压力源；LLM Agent 负责在边界内做主观判断、表达、记忆和关系演化。多层 Agent 架构见 [`agentic_game_design.md`](./agentic_game_design.md)，游戏本体架构见 [`gameplay_system_architecture.md`](./gameplay_system_architecture.md)。
+设计师负责提供土壤、舞台、规则和压力源；LLM Agent 负责在边界内做主观判断、表达、记忆和关系演化。多层 Agent 架构与游戏本体架构的早期长文已归档至 `docs/archive/`，当前事实由 [`agent_loop_architecture.md`](./agent_loop_architecture.md) 与 [`production_roadmap.md`](./production_roadmap.md) 承载。
 
 ### 0.1 涌现式田园生活模拟本体
 

@@ -1,0 +1,118 @@
+{
+  "testReportId": "skill_failing_test_repair.pre_patch_tests",
+  "command": "python -m pytest tests/test_skill.py -q",
+  "testRunner": "pytest",
+  "durationMs": 507.214,
+  "exitCode": 1,
+  "testPhase": "pre_patch",
+  "passed": false,
+  "expectedFailure": true,
+  "failureObserved": true,
+  "failingCaseIds": [
+    "pytest_suite"
+  ],
+  "caseResults": [
+    {
+      "caseId": "pytest_suite",
+      "passed": false,
+      "runner": "pytest",
+      "exitCode": 1,
+      "passedCount": 2,
+      "failedCount": 2,
+      "summary": "..FF                                                                     [100%]",
+      "parseNote": "JSONDecodeError('Expecting value: line 1 column 1 (char 0)')"
+    }
+  ],
+  "execution": {
+    "executed": true,
+    "testPhase": "pre_patch",
+    "testRunner": "pytest",
+    "workspaceKind": "git_external_repo_checkout",
+    "sourceRepoKind": "deterministic_local_git_repository",
+    "checkoutMethod": "git clone",
+    "command": "python -m pytest tests/test_skill.py -q",
+    "commandTemplate": "python -m pytest tests/test_skill.py -q",
+    "testCommandSource": "metadata.testRunner",
+    "pythonExecutable": "python.exe",
+    "exitCode": 1,
+    "durationMs": 507.214,
+    "stdout": "..FF                                                                     [100%]\n================================== FAILURES ===================================\n__________ test_fixture_expectation[requires_failing_test_evidence] ___________\n\nitem = {'caseId': 'requires_failing_test_evidence', 'type': 'contains', 'value': 'failing test evidence before repair'}\n\n    @pytest.mark.parametrize('item', expectations, ids=lambda item: item.get('caseId', 'unknown_case'))\n    def test_fixture_expectation(item):\n>       assert evaluate_expectation(item)\nE       AssertionError: assert False\nE        +  where False = evaluate_expectation({'caseId': 'requires_failing_test_evidence', 'type': 'contains', 'value': 'failing test evidence before repair'})\n\ntests\\test_skill.py:48: AssertionError\n_________ test_fixture_expectation[requires_eval_domain_after_repair] _________\n\nitem = {'caseId': 'requires_eval_domain_after_repair', 'type': 'contains', 'value': 'eval:domain'}\n\n    @pytest.mark.parametrize('item', expectations, ids=lambda item: item.get('caseId', 'unknown_case'))\n    def test_fixture_expectation(item):\n>       assert evaluate_expectation(item)\nE       AssertionError: assert False\nE        +  where False = evaluate_expectation({'caseId': 'requires_eval_domain_after_repair', 'type': 'contains', 'value': 'eval:domain'})\n\ntests\\test_skill.py:48: AssertionError\n=========================== short test summary info ===========================\nFAILED tests/test_skill.py::test_fixture_expectation[requires_failing_test_evidence]\nFAILED tests/test_skill.py::test_fixture_expectation[requires_eval_domain_after_repair]\n2 failed, 2 passed in 0.05s\n",
+    "stderr": "",
+    "checkoutSteps": [
+      {
+        "command": "git init --quiet",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git checkout -B main",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "Switched to a new branch 'main'\n"
+      },
+      {
+        "command": "git config user.email fixture@example.invalid",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git config user.name Loomstead Fixture",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git add --all",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "warning: unable to access 'C:/Users/Administrator/.config/git/ignore': Permission denied\n"
+      },
+      {
+        "command": "git commit --quiet -m initial fixture repo",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git clone --quiet <source-repo> <checkout>",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "warning: unable to access 'C:/Users/Administrator/.config/git/ignore': Permission denied\n"
+      }
+    ],
+    "git": {
+      "defaultBranch": "main",
+      "sourceHead": "7be9cc17fe3a61f1cd3bed77c63fbc94ab40b0ad",
+      "checkoutHead": "7be9cc17fe3a61f1cd3bed77c63fbc94ab40b0ad",
+      "statusAfterPatch": []
+    },
+    "sourceRepoFiles": [
+      "README.md",
+      "docs/review_rubric.md",
+      "skills/loomstead-debug/SKILL.md",
+      "skills/loomstead-debug/metadata.json",
+      "tests/test_skill.py"
+    ],
+    "workspaceFiles": [
+      "README.md",
+      "docs/review_rubric.md",
+      "skills/loomstead-debug/SKILL.md",
+      "skills/loomstead-debug/metadata.json",
+      "tests/test_skill.py"
+    ],
+    "workspaceFileHashes": {
+      "README.md": "b603311279d95465518b947526822a4d81f2cbef7c4362dd197868b5bb466860",
+      "skills/loomstead-debug/SKILL.md": "cfbc8de80c634321e9aa1bcd78cf7838537c3f0693f6f70f39d8127042ccc201",
+      "skills/loomstead-debug/metadata.json": "3fed5d3f9e7609cbf31878e8b83c173efc55c50dcc2dd7afc6db2538b34786cb",
+      "docs/review_rubric.md": "d9559858a56896b5cb0f6864c5b01a108428f0dcb760b84393847969a8196df3",
+      "tests/test_skill.py": "ac7ce6eb223c82aa0ff9bf42a9ed9b90c4df0e3209431fd04baaa3445bbf3de4"
+    }
+  },
+  "sourceArtifactId": "pre_patch_fixture_state",
+  "sourceEventIds": [
+    "coding_evt_005"
+  ],
+  "sha256": "0c300b5f74a9bbf9f7e55e5834de9162153bf7d76fdc402b32707960bb8691d7"
+}

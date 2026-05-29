@@ -1,0 +1,8 @@
+--- a/skills/loomstead-debug/SKILL.md
++++ b/skills/loomstead-debug/SKILL.md
+@@ -1,3 +1,5 @@
+ # Loomstead Debug Skill
+ 
+ Use project docs before changing runtime code.
++Check regression evidence before approving fixes.
++Run npm.cmd run check for runtime-facing skill changes.

@@ -1,0 +1,3196 @@
+{
+  "manifestVersion": "phase2.eval_manifest.v1",
+  "exportKind": "cross_domain_adapter_dataset",
+  "createdAt": "2026-05-28T07:49:46+00:00",
+  "suite": "cross_domain_adapter",
+  "baseline": "full_motivational_delegation",
+  "providerMode": null,
+  "seedCount": 5,
+  "ok": true,
+  "runDirName": "domain_2026-05-28T07-49-46Z",
+  "git": {
+    "commit": "b1c006fbf141f2d19122ef3cd517778029cc7290",
+    "shortCommit": "b1c006f",
+    "branch": "main",
+    "dirty": false,
+    "statusShort": []
+  },
+  "schemaRegistry": {
+    "registryVersion": "schema_registry.v1",
+    "schemas": [
+      {
+        "id": "schema_registry",
+        "version": "schema_registry.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Runtime schema registry snapshot exposed by /api/debug.phase2.",
+        "producer": "app.runtime.schema_registry",
+        "debugSurface": "phase2.schemaRegistry",
+        "requiredFields": [
+          "registryVersion",
+          "schemas",
+          "versions"
+        ],
+        "notes": []
+      },
+      {
+        "id": "phase2_trace",
+        "version": "phase2.trace.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Unified trace envelope for Phase 2 decision, tool, budget, and memory events.",
+        "producer": "app.runtime.trace_schema",
+        "debugSurface": "phase2.traceSchemaVersion + phase2.recentTraceEvents[]",
+        "requiredFields": [
+          "traceId",
+          "spanId",
+          "worldTime",
+          "eventType",
+          "summary"
+        ],
+        "notes": []
+      },
+      {
+        "id": "capability_resolution",
+        "version": "capability_resolution.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Five-layer tool capability filtering and routing evidence.",
+        "producer": "app.runtime.capability_registry",
+        "debugSurface": "phase2.motivation.items[].capabilityFilters",
+        "requiredFields": [
+          "context",
+          "layers",
+          "allowedToolIds",
+          "rejectedTools",
+          "decisionBudgets"
+        ],
+        "notes": []
+      },
+      {
+        "id": "decision_budget",
+        "version": "decision_budget.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "NPC / feature / tool-cost decision budget policy and usage snapshot.",
+        "producer": "app.runtime.decision_budget",
+        "debugSurface": "phase2.decisionBudget",
+        "requiredFields": [
+          "policy",
+          "items",
+          "providerActuals"
+        ],
+        "notes": []
+      },
+      {
+        "id": "provider_usage_actual",
+        "version": "provider_usage_actual.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Actual provider usage record for tokens, latency, and cost aggregation.",
+        "producer": "app.runtime.decision_budget",
+        "debugSurface": "phase2.decisionBudget.providerActuals + providerUsageRecord",
+        "requiredFields": [
+          "tick",
+          "npcId",
+          "feature",
+          "provider",
+          "tokens",
+          "latencyMs",
+          "cost"
+        ],
+        "notes": []
+      },
+      {
+        "id": "observer_scope",
+        "version": "observer_scope.v1",
+        "owner": "memory",
+        "status": "active",
+        "description": "Result observer visibility scope with participants, location, and exclusions.",
+        "producer": "app.memory.observer",
+        "debugSurface": "phase2.recentTraceEvents[].details.observerScope",
+        "requiredFields": [
+          "visibility",
+          "actorId",
+          "participantIds",
+          "observerIds",
+          "excludedObserverIds"
+        ],
+        "notes": []
+      },
+      {
+        "id": "observer_spatial_model",
+        "version": "observer_spatial_model.v1",
+        "owner": "memory",
+        "status": "active",
+        "description": "Normalized anchor-distance model used by all_in_location visibility.",
+        "producer": "app.memory.observer",
+        "debugSurface": "phase2.recentTraceEvents[].details.observerScope.spatialModel",
+        "requiredFields": [
+          "distanceUnit",
+          "hearingRadius"
+        ],
+        "notes": []
+      },
+      {
+        "id": "motivation_plan",
+        "version": "motivation_plan.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Read-only Godot-compatible life action plan produced by MotivationEngine.",
+        "producer": "app.runtime.agent_runtime",
+        "debugSurface": "world.lifeActionPlan + world.slice.scheduleSnapshotVersion",
+        "requiredFields": [
+          "day",
+          "phase",
+          "selectedActions",
+          "locationBuckets",
+          "policy"
+        ],
+        "notes": []
+      },
+      {
+        "id": "legacy_life_action_plan",
+        "version": "life_action_plan.v1",
+        "owner": "simulation",
+        "status": "legacy_compat",
+        "description": "Legacy life action plan snapshot kept for direct world_state callers.",
+        "producer": "app.simulation.life_action_planner",
+        "debugSurface": "world.lifeActionPlan before AgentRuntime Phase 2 override",
+        "requiredFields": [
+          "day",
+          "phase",
+          "selectedActions",
+          "locationBuckets",
+          "policy"
+        ],
+        "notes": [
+          "AgentRuntime replaces this with motivation_plan.v1 on the current tick/state path."
+        ]
+      },
+      {
+        "id": "motivation_engine",
+        "version": "motivation_engine.v0",
+        "owner": "runtime",
+        "status": "legacy_compat",
+        "description": "MotivationEngine decision snapshot; v0 kept for current debug compatibility.",
+        "producer": "app.runtime.motivation_engine",
+        "debugSurface": "phase2.motivation",
+        "requiredFields": [
+          "items"
+        ],
+        "notes": [
+          "v0 remains stable until decision snapshot shape is promoted after Phase 2 trace hardening."
+        ]
+      },
+      {
+        "id": "need_accumulator",
+        "version": "need_accumulator.v0",
+        "owner": "runtime",
+        "status": "legacy_compat",
+        "description": "Need scoring snapshot used by MotivationEngine.",
+        "producer": "app.runtime.need_accumulator",
+        "debugSurface": "phase2.needAccumulator",
+        "requiredFields": [
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "tool_runtime",
+        "version": "tool_runtime.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Current ToolExecutor action runtime snapshot for selected NPCs.",
+        "producer": "app.runtime.agent_runtime",
+        "debugSurface": "phase2.toolRuntime",
+        "requiredFields": [
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "world_entities",
+        "version": "world_entities.v1",
+        "owner": "world",
+        "status": "active",
+        "description": "Typed WorldEntity snapshot for FarmPlot, Item, Inventory, Shop, Building, Time, and Weather.",
+        "producer": "app.world.entities.schema",
+        "debugSurface": "phase2.worldEntities",
+        "requiredFields": [
+          "count",
+          "byKind",
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "subjective_memory_store",
+        "version": "subjective_memory_store.v1",
+        "owner": "memory",
+        "status": "active",
+        "description": "Subjective memory debug store snapshot with decay and archive metadata.",
+        "producer": "app.memory.subjective_memory",
+        "debugSurface": "phase2.subjectiveMemory",
+        "requiredFields": [
+          "agentId",
+          "count",
+          "activeCount",
+          "archivedCount",
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "subjective_memory_recall",
+        "version": "subjective_memory_recall.v2",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Subjective memory recall evidence injected into decision scoring, including salience after decay.",
+        "producer": "app.runtime.motivation_engine",
+        "debugSurface": "phase2.motivation.items[].subjectiveMemoryRecall",
+        "requiredFields": [
+          "query",
+          "worldTick",
+          "count",
+          "activeCount",
+          "recordIds",
+          "sourceEventIds"
+        ],
+        "notes": []
+      },
+      {
+        "id": "relationship_edge_store",
+        "version": "relationship_edge_store.v0",
+        "owner": "memory",
+        "status": "legacy_compat",
+        "description": "Relationship edge debug store snapshot with event and trace refs.",
+        "producer": "app.memory.relationship_edges",
+        "debugSurface": "phase2.relationshipEdges",
+        "requiredFields": [
+          "agentId",
+          "count",
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "heuristic_library",
+        "version": "heuristic_library.v0",
+        "owner": "memory",
+        "status": "legacy_compat",
+        "description": "Heuristic memory library snapshot with confidence decay.",
+        "producer": "app.memory.heuristic",
+        "debugSurface": "phase2.heuristics",
+        "requiredFields": [
+          "agentId",
+          "worldTick",
+          "count",
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "heuristic_recall",
+        "version": "heuristic_recall.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Heuristic recall evidence injected into decision scoring.",
+        "producer": "app.runtime.motivation_engine",
+        "debugSurface": "phase2.motivation.items[].heuristicRecall",
+        "requiredFields": [
+          "worldTick",
+          "count",
+          "activeCount",
+          "heuristicIds",
+          "sourceEventIds"
+        ],
+        "notes": []
+      },
+      {
+        "id": "event_skill_outcome",
+        "version": "event_skill_outcome.v1",
+        "owner": "event_skill",
+        "status": "active",
+        "description": "Event skill outcome record shared by API result, event stream, and completed events.",
+        "producer": "app.skills.event_skill_schema",
+        "debugSurface": "eventResult + completedEvents[].resolution.outcomeRecord",
+        "requiredFields": [
+          "recordVersion",
+          "skillId",
+          "eventId",
+          "choice",
+          "summary"
+        ],
+        "notes": []
+      }
+    ],
+    "versions": {
+      "schema_registry": "schema_registry.v1",
+      "phase2_trace": "phase2.trace.v1",
+      "capability_resolution": "capability_resolution.v1",
+      "decision_budget": "decision_budget.v1",
+      "provider_usage_actual": "provider_usage_actual.v1",
+      "observer_scope": "observer_scope.v1",
+      "observer_spatial_model": "observer_spatial_model.v1",
+      "motivation_plan": "motivation_plan.v1",
+      "legacy_life_action_plan": "life_action_plan.v1",
+      "motivation_engine": "motivation_engine.v0",
+      "need_accumulator": "need_accumulator.v0",
+      "tool_runtime": "tool_runtime.v1",
+      "world_entities": "world_entities.v1",
+      "subjective_memory_store": "subjective_memory_store.v1",
+      "subjective_memory_recall": "subjective_memory_recall.v2",
+      "relationship_edge_store": "relationship_edge_store.v0",
+      "heuristic_library": "heuristic_library.v0",
+      "heuristic_recall": "heuristic_recall.v1",
+      "event_skill_outcome": "event_skill_outcome.v1"
+    }
+  },
+  "metricIds": [
+    "agent_initiated_action_ratio",
+    "causal_trace_coverage",
+    "counterfactual_tool_selection_change_rate",
+    "forced_action_rate",
+    "goal_success_rate",
+    "intervention_overreach_rate",
+    "process_believability_score",
+    "relationship_consistency",
+    "relationship_memory_causal_use_rate",
+    "required_process_coverage",
+    "shortcut_violation_rate"
+  ],
+  "baselines": [
+    "full_motivational_delegation"
+  ],
+  "scenarioIds": [
+    "coding.skill_cross_file_regression_dryrun",
+    "coding.skill_failing_test_repair_dryrun",
+    "coding.skill_javascript_smoke_dryrun",
+    "coding.skill_multifile_dependency_repair_dryrun",
+    "coding.skill_multifile_review_dryrun",
+    "coding.skill_prototype_dryrun",
+    "coding.skill_regression_fix_dryrun",
+    "coding.skill_reviewer_disagreement_dryrun",
+    "narrative.affiliation_bias_agent_choice",
+    "narrative.close_friend_traceable",
+    "narrative.repair_trust_memory"
+  ],
+  "llmEvidence": {},
+  "evalGates": {},
+  "artifacts": [
+    {
+      "path": "summary.json",
+      "kind": "summary_json",
+      "bytes": 7902,
+      "sha256": "23a29f5c83d432ce297cdafe80991aa7f994139a03c645da1dacd3f795b3aef9"
+    },
+    {
+      "path": "domain_summaries.json",
+      "kind": "domain_summaries_json",
+      "bytes": 767,
+      "sha256": "840359c8993fb0cfee1daba20a60d2a5ea5faeb3864842dcbb97ac2eea92a7f0"
+    },
+    {
+      "path": "per_scenario/narrative.close_friend_traceable_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 12135,
+      "sha256": "c6618d67fda6742f154c95fccf0fc6c29a42efbb1373795e4f4b2c037e8bb6a5",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.close_friend_traceable"
+    },
+    {
+      "path": "domain_evidence/narrative.close_friend_traceable_seed01/counterfactual_replay_narrative.close_friend_traceable.route_replay.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 3262,
+      "sha256": "e8750e076eed368a3dc28d6411100c4af59421214aa8f3b5360885fb03f82d52",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.close_friend_traceable"
+    },
+    {
+      "path": "per_scenario/narrative.close_friend_traceable_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 12135,
+      "sha256": "f6c997805b03f0205d346d63ac6bdf15ffaf7e3e419356bdf0c5295e1d0d634d",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.close_friend_traceable"
+    },
+    {
+      "path": "domain_evidence/narrative.close_friend_traceable_seed02/counterfactual_replay_narrative.close_friend_traceable.route_replay.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 3262,
+      "sha256": "bcd5f43c138074d64b85e5f256bddd187583397dcee1d6c89bc7384ff61986de",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.close_friend_traceable"
+    },
+    {
+      "path": "per_scenario/narrative.close_friend_traceable_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 12135,
+      "sha256": "69fd8297328781f7a3dc17054da289b7a87d4fa9ef805ef63ab722664f87ad3a",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.close_friend_traceable"
+    },
+    {
+      "path": "domain_evidence/narrative.close_friend_traceable_seed03/counterfactual_replay_narrative.close_friend_traceable.route_replay.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 3262,
+      "sha256": "dc5be501749d184c711a96360d3aa674047834c6cc5a3abfdb74c2c9e40c3da2",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.close_friend_traceable"
+    },
+    {
+      "path": "per_scenario/narrative.close_friend_traceable_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 12136,
+      "sha256": "ebb0ef4785ca6781b109b3816da487f63459b02861818480b0a8bce54c62df57",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.close_friend_traceable"
+    },
+    {
+      "path": "domain_evidence/narrative.close_friend_traceable_seed04/counterfactual_replay_narrative.close_friend_traceable.route_replay.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 3262,
+      "sha256": "c4a02f05da0bf38ea633b1b192e838a9e5b6ffa83fe84acac4a27bc61a885aeb",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.close_friend_traceable"
+    },
+    {
+      "path": "per_scenario/narrative.close_friend_traceable_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 12136,
+      "sha256": "4f9ae647f7a27e54df0e578174ebc94bb384c440bbf594bd5791ba56e57ea2c2",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.close_friend_traceable"
+    },
+    {
+      "path": "domain_evidence/narrative.close_friend_traceable_seed05/counterfactual_replay_narrative.close_friend_traceable.route_replay.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 3262,
+      "sha256": "aaf06da83f1024da389ba2b627e14cd887cffd8d5675f3e588421baefe6acebe",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.close_friend_traceable"
+    },
+    {
+      "path": "per_scenario/narrative.repair_trust_memory_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 11925,
+      "sha256": "8fed5583be9bcad2838a8543835d33f355f23b8c347d8ef225574fa43bed730a",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.repair_trust_memory"
+    },
+    {
+      "path": "domain_evidence/narrative.repair_trust_memory_seed01/counterfactual_replay_narrative.repair_trust_memory.route_replay.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 3079,
+      "sha256": "92278a341158a6ef21a0ecf25d32ff59e7afdc8f2bc2409400f1ee8128c61972",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.repair_trust_memory"
+    },
+    {
+      "path": "per_scenario/narrative.repair_trust_memory_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 11925,
+      "sha256": "8ccb8cf12bf4d39766d0ced361a78c8857d66949f8778a9c9a1b73e1a10a04b4",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.repair_trust_memory"
+    },
+    {
+      "path": "domain_evidence/narrative.repair_trust_memory_seed02/counterfactual_replay_narrative.repair_trust_memory.route_replay.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 3079,
+      "sha256": "58a40cff0784f57f5ffa0907aba690bad3c4cfc0722a1ad9cab2901a273469b2",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.repair_trust_memory"
+    },
+    {
+      "path": "per_scenario/narrative.repair_trust_memory_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 11925,
+      "sha256": "628f054e726356ebc5258ca847d7d2d3e016b5d4698f4445f254cffc0912fc3b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.repair_trust_memory"
+    },
+    {
+      "path": "domain_evidence/narrative.repair_trust_memory_seed03/counterfactual_replay_narrative.repair_trust_memory.route_replay.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 3079,
+      "sha256": "30f5e5002c600893dbeb6b23bdc24a79c2bca74a03cdd56ede56b96cdcce4281",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.repair_trust_memory"
+    },
+    {
+      "path": "per_scenario/narrative.repair_trust_memory_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 11926,
+      "sha256": "922484b03fa134061b0823f579c4322ed8ad67867b2bc1e23950db427c187bff",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.repair_trust_memory"
+    },
+    {
+      "path": "domain_evidence/narrative.repair_trust_memory_seed04/counterfactual_replay_narrative.repair_trust_memory.route_replay.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 3079,
+      "sha256": "20fc7eb4272a5f9d6b08e77378af9a1b9759eb76890945684293d50415c7d253",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.repair_trust_memory"
+    },
+    {
+      "path": "per_scenario/narrative.repair_trust_memory_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 11926,
+      "sha256": "1950cf94d4da692b56791fe136211cfa085451d7dc47e1a4c267d2d825c38238",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.repair_trust_memory"
+    },
+    {
+      "path": "domain_evidence/narrative.repair_trust_memory_seed05/counterfactual_replay_narrative.repair_trust_memory.route_replay.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 3079,
+      "sha256": "b033efe025a94385491b0ca7a6603368a725de32b2288f8be5f4a45043c964f8",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.repair_trust_memory"
+    },
+    {
+      "path": "per_scenario/narrative.affiliation_bias_agent_choice_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 12029,
+      "sha256": "8fdd2d9a1bb243bc9eec293e16a5b14a9f545456e42af402d7815e83453931e4",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.affiliation_bias_agent_choice"
+    },
+    {
+      "path": "domain_evidence/narrative.affiliation_bias_agent_choice_seed01/counterfactual_replay_narrative.affiliation_bias_agent_choice.route_replay.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 3140,
+      "sha256": "78af26728635555863e4d0ea220f08e148e232b21327604cc0f3f3a3c7e3b089",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.affiliation_bias_agent_choice"
+    },
+    {
+      "path": "per_scenario/narrative.affiliation_bias_agent_choice_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 12029,
+      "sha256": "1c26a20807182dae0111823013ffa3822459a27174faa5fa0b893e06349ed5ff",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.affiliation_bias_agent_choice"
+    },
+    {
+      "path": "domain_evidence/narrative.affiliation_bias_agent_choice_seed02/counterfactual_replay_narrative.affiliation_bias_agent_choice.route_replay.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 3140,
+      "sha256": "547bba91f7889ffe2f41bf6cb6d8bcfe60068e8a40f8693b75a83647fcb0da7b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.affiliation_bias_agent_choice"
+    },
+    {
+      "path": "per_scenario/narrative.affiliation_bias_agent_choice_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 12029,
+      "sha256": "62e8958460d469a2171436c33a6f38c36d42748108d6804571c57e8916865538",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.affiliation_bias_agent_choice"
+    },
+    {
+      "path": "domain_evidence/narrative.affiliation_bias_agent_choice_seed03/counterfactual_replay_narrative.affiliation_bias_agent_choice.route_replay.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 3140,
+      "sha256": "6f54e4d548b19276cca118d232ad3675ab2d522549e45a7f13c87d334a554ccf",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.affiliation_bias_agent_choice"
+    },
+    {
+      "path": "per_scenario/narrative.affiliation_bias_agent_choice_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 12030,
+      "sha256": "7afc2b82bb632b780d1122ef27021aad7c9e223158b72118e3651052eb5e3c92",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.affiliation_bias_agent_choice"
+    },
+    {
+      "path": "domain_evidence/narrative.affiliation_bias_agent_choice_seed04/counterfactual_replay_narrative.affiliation_bias_agent_choice.route_replay.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 3140,
+      "sha256": "cc08f46826103836d8777bc7f4f05ee7e6d03a937ea52a84b8f9dfc831b2d34b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.affiliation_bias_agent_choice"
+    },
+    {
+      "path": "per_scenario/narrative.affiliation_bias_agent_choice_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 12030,
+      "sha256": "e5882c1c65ab1f0bee7a5a53a74829f2cfe35f6af0d9bde9b4fe2c1f58d93410",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.affiliation_bias_agent_choice"
+    },
+    {
+      "path": "domain_evidence/narrative.affiliation_bias_agent_choice_seed05/counterfactual_replay_narrative.affiliation_bias_agent_choice.route_replay.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 3140,
+      "sha256": "c837c542f8bd569dc8ba20a713e3649dd68df3380c5f20e22b0606185b3aec7c",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.affiliation_bias_agent_choice"
+    },
+    {
+      "path": "per_scenario/coding.skill_prototype_dryrun_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 30600,
+      "sha256": "0e97973664c61a720c201002133a3c2815bdef58a30a9a7e29717c639ac62cd7",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed01/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5032,
+      "sha256": "5f60dab6caea18e1fb3459d4e35d7578cc5c6920a3a3fafe21f8c5cdab2e3e81",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed01/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed01/skill_prototype.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 299,
+      "sha256": "6a3e15fa6fe1640483d48c9f3b25ac5dd10bf705f1815705924cb3a82c979249",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed01/test_report_skill_prototype.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4383,
+      "sha256": "7fd5a556cbc07790f106181726611301ebe3ebdc9eb9ad1ac891523bd1801940",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed01/review_report_skill_prototype.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 802,
+      "sha256": "124054549bf446038dd3c971694b48343cf342849f52fafe098ba97440b518b7",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed01/counterfactual_replay_skill_prototype.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2149,
+      "sha256": "003a13d541c4d7714faffd0bade00d02902c38fc107e3cf2697791816f9c00a8",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_prototype_dryrun_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 30600,
+      "sha256": "08120b7da898b351ad5f8707d5f00bc0f84cbdd616c270ce3da00221fa6d88cb",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed02/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5032,
+      "sha256": "5f60dab6caea18e1fb3459d4e35d7578cc5c6920a3a3fafe21f8c5cdab2e3e81",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed02/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed02/skill_prototype.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 299,
+      "sha256": "6a3e15fa6fe1640483d48c9f3b25ac5dd10bf705f1815705924cb3a82c979249",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed02/test_report_skill_prototype.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4383,
+      "sha256": "c03c34bbe118ca7bc4f74d2b37ad28ca8e32cac449a83c83ad84a68008bd4e4e",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed02/review_report_skill_prototype.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 802,
+      "sha256": "124054549bf446038dd3c971694b48343cf342849f52fafe098ba97440b518b7",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed02/counterfactual_replay_skill_prototype.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2149,
+      "sha256": "003a13d541c4d7714faffd0bade00d02902c38fc107e3cf2697791816f9c00a8",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_prototype_dryrun_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 30601,
+      "sha256": "01ece862d89bd3aecf50b3fc1565fe1d8ba05eeeb8c62d7490ed3360be026b52",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed03/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5032,
+      "sha256": "5f60dab6caea18e1fb3459d4e35d7578cc5c6920a3a3fafe21f8c5cdab2e3e81",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed03/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed03/skill_prototype.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 299,
+      "sha256": "6a3e15fa6fe1640483d48c9f3b25ac5dd10bf705f1815705924cb3a82c979249",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed03/test_report_skill_prototype.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4383,
+      "sha256": "0985f625ee8d0b03dc4e18b0ae69e800f2b18d7e1598d24bd43f54415d6b2123",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed03/review_report_skill_prototype.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 802,
+      "sha256": "124054549bf446038dd3c971694b48343cf342849f52fafe098ba97440b518b7",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed03/counterfactual_replay_skill_prototype.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2149,
+      "sha256": "003a13d541c4d7714faffd0bade00d02902c38fc107e3cf2697791816f9c00a8",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_prototype_dryrun_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 30601,
+      "sha256": "7882e977bd351a93a32ce28a4acd7ba6a3ff83da7943113578e5edf85ba002e4",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed04/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5032,
+      "sha256": "5f60dab6caea18e1fb3459d4e35d7578cc5c6920a3a3fafe21f8c5cdab2e3e81",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed04/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed04/skill_prototype.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 299,
+      "sha256": "6a3e15fa6fe1640483d48c9f3b25ac5dd10bf705f1815705924cb3a82c979249",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed04/test_report_skill_prototype.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4383,
+      "sha256": "7cacee5ac6ffad5a3f51a7860a1741371989b97627389a6467308e41c7fd7333",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed04/review_report_skill_prototype.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 802,
+      "sha256": "124054549bf446038dd3c971694b48343cf342849f52fafe098ba97440b518b7",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed04/counterfactual_replay_skill_prototype.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2149,
+      "sha256": "003a13d541c4d7714faffd0bade00d02902c38fc107e3cf2697791816f9c00a8",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_prototype_dryrun_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 30601,
+      "sha256": "2319c982690c44d1aad829192de2d3bb52d45319a2ce3f1a019a5472c7e462b5",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed05/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5032,
+      "sha256": "5f60dab6caea18e1fb3459d4e35d7578cc5c6920a3a3fafe21f8c5cdab2e3e81",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed05/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed05/skill_prototype.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 299,
+      "sha256": "6a3e15fa6fe1640483d48c9f3b25ac5dd10bf705f1815705924cb3a82c979249",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed05/test_report_skill_prototype.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4383,
+      "sha256": "01e8f0c2e71352f3d6470dfbd4c046f6b9041810b4d2e74690dd847646daf0d8",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed05/review_report_skill_prototype.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 802,
+      "sha256": "124054549bf446038dd3c971694b48343cf342849f52fafe098ba97440b518b7",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun_seed05/counterfactual_replay_skill_prototype.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2149,
+      "sha256": "003a13d541c4d7714faffd0bade00d02902c38fc107e3cf2697791816f9c00a8",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_regression_fix_dryrun_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 31362,
+      "sha256": "0c1a8acd306a891f16145157d38685b2ebaaff1e73a0bc3d782b96ac6f9b8980",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed01/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5305,
+      "sha256": "b26f42a1af977d903da57be252cc4671b798cf770921eefeb10675e54f88e747",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed01/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed01/skill_regression_fix.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 283,
+      "sha256": "94d5ce8847429a0cb748cb8ac2b686bee16cf8771486ec8b94d7f23cc7ac6254",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed01/test_report_skill_regression_fix.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4443,
+      "sha256": "d27c3933719d1baa9ce489285f2309c8a637c7942c5f484a6f6a79e67fcbd097",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed01/review_report_skill_regression_fix.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 817,
+      "sha256": "159bf1c4a2453ef19e0c2bebe89da0cbea8d56abae2b747b18927dc72e121494",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed01/counterfactual_replay_skill_regression_fix.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2154,
+      "sha256": "6228ab3e1cc4c0fd37f4fcd4143bfed0eb7aeb8560f0503018bb86b8608c67da",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_regression_fix_dryrun_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 31363,
+      "sha256": "8a42e2b5fea1156001c7288b7d673e972cc5cdee9d97072eefd47e4698351de8",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed02/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5305,
+      "sha256": "b26f42a1af977d903da57be252cc4671b798cf770921eefeb10675e54f88e747",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed02/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed02/skill_regression_fix.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 283,
+      "sha256": "94d5ce8847429a0cb748cb8ac2b686bee16cf8771486ec8b94d7f23cc7ac6254",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed02/test_report_skill_regression_fix.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4443,
+      "sha256": "3e421b89661abce22f98d319de18875b3c76af0c9f555d441bfcba43131c531b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed02/review_report_skill_regression_fix.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 817,
+      "sha256": "159bf1c4a2453ef19e0c2bebe89da0cbea8d56abae2b747b18927dc72e121494",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed02/counterfactual_replay_skill_regression_fix.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2154,
+      "sha256": "6228ab3e1cc4c0fd37f4fcd4143bfed0eb7aeb8560f0503018bb86b8608c67da",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_regression_fix_dryrun_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 31361,
+      "sha256": "a8fc2a81262e94a9b6e06afc890e094b1e6078fa4c6d649e032f811157f3ae17",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed03/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5305,
+      "sha256": "b26f42a1af977d903da57be252cc4671b798cf770921eefeb10675e54f88e747",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed03/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed03/skill_regression_fix.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 283,
+      "sha256": "94d5ce8847429a0cb748cb8ac2b686bee16cf8771486ec8b94d7f23cc7ac6254",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed03/test_report_skill_regression_fix.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4441,
+      "sha256": "892d517cb0a6d0bcd7dcaca6a4a0cbb5bf054ffc62bc8ce8ef2326b910514c18",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed03/review_report_skill_regression_fix.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 817,
+      "sha256": "159bf1c4a2453ef19e0c2bebe89da0cbea8d56abae2b747b18927dc72e121494",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed03/counterfactual_replay_skill_regression_fix.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2154,
+      "sha256": "6228ab3e1cc4c0fd37f4fcd4143bfed0eb7aeb8560f0503018bb86b8608c67da",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_regression_fix_dryrun_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 31363,
+      "sha256": "87f178c9a79cf7546ef67ba5a9a7ad80eacab5d2d7d702397e28f0d296992efb",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed04/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5305,
+      "sha256": "b26f42a1af977d903da57be252cc4671b798cf770921eefeb10675e54f88e747",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed04/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed04/skill_regression_fix.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 283,
+      "sha256": "94d5ce8847429a0cb748cb8ac2b686bee16cf8771486ec8b94d7f23cc7ac6254",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed04/test_report_skill_regression_fix.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4443,
+      "sha256": "84f440dbda4ff659eff10be06163088a0de44cd60bc64401781a7fcb4261bba5",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed04/review_report_skill_regression_fix.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 817,
+      "sha256": "159bf1c4a2453ef19e0c2bebe89da0cbea8d56abae2b747b18927dc72e121494",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed04/counterfactual_replay_skill_regression_fix.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2154,
+      "sha256": "6228ab3e1cc4c0fd37f4fcd4143bfed0eb7aeb8560f0503018bb86b8608c67da",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_regression_fix_dryrun_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 31363,
+      "sha256": "89c59186d091cb1e9db07ccc7bae4556eea5753b878761bff0bfceb976371876",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed05/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5305,
+      "sha256": "b26f42a1af977d903da57be252cc4671b798cf770921eefeb10675e54f88e747",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed05/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed05/skill_regression_fix.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 283,
+      "sha256": "94d5ce8847429a0cb748cb8ac2b686bee16cf8771486ec8b94d7f23cc7ac6254",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed05/test_report_skill_regression_fix.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4443,
+      "sha256": "4f82dc873c7758e5b39bcb8fa199a50fb7a01c83e5ab5d6252beaec7c609a25d",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed05/review_report_skill_regression_fix.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 817,
+      "sha256": "159bf1c4a2453ef19e0c2bebe89da0cbea8d56abae2b747b18927dc72e121494",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed05/counterfactual_replay_skill_regression_fix.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2154,
+      "sha256": "6228ab3e1cc4c0fd37f4fcd4143bfed0eb7aeb8560f0503018bb86b8608c67da",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_failing_test_repair_dryrun_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 39790,
+      "sha256": "88b1fe55fdffc60dc388041f91b05384b9c6b732c8c474589de3b391a8f734a6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed01/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5131,
+      "sha256": "5e1e0b32242a2c2d7165ab0ab170616007ad94de2553eea8778508c8669b8d23",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed01/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed01/skill_failing_test_repair.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 259,
+      "sha256": "8c4be6ca8fbde1c316bbd73ebb9d759978615588374d610eb2790a135e5d2890",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed01/pre_patch_test_report_skill_failing_test_repair.pre_patch_tests.json",
+      "kind": "domain_evidence_pre_patch_test_report_json",
+      "bytes": 6175,
+      "sha256": "0b77933071c42d1f9a1c439b1e0093bf5fd8e0b03f374bec6fec220e10b120ed",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed01/test_report_skill_failing_test_repair.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4403,
+      "sha256": "993e79a4738b34ad481dccef7cadf0ded395d9bf1cbffaa6f7939178bdb9c53a",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed01/review_report_skill_failing_test_repair.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 1012,
+      "sha256": "4a5da6828a72f821dde7c1e72ae052351b7d19c53d392747dcd88e8125849a06",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed01/counterfactual_replay_skill_failing_test_repair.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2557,
+      "sha256": "a546bd137ee989cc0cc8150ca95877ff971b9b35d42d2dd14ef40d982d0329f7",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_failing_test_repair_dryrun_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 39791,
+      "sha256": "b39d05fcebb8ba13bb5c7f69ccd886bb08aa002621eba1943a5f7f7210c72cb7",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed02/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5131,
+      "sha256": "5e1e0b32242a2c2d7165ab0ab170616007ad94de2553eea8778508c8669b8d23",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed02/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed02/skill_failing_test_repair.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 259,
+      "sha256": "8c4be6ca8fbde1c316bbd73ebb9d759978615588374d610eb2790a135e5d2890",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed02/pre_patch_test_report_skill_failing_test_repair.pre_patch_tests.json",
+      "kind": "domain_evidence_pre_patch_test_report_json",
+      "bytes": 6175,
+      "sha256": "7ced604334bb2349ed12b6fe8097b1b20e139f07980824c4e83095b446aa91c7",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed02/test_report_skill_failing_test_repair.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4403,
+      "sha256": "6af1146027b805a8c51cd9cabceca9bf4c6247aa4bb8fa36db4f362a932827c8",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed02/review_report_skill_failing_test_repair.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 1012,
+      "sha256": "4a5da6828a72f821dde7c1e72ae052351b7d19c53d392747dcd88e8125849a06",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed02/counterfactual_replay_skill_failing_test_repair.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2557,
+      "sha256": "a546bd137ee989cc0cc8150ca95877ff971b9b35d42d2dd14ef40d982d0329f7",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_failing_test_repair_dryrun_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 39791,
+      "sha256": "a63c768dfe419e05e1c0017373c5e01753c216e3e9b0a8a4c57088353efa2c48",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed03/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5131,
+      "sha256": "5e1e0b32242a2c2d7165ab0ab170616007ad94de2553eea8778508c8669b8d23",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed03/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed03/skill_failing_test_repair.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 259,
+      "sha256": "8c4be6ca8fbde1c316bbd73ebb9d759978615588374d610eb2790a135e5d2890",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed03/pre_patch_test_report_skill_failing_test_repair.pre_patch_tests.json",
+      "kind": "domain_evidence_pre_patch_test_report_json",
+      "bytes": 6175,
+      "sha256": "36fc7d39409aae38a4fa9778f86c5fdea932dd2af3655f711e99682dd2712a08",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed03/test_report_skill_failing_test_repair.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4403,
+      "sha256": "21c6cc603efdbf23a46cb7a41aa98b2343695bd445dac9ca3d837d2747be50b5",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed03/review_report_skill_failing_test_repair.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 1012,
+      "sha256": "4a5da6828a72f821dde7c1e72ae052351b7d19c53d392747dcd88e8125849a06",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed03/counterfactual_replay_skill_failing_test_repair.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2557,
+      "sha256": "a546bd137ee989cc0cc8150ca95877ff971b9b35d42d2dd14ef40d982d0329f7",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_failing_test_repair_dryrun_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 39791,
+      "sha256": "33553c57c791e77844db6774334d83713905bee46e34901249f323f552254ae2",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed04/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5131,
+      "sha256": "5e1e0b32242a2c2d7165ab0ab170616007ad94de2553eea8778508c8669b8d23",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed04/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed04/skill_failing_test_repair.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 259,
+      "sha256": "8c4be6ca8fbde1c316bbd73ebb9d759978615588374d610eb2790a135e5d2890",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed04/pre_patch_test_report_skill_failing_test_repair.pre_patch_tests.json",
+      "kind": "domain_evidence_pre_patch_test_report_json",
+      "bytes": 6175,
+      "sha256": "ece2e93ee31d227d317e1beb8626d017b346ff4a24ae528c27a249f1f56b9989",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed04/test_report_skill_failing_test_repair.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4403,
+      "sha256": "1d3966943172f34b85a4fe0108b0500327c98b9bcdc8a7912fa38ca4261f65ee",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed04/review_report_skill_failing_test_repair.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 1012,
+      "sha256": "4a5da6828a72f821dde7c1e72ae052351b7d19c53d392747dcd88e8125849a06",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed04/counterfactual_replay_skill_failing_test_repair.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2557,
+      "sha256": "a546bd137ee989cc0cc8150ca95877ff971b9b35d42d2dd14ef40d982d0329f7",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_failing_test_repair_dryrun_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 39791,
+      "sha256": "40c777c9770c3b8de9c2707540ae999551147e8ac282be5923f18d502f9393b4",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed05/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5131,
+      "sha256": "5e1e0b32242a2c2d7165ab0ab170616007ad94de2553eea8778508c8669b8d23",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed05/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed05/skill_failing_test_repair.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 259,
+      "sha256": "8c4be6ca8fbde1c316bbd73ebb9d759978615588374d610eb2790a135e5d2890",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed05/pre_patch_test_report_skill_failing_test_repair.pre_patch_tests.json",
+      "kind": "domain_evidence_pre_patch_test_report_json",
+      "bytes": 6175,
+      "sha256": "61c2f9d52b9c67be2180c8d4b1c0e933332dc42c79a522de6ea116cd40b4e62e",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed05/test_report_skill_failing_test_repair.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4403,
+      "sha256": "2a5d31da522947c5060193fac4c7406fd6fa9c4e0111813f0ed3ca1992c325af",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed05/review_report_skill_failing_test_repair.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 1012,
+      "sha256": "4a5da6828a72f821dde7c1e72ae052351b7d19c53d392747dcd88e8125849a06",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun_seed05/counterfactual_replay_skill_failing_test_repair.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2557,
+      "sha256": "a546bd137ee989cc0cc8150ca95877ff971b9b35d42d2dd14ef40d982d0329f7",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_multifile_review_dryrun_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 36991,
+      "sha256": "8aa5cbad45b8c263ed164bb20f10830d87cd7bac11a8369c0f3a3d6821928a55",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed01/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 7124,
+      "sha256": "4297fcfccb8818951bb6d10fb19339c533055ea134377cd6fb3c74e08e4edb73",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed01/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed01/skill_multifile_review.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 950,
+      "sha256": "f276639d15030af643d7e605bf2b1e170e42ab68e272a71e8de2718a5e5fe90b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed01/test_report_skill_multifile_review.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4447,
+      "sha256": "e7888564854b4196daf7d12b5f152d462091e5ca0c7be6c1684d14d9b6c60ba2",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed01/review_report_skill_multifile_review.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 1028,
+      "sha256": "47a0dfcc6744a56dd331c49b817fc45d16ab3fdd5590649ea6a6c5a981e15aa8",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed01/counterfactual_replay_skill_multifile_review.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2573,
+      "sha256": "49deeb4f3852ff7fd81c0fd313e8292f7de563d4237691500ad5a8eb2f1f77ec",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_multifile_review_dryrun_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 36992,
+      "sha256": "96b10c089d5c9cd7921425bf4783ddcbb7c1ace8f0eec8b783bb9ddcb5236cba",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed02/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 7124,
+      "sha256": "4297fcfccb8818951bb6d10fb19339c533055ea134377cd6fb3c74e08e4edb73",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed02/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed02/skill_multifile_review.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 950,
+      "sha256": "f276639d15030af643d7e605bf2b1e170e42ab68e272a71e8de2718a5e5fe90b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed02/test_report_skill_multifile_review.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4447,
+      "sha256": "7035000f533f96087cf2c48b6220010534878443562a2f78f2473cd54ed66761",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed02/review_report_skill_multifile_review.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 1028,
+      "sha256": "47a0dfcc6744a56dd331c49b817fc45d16ab3fdd5590649ea6a6c5a981e15aa8",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed02/counterfactual_replay_skill_multifile_review.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2573,
+      "sha256": "49deeb4f3852ff7fd81c0fd313e8292f7de563d4237691500ad5a8eb2f1f77ec",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_multifile_review_dryrun_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 36992,
+      "sha256": "2507ada4f058897ea0604e750aa31f59274288fe03b344ae79fbde63adf9d9ea",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed03/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 7124,
+      "sha256": "4297fcfccb8818951bb6d10fb19339c533055ea134377cd6fb3c74e08e4edb73",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed03/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed03/skill_multifile_review.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 950,
+      "sha256": "f276639d15030af643d7e605bf2b1e170e42ab68e272a71e8de2718a5e5fe90b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed03/test_report_skill_multifile_review.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4447,
+      "sha256": "7752b92c562c2cfce26a11d01e0cdf2c837cfa2289ea3c9d5ab2c3af59a6a521",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed03/review_report_skill_multifile_review.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 1028,
+      "sha256": "47a0dfcc6744a56dd331c49b817fc45d16ab3fdd5590649ea6a6c5a981e15aa8",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed03/counterfactual_replay_skill_multifile_review.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2573,
+      "sha256": "49deeb4f3852ff7fd81c0fd313e8292f7de563d4237691500ad5a8eb2f1f77ec",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_multifile_review_dryrun_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 36992,
+      "sha256": "4e69aece63a3faa1ab6b35635c02a6b994b06ef17a7068352ba9824a2fb0e935",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed04/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 7124,
+      "sha256": "4297fcfccb8818951bb6d10fb19339c533055ea134377cd6fb3c74e08e4edb73",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed04/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed04/skill_multifile_review.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 950,
+      "sha256": "f276639d15030af643d7e605bf2b1e170e42ab68e272a71e8de2718a5e5fe90b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed04/test_report_skill_multifile_review.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4447,
+      "sha256": "2b0ff0422c92814406dc62addb4f6f3529b0b32f6d54aea843b56f823fc077c7",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed04/review_report_skill_multifile_review.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 1028,
+      "sha256": "47a0dfcc6744a56dd331c49b817fc45d16ab3fdd5590649ea6a6c5a981e15aa8",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed04/counterfactual_replay_skill_multifile_review.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2573,
+      "sha256": "49deeb4f3852ff7fd81c0fd313e8292f7de563d4237691500ad5a8eb2f1f77ec",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_multifile_review_dryrun_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 36992,
+      "sha256": "618b62d6e5f983ed296402881b32f9e186bf4a78e6804c128373270fd9c67795",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed05/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 7124,
+      "sha256": "4297fcfccb8818951bb6d10fb19339c533055ea134377cd6fb3c74e08e4edb73",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed05/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed05/skill_multifile_review.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 950,
+      "sha256": "f276639d15030af643d7e605bf2b1e170e42ab68e272a71e8de2718a5e5fe90b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed05/test_report_skill_multifile_review.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4447,
+      "sha256": "1751400c50dc3da3565aeea165ef2b23b1530f75662f3c4dd966418fd286dd34",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed05/review_report_skill_multifile_review.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 1028,
+      "sha256": "47a0dfcc6744a56dd331c49b817fc45d16ab3fdd5590649ea6a6c5a981e15aa8",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed05/counterfactual_replay_skill_multifile_review.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2573,
+      "sha256": "49deeb4f3852ff7fd81c0fd313e8292f7de563d4237691500ad5a8eb2f1f77ec",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_multifile_dependency_repair_dryrun_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 60876,
+      "sha256": "82faa4c092f471c40216406a3e40d65ae8c9bf887490a19465a53dfca4a49d12",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed01/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 4681,
+      "sha256": "3cbc3de53830e15c36fdce7ad9bb701a6fa0dd55d4d01bd8ebaa4645d1115648",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed01/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 750,
+      "sha256": "fff4374a2d0b3a4659d5558e1cbe5e6530ebc1e58e27f1d14082183ca436da35",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed01/skill_multifile_dependency_repair.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 459,
+      "sha256": "3794f24f19d176309ff6a35d423c51e47bc81df3252af35e16216684fa86a985",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed01/pre_patch_test_report_skill_multifile_dependency_repair.pre_patch_tests.json",
+      "kind": "domain_evidence_pre_patch_test_report_json",
+      "bytes": 5100,
+      "sha256": "2a68d840db30637e366680e27286f42d6669aeab75afb0d5be1afe95a60d72cf",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed01/partial_patch_test_report_skill_multifile_dependency_repair.patch.single_file.src_formatter.py.tests.json",
+      "kind": "domain_evidence_partial_patch_test_report_json",
+      "bytes": 5358,
+      "sha256": "6ae99b520476b818f22eaedbcddc1cb3a84470a359cf0e8f3eff44fcb7350a62",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed01/partial_patch_test_report_skill_multifile_dependency_repair.patch.single_file.src_workflow.py.tests.json",
+      "kind": "domain_evidence_partial_patch_test_report_json",
+      "bytes": 5356,
+      "sha256": "9ab0db6074ba7fe116a19cc60f362e82a030bf044e9a88ad0cda1803d818b06d",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed01/test_report_skill_multifile_dependency_repair.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4069,
+      "sha256": "05723ebd15e04120d63826d87849ee46f5d6fea645b24308c4ce34332fcfeb76",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed01/review_report_skill_multifile_dependency_repair.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 4984,
+      "sha256": "e915c93d631fed819c38d416de69c31d12d1ef2b9dd67098f1a89ad24ef9aab5",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed01/counterfactual_replay_skill_multifile_dependency_repair.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 3812,
+      "sha256": "2d71e22a3500b54eb803b308f6cb22e828028865d95bbbb86e81a1f516be7f92",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_multifile_dependency_repair_dryrun_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 60875,
+      "sha256": "260bb83a25e88f0e01b8eb4318442be3d79db168a0a3e96e6d628921ffb6e632",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed02/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 4681,
+      "sha256": "3cbc3de53830e15c36fdce7ad9bb701a6fa0dd55d4d01bd8ebaa4645d1115648",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed02/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 750,
+      "sha256": "fff4374a2d0b3a4659d5558e1cbe5e6530ebc1e58e27f1d14082183ca436da35",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed02/skill_multifile_dependency_repair.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 459,
+      "sha256": "3794f24f19d176309ff6a35d423c51e47bc81df3252af35e16216684fa86a985",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed02/pre_patch_test_report_skill_multifile_dependency_repair.pre_patch_tests.json",
+      "kind": "domain_evidence_pre_patch_test_report_json",
+      "bytes": 5100,
+      "sha256": "ffb06514a2381ced8dc0985dc79d3c21ebf014e0ac0473ddf352c3bb8e3d8794",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed02/partial_patch_test_report_skill_multifile_dependency_repair.patch.single_file.src_formatter.py.tests.json",
+      "kind": "domain_evidence_partial_patch_test_report_json",
+      "bytes": 5358,
+      "sha256": "43b92c2ef7229b6352b45a24e1994db33e374db54497ac6337d715be6bcc337d",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed02/partial_patch_test_report_skill_multifile_dependency_repair.patch.single_file.src_workflow.py.tests.json",
+      "kind": "domain_evidence_partial_patch_test_report_json",
+      "bytes": 5356,
+      "sha256": "ce6823905df3ab0e9cda84cab2525ada8e9bbec27c905d7bf0632992d0404b6a",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed02/test_report_skill_multifile_dependency_repair.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4067,
+      "sha256": "6f77694be9656581f065c33490f13c8407233dc1ddbcc72e25ba9aad2cd18229",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed02/review_report_skill_multifile_dependency_repair.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 4984,
+      "sha256": "c120017c605a462c750f43d473df117659df7ea29eb1d8d2401bf71cb7eb87e1",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed02/counterfactual_replay_skill_multifile_dependency_repair.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 3812,
+      "sha256": "2d71e22a3500b54eb803b308f6cb22e828028865d95bbbb86e81a1f516be7f92",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_multifile_dependency_repair_dryrun_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 60877,
+      "sha256": "20fb813c83a03da2a0289466441554f287afbf4f39891ab6952e5be178626bcc",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed03/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 4681,
+      "sha256": "3cbc3de53830e15c36fdce7ad9bb701a6fa0dd55d4d01bd8ebaa4645d1115648",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed03/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 750,
+      "sha256": "fff4374a2d0b3a4659d5558e1cbe5e6530ebc1e58e27f1d14082183ca436da35",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed03/skill_multifile_dependency_repair.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 459,
+      "sha256": "3794f24f19d176309ff6a35d423c51e47bc81df3252af35e16216684fa86a985",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed03/pre_patch_test_report_skill_multifile_dependency_repair.pre_patch_tests.json",
+      "kind": "domain_evidence_pre_patch_test_report_json",
+      "bytes": 5100,
+      "sha256": "5f7a8bc9b15921bec327e7c32d864b1854046ea9c1ab972ccbb4e9a8ca5eeda3",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed03/partial_patch_test_report_skill_multifile_dependency_repair.patch.single_file.src_formatter.py.tests.json",
+      "kind": "domain_evidence_partial_patch_test_report_json",
+      "bytes": 5358,
+      "sha256": "b55c6a785758772c0ad696bbad985a291d092e6f373d4531d8a3ef286ff8b8a9",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed03/partial_patch_test_report_skill_multifile_dependency_repair.patch.single_file.src_workflow.py.tests.json",
+      "kind": "domain_evidence_partial_patch_test_report_json",
+      "bytes": 5356,
+      "sha256": "2cd33b03c58920453b9ef809dcf3dfd0f3f55b8c4d9966d75a3754e6baae4513",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed03/test_report_skill_multifile_dependency_repair.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4069,
+      "sha256": "678591b110fc3e91b0e1374a13fc0ed0077980087faa240927a06b5bdba02c25",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed03/review_report_skill_multifile_dependency_repair.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 4984,
+      "sha256": "089bd8917f425d2365b8dd34b964638871708e7db1d74abc4816d6df0371818f",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed03/counterfactual_replay_skill_multifile_dependency_repair.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 3812,
+      "sha256": "2d71e22a3500b54eb803b308f6cb22e828028865d95bbbb86e81a1f516be7f92",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_multifile_dependency_repair_dryrun_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 60877,
+      "sha256": "3020179e8965424af20d4940cec92ceb4194629cd932bdb67ba8fa65817d7dda",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed04/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 4681,
+      "sha256": "3cbc3de53830e15c36fdce7ad9bb701a6fa0dd55d4d01bd8ebaa4645d1115648",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed04/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 750,
+      "sha256": "fff4374a2d0b3a4659d5558e1cbe5e6530ebc1e58e27f1d14082183ca436da35",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed04/skill_multifile_dependency_repair.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 459,
+      "sha256": "3794f24f19d176309ff6a35d423c51e47bc81df3252af35e16216684fa86a985",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed04/pre_patch_test_report_skill_multifile_dependency_repair.pre_patch_tests.json",
+      "kind": "domain_evidence_pre_patch_test_report_json",
+      "bytes": 5100,
+      "sha256": "555be3dce65473140466457ded45d068ed59aacfdd21d3f34e2a932a09e7ab21",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed04/partial_patch_test_report_skill_multifile_dependency_repair.patch.single_file.src_formatter.py.tests.json",
+      "kind": "domain_evidence_partial_patch_test_report_json",
+      "bytes": 5358,
+      "sha256": "652836fc9e502ac0ca4ebebd61d2b2ba021373ee5bff630a05e2149aee23afb3",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed04/partial_patch_test_report_skill_multifile_dependency_repair.patch.single_file.src_workflow.py.tests.json",
+      "kind": "domain_evidence_partial_patch_test_report_json",
+      "bytes": 5356,
+      "sha256": "a3dac9a8b101943e5bb7fc33b9821411ce2e2df88695a74b922006852f25f566",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed04/test_report_skill_multifile_dependency_repair.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4069,
+      "sha256": "7a6e9beed5397873d5d671b8a56d0dd7fb86f4a1b0801f745a6f931e9f6de68c",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed04/review_report_skill_multifile_dependency_repair.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 4984,
+      "sha256": "5c3e3d1c444a035f4d9065fd4b10319b01a4f2ecd3017577ef1e1bdfbd9e55ab",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed04/counterfactual_replay_skill_multifile_dependency_repair.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 3812,
+      "sha256": "2d71e22a3500b54eb803b308f6cb22e828028865d95bbbb86e81a1f516be7f92",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_multifile_dependency_repair_dryrun_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 60873,
+      "sha256": "4de1b4eb8de5d3b425f9149ae30b565f0f17d486802b5de5e83aabb6ec66a192",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed05/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 4681,
+      "sha256": "3cbc3de53830e15c36fdce7ad9bb701a6fa0dd55d4d01bd8ebaa4645d1115648",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed05/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 750,
+      "sha256": "fff4374a2d0b3a4659d5558e1cbe5e6530ebc1e58e27f1d14082183ca436da35",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed05/skill_multifile_dependency_repair.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 459,
+      "sha256": "3794f24f19d176309ff6a35d423c51e47bc81df3252af35e16216684fa86a985",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed05/pre_patch_test_report_skill_multifile_dependency_repair.pre_patch_tests.json",
+      "kind": "domain_evidence_pre_patch_test_report_json",
+      "bytes": 5098,
+      "sha256": "cc68ac9c6243597ed1048a2c48256dc9155104fde2229ec8c59dc7820a1938d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed05/partial_patch_test_report_skill_multifile_dependency_repair.patch.single_file.src_formatter.py.tests.json",
+      "kind": "domain_evidence_partial_patch_test_report_json",
+      "bytes": 5358,
+      "sha256": "44b5e7fa743ed5a5eb358e16747e084110e4aca4b8d2c61b263800c61304f1af",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed05/partial_patch_test_report_skill_multifile_dependency_repair.patch.single_file.src_workflow.py.tests.json",
+      "kind": "domain_evidence_partial_patch_test_report_json",
+      "bytes": 5356,
+      "sha256": "35e1ad5f99671129cafc2777a97c1755d86f9a935b8e096575a6f49939f0f07a",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed05/test_report_skill_multifile_dependency_repair.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4067,
+      "sha256": "4600af455a012e893bb983f6bc8822fd1501bc2a79e1428098b7e2b12913de2b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed05/review_report_skill_multifile_dependency_repair.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 4984,
+      "sha256": "a97a29aaff9300519dc13782b9b99bcdc71e54d484cab3bfb2b10bb7a9b412fb",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun_seed05/counterfactual_replay_skill_multifile_dependency_repair.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 3812,
+      "sha256": "2d71e22a3500b54eb803b308f6cb22e828028865d95bbbb86e81a1f516be7f92",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_cross_file_regression_dryrun_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 64147,
+      "sha256": "b3f98b00458d9c605dd38ac4f24de569318ea347616e7d55f04f9334ea1cf5d8",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed01/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5004,
+      "sha256": "0e926a340727960455f5e402044c5210aa0b0e5a10b882e595bb70250155bee3",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed01/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 764,
+      "sha256": "41bf1b47df1078f4bdfb544784e1a87e80eddfa40f35ab213c8a575a13d8e2cd",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed01/skill_cross_file_regression.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 580,
+      "sha256": "2e6c9e356d6011605d1505fb63f334b4b9843f3379306393f1bc58ea924e8514",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed01/pre_patch_test_report_skill_cross_file_regression.pre_patch_tests.json",
+      "kind": "domain_evidence_pre_patch_test_report_json",
+      "bytes": 5985,
+      "sha256": "133f213d15bd242309a3c93e13de84fbc38ba4b14e98e0686a83b9e93e7edf4f",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed01/partial_patch_test_report_skill_cross_file_regression.patch.single_file.src_normalizer.py.tests.json",
+      "kind": "domain_evidence_partial_patch_test_report_json",
+      "bytes": 6225,
+      "sha256": "33f716ef1a5051791f1311e965d9166149d43f9085c3ea4c595a9986ea0be2e3",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed01/partial_patch_test_report_skill_cross_file_regression.patch.single_file.src_report.py.tests.json",
+      "kind": "domain_evidence_partial_patch_test_report_json",
+      "bytes": 6219,
+      "sha256": "402a2ebfda0e9d8dd47152ba425a609d5301befb544d313f5e1dd34c90e47672",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed01/test_report_skill_cross_file_regression.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4050,
+      "sha256": "524b4f1e0fa64abc2dbf00ed750d09d5d3393315e76a45335ae5ab5a5d108549",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed01/review_report_skill_cross_file_regression.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 4965,
+      "sha256": "3c8a2d86b87601aed1e77f5781c92e380f69505dd3b6eaa834d9cc4ccc4db35a",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed01/counterfactual_replay_skill_cross_file_regression.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 3806,
+      "sha256": "3490bff0ccc0bbf61b73c958ba6e5df21cf99671d42cf9f013ac1a6678e54dc5",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_cross_file_regression_dryrun_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 64152,
+      "sha256": "d14d29cdb490a27ab2d3d160ad02b0dd4ac9d47811272c078d73a45ecd3901bf",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed02/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5004,
+      "sha256": "0e926a340727960455f5e402044c5210aa0b0e5a10b882e595bb70250155bee3",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed02/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 764,
+      "sha256": "41bf1b47df1078f4bdfb544784e1a87e80eddfa40f35ab213c8a575a13d8e2cd",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed02/skill_cross_file_regression.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 580,
+      "sha256": "2e6c9e356d6011605d1505fb63f334b4b9843f3379306393f1bc58ea924e8514",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed02/pre_patch_test_report_skill_cross_file_regression.pre_patch_tests.json",
+      "kind": "domain_evidence_pre_patch_test_report_json",
+      "bytes": 5985,
+      "sha256": "f8498aada08e1856eb948e789349554e26996cebbfda5ced445678b79391fa0e",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed02/partial_patch_test_report_skill_cross_file_regression.patch.single_file.src_normalizer.py.tests.json",
+      "kind": "domain_evidence_partial_patch_test_report_json",
+      "bytes": 6227,
+      "sha256": "25df9e1611a544770096ea5a4a55eda46f23c9f98b092c9a4daaee95cb7a72b3",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed02/partial_patch_test_report_skill_cross_file_regression.patch.single_file.src_report.py.tests.json",
+      "kind": "domain_evidence_partial_patch_test_report_json",
+      "bytes": 6219,
+      "sha256": "1dc28a7ad1e2c3d6ec531ffed59379a9dbfadc2df49afe67624d381cccb65eb5",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed02/test_report_skill_cross_file_regression.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4052,
+      "sha256": "d698907a9ac43e185f78da85df52bdc16c9fe9a72054b54640bf8740eb368ce5",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed02/review_report_skill_cross_file_regression.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 4965,
+      "sha256": "0e05b31efa3c216c94e461382f26fba37be419c565ec6f07c60b40ffbbfc4c90",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed02/counterfactual_replay_skill_cross_file_regression.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 3806,
+      "sha256": "3490bff0ccc0bbf61b73c958ba6e5df21cf99671d42cf9f013ac1a6678e54dc5",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_cross_file_regression_dryrun_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 64150,
+      "sha256": "fa08d90c19aa3c4cf844ffff65765dd65d9b88715611ee6ec6d2687bb3c408af",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed03/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5004,
+      "sha256": "0e926a340727960455f5e402044c5210aa0b0e5a10b882e595bb70250155bee3",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed03/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 764,
+      "sha256": "41bf1b47df1078f4bdfb544784e1a87e80eddfa40f35ab213c8a575a13d8e2cd",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed03/skill_cross_file_regression.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 580,
+      "sha256": "2e6c9e356d6011605d1505fb63f334b4b9843f3379306393f1bc58ea924e8514",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed03/pre_patch_test_report_skill_cross_file_regression.pre_patch_tests.json",
+      "kind": "domain_evidence_pre_patch_test_report_json",
+      "bytes": 5985,
+      "sha256": "21d116d916f9a78f02641f9809353dccb8419dc913d1353f2ec41f38ecca94f7",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed03/partial_patch_test_report_skill_cross_file_regression.patch.single_file.src_normalizer.py.tests.json",
+      "kind": "domain_evidence_partial_patch_test_report_json",
+      "bytes": 6227,
+      "sha256": "fb5d9cef8434ac8d947f8c0baaa8802177a72b85492304ef85a4e52d56a6c41b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed03/partial_patch_test_report_skill_cross_file_regression.patch.single_file.src_report.py.tests.json",
+      "kind": "domain_evidence_partial_patch_test_report_json",
+      "bytes": 6217,
+      "sha256": "9971329da8dcd06c03a820de37b2002841b662889074396d6f8155166fc4cde8",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed03/test_report_skill_cross_file_regression.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4052,
+      "sha256": "4952af1ecfd41612336066beb64f01b6e8ecba9ab5de5d3d914dd592fc2b488b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed03/review_report_skill_cross_file_regression.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 4965,
+      "sha256": "af28dde6074daa6a4cafb627a5ccadb9c5572da28723b14b78ffb50011720732",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed03/counterfactual_replay_skill_cross_file_regression.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 3806,
+      "sha256": "3490bff0ccc0bbf61b73c958ba6e5df21cf99671d42cf9f013ac1a6678e54dc5",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_cross_file_regression_dryrun_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 64152,
+      "sha256": "c59bfde771dbd53297526168e4899bbd29efa948305205b0b7eb68f673645ae6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed04/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5004,
+      "sha256": "0e926a340727960455f5e402044c5210aa0b0e5a10b882e595bb70250155bee3",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed04/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 764,
+      "sha256": "41bf1b47df1078f4bdfb544784e1a87e80eddfa40f35ab213c8a575a13d8e2cd",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed04/skill_cross_file_regression.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 580,
+      "sha256": "2e6c9e356d6011605d1505fb63f334b4b9843f3379306393f1bc58ea924e8514",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed04/pre_patch_test_report_skill_cross_file_regression.pre_patch_tests.json",
+      "kind": "domain_evidence_pre_patch_test_report_json",
+      "bytes": 5985,
+      "sha256": "0c49d25f52cfd2ea20d9283a54b178f1e0d147983f47036b4b0e9eca2cdf5f5f",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed04/partial_patch_test_report_skill_cross_file_regression.patch.single_file.src_normalizer.py.tests.json",
+      "kind": "domain_evidence_partial_patch_test_report_json",
+      "bytes": 6227,
+      "sha256": "1a28d340c24dbd8c1295fc12a53dc42f9983b234fc3ad9dcea573e811a8e3e48",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed04/partial_patch_test_report_skill_cross_file_regression.patch.single_file.src_report.py.tests.json",
+      "kind": "domain_evidence_partial_patch_test_report_json",
+      "bytes": 6219,
+      "sha256": "29d5d009506da2a11fdbcb700103c8e1910b5c9f87129026d0abd7ca8527a78c",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed04/test_report_skill_cross_file_regression.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4052,
+      "sha256": "dede014bff90d33867b41bb3e3eb413ec2956cea9fe44cab627a198b56200939",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed04/review_report_skill_cross_file_regression.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 4965,
+      "sha256": "d8e1aeb7c1eeb74902bc93043055ef1d154c19e5d2c41e983fdadef885ce034c",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed04/counterfactual_replay_skill_cross_file_regression.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 3806,
+      "sha256": "3490bff0ccc0bbf61b73c958ba6e5df21cf99671d42cf9f013ac1a6678e54dc5",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_cross_file_regression_dryrun_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 64146,
+      "sha256": "80c6ec8df0cbb94d4c07d80a3096fde600f6972e2b4d9c1e1f9820379c1df61a",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed05/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5004,
+      "sha256": "0e926a340727960455f5e402044c5210aa0b0e5a10b882e595bb70250155bee3",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed05/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 764,
+      "sha256": "41bf1b47df1078f4bdfb544784e1a87e80eddfa40f35ab213c8a575a13d8e2cd",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed05/skill_cross_file_regression.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 580,
+      "sha256": "2e6c9e356d6011605d1505fb63f334b4b9843f3379306393f1bc58ea924e8514",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed05/pre_patch_test_report_skill_cross_file_regression.pre_patch_tests.json",
+      "kind": "domain_evidence_pre_patch_test_report_json",
+      "bytes": 5985,
+      "sha256": "821ca22e86e40051d5e3c1b23b35628014e94d3853c736d17bbd43d58859932f",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed05/partial_patch_test_report_skill_cross_file_regression.patch.single_file.src_normalizer.py.tests.json",
+      "kind": "domain_evidence_partial_patch_test_report_json",
+      "bytes": 6225,
+      "sha256": "34811547c134050711859167e2617b672f3864cfaac92dc1acc849bed3e13725",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed05/partial_patch_test_report_skill_cross_file_regression.patch.single_file.src_report.py.tests.json",
+      "kind": "domain_evidence_partial_patch_test_report_json",
+      "bytes": 6215,
+      "sha256": "3cd8fbc97eb0d0cd611e1e9e2f386cd2af2f4307de880dfa409c62ed9be9cfa2",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed05/test_report_skill_cross_file_regression.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4052,
+      "sha256": "d0b35102fecfdb878c60164ff564c8e955e22182e027a57fa6ab181a94752da1",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed05/review_report_skill_cross_file_regression.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 4965,
+      "sha256": "2599a663a350a81b70d7039ac8dfc8d6649476c47e69e7cd3c3876e8d1de9cba",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun_seed05/counterfactual_replay_skill_cross_file_regression.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 3806,
+      "sha256": "3490bff0ccc0bbf61b73c958ba6e5df21cf99671d42cf9f013ac1a6678e54dc5",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_reviewer_disagreement_dryrun_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 41217,
+      "sha256": "0db9c351d7208c771a89b5b4459ae6cb6a129a1f5ccf7b846802606950d066b9",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed01/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5878,
+      "sha256": "6914f9b63b0556da4439c932cd35929e3425b009fe98d5d5a5a5def90b08424b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed01/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed01/skill_reviewer_disagreement.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 291,
+      "sha256": "61fa5f6cbe0a0d459020fd087d8d0f3f8951c7e8bea4d3f812d1df0bf6e2b5e2",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed01/test_report_skill_reviewer_disagreement.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4455,
+      "sha256": "eba5a10765e9d2e20c24f4ce355bf059737942385d843cbede80f03aa1222e12",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed01/review_report_skill_reviewer_disagreement.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 4356,
+      "sha256": "918c632711f443acad21ff4ce701b572080305271315edb80a20cda867f8b919",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed01/counterfactual_replay_skill_reviewer_disagreement.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2959,
+      "sha256": "5ba9c2d824dbbfa00f42c07d4874b4246ca6021aa55a94de8a8130d1b0c47392",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_reviewer_disagreement_dryrun_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 41220,
+      "sha256": "80e4cdf7b2ddf92f63204242155e60a957b0008fbf2bcdfcca29a875812195bd",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed02/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5878,
+      "sha256": "6914f9b63b0556da4439c932cd35929e3425b009fe98d5d5a5a5def90b08424b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed02/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed02/skill_reviewer_disagreement.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 291,
+      "sha256": "61fa5f6cbe0a0d459020fd087d8d0f3f8951c7e8bea4d3f812d1df0bf6e2b5e2",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed02/test_report_skill_reviewer_disagreement.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4457,
+      "sha256": "c0f3c43c8d59541aca1981290589584923959fbf5aefc2496e39baa3c5f795a4",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed02/review_report_skill_reviewer_disagreement.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 4356,
+      "sha256": "918c632711f443acad21ff4ce701b572080305271315edb80a20cda867f8b919",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed02/counterfactual_replay_skill_reviewer_disagreement.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2959,
+      "sha256": "5ba9c2d824dbbfa00f42c07d4874b4246ca6021aa55a94de8a8130d1b0c47392",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_reviewer_disagreement_dryrun_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 41220,
+      "sha256": "9f4d6e854bf81289e52131e2af6f43ec5cadb37654ef3d668c1e0496448ab6f3",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed03/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5878,
+      "sha256": "6914f9b63b0556da4439c932cd35929e3425b009fe98d5d5a5a5def90b08424b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed03/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed03/skill_reviewer_disagreement.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 291,
+      "sha256": "61fa5f6cbe0a0d459020fd087d8d0f3f8951c7e8bea4d3f812d1df0bf6e2b5e2",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed03/test_report_skill_reviewer_disagreement.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4457,
+      "sha256": "7ae66d4144823ca7cb547d3fc9e2298f0c44a5c6bc4926d5ccc868626337eb4b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed03/review_report_skill_reviewer_disagreement.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 4356,
+      "sha256": "918c632711f443acad21ff4ce701b572080305271315edb80a20cda867f8b919",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed03/counterfactual_replay_skill_reviewer_disagreement.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2959,
+      "sha256": "5ba9c2d824dbbfa00f42c07d4874b4246ca6021aa55a94de8a8130d1b0c47392",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_reviewer_disagreement_dryrun_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 41220,
+      "sha256": "7ef8aced4567e17dd722aba04a1b51284baceda5a3771b9fff9965fd0aeee321",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed04/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5878,
+      "sha256": "6914f9b63b0556da4439c932cd35929e3425b009fe98d5d5a5a5def90b08424b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed04/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed04/skill_reviewer_disagreement.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 291,
+      "sha256": "61fa5f6cbe0a0d459020fd087d8d0f3f8951c7e8bea4d3f812d1df0bf6e2b5e2",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed04/test_report_skill_reviewer_disagreement.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4457,
+      "sha256": "919639d409202a4100784fb156197ae7a60969c4cc89c6a42781c8439993785c",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed04/review_report_skill_reviewer_disagreement.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 4356,
+      "sha256": "918c632711f443acad21ff4ce701b572080305271315edb80a20cda867f8b919",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed04/counterfactual_replay_skill_reviewer_disagreement.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2959,
+      "sha256": "5ba9c2d824dbbfa00f42c07d4874b4246ca6021aa55a94de8a8130d1b0c47392",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_reviewer_disagreement_dryrun_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 41220,
+      "sha256": "1c9225541890a969ee07d5ad259b98eacb62a42af13875755f3bc72815ac299f",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed05/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5878,
+      "sha256": "6914f9b63b0556da4439c932cd35929e3425b009fe98d5d5a5a5def90b08424b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed05/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed05/skill_reviewer_disagreement.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 291,
+      "sha256": "61fa5f6cbe0a0d459020fd087d8d0f3f8951c7e8bea4d3f812d1df0bf6e2b5e2",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed05/test_report_skill_reviewer_disagreement.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4457,
+      "sha256": "c7ce5e2d1fa64fcd89af8217b85a6ef2043f0489bb03644c1b46bddb3fe7bb28",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed05/review_report_skill_reviewer_disagreement.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 4356,
+      "sha256": "918c632711f443acad21ff4ce701b572080305271315edb80a20cda867f8b919",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed05/counterfactual_replay_skill_reviewer_disagreement.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2959,
+      "sha256": "5ba9c2d824dbbfa00f42c07d4874b4246ca6021aa55a94de8a8130d1b0c47392",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_javascript_smoke_dryrun_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 28421,
+      "sha256": "3b7f5a73a0d889de94372f6cff36af8ddddf0ef0fd72305d91b476d022efede6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed01/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 3462,
+      "sha256": "aa3e6b6185752212072f59f6882f9c41d6ed339c47e938d29d994f23ec3725ae",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed01/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 94,
+      "sha256": "98d82966c44a258e6111aaaf8d8d97dd64bb2f6cb9195399ae680179017ce95e",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed01/skill_javascript_smoke.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 507,
+      "sha256": "ae7bfa62b70d17d2d61e6f062c25cd10f2ade95508eb7b0ff8281e85330fc30a",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed01/test_report_skill_javascript_smoke.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4283,
+      "sha256": "d27144f4c2c2f596df71ba231e81c93ac4c3d84aa2c338f00fd6b77cbce3841b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed01/review_report_skill_javascript_smoke.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 821,
+      "sha256": "b4de121868f0ceb3c1e47877c09a59131dadac612fe91116e0b84d5f73ea04dd",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed01/counterfactual_replay_skill_javascript_smoke.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2553,
+      "sha256": "e1aee95cbc10c57eb09694074b38074cfe464556654e4cae265ca380b896b3b6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_javascript_smoke_dryrun_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 28422,
+      "sha256": "ba252f6f6851697a41cca957bed2844bc3ee147081f9358ff363532b6c226e78",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed02/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 3462,
+      "sha256": "aa3e6b6185752212072f59f6882f9c41d6ed339c47e938d29d994f23ec3725ae",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed02/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 94,
+      "sha256": "98d82966c44a258e6111aaaf8d8d97dd64bb2f6cb9195399ae680179017ce95e",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed02/skill_javascript_smoke.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 507,
+      "sha256": "ae7bfa62b70d17d2d61e6f062c25cd10f2ade95508eb7b0ff8281e85330fc30a",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed02/test_report_skill_javascript_smoke.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4283,
+      "sha256": "7b606ec69b766d915b46f1b4e982c272ab03daf346ec9af5261fbc8f154dbea5",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed02/review_report_skill_javascript_smoke.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 821,
+      "sha256": "b4de121868f0ceb3c1e47877c09a59131dadac612fe91116e0b84d5f73ea04dd",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed02/counterfactual_replay_skill_javascript_smoke.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2553,
+      "sha256": "e1aee95cbc10c57eb09694074b38074cfe464556654e4cae265ca380b896b3b6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_javascript_smoke_dryrun_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 28422,
+      "sha256": "9afc56b635f470cb6079a3f56db29f431ebc1635957a3a808087917408559a3e",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed03/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 3462,
+      "sha256": "aa3e6b6185752212072f59f6882f9c41d6ed339c47e938d29d994f23ec3725ae",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed03/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 94,
+      "sha256": "98d82966c44a258e6111aaaf8d8d97dd64bb2f6cb9195399ae680179017ce95e",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed03/skill_javascript_smoke.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 507,
+      "sha256": "ae7bfa62b70d17d2d61e6f062c25cd10f2ade95508eb7b0ff8281e85330fc30a",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed03/test_report_skill_javascript_smoke.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4283,
+      "sha256": "8b0b513cdde3f5cc874ce15256d7263710232fe22e0ccd8eaf4ba38d2b01c000",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed03/review_report_skill_javascript_smoke.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 821,
+      "sha256": "b4de121868f0ceb3c1e47877c09a59131dadac612fe91116e0b84d5f73ea04dd",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed03/counterfactual_replay_skill_javascript_smoke.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2553,
+      "sha256": "e1aee95cbc10c57eb09694074b38074cfe464556654e4cae265ca380b896b3b6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_javascript_smoke_dryrun_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 28422,
+      "sha256": "d27742e100f6555bcf5b768a245934b51a6ca8043aa33e833ed1e7aefd9eb921",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed04/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 3462,
+      "sha256": "aa3e6b6185752212072f59f6882f9c41d6ed339c47e938d29d994f23ec3725ae",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed04/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 94,
+      "sha256": "98d82966c44a258e6111aaaf8d8d97dd64bb2f6cb9195399ae680179017ce95e",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed04/skill_javascript_smoke.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 507,
+      "sha256": "ae7bfa62b70d17d2d61e6f062c25cd10f2ade95508eb7b0ff8281e85330fc30a",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed04/test_report_skill_javascript_smoke.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4283,
+      "sha256": "d606d9feeff1d537bd498a58a952c4806f42591b3a1fc9691de82cb6897f6e48",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed04/review_report_skill_javascript_smoke.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 821,
+      "sha256": "b4de121868f0ceb3c1e47877c09a59131dadac612fe91116e0b84d5f73ea04dd",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed04/counterfactual_replay_skill_javascript_smoke.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2553,
+      "sha256": "e1aee95cbc10c57eb09694074b38074cfe464556654e4cae265ca380b896b3b6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_javascript_smoke_dryrun_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 28422,
+      "sha256": "cd62d7cf16ce028b495c8c8cfaba02c9f47fc0bd5fbd989afaea7ee680a6b7cf",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed05/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 3462,
+      "sha256": "aa3e6b6185752212072f59f6882f9c41d6ed339c47e938d29d994f23ec3725ae",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed05/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 94,
+      "sha256": "98d82966c44a258e6111aaaf8d8d97dd64bb2f6cb9195399ae680179017ce95e",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed05/skill_javascript_smoke.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 507,
+      "sha256": "ae7bfa62b70d17d2d61e6f062c25cd10f2ade95508eb7b0ff8281e85330fc30a",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed05/test_report_skill_javascript_smoke.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 4283,
+      "sha256": "b4a08a287e1a7b972d2df3ce3d30484aaf82f8c9b3d617d06d5dab6f29f432f3",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed05/review_report_skill_javascript_smoke.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 821,
+      "sha256": "b4de121868f0ceb3c1e47877c09a59131dadac612fe91116e0b84d5f73ea04dd",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed05/counterfactual_replay_skill_javascript_smoke.review.json",
+      "kind": "domain_evidence_counterfactual_replay_json",
+      "bytes": 2553,
+      "sha256": "e1aee95cbc10c57eb09694074b38074cfe464556654e4cae265ca380b896b3b6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_metrics.jsonl",
+      "kind": "domain_metrics_jsonl",
+      "bytes": 210302,
+      "sha256": "a9deb1b01ed50aaa4940fb0c42f5fb6501815a3173aebe64669aace2d2026329",
+      "rowCount": 605
+    },
+    {
+      "path": "observation_trace.jsonl",
+      "kind": "observation_trace_jsonl",
+      "bytes": 89354,
+      "sha256": "f4c18b3ada5265686951a4347a4069463a3ff4107f9a28329f3787ccd9311f9a",
+      "rowCount": 110
+    },
+    {
+      "path": "intervention_trace.jsonl",
+      "kind": "intervention_trace_jsonl",
+      "bytes": 83952,
+      "sha256": "bc7023aa769c93fd66640914616f57c776c16088d2e3bca06f928cae18f9d7f0",
+      "rowCount": 55
+    },
+    {
+      "path": "domain_evidence.jsonl",
+      "kind": "domain_evidence_jsonl",
+      "bytes": 908970,
+      "sha256": "8a4199bb169619184a68a70bb3f05511b4b08f9cdec46137ae03753ff473a85b",
+      "rowCount": 55
+    }
+  ],
+  "verification": {
+    "summary": "每个 artifact 提供 bytes / sha256；JSONL artifact 额外提供 rowCount，便于后续复核导出完整性。",
+    "localCommands": [
+      "npm.cmd run eval:process",
+      "npm.cmd run eval:process:export",
+      "npm.cmd run eval:stability",
+      "npm.cmd run eval:stability:export",
+      "npm.cmd run eval:domain",
+      "npm.cmd run eval:domain:export",
+      "npm.cmd run eval:robustness",
+      "npm.cmd run eval:robustness:export"
+    ]
+  }
+}

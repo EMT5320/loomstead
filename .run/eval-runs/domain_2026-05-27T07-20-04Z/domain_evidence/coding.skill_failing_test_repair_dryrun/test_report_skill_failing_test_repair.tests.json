@@ -1,0 +1,118 @@
+{
+  "testReportId": "skill_failing_test_repair.tests",
+  "command": "python -m pytest tests/test_skill.py -q",
+  "testRunner": "pytest",
+  "durationMs": 6448.4,
+  "exitCode": 0,
+  "testPhase": "post_patch",
+  "passed": true,
+  "caseResults": [
+    {
+      "caseId": "pytest_suite",
+      "passed": true,
+      "runner": "pytest",
+      "exitCode": 0,
+      "passedCount": 4,
+      "failedCount": 0,
+      "summary": "....                                                                     [100%]"
+    }
+  ],
+  "execution": {
+    "executed": true,
+    "testPhase": "post_patch",
+    "testRunner": "pytest",
+    "workspaceKind": "git_external_repo_checkout",
+    "sourceRepoKind": "deterministic_local_git_repository",
+    "checkoutMethod": "git clone",
+    "command": "python -m pytest tests/test_skill.py -q",
+    "commandTemplate": "python -m pytest tests/test_skill.py -q",
+    "testCommandSource": "metadata.testRunner",
+    "pythonExecutable": "python.exe",
+    "exitCode": 0,
+    "durationMs": 6448.4,
+    "stdout": "....                                                                     [100%]\n4 passed in 0.16s\n",
+    "stderr": "",
+    "checkoutSteps": [
+      {
+        "command": "git init --quiet",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git checkout -B main",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "Switched to a new branch 'main'\n"
+      },
+      {
+        "command": "git config user.email fixture@example.invalid",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git config user.name Loomstead Fixture",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git add --all",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "warning: in the working copy of 'README.md', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'docs/review_rubric.md', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'skills/loomstead-debug/SKILL.md', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'skills/loomstead-debug/metadata.json', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'tests/test_skill.py', CRLF will be replaced by LF the next time Git touches it\n"
+      },
+      {
+        "command": "git commit --quiet -m initial fixture repo",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git clone --quiet <source-repo> <checkout>",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "git": {
+      "defaultBranch": "main",
+      "sourceHead": "a182cb3666cdc151a45db6415a0ce769b37257ea",
+      "checkoutHead": "a182cb3666cdc151a45db6415a0ce769b37257ea",
+      "statusAfterPatch": [
+        " M README.md",
+        " M docs/review_rubric.md",
+        " M skills/loomstead-debug/SKILL.md",
+        " M skills/loomstead-debug/metadata.json",
+        " M tests/test_skill.py"
+      ]
+    },
+    "sourceRepoFiles": [
+      "README.md",
+      "docs/review_rubric.md",
+      "skills/loomstead-debug/SKILL.md",
+      "skills/loomstead-debug/metadata.json",
+      "tests/test_skill.py"
+    ],
+    "workspaceFiles": [
+      "README.md",
+      "docs/review_rubric.md",
+      "skills/loomstead-debug/SKILL.md",
+      "skills/loomstead-debug/metadata.json",
+      "tests/test_skill.py"
+    ],
+    "workspaceFileHashes": {
+      "README.md": "b603311279d95465518b947526822a4d81f2cbef7c4362dd197868b5bb466860",
+      "skills/loomstead-debug/SKILL.md": "c4fc6ef43f1a416a3f6472cda82b8338c6a68dde946361afcb256c28dff231a0",
+      "skills/loomstead-debug/metadata.json": "3fed5d3f9e7609cbf31878e8b83c173efc55c50dcc2dd7afc6db2538b34786cb",
+      "docs/review_rubric.md": "d9559858a56896b5cb0f6864c5b01a108428f0dcb760b84393847969a8196df3",
+      "tests/test_skill.py": "ac7ce6eb223c82aa0ff9bf42a9ed9b90c4df0e3209431fd04baaa3445bbf3de4"
+    }
+  },
+  "sourceArtifactId": "skill_failing_test_repair.patch",
+  "sourceEventIds": [
+    "coding_evt_007"
+  ],
+  "sha256": "ae4e2f315db7b43af708f97d8deede9bc2a164343e00589f4129c9518cf8d7ab"
+}

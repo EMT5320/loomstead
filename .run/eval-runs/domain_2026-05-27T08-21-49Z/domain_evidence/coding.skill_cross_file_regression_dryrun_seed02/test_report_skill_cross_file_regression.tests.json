@@ -1,0 +1,117 @@
+{
+  "testReportId": "skill_cross_file_regression.tests",
+  "command": "python -m pytest tests/test_skill.py -q",
+  "testRunner": "pytest",
+  "durationMs": 6287.326,
+  "exitCode": 0,
+  "testPhase": "post_patch",
+  "passed": true,
+  "caseResults": [
+    {
+      "caseId": "pytest_suite",
+      "passed": true,
+      "runner": "pytest",
+      "exitCode": 0,
+      "passedCount": 2,
+      "failedCount": 0,
+      "summary": "..                                                                       [100%]"
+    }
+  ],
+  "execution": {
+    "executed": true,
+    "testPhase": "post_patch",
+    "testRunner": "pytest",
+    "workspaceKind": "git_external_repo_checkout",
+    "sourceRepoKind": "deterministic_local_git_repository",
+    "checkoutMethod": "git clone",
+    "command": "python -m pytest tests/test_skill.py -q",
+    "commandTemplate": "python -m pytest tests/test_skill.py -q",
+    "testCommandSource": "metadata.testRunner",
+    "pythonExecutable": "python.exe",
+    "exitCode": 0,
+    "durationMs": 6287.326,
+    "stdout": "..                                                                       [100%]\n2 passed in 0.14s\n",
+    "stderr": "",
+    "checkoutSteps": [
+      {
+        "command": "git init --quiet",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git checkout -B main",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "Switched to a new branch 'main'\n"
+      },
+      {
+        "command": "git config user.email fixture@example.invalid",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git config user.name Loomstead Fixture",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git add --all",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "warning: in the working copy of 'README.md', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'src/normalizer.py', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'src/report.py', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'tests/test_skill.py', CRLF will be replaced by LF the next time Git touches it\n"
+      },
+      {
+        "command": "git commit --quiet -m initial fixture repo",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git clone --quiet <source-repo> <checkout>",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "git": {
+      "defaultBranch": "main",
+      "sourceHead": "6141ca5f1da228eee278c0cf4183cd3b93efcbf7",
+      "checkoutHead": "6141ca5f1da228eee278c0cf4183cd3b93efcbf7",
+      "statusAfterPatch": [
+        " M README.md",
+        " M src/normalizer.py",
+        " M src/report.py",
+        " M tests/test_skill.py"
+      ]
+    },
+    "sourceRepoFiles": [
+      "README.md",
+      "src/__init__.py",
+      "src/normalizer.py",
+      "src/report.py",
+      "tests/test_skill.py"
+    ],
+    "workspaceFiles": [
+      "README.md",
+      "src/__init__.py",
+      "src/normalizer.py",
+      "src/report.py",
+      "tests/test_skill.py"
+    ],
+    "workspaceFileHashes": {
+      "README.md": "b103f613c1e586660feeff19cc8a7c65b6396391c1e032ac3b7948389d33e055",
+      "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "src/normalizer.py": "b454750d8e393aadba401d0d39e5fc5fa04d8ef80057bd78594c4c8600993004",
+      "src/report.py": "3893b79d87deee0f6ebd5c20321a9d75b5ca618ad3c02ea9c6ccf6bfbeff73d0",
+      "tests/test_skill.py": "a1433943132fc14d9b867f857e44c7c5780e17916a8765ee068703a1e0c73bac"
+    }
+  },
+  "sourceArtifactId": "skill_cross_file_regression.patch",
+  "sourceEventIds": [
+    "coding_evt_007"
+  ],
+  "sha256": "a0aacfb24e20b5b5f02b130d9d742ec942beafe9644f1c769c72d3230755ad6f"
+}

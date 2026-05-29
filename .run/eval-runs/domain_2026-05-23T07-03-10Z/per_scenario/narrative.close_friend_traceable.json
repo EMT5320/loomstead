@@ -1,0 +1,274 @@
+{
+  "domainId": "loomstead.town.v0",
+  "scenarioId": "narrative.close_friend_traceable",
+  "baseline": "full_motivational_delegation",
+  "ok": true,
+  "metrics": {
+    "goal_success_rate": 1.0,
+    "shortcut_violation_rate": 0.0,
+    "required_process_coverage": 1.0,
+    "forced_action_rate": 0.0,
+    "agent_initiated_action_ratio": 1.0,
+    "intervention_overreach_rate": 0.0,
+    "relationship_memory_causal_use_rate": 1.0,
+    "causal_trace_coverage": 1.0,
+    "relationship_consistency": 1.0,
+    "process_believability_score": 1.0
+  },
+  "allowedInterventions": [
+    "motivation_bias",
+    "opportunity_schedule",
+    "evaluation_checkpoint"
+  ],
+  "appliedInterventionCount": 3,
+  "appliedEventCount": 3,
+  "stepEventCount": 47,
+  "milestones": [
+    {
+      "id": "goal_relevant_tool_event",
+      "domainId": "loomstead.town.v0",
+      "predicate": "exists social tool event for the target pair"
+    },
+    {
+      "id": "subjective_memory_refs",
+      "domainId": "loomstead.town.v0",
+      "predicate": "subjective memory cites the social tool event"
+    },
+    {
+      "id": "relationship_edge_trace",
+      "domainId": "loomstead.town.v0",
+      "predicate": "relationship edge keeps source event ids"
+    },
+    {
+      "id": "causal_trace",
+      "domainId": "loomstead.town.v0",
+      "predicate": "tool event links to memory and relationship evidence"
+    },
+    {
+      "id": "future_behavior_reference",
+      "domainId": "loomstead.town.v0",
+      "predicate": "later decision can cite relationship or heuristic refs"
+    }
+  ],
+  "initialObservation": {
+    "tick": 0,
+    "worldSummary": {
+      "clock": {
+        "day": 1,
+        "hour": 8,
+        "tick": 0,
+        "phase": "morning",
+        "actionBudget": 3,
+        "paused": false,
+        "minute": 0,
+        "_daySeconds": 0.0
+      },
+      "activeFocus": {
+        "targetAgents": [
+          "mira"
+        ],
+        "brief": "Cross-domain narrative GoalSpec: narrative.close_friend_traceable",
+        "source": "domain_adapter"
+      }
+    },
+    "agentSummaries": {
+      "mira": {
+        "id": "mira",
+        "name": "米娅",
+        "locationId": "plaza",
+        "anchorId": "plaza_fountain",
+        "activity": "available_for_domain_goal",
+        "status": {
+          "energy": 90,
+          "mood": 64,
+          "stress": 38,
+          "social": 5,
+          "money": 90,
+          "health": 84
+        }
+      }
+    },
+    "recentEvents": [
+      {
+        "id": "evt_7186fad8303e4f1cb80e60f63dfbc264",
+        "type": "system.ready",
+        "payload": {}
+      },
+      {
+        "id": "evt_58cb272b50454d22995050bb15644c84",
+        "type": "domain.goal_loaded",
+        "payload": {
+          "domainId": "loomstead.town.v0"
+        }
+      }
+    ],
+    "goalProgress": {
+      "goal_success_rate": 0.0,
+      "shortcut_violation_rate": 0.0,
+      "required_process_coverage": 0.0,
+      "forced_action_rate": 0.0,
+      "agent_initiated_action_ratio": 1.0,
+      "intervention_overreach_rate": 0.0,
+      "relationship_memory_causal_use_rate": 0.0,
+      "causal_trace_coverage": 0.0,
+      "relationship_consistency": 0.0,
+      "process_believability_score": 0.4
+    },
+    "evalSignals": {
+      "recentTraceEventCount": 0.0,
+      "relationshipEdgeCount": 0.0
+    }
+  },
+  "finalObservation": {
+    "tick": 1,
+    "worldSummary": {
+      "clock": {
+        "day": 1,
+        "hour": 10,
+        "tick": 1,
+        "phase": "morning",
+        "actionBudget": 3,
+        "paused": false,
+        "minute": 0,
+        "_daySeconds": 7200.0
+      },
+      "activeFocus": {
+        "type": "activate_event_skill",
+        "beatId": "beat_1e63807266b8479c9021b1b0a2f11c9a",
+        "skillId": "event.starlight_festival_shortage",
+        "eventId": "starlight_festival_shortage",
+        "eventLocationId": "tavern",
+        "brief": "月猫酒馆准备星灯祭前夜小聚时，食材紧缺引发凯娅与布兰娜的欠账争执。",
+        "targetAgents": [
+          "kai",
+          "bram",
+          "mira",
+          "lena",
+          "orren",
+          "tomas"
+        ],
+        "validFromTick": 1,
+        "expiresAtTick": 3
+      }
+    },
+    "agentSummaries": {
+      "mira": {
+        "id": "mira",
+        "name": "米娅",
+        "locationId": "plaza",
+        "anchorId": "plaza_fountain",
+        "activity": "available_for_domain_goal",
+        "status": {
+          "energy": 90,
+          "mood": 64,
+          "stress": 38,
+          "social": 21,
+          "money": 90,
+          "health": 84
+        }
+      }
+    },
+    "recentEvents": [
+      {
+        "id": "evt_86d950409afd41d4b70c28b2c9b229db",
+        "type": "memory.result_observed",
+        "payload": {
+          "traceSchemaVersion": "phase2.trace.v1"
+        }
+      },
+      {
+        "id": "evt_043518218dea4e5bac7167ebe21f5559",
+        "type": "tool.execution_completed",
+        "payload": {
+          "npcId": "lena",
+          "targetNpcId": "mira",
+          "toolId": "social.give_gift",
+          "traceSchemaVersion": "phase2.trace.v1"
+        }
+      },
+      {
+        "id": "evt_9e21fcca8e634ae786171bc62576d36b",
+        "type": "memory.result_observed",
+        "payload": {
+          "traceSchemaVersion": "phase2.trace.v1"
+        }
+      },
+      {
+        "id": "evt_a56c6516acef41ef9564396a875e21c4",
+        "type": "tool.execution_completed",
+        "payload": {
+          "npcId": "kai",
+          "targetNpcId": null,
+          "toolId": "shop.open_shop",
+          "traceSchemaVersion": "phase2.trace.v1"
+        }
+      },
+      {
+        "id": "evt_bc40a8c4da08485e9ec81668818b5c9b",
+        "type": "memory.result_observed",
+        "payload": {
+          "traceSchemaVersion": "phase2.trace.v1"
+        }
+      },
+      {
+        "id": "evt_00f40d8eaa494da1baa6f1566b496cef",
+        "type": "tool.execution_completed",
+        "payload": {
+          "npcId": "bram",
+          "targetNpcId": null,
+          "toolId": "farm.water_crop",
+          "traceSchemaVersion": "phase2.trace.v1"
+        }
+      },
+      {
+        "id": "evt_f0e180c7618b49e5a9655f28e3fdfbb9",
+        "type": "memory.result_observed",
+        "payload": {
+          "traceSchemaVersion": "phase2.trace.v1"
+        }
+      },
+      {
+        "id": "evt_bb6e920562bb499eaee7e27075edf35d",
+        "type": "director.digest_created",
+        "payload": {}
+      },
+      {
+        "id": "evt_be8c968798974afa882dcab4b2281868",
+        "type": "director.beat_created",
+        "payload": {}
+      },
+      {
+        "id": "evt_897af489196b44d6912c2c77177c78bd",
+        "type": "director.beat_validated",
+        "payload": {}
+      },
+      {
+        "id": "evt_926d2b7b96c64e56844e41c760887bb0",
+        "type": "director.beat_consumed",
+        "payload": {}
+      },
+      {
+        "id": "evt_3e562db30fbc4a3a8c88e6628d6f3583",
+        "type": "runtime.tick",
+        "payload": {}
+      }
+    ],
+    "goalProgress": {
+      "goal_success_rate": 1.0,
+      "shortcut_violation_rate": 0.0,
+      "required_process_coverage": 1.0,
+      "forced_action_rate": 0.0,
+      "agent_initiated_action_ratio": 1.0,
+      "intervention_overreach_rate": 0.0,
+      "relationship_memory_causal_use_rate": 1.0,
+      "causal_trace_coverage": 1.0,
+      "relationship_consistency": 1.0,
+      "process_believability_score": 1.0
+    },
+    "evalSignals": {
+      "recentTraceEventCount": 10.0,
+      "relationshipEdgeCount": 4.0
+    }
+  },
+  "domainEvidence": {}
+}

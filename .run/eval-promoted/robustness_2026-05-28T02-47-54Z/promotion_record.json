@@ -1,0 +1,335 @@
+{
+  "promotionVersion": "phase2.eval_promotion.v1",
+  "promotionTemplateVersion": "phase2.eval_promotion_template.v1",
+  "promotedAt": "2026-05-28T02:48:25+00:00",
+  "promotionStatus": "needs_manual_review",
+  "promotionPurpose": "regression",
+  "promotionTemplate": {
+    "templateVersion": "phase2.eval_promotion_template.v1",
+    "purpose": "regression",
+    "purposeLabel": "回归基线证据",
+    "requiredNotes": [
+      "说明该 run 锁定的回归范围。",
+      "记录预期稳定的 metric / scenario 集合。",
+      "说明允许漂移的字段和后续触发条件。"
+    ],
+    "extraChecklist": [
+      "确认未来回归脚本会引用同一 suite。",
+      "确认 drift policy 输出已保存。"
+    ]
+  },
+  "sourceRunDir": ".run/eval-runs/robustness_2026-05-28T02-47-54Z",
+  "promotedRunDir": ".run/eval-promoted/robustness_2026-05-28T02-47-54Z",
+  "promotionNote": "Clean two-seed robustness strict gate export after commit 4e0c80c; drift review expected from seed count and eval gate signature summary changes.",
+  "suite": "evidence_robustness",
+  "baseline": "full_motivational_delegation",
+  "ok": true,
+  "manifestVersion": "phase2.eval_manifest.v1",
+  "manifestSha256": "b565c02725264cfd1b85122088bf3a14ce8c2a6054a3aa7fe5e2740ee8b2b123",
+  "git": {
+    "shortCommit": "4e0c80c",
+    "branch": "main",
+    "dirty": false
+  },
+  "schemaRegistryVersion": "schema_registry.v1",
+  "metricIds": [
+    "domain_evidence_invariance.source_order_shuffle",
+    "domain_evidence_invariance.source_variation_duplicate",
+    "domain_evidence_invariance.source_variation_irrelevant",
+    "domain_evidence_invariance.source_variation_weak_noise",
+    "domain_evidence_robustness_score",
+    "evidence_robustness_score",
+    "process_evidence_invariance.source_order_shuffle",
+    "process_evidence_invariance.source_variation_duplicate",
+    "process_evidence_invariance.source_variation_irrelevant",
+    "process_evidence_invariance.source_variation_weak_noise",
+    "process_evidence_robustness_score"
+  ],
+  "baselines": [
+    "full_motivational_delegation"
+  ],
+  "scenarioIds": [],
+  "llmEvidence": {
+    "schemaVersion": null,
+    "providerUsageSchemaVersion": null,
+    "source": null,
+    "providerMode": null,
+    "seedCount": null,
+    "recordCount": 0,
+    "cloudCallCount": 0,
+    "fallbackCount": 0,
+    "totals": {},
+    "records": []
+  },
+  "evalGates": {
+    "strictGate": {
+      "gateVersion": "phase2.evidence_robustness.strict_gate.v1",
+      "pass": true,
+      "failedCheckCount": 0,
+      "failedCheckIds": []
+    },
+    "signatureKindIds": {
+      "process": [
+        "process_signature.v1"
+      ],
+      "domain": [
+        "phase2.evidence_robustness.domain_signature.v2.coding",
+        "phase2.evidence_robustness.domain_signature.v2.narrative"
+      ]
+    },
+    "domainGroups": [
+      {
+        "groupId": "loomstead.coding.v0",
+        "total": 64,
+        "overallInvarianceRate": 1.0,
+        "allStable": true
+      },
+      {
+        "groupId": "loomstead.town.v0",
+        "total": 24,
+        "overallInvarianceRate": 1.0,
+        "allStable": true
+      }
+    ]
+  },
+  "artifactCount": 6,
+  "archiveChecks": {
+    "archiveIndexVersion": "phase2.eval_run_index.v1",
+    "archiveCheckPassed": true,
+    "manifestValid": true,
+    "artifactCount": 6
+  },
+  "driftComparison": {
+    "suite": "evidence_robustness",
+    "latestRunDir": ".run/eval-runs/robustness_2026-05-28T02-47-54Z",
+    "previousRunDir": ".run/eval-runs/robustness_2026-05-28T02-26-00Z",
+    "latestCreatedAt": "2026-05-28T02:47:54+00:00",
+    "previousCreatedAt": "2026-05-28T02:26:00+00:00",
+    "latestGit": {
+      "shortCommit": "4e0c80c",
+      "branch": "main",
+      "dirty": false
+    },
+    "previousGit": {
+      "shortCommit": "fb19e1d",
+      "branch": "main",
+      "dirty": true
+    },
+    "schemaRegistryVersion": {
+      "latest": "schema_registry.v1",
+      "previous": "schema_registry.v1",
+      "changed": false
+    },
+    "exportKind": {
+      "latest": "evidence_robustness_dataset",
+      "previous": "evidence_robustness_dataset",
+      "changed": false
+    },
+    "ok": {
+      "latest": true,
+      "previous": true,
+      "changed": false
+    },
+    "evalGates": {
+      "latest": {
+        "strictGate": {
+          "gateVersion": "phase2.evidence_robustness.strict_gate.v1",
+          "pass": true,
+          "failedCheckCount": 0,
+          "failedCheckIds": []
+        },
+        "signatureKindIds": {
+          "process": [
+            "process_signature.v1"
+          ],
+          "domain": [
+            "phase2.evidence_robustness.domain_signature.v2.coding",
+            "phase2.evidence_robustness.domain_signature.v2.narrative"
+          ]
+        },
+        "domainGroups": [
+          {
+            "groupId": "loomstead.coding.v0",
+            "total": 64,
+            "overallInvarianceRate": 1.0,
+            "allStable": true
+          },
+          {
+            "groupId": "loomstead.town.v0",
+            "total": 24,
+            "overallInvarianceRate": 1.0,
+            "allStable": true
+          }
+        ]
+      },
+      "previous": {
+        "strictGate": {
+          "gateVersion": "phase2.evidence_robustness.strict_gate.v1",
+          "pass": true,
+          "failedCheckCount": 0,
+          "failedCheckIds": []
+        },
+        "signatureKindIds": {
+          "process": [
+            "process_signature.v1"
+          ],
+          "domain": [
+            "phase2.evidence_robustness.domain_signature.v2.coding",
+            "phase2.evidence_robustness.domain_signature.v2.narrative"
+          ]
+        },
+        "domainGroups": [
+          {
+            "groupId": "loomstead.coding.v0",
+            "total": 32,
+            "overallInvarianceRate": 1.0,
+            "allStable": true
+          },
+          {
+            "groupId": "loomstead.town.v0",
+            "total": 12,
+            "overallInvarianceRate": 1.0,
+            "allStable": true
+          }
+        ]
+      },
+      "changed": true
+    },
+    "artifactCountDelta": 0,
+    "metricIds": {
+      "added": [],
+      "removed": [],
+      "unchanged": [
+        "domain_evidence_invariance.source_order_shuffle",
+        "domain_evidence_invariance.source_variation_duplicate",
+        "domain_evidence_invariance.source_variation_irrelevant",
+        "domain_evidence_invariance.source_variation_weak_noise",
+        "domain_evidence_robustness_score",
+        "evidence_robustness_score",
+        "process_evidence_invariance.source_order_shuffle",
+        "process_evidence_invariance.source_variation_duplicate",
+        "process_evidence_invariance.source_variation_irrelevant",
+        "process_evidence_invariance.source_variation_weak_noise",
+        "process_evidence_robustness_score"
+      ]
+    },
+    "baselines": {
+      "added": [],
+      "removed": [],
+      "unchanged": [
+        "full_motivational_delegation"
+      ]
+    },
+    "scenarioIds": {
+      "added": [],
+      "removed": [],
+      "unchanged": []
+    },
+    "hasDrift": true,
+    "driftSeverity": "review",
+    "requiresManualReview": true,
+    "blocksPromotion": false,
+    "driftPolicy": {
+      "policyVersion": "phase2.eval_drift_policy.v1",
+      "severity": "review",
+      "requiresManualReview": true,
+      "blocksPromotion": false,
+      "reviewReasons": [
+        "eval gate 或 signature 摘要变化"
+      ],
+      "checks": [
+        {
+          "id": "latest_ok_false",
+          "breached": false,
+          "severity": "breaking",
+          "message": "latest run manifest ok=false"
+        },
+        {
+          "id": "ok_changed",
+          "breached": false,
+          "severity": "breaking",
+          "message": "manifest ok 状态变化"
+        },
+        {
+          "id": "eval_gate_changed",
+          "breached": true,
+          "severity": "review",
+          "message": "eval gate 或 signature 摘要变化"
+        },
+        {
+          "id": "schema_registry_changed",
+          "breached": false,
+          "severity": "breaking",
+          "message": "schema registry version 变化"
+        },
+        {
+          "id": "export_kind_changed",
+          "breached": false,
+          "severity": "breaking",
+          "message": "export kind 变化"
+        },
+        {
+          "id": "artifact_count_decreased",
+          "breached": false,
+          "severity": "breaking",
+          "message": "artifact 数量下降"
+        },
+        {
+          "id": "artifact_count_increased",
+          "breached": false,
+          "severity": "review",
+          "message": "artifact 数量增加"
+        },
+        {
+          "id": "metricIds_removed",
+          "breached": false,
+          "severity": "breaking",
+          "message": "metricIds 被移除"
+        },
+        {
+          "id": "metricIds_added",
+          "breached": false,
+          "severity": "review",
+          "message": "metricIds 新增超过免复核阈值"
+        },
+        {
+          "id": "baselines_removed",
+          "breached": false,
+          "severity": "breaking",
+          "message": "baselines 被移除"
+        },
+        {
+          "id": "baselines_added",
+          "breached": false,
+          "severity": "review",
+          "message": "baselines 新增超过免复核阈值"
+        },
+        {
+          "id": "scenarioIds_removed",
+          "breached": false,
+          "severity": "breaking",
+          "message": "scenarioIds 被移除"
+        },
+        {
+          "id": "scenarioIds_added",
+          "breached": false,
+          "severity": "review",
+          "message": "scenarioIds 新增超过免复核阈值"
+        }
+      ]
+    }
+  },
+  "manualReviewItems": [
+    "drift policy 要求人工复核；需要说明 metric / baseline / scenario / artifact 变化原因。"
+  ],
+  "paperGradeChecklist": {
+    "okTrue": true,
+    "archiveCheckPassed": true,
+    "gitCleanAtExport": true,
+    "schemaRegistryV1": true,
+    "driftExplained": false,
+    "driftPolicyBlocking": false,
+    "manualWindowVerified": false,
+    "externalModelVerifiedIfNeeded": false
+  }
+}

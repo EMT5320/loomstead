@@ -28,10 +28,11 @@ scope: cross-assistant resume, handoff, and evidence protocol
 
 ## 3. 工作中约束
 
-- 优先做最小正确改动，避免借接续治理扩 scope。
-- 状态文档只写当前事实、验证状态、manual gate 和下一步，不复制源设计长文。
-- 多助手并行时，`docs/current_status.md`、`docs/agent_context.md`、`AGENTS.md` 等治理入口由主会话串行修改。
+- 优先选最直接、能推进 claim level 或用户可见体验的改动；治理协议 §3 风格条款优先级高于"最小修改"等保守倾向。
+- 状态文档只写当前事实、验证状态、manual gate 和下一步，不复制源设计长文，不堆历史 changelog。
+- 多助手并行时，`docs/current_status.md`、`docs/agent_context.md`、`AGENTS.md`、`docs/context_governance.md` 等治理入口由主会话串行修改。
 - 本机私有 key、模型 overlay、本地绝对路径和未整理 `.run/` artifact 不进入提交态。
+- 家里 / 公司交替开发时，已整理的 eval 证据子树可随 Git 同步：`.run/eval-promoted/`、`.run/eval-reviewer-packets/`、`.run/process-llm-evidence/`；发现本机缺少文档记录的 run 时，先视为 artifact 同步缺口，不默认重跑白天已完成的 eval。
 
 ## 4. 证据等级
 
@@ -68,6 +69,6 @@ scope: cross-assistant resume, handoff, and evidence protocol
 - 接续摘要：`npm.cmd run context:resume`。
 - 收工交接草稿：`npm.cmd run context:handoff`。
 - 上下文治理：`npm.cmd run context:check; git diff --check`。
+- 治理协议：`docs/context_governance.md`。
 - 命令选择：参考 `docs/workflows.md` 中的 `test-eval-triage`。
 - 分支交接：参考 `docs/workflows.md` 中的 `branch-review`。
-- Kilo 快捷入口：`/loomstead-resume`、`/loomstead-handoff`。

@@ -1,0 +1,5 @@
+--- a/skills/loomstead-debug/SKILL.md
++++ b/skills/loomstead-debug/SKILL.md
+@@
++Add failing test evidence before repair.
++Run eval:domain after the repair passes.

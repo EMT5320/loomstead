@@ -5,7 +5,18 @@ node_modules/
 
 # 实验导出
 exports/
-.run/
+
+# 跨家里 / 公司环境需要复用的研究证据纳入 Git 候选；
+# 其他 .run 临时文件继续忽略，避免把 Godot 缓存、截图和一次性临时文件混入提交。
+.run/*
+!.run/eval-runs/
+!.run/eval-runs/**
+!.run/eval-promoted/
+!.run/eval-promoted/**
+!.run/eval-reviewer-packets/
+!.run/eval-reviewer-packets/**
+!.run/process-llm-evidence/
+!.run/process-llm-evidence/**
 
 __pycache__/
 *.pyc
@@ -26,6 +37,7 @@ config/models.local.json
 
 # Godot 本地导入缓存
 clients/godot/.godot/
+clients/godot/.run/
 
 # Paper build artifacts
 paper/latex/build/

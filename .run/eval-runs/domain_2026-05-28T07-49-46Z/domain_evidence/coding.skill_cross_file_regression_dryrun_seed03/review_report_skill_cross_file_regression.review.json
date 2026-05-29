@@ -1,0 +1,161 @@
+{
+  "reviewReportId": "skill_cross_file_regression.review",
+  "status": "approved",
+  "sourcePrePatchTestReportId": "skill_cross_file_regression.pre_patch_tests",
+  "sourceTestReportId": "skill_cross_file_regression.tests",
+  "sourceEventIds": [
+    "coding_evt_006",
+    "coding_evt_008"
+  ],
+  "repoFixtureId": "loomstead-debug-cross-file-regression-fixture.v1",
+  "reviewRubricPath": null,
+  "metadataPath": null,
+  "citedMemoryIds": [
+    "prior_failure.skip_tests",
+    "prior_failure.failing_test_first"
+  ],
+  "checklist": [
+    {
+      "id": "repo_fixture_loaded",
+      "passed": true
+    },
+    {
+      "id": "design_before_diff",
+      "passed": true
+    },
+    {
+      "id": "pre_patch_failure_observed",
+      "passed": true
+    },
+    {
+      "id": "real_dependency_graph_recorded",
+      "passed": true
+    },
+    {
+      "id": "dependency_evidence_chain_confirmed",
+      "passed": true
+    },
+    {
+      "id": "regression_case_covered",
+      "passed": true
+    },
+    {
+      "id": "single_file_patch_still_fails",
+      "passed": true
+    },
+    {
+      "id": "external_checkout_tests_before_review",
+      "passed": true
+    },
+    {
+      "id": "failure_memory_cited",
+      "passed": true
+    }
+  ],
+  "dependencyEvidenceChain": {
+    "chainVersion": "coding.dependency_evidence_chain.v2",
+    "prePatch": {
+      "testReportId": "skill_cross_file_regression.pre_patch_tests",
+      "testRunner": "pytest",
+      "command": "python -m pytest tests/test_skill.py -q",
+      "exitCode": 1,
+      "failingCaseIds": [
+        "pytest_suite"
+      ],
+      "sourceEventIds": [
+        "coding_evt_005"
+      ],
+      "sha256": "db2dac5521487e230ddf98b252925f592133d79cff28ed8cbad29d952e364eb9"
+    },
+    "postPatch": {
+      "testReportId": "skill_cross_file_regression.tests",
+      "testRunner": "pytest",
+      "command": "python -m pytest tests/test_skill.py -q",
+      "exitCode": 0,
+      "passingCaseIds": [
+        "pytest_suite"
+      ],
+      "sourceEventIds": [
+        "coding_evt_007"
+      ],
+      "sha256": "24f5592767722ac17a71f0e2c1626ec4543fa7b28131dca11f7019201c22dab0"
+    },
+    "partialPatchFailures": [
+      {
+        "testReportId": "skill_cross_file_regression.patch.single_file.src_normalizer.py.tests",
+        "patchedFile": "src/normalizer.py",
+        "testRunner": "pytest",
+        "command": "python -m pytest tests/test_skill.py -q",
+        "exitCode": 1,
+        "failureObserved": true,
+        "failingCaseIds": [
+          "pytest_suite"
+        ],
+        "sourceEventIds": [
+          "coding_evt_007"
+        ],
+        "sha256": "7abd6c08f94ce87590a64832a9eab5ccf9650edf5ff65b660fa9dc9d035cd846"
+      },
+      {
+        "testReportId": "skill_cross_file_regression.patch.single_file.src_report.py.tests",
+        "patchedFile": "src/report.py",
+        "testRunner": "pytest",
+        "command": "python -m pytest tests/test_skill.py -q",
+        "exitCode": 1,
+        "failureObserved": true,
+        "failingCaseIds": [
+          "pytest_suite"
+        ],
+        "sourceEventIds": [
+          "coding_evt_007"
+        ],
+        "sha256": "5fdb3e4d00ac967dbcff691e385128cc34891cad391972be0314f70822251cd5"
+      }
+    ],
+    "consistentRunner": true,
+    "allExpectedFailuresObserved": true,
+    "transitionEdges": [
+      {
+        "from": "skill_cross_file_regression.pre_patch_tests",
+        "to": "skill_cross_file_regression.patch.single_file.src_normalizer.py.tests",
+        "reason": "single_file_partial_patch_replays_pre_patch_failure",
+        "patchedFile": "src/normalizer.py"
+      },
+      {
+        "from": "skill_cross_file_regression.patch.single_file.src_normalizer.py.tests",
+        "to": "skill_cross_file_regression.tests",
+        "reason": "coordinated_cross_file_patch_resolves_failure",
+        "patchedFile": "src/normalizer.py"
+      },
+      {
+        "from": "skill_cross_file_regression.pre_patch_tests",
+        "to": "skill_cross_file_regression.patch.single_file.src_report.py.tests",
+        "reason": "single_file_partial_patch_replays_pre_patch_failure",
+        "patchedFile": "src/report.py"
+      },
+      {
+        "from": "skill_cross_file_regression.patch.single_file.src_report.py.tests",
+        "to": "skill_cross_file_regression.tests",
+        "reason": "coordinated_cross_file_patch_resolves_failure",
+        "patchedFile": "src/report.py"
+      }
+    ],
+    "caseEvidence": {
+      "prePatchFailingCaseIds": [
+        "pytest_suite"
+      ],
+      "partialPatchFailingCaseIdsByFile": {
+        "src/normalizer.py": [
+          "pytest_suite"
+        ],
+        "src/report.py": [
+          "pytest_suite"
+        ]
+      },
+      "postPatchPassingCaseIds": [
+        "pytest_suite"
+      ]
+    }
+  },
+  "sha256": "7038b494db1e4b0dd30f0aa7d088153806f8d02e3aaa29757da9ca7f53860410"
+}

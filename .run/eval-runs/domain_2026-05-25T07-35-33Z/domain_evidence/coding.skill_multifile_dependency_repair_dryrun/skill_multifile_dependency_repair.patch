@@ -1,0 +1,16 @@
+--- a/src/formatter.py
++++ b/src/formatter.py
+@@ -6,4 +6,4 @@
+ 
+ 
+ def slugify(name: str) -> str:
+-    return name
++    return '-'.join(name.lower().split())
+--- a/src/workflow.py
++++ b/src/workflow.py
+@@ -7,4 +7,4 @@
+     name = display_name(raw_name)
+     if not name:
+         return {'ok': False, 'label': '', 'slug': ''}
+-    return {"ok": True, "label": name, "slug": name}
++    return {"ok": True, "label": name, "slug": slugify(name)}

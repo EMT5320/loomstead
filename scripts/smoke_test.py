@@ -1,4 +1,4 @@
-﻿"""Python 后端 smoke test。"""
+"""Python 后端 smoke test。"""
 
 from pathlib import Path
 from http.server import ThreadingHTTPServer
@@ -718,6 +718,13 @@ def assert_phase2_decision_budget_routing() -> dict:
     ):
         raise RuntimeError("Arbitration candidateScores 应记录预算路由的组件来源")
 
+    decision_trace_events: list[dict] = []
+    enriched_decisions = runtime._record_phase2_decision_events([decision], tick_events=decision_trace_events)
+    decision = enriched_decisions[0]
+    decision_trace_event_id = str(decision.get("decisionTraceEventId") or "")
+    if not decision_trace_event_id or not decision_trace_events:
+        raise RuntimeError("预算路由 smoke 应先写入 motivation.decision_made 来源事件")
+
     planned = runtime.tool_executor.plan_action(world, decision)
     if planned.get("decisionBudget", {}).get("route") != "rule_fallback":
         raise RuntimeError("ToolExecutor plan_action 应携带 decisionBudget.route")
@@ -727,6 +734,12 @@ def assert_phase2_decision_budget_routing() -> dict:
         raise RuntimeError("工具开始执行时应写入 budget.decision_fallback 事件")
     if not fallback_event.get("feature") or not isinstance(fallback_event.get("costBreakdown"), dict):
         raise RuntimeError("预算事件应携带 feature 和 costBreakdown")
+    if fallback_event.get("traceSchemaVersion") != versions["phase2_trace"]:
+        raise RuntimeError("预算事件应接入 Phase 2 trace envelope")
+    if decision_trace_event_id not in fallback_event.get("sourceEventIds", []):
+        raise RuntimeError("预算事件应能回跳到 motivation.decision_made 来源事件")
+    if not any(isinstance(ref, dict) and ref.get("eventId") == decision_trace_event_id for ref in fallback_event.get("traceRefs", [])):
+        raise RuntimeError("预算事件应保留 motivation decision traceRefs")
     debug_budget = runtime.decision_budget.debug_snapshot(world, npc_ids=[npc_id])
     remaining = debug_budget["items"][0]["remaining"].get("social_strategic_layer")
     if remaining != 0:
@@ -1411,7 +1424,7 @@ def assert_phase2_failure_and_interrupt_trace() -> dict:
 def has_real_llm_config() -> bool:
     """检测是否存在可用于真实 LLM smoke 的本地配置入口。"""
     if (PROJECT_ROOT / "config" / "models.local.json").exists() or any(
-        os.getenv(name) for name in ("DEEPSEEK_API_KEY", "OPENAI_API_KEY", "AGENT_TOWN_API_KEY")
+        os.getenv(name) for name in ("DEEPSEEK_API_KEY", "OPENAI_API_KEY", "LOOMSTEAD_API_KEY", "AGENT_TOWN_API_KEY")
     ):
         return True
     try:
@@ -1457,12 +1470,14 @@ def enable_real_llm_smoke() -> bool:
     """是否执行真实 LLM smoke；默认跳过，避免常规检查消耗真实模型额度。"""
     if require_real_llm_smoke():
         return True
-    return str(os.getenv("AGENT_TOWN_ENABLE_REAL_LLM_SMOKE") or "").lower() in {"1", "true", "yes"}
+    flag_value = os.getenv("LOOMSTEAD_ENABLE_REAL_LLM_SMOKE") or os.getenv("AGENT_TOWN_ENABLE_REAL_LLM_SMOKE") or ""
+    return str(flag_value).lower() in {"1", "true", "yes"}
 
 
 def require_real_llm_smoke() -> bool:
     """是否要求真实 LLM smoke 必须成功，供本地带网络的强验收使用。"""
-    return str(os.getenv("AGENT_TOWN_REQUIRE_REAL_LLM_SMOKE") or "").lower() in {"1", "true", "yes"}
+    flag_value = os.getenv("LOOMSTEAD_REQUIRE_REAL_LLM_SMOKE") or os.getenv("AGENT_TOWN_REQUIRE_REAL_LLM_SMOKE") or ""
+    return str(flag_value).lower() in {"1", "true", "yes"}
 
 
 def real_cloud_check_error(debug: dict, feature: str) -> str | None:
@@ -1625,8 +1640,15 @@ def assert_http_debug_endpoints(api_app) -> dict:
 
 def assert_provider_fallback_debug() -> dict:
     """用临时无密钥配置强制云端转规则兜底，并确认 Debug API 可解释。"""
-    previous_env = {name: os.environ.get(name) for name in ("AGENT_TOWN_MODEL_CONFIG", "OPENAI_API_KEY", "AGENT_TOWN_NEVER_SET_API_KEY")}
-    with tempfile.TemporaryDirectory(prefix="agent-town-fallback-") as tmp_dir:
+    tracked_env_names = (
+        "LOOMSTEAD_MODEL_CONFIG",
+        "AGENT_TOWN_MODEL_CONFIG",
+        "OPENAI_API_KEY",
+        "LOOMSTEAD_NEVER_SET_API_KEY",
+        "AGENT_TOWN_NEVER_SET_API_KEY",
+    )
+    previous_env = {name: os.environ.get(name) for name in tracked_env_names}
+    with tempfile.TemporaryDirectory(prefix="loomstead-fallback-") as tmp_dir:
         config_path = Path(tmp_dir) / "models.json"
         config_path.write_text(
             json.dumps(
@@ -1637,7 +1659,7 @@ def assert_provider_fallback_debug() -> dict:
                         "no_key_cloud": {
                             "provider": "cloud",
                             "baseUrl": "https://example.invalid",
-                            "apiKeyEnv": "AGENT_TOWN_NEVER_SET_API_KEY",
+                            "apiKeyEnv": "LOOMSTEAD_NEVER_SET_API_KEY",
                             "model": "debug-no-key",
                             "timeoutSeconds": 1,
                         },
@@ -1650,8 +1672,11 @@ def assert_provider_fallback_debug() -> dict:
             ),
             encoding="utf-8",
         )
+        os.environ["LOOMSTEAD_MODEL_CONFIG"] = str(config_path)
+        # 兼容旧前缀，避免半迁移环境读到上一组配置。
         os.environ["AGENT_TOWN_MODEL_CONFIG"] = str(config_path)
         os.environ.pop("OPENAI_API_KEY", None)
+        os.environ.pop("LOOMSTEAD_NEVER_SET_API_KEY", None)
         os.environ.pop("AGENT_TOWN_NEVER_SET_API_KEY", None)
         try:
             fallback_app = create_town_app(provider_mode="cloud")
@@ -2131,7 +2156,7 @@ if enable_real_llm_smoke():
             {
                 "reason": dialogue_error,
                 "dialogue": llm_debug_summary(llm_dialogue_debug),
-                "strictHint": "设置 AGENT_TOWN_REQUIRE_REAL_LLM_SMOKE=1 可要求真实云端 smoke 必须通过",
+                "strictHint": "设置 LOOMSTEAD_REQUIRE_REAL_LLM_SMOKE=1（兼容 AGENT_TOWN_REQUIRE_REAL_LLM_SMOKE=1）可要求真实云端 smoke 必须通过",
             },
         )
     else:
@@ -2152,7 +2177,7 @@ if enable_real_llm_smoke():
                     "dialogue": llm_debug_summary(llm_dialogue_debug),
                     "eventReaction": llm_debug_summary(llm_event_reaction_debug),
                     "nightReflection": llm_debug_summary(llm_night_reflection_debug),
-                    "strictHint": "设置 AGENT_TOWN_REQUIRE_REAL_LLM_SMOKE=1 可要求真实云端 smoke 必须通过",
+                    "strictHint": "设置 LOOMSTEAD_REQUIRE_REAL_LLM_SMOKE=1（兼容 AGENT_TOWN_REQUIRE_REAL_LLM_SMOKE=1）可要求真实云端 smoke 必须通过",
                 },
             )
         else:

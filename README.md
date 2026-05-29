@@ -172,9 +172,16 @@ Committed config defaults to rule fallback so the project can run without secret
 npm.cmd run model:check
 ```
 
-The current environment-variable prefix remains `AGENT_TOWN_*` for compatibility with existing scripts, local configs, and smoke tests. Do not treat that prefix as the long-term brand. Phase 2 skeleton work may migrate these to `LOOMSTEAD_*` with a compatibility shim.
+The current environment-variable prefix is `LOOMSTEAD_*`. The legacy `AGENT_TOWN_*` prefix is still recognized as a fallback so existing scripts, local configs, and smoke tests keep working during the transition; new automation should prefer `LOOMSTEAD_*`.
 
 Examples that intentionally remain valid today:
+
+```powershell
+$env:LOOMSTEAD_REQUIRE_REAL_LLM_SMOKE = "1"
+$env:LOOMSTEAD_MODEL_CONFIG = "config/models.local.json"
+```
+
+Legacy form (still supported, prefer the new one above):
 
 ```powershell
 $env:AGENT_TOWN_REQUIRE_REAL_LLM_SMOKE = "1"

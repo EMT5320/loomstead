@@ -1,0 +1,91 @@
+{
+  "replayVersion": "narrative.domain_counterfactual_replay.v1",
+  "goalId": "narrative.close_friend_traceable",
+  "npcId": "mira",
+  "targetNpcId": "tomas",
+  "selectedWithEvidence": "social.chat_with",
+  "goalEventIds": [
+    "evt_b685a8c03c774097a6bc6439d68ca044"
+  ],
+  "goalRelationshipEdgeIds": [
+    "mira::tomas::affection",
+    "mira::tomas::conflict",
+    "mira::tomas::trust"
+  ],
+  "goalSubjectiveMemoryRecordIds": [
+    "evt_b685a8c03c774097a6bc6439d68ca044:mira"
+  ],
+  "goalHeuristicIds": [
+    "mira:prefer_social_when_affiliation_high",
+    "mira:prefer_successful_tool:social.chat_with"
+  ],
+  "comparisonCount": 4,
+  "changedDecisionCount": 1,
+  "changeRate": 0.25,
+  "comparisons": [
+    {
+      "ablationId": "remove_goal_relationship_edges",
+      "kind": "critical",
+      "removedEvidenceIds": [
+        "mira::tomas::affection",
+        "mira::tomas::conflict",
+        "mira::tomas::trust"
+      ],
+      "selectedWithEvidence": "social.chat_with",
+      "selectedWithoutEvidence": "social.chat_with",
+      "changed": false,
+      "scoreChanged": true,
+      "reason": "Remove relationship edges sourced from the narrative goal route."
+    },
+    {
+      "ablationId": "remove_goal_subjective_memories",
+      "kind": "critical",
+      "removedEvidenceIds": [
+        "evt_b685a8c03c774097a6bc6439d68ca044:mira"
+      ],
+      "selectedWithEvidence": "social.chat_with",
+      "selectedWithoutEvidence": "social.chat_with",
+      "changed": false,
+      "scoreChanged": true,
+      "reason": "Remove subjective memories written by the goal-relevant tool events."
+    },
+    {
+      "ablationId": "remove_goal_learned_heuristics",
+      "kind": "critical",
+      "removedEvidenceIds": [
+        "mira:prefer_social_when_affiliation_high",
+        "mira:prefer_successful_tool:social.chat_with"
+      ],
+      "selectedWithEvidence": "social.chat_with",
+      "selectedWithoutEvidence": "social.chat_with",
+      "changed": false,
+      "scoreChanged": true,
+      "reason": "Remove heuristics learned from the goal-relevant tool events."
+    },
+    {
+      "ablationId": "remove_all_memory_context",
+      "kind": "critical",
+      "removedEvidenceIds": [
+        "evt_236bc322c554400d91347ad8c34b4e64:mira",
+        "evt_3de30955edbf41f4ae5a457eaafef4ac:mira",
+        "evt_b685a8c03c774097a6bc6439d68ca044:mira",
+        "evt_c1667938aa334341bb15a5f95d523a73:mira",
+        "evt_def30a7df2634446a8e2ddc193344b22:mira",
+        "mira::tomas::affection",
+        "mira::tomas::conflict",
+        "mira::tomas::trust",
+        "mira:designer:avoid_mira_price_conflict_rumor",
+        "mira:designer:designer_prefer_chat_when_recognition_rises",
+        "mira:designer:prefer_mira_check_family_before_overwork",
+        "mira:designer:prefer_mira_shop_when_ledger_anxious",
+        "mira:prefer_social_when_affiliation_high",
+        "mira:prefer_successful_tool:social.chat_with"
+      ],
+      "selectedWithEvidence": "social.chat_with",
+      "selectedWithoutEvidence": "social.give_gift",
+      "changed": true,
+      "scoreChanged": true,
+      "reason": "Remove relationship, subjective memory, and heuristic context together."
+    }
+  ]
+}

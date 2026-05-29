@@ -1,0 +1,134 @@
+{
+  "signatureSummaryVersion": "phase2.evidence_robustness.domain_signature.v2",
+  "strictGate": {
+    "gateVersion": "phase2.evidence_robustness.strict_gate.v1",
+    "pass": true,
+    "failedCheckCount": 0
+  },
+  "process": {
+    "groups": [
+      {
+        "groupId": "process",
+        "stableCount": 80,
+        "total": 80,
+        "overallInvarianceRate": 1.0,
+        "allStable": true,
+        "perturbations": [
+          {
+            "perturbationId": "source_order_shuffle",
+            "stableCount": 20,
+            "total": 20,
+            "invarianceRate": 1.0
+          },
+          {
+            "perturbationId": "source_variation_weak_noise",
+            "stableCount": 20,
+            "total": 20,
+            "invarianceRate": 1.0
+          },
+          {
+            "perturbationId": "source_variation_duplicate",
+            "stableCount": 20,
+            "total": 20,
+            "invarianceRate": 1.0
+          },
+          {
+            "perturbationId": "source_variation_irrelevant",
+            "stableCount": 20,
+            "total": 20,
+            "invarianceRate": 1.0
+          }
+        ]
+      }
+    ],
+    "signatureKinds": [
+      {
+        "groupId": "process",
+        "signatureId": "process_signature.v1",
+        "itemCount": 20
+      }
+    ]
+  },
+  "domain": {
+    "groups": [
+      {
+        "groupId": "loomstead.coding.v0",
+        "stableCount": 160,
+        "total": 160,
+        "overallInvarianceRate": 1.0,
+        "allStable": true,
+        "perturbations": [
+          {
+            "perturbationId": "source_order_shuffle",
+            "stableCount": 40,
+            "total": 40,
+            "invarianceRate": 1.0
+          },
+          {
+            "perturbationId": "source_variation_weak_noise",
+            "stableCount": 40,
+            "total": 40,
+            "invarianceRate": 1.0
+          },
+          {
+            "perturbationId": "source_variation_duplicate",
+            "stableCount": 40,
+            "total": 40,
+            "invarianceRate": 1.0
+          },
+          {
+            "perturbationId": "source_variation_irrelevant",
+            "stableCount": 40,
+            "total": 40,
+            "invarianceRate": 1.0
+          }
+        ]
+      },
+      {
+        "groupId": "loomstead.town.v0",
+        "stableCount": 60,
+        "total": 60,
+        "overallInvarianceRate": 1.0,
+        "allStable": true,
+        "perturbations": [
+          {
+            "perturbationId": "source_order_shuffle",
+            "stableCount": 15,
+            "total": 15,
+            "invarianceRate": 1.0
+          },
+          {
+            "perturbationId": "source_variation_weak_noise",
+            "stableCount": 15,
+            "total": 15,
+            "invarianceRate": 1.0
+          },
+          {
+            "perturbationId": "source_variation_duplicate",
+            "stableCount": 15,
+            "total": 15,
+            "invarianceRate": 1.0
+          },
+          {
+            "perturbationId": "source_variation_irrelevant",
+            "stableCount": 15,
+            "total": 15,
+            "invarianceRate": 1.0
+          }
+        ]
+      }
+    ],
+    "signatureKinds": [
+      {
+        "groupId": "loomstead.coding.v0",
+        "signatureId": "phase2.evidence_robustness.domain_signature.v2.coding",
+        "itemCount": 40
+      },
+      {
+        "groupId": "loomstead.town.v0",
+        "signatureId": "phase2.evidence_robustness.domain_signature.v2.narrative",
+        "itemCount": 15
+      }
+    ]
+  }
+}

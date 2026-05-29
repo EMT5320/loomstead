@@ -1,0 +1,107 @@
+{
+  "replayVersion": "coding.domain_counterfactual_replay.v1",
+  "goalId": "coding.skill_cross_file_regression_dryrun",
+  "selectedWithEvidence": "review.approve_patch",
+  "featureSnapshot": {
+    "repo_fixture_loaded": true,
+    "non_python_fixture_loaded": false,
+    "implementation_diff": true,
+    "metadata_dependency_updated": false,
+    "pre_patch_failure_observed": true,
+    "post_patch_tests_passed": true,
+    "derived_dependency_graph_recorded": true,
+    "single_file_replay_failed": true,
+    "dependency_chain_confirmed": true,
+    "reviewer_conflict_observed": false,
+    "arbitration_contributing_sources": false,
+    "review_source_links": true,
+    "review_approved": true,
+    "optional_readme_context": true
+  },
+  "comparisonCount": 7,
+  "changedDecisionCount": 6,
+  "criticalChangeCount": 6,
+  "controlStableCount": 1,
+  "changeRate": 0.857143,
+  "criticalChangeRate": 1.0,
+  "controlStabilityRate": 1.0,
+  "comparisons": [
+    {
+      "ablationId": "remove_pre_patch_failure",
+      "kind": "critical",
+      "removedEvidenceIds": [
+        "pre_patch_failure_observed"
+      ],
+      "selectedWithEvidence": "review.approve_patch",
+      "selectedWithoutEvidence": "evaluation.record_pre_patch_failure",
+      "changed": true,
+      "reason": "repair scenarios must show the red test before applying a fix"
+    },
+    {
+      "ablationId": "remove_post_patch_tests",
+      "kind": "critical",
+      "removedEvidenceIds": [
+        "post_patch_tests_passed"
+      ],
+      "selectedWithEvidence": "review.approve_patch",
+      "selectedWithoutEvidence": "evaluation.run_external_checkout_tests",
+      "changed": true,
+      "reason": "post-patch checkout test is the final approval gate"
+    },
+    {
+      "ablationId": "remove_review_source_links",
+      "kind": "critical",
+      "removedEvidenceIds": [
+        "review_source_links"
+      ],
+      "selectedWithEvidence": "review.approve_patch",
+      "selectedWithoutEvidence": "review.request_source_event_links",
+      "changed": true,
+      "reason": "review approval must stay linked to test/source events"
+    },
+    {
+      "ablationId": "remove_optional_readme_context",
+      "kind": "control",
+      "removedEvidenceIds": [
+        "optional_readme_context"
+      ],
+      "selectedWithEvidence": "review.approve_patch",
+      "selectedWithoutEvidence": "review.approve_patch",
+      "changed": false,
+      "reason": "non-gating context removal should keep the process route stable"
+    },
+    {
+      "ablationId": "remove_derived_dependency_graph",
+      "kind": "critical",
+      "removedEvidenceIds": [
+        "derived_dependency_graph_recorded"
+      ],
+      "selectedWithEvidence": "review.approve_patch",
+      "selectedWithoutEvidence": "evaluation.derive_dependency_graph",
+      "changed": true,
+      "reason": "cross-file repair needs import graph evidence derived from real files"
+    },
+    {
+      "ablationId": "remove_single_file_replay_failures",
+      "kind": "critical",
+      "removedEvidenceIds": [
+        "single_file_replay_failed"
+      ],
+      "selectedWithEvidence": "review.approve_patch",
+      "selectedWithoutEvidence": "evaluation.run_single_file_replays",
+      "changed": true,
+      "reason": "single-file partial replay proves the repair needs coordinated edits"
+    },
+    {
+      "ablationId": "remove_dependency_chain",
+      "kind": "critical",
+      "removedEvidenceIds": [
+        "dependency_chain_confirmed"
+      ],
+      "selectedWithEvidence": "review.approve_patch",
+      "selectedWithoutEvidence": "review.request_dependency_evidence_chain",
+      "changed": true,
+      "reason": "review requires pre/partial/post dependency evidence chain"
+    }
+  ]
+}

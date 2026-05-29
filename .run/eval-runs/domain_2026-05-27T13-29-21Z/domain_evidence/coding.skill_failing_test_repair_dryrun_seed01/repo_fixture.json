@@ -1,0 +1,77 @@
+{
+  "fixtureId": "loomstead-debug-failing-test-fixture.v1",
+  "repoName": "fixture/loomstead-debug-skill",
+  "defaultBranch": "main",
+  "files": {
+    "README.md": "# Skill Fixture\n\nThis fixture represents a tiny external skill repository.\n",
+    "skills/loomstead-debug/SKILL.md": "# Loomstead Debug Skill\n\nUse project docs before changing runtime code.\n",
+    "skills/loomstead-debug/metadata.json": "{\n  \"id\": \"loomstead-debug\",\n  \"qualityGates\": [\n    \"manual_review\"\n  ],\n  \"requiresReviewRubric\": false,\n  \"version\": \"0.1.0\"\n}\n",
+    "docs/review_rubric.md": "# Review Rubric\n\n- Confirm existing doc guidance remains intact.\n",
+    "tests/test_skill.py": "from __future__ import annotations\nimport json\nfrom pathlib import Path\n\nEXPECTATIONS = '[{\"caseId\": \"loads_skill_md\", \"type\": \"startswith\", \"value\": \"# Loomstead Debug Skill\"}, {\"caseId\": \"keeps_existing_doc_guidance\", \"type\": \"contains\", \"value\": \"Use project docs\"}, {\"caseId\": \"requires_failing_test_evidence\", \"type\": \"contains\", \"value\": \"failing test evidence before repair\"}, {\"caseId\": \"requires_eval_domain_after_repair\", \"type\": \"contains\", \"value\": \"eval:domain\"}]'\nexpectations = json.loads(EXPECTATIONS)\nrepo_root = Path(__file__).resolve().parents[1]\n\ndef read_text(rel_path):\n    path = repo_root / rel_path\n    return path.read_text(encoding='utf-8') if path.exists() else ''\n\ndef read_json(rel_path):\n    text = read_text(rel_path)\n    return json.loads(text) if text else None\n\ndef get_field(payload, dotted):\n    current = payload\n    for part in str(dotted).split('.'):\n        if not isinstance(current, dict) or part not in current:\n            return None\n        current = current[part]\n    return current\n\ndef evaluate_expectation(item):\n    value = str(item.get('value', ''))\n    check_type = item.get('type')\n    rel_path = Path(str(item.get('path') or 'skills/loomstead-debug/SKILL.md'))\n    file_text = read_text(rel_path)\n    if check_type == 'startswith':\n        return file_text.startswith(value)\n    if check_type == 'contains':\n        return value in file_text\n    if check_type == 'json_field_equals':\n        payload = read_json(rel_path)\n        return get_field(payload, item.get('field')) == item.get('value')\n    if check_type == 'json_array_contains':\n        payload = read_json(rel_path)\n        actual = get_field(payload, item.get('field'))\n        return isinstance(actual, list) and item.get('value') in actual\n    return False\n\nimport pytest\n\n\n@pytest.mark.parametrize('item', expectations, ids=lambda item: item.get('caseId', 'unknown_case'))\ndef test_fixture_expectation(item):\n    assert evaluate_expectation(item)\n"
+  },
+  "fileHashes": {
+    "README.md": "b603311279d95465518b947526822a4d81f2cbef7c4362dd197868b5bb466860",
+    "skills/loomstead-debug/SKILL.md": "cfbc8de80c634321e9aa1bcd78cf7838537c3f0693f6f70f39d8127042ccc201",
+    "skills/loomstead-debug/metadata.json": "3fed5d3f9e7609cbf31878e8b83c173efc55c50dcc2dd7afc6db2538b34786cb",
+    "docs/review_rubric.md": "d9559858a56896b5cb0f6864c5b01a108428f0dcb760b84393847969a8196df3",
+    "tests/test_skill.py": "ac7ce6eb223c82aa0ff9bf42a9ed9b90c4df0e3209431fd04baaa3445bbf3de4"
+  },
+  "targetPath": "skills/loomstead-debug/SKILL.md",
+  "targetPaths": [
+    "skills/loomstead-debug/SKILL.md"
+  ],
+  "artifactId": "skill_failing_test_repair.patch",
+  "prePatchTestReportId": "skill_failing_test_repair.pre_patch_tests",
+  "testReportId": "skill_failing_test_repair.tests",
+  "reviewReportId": "skill_failing_test_repair.review",
+  "metadataPath": null,
+  "reviewRubricPath": null,
+  "metadata": {
+    "testRunner": "pytest",
+    "commandTemplate": "python -m pytest tests/test_skill.py -q",
+    "language": "python"
+  },
+  "testCommand": "python -m pytest tests/test_skill.py -q",
+  "commandTemplate": "python -m pytest tests/test_skill.py -q",
+  "testCommandSource": "metadata.testRunner",
+  "importGraph": {},
+  "derivedDependencyGraph": {
+    "graphVersion": "coding.derived_dependency_graph.v1",
+    "nodes": [
+      "tests/test_skill.py"
+    ],
+    "edges": []
+  },
+  "reviewerRubrics": [],
+  "plannedAdditions": [
+    "Add failing test evidence before repair.",
+    "Run eval:domain after the repair passes."
+  ],
+  "plannedFileUpdates": [],
+  "testExpectations": [
+    {
+      "caseId": "loads_skill_md",
+      "type": "startswith",
+      "value": "# Loomstead Debug Skill"
+    },
+    {
+      "caseId": "keeps_existing_doc_guidance",
+      "type": "contains",
+      "value": "Use project docs"
+    },
+    {
+      "caseId": "requires_failing_test_evidence",
+      "type": "contains",
+      "value": "failing test evidence before repair"
+    },
+    {
+      "caseId": "requires_eval_domain_after_repair",
+      "type": "contains",
+      "value": "eval:domain"
+    }
+  ],
+  "requiresPrePatchFailure": true,
+  "requiresSingleFileFailureEvidence": false,
+  "requiresReviewerDisagreement": false,
+  "sourceRepoKind": "deterministic_local_git_repository"
+}

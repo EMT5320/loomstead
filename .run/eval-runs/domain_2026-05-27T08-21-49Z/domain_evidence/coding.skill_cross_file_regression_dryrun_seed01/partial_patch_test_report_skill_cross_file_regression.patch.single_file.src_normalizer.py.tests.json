@@ -1,0 +1,126 @@
+{
+  "testReportId": "skill_cross_file_regression.patch.single_file.src_normalizer.py.tests",
+  "command": "python -m pytest tests/test_skill.py -q",
+  "testRunner": "pytest",
+  "durationMs": 6533.428,
+  "exitCode": 1,
+  "testPhase": "single_file_patch",
+  "patchedFile": "src/normalizer.py",
+  "passed": false,
+  "expectedFailure": true,
+  "failureObserved": true,
+  "failingCaseIds": [
+    "pytest_suite"
+  ],
+  "caseResults": [
+    {
+      "caseId": "pytest_suite",
+      "passed": false,
+      "runner": "pytest",
+      "exitCode": 1,
+      "passedCount": 0,
+      "failedCount": 2,
+      "summary": "FF                                                                       [100%]",
+      "parseNote": "JSONDecodeError('Expecting value: line 1 column 1 (char 0)')"
+    }
+  ],
+  "execution": {
+    "executed": true,
+    "testPhase": "single_file_patch",
+    "testRunner": "pytest",
+    "workspaceKind": "git_external_repo_checkout",
+    "sourceRepoKind": "deterministic_local_git_repository",
+    "checkoutMethod": "git clone",
+    "command": "python -m pytest tests/test_skill.py -q",
+    "commandTemplate": "python -m pytest tests/test_skill.py -q",
+    "testCommandSource": "metadata.testRunner",
+    "pythonExecutable": "python.exe",
+    "exitCode": 1,
+    "durationMs": 6533.428,
+    "stdout": "FF                                                                       [100%]\n================================== FAILURES ===================================\n______________ test_status_report_normalizes_cross_file_severity ______________\n\n    def test_status_report_normalizes_cross_file_severity():\n        report = build_status_report('  Ready  ', ' LOW ')\n>       assert report == {'status': 'ready', 'severity': 'low', 'display': 'ready:low'}\nE       AssertionError: assert {'display': '...tus': 'ready'} == {'display': '...tus': 'ready'}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Differing items:\nE         {'severity': ' LOW '} != {'severity': 'low'}\nE         {'display': 'ready: LOW '} != {'display': 'ready:low'}\nE         Use -v to get more diff\n\ntests\\test_skill.py:14: AssertionError\n______________ test_status_report_preserves_status_word_spacing _______________\n\n    def test_status_report_preserves_status_word_spacing():\n        report = build_status_report('Needs   Review', ' Medium ')\n>       assert report == {'status': 'needs review', 'severity': 'medium', 'display': 'needs review:medium'}\nE       AssertionError: assert {'display': '...needs review'} == {'display': '...needs review'}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Differing items:\nE         {'severity': ' Medium '} != {'severity': 'medium'}\nE         {'display': 'needs review: Medium '} != {'display': 'needs review:medium'}\nE         Use -v to get more diff\n\ntests\\test_skill.py:19: AssertionError\n=========================== short test summary info ===========================\nFAILED tests/test_skill.py::test_status_report_normalizes_cross_file_severity\nFAILED tests/test_skill.py::test_status_report_preserves_status_word_spacing\n2 failed in 0.32s\n",
+    "stderr": "",
+    "checkoutSteps": [
+      {
+        "command": "git init --quiet",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git checkout -B main",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "Switched to a new branch 'main'\n"
+      },
+      {
+        "command": "git config user.email fixture@example.invalid",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git config user.name Loomstead Fixture",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git add --all",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "warning: in the working copy of 'README.md', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'src/normalizer.py', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'src/report.py', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'tests/test_skill.py', CRLF will be replaced by LF the next time Git touches it\n"
+      },
+      {
+        "command": "git commit --quiet -m initial fixture repo",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git clone --quiet <source-repo> <checkout>",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "git": {
+      "defaultBranch": "main",
+      "sourceHead": "1beff8192d9c271e8f82ca8412c1cbf3755a31c2",
+      "checkoutHead": "1beff8192d9c271e8f82ca8412c1cbf3755a31c2",
+      "statusAfterPatch": [
+        " M README.md",
+        " M src/normalizer.py",
+        " M src/report.py",
+        " M tests/test_skill.py"
+      ]
+    },
+    "sourceRepoFiles": [
+      "README.md",
+      "src/__init__.py",
+      "src/normalizer.py",
+      "src/report.py",
+      "tests/test_skill.py"
+    ],
+    "workspaceFiles": [
+      "README.md",
+      "src/__init__.py",
+      "src/normalizer.py",
+      "src/report.py",
+      "tests/test_skill.py"
+    ],
+    "workspaceFileHashes": {
+      "README.md": "b103f613c1e586660feeff19cc8a7c65b6396391c1e032ac3b7948389d33e055",
+      "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "src/normalizer.py": "b454750d8e393aadba401d0d39e5fc5fa04d8ef80057bd78594c4c8600993004",
+      "src/report.py": "5541288be4d3d1cfe643f83052297dded066bfce32028a64e7aca8b298b5b08d",
+      "tests/test_skill.py": "a1433943132fc14d9b867f857e44c7c5780e17916a8765ee068703a1e0c73bac"
+    }
+  },
+  "sourceArtifactId": "skill_cross_file_regression.patch",
+  "sha256": "6c9be9f3d1b16ac96a7bf9edb2962fb7970ee401daccea8a13bc37c44bbf0b37",
+  "sourceEventIds": [
+    "coding_evt_007"
+  ],
+  "sourcePostPatchTestReportId": "skill_cross_file_regression.tests",
+  "sourcePrePatchTestReportId": "skill_cross_file_regression.pre_patch_tests"
+}

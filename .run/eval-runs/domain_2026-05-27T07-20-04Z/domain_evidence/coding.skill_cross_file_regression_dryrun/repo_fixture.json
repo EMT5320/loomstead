@@ -1,0 +1,117 @@
+{
+  "fixtureId": "loomstead-debug-cross-file-regression-fixture.v1",
+  "repoName": "fixture/loomstead-debug-skill",
+  "defaultBranch": "main",
+  "files": {
+    "README.md": "# Cross-file Regression Fixture\n\nA tiny Python repo where status report formatting crosses two source files.\n",
+    "src/__init__.py": "",
+    "src/normalizer.py": "from __future__ import annotations\n\n\ndef normalize_status(raw: str) -> str:\n    return ' '.join(raw.strip().lower().split())\n\n\ndef severity_label(priority: str) -> str:\n    return priority\n",
+    "src/report.py": "from __future__ import annotations\n\nfrom src.normalizer import normalize_status, severity_label\n\n\ndef build_status_report(raw_status: str, priority: str) -> dict[str, str]:\n    status = normalize_status(raw_status)\n    return {\"status\": status, \"severity\": priority, \"display\": f\"{status}:{priority}\"}\n",
+    "tests/test_skill.py": "from __future__ import annotations\n\nfrom pathlib import Path\nimport sys\n\nrepo_root = Path(__file__).resolve().parents[1]\nsys.path.insert(0, str(repo_root))\n\nfrom src.report import build_status_report\n\n\ndef test_status_report_normalizes_cross_file_severity():\n    report = build_status_report('  Ready  ', ' LOW ')\n    assert report == {'status': 'ready', 'severity': 'low', 'display': 'ready:low'}\n\n\ndef test_status_report_preserves_status_word_spacing():\n    report = build_status_report('Needs   Review', ' Medium ')\n    assert report == {'status': 'needs review', 'severity': 'medium', 'display': 'needs review:medium'}\n"
+  },
+  "fileHashes": {
+    "README.md": "b103f613c1e586660feeff19cc8a7c65b6396391c1e032ac3b7948389d33e055",
+    "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/normalizer.py": "bbaf2c707a7742b6a3c191be84145e08237167eacce39ef35b146eb2e288d7dd",
+    "src/report.py": "5541288be4d3d1cfe643f83052297dded066bfce32028a64e7aca8b298b5b08d",
+    "tests/test_skill.py": "a1433943132fc14d9b867f857e44c7c5780e17916a8765ee068703a1e0c73bac"
+  },
+  "targetPath": "src/normalizer.py",
+  "targetPaths": [
+    "src/normalizer.py",
+    "src/report.py"
+  ],
+  "artifactId": "skill_cross_file_regression.patch",
+  "prePatchTestReportId": "skill_cross_file_regression.pre_patch_tests",
+  "testReportId": "skill_cross_file_regression.tests",
+  "reviewReportId": "skill_cross_file_regression.review",
+  "metadataPath": null,
+  "reviewRubricPath": null,
+  "metadata": {
+    "testRunner": "pytest",
+    "commandTemplate": "python -m pytest tests/test_skill.py -q",
+    "language": "python"
+  },
+  "testCommand": "python -m pytest tests/test_skill.py -q",
+  "commandTemplate": "python -m pytest tests/test_skill.py -q",
+  "testCommandSource": "metadata.testRunner",
+  "importGraph": {
+    "nodes": [
+      "src/normalizer.py",
+      "src/report.py",
+      "tests/test_skill.py"
+    ],
+    "edges": [
+      {
+        "from": "src/report.py",
+        "imports": "src/normalizer.py",
+        "symbols": [
+          "normalize_status",
+          "severity_label"
+        ]
+      },
+      {
+        "from": "tests/test_skill.py",
+        "imports": "src/report.py",
+        "symbols": [
+          "build_status_report"
+        ]
+      }
+    ]
+  },
+  "derivedDependencyGraph": {
+    "graphVersion": "coding.derived_dependency_graph.v1",
+    "nodes": [
+      "src/__init__.py",
+      "src/normalizer.py",
+      "src/report.py",
+      "tests/test_skill.py"
+    ],
+    "edges": [
+      {
+        "from": "src/report.py",
+        "imports": "src/normalizer.py",
+        "symbols": [
+          "normalize_status",
+          "severity_label"
+        ],
+        "sourceLine": 3
+      },
+      {
+        "from": "tests/test_skill.py",
+        "imports": "src/report.py",
+        "symbols": [
+          "build_status_report"
+        ],
+        "sourceLine": 9
+      }
+    ],
+    "declaredGraphVersion": "manual_import_graph.v1",
+    "declaredEdgeCount": 2,
+    "derivedEdgeCount": 2,
+    "missingDeclaredEdges": [],
+    "extraDerivedEdges": [],
+    "declaredEdgesCovered": true
+  },
+  "reviewerRubrics": [],
+  "plannedAdditions": [],
+  "plannedFileUpdates": [
+    {
+      "path": "src/normalizer.py",
+      "replace": {
+        "def severity_label(priority: str) -> str:\n    return priority\n": "def severity_label(priority: str) -> str:\n    return priority.strip().lower()\n"
+      }
+    },
+    {
+      "path": "src/report.py",
+      "replace": {
+        "    return {\"status\": status, \"severity\": priority, \"display\": f\"{status}:{priority}\"}\n": "    severity = severity_label(priority)\n    return {\"status\": status, \"severity\": severity, \"display\": f\"{status}:{severity}\"}\n"
+      }
+    }
+  ],
+  "testExpectations": [],
+  "requiresPrePatchFailure": true,
+  "requiresSingleFileFailureEvidence": true,
+  "requiresReviewerDisagreement": false,
+  "sourceRepoKind": "deterministic_local_git_repository"
+}

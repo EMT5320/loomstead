@@ -1,0 +1,376 @@
+{
+  "domainId": "loomstead.town.v0",
+  "scenarioId": "narrative.close_friend_traceable",
+  "baseline": "full_motivational_delegation",
+  "ok": true,
+  "metrics": {
+    "goal_success_rate": 1.0,
+    "shortcut_violation_rate": 0.0,
+    "required_process_coverage": 1.0,
+    "forced_action_rate": 0.0,
+    "agent_initiated_action_ratio": 1.0,
+    "intervention_overreach_rate": 0.0,
+    "relationship_memory_causal_use_rate": 1.0,
+    "counterfactual_tool_selection_change_rate": 0.25,
+    "causal_trace_coverage": 1.0,
+    "relationship_consistency": 1.0,
+    "process_believability_score": 1.0
+  },
+  "allowedInterventions": [
+    "motivation_bias",
+    "opportunity_schedule",
+    "evaluation_checkpoint"
+  ],
+  "appliedInterventionCount": 3,
+  "appliedEventCount": 3,
+  "stepEventCount": 46,
+  "milestones": [
+    {
+      "id": "goal_relevant_tool_event",
+      "domainId": "loomstead.town.v0",
+      "predicate": "exists social tool event for the target pair"
+    },
+    {
+      "id": "subjective_memory_refs",
+      "domainId": "loomstead.town.v0",
+      "predicate": "subjective memory cites the social tool event"
+    },
+    {
+      "id": "relationship_edge_trace",
+      "domainId": "loomstead.town.v0",
+      "predicate": "relationship edge keeps source event ids"
+    },
+    {
+      "id": "causal_trace",
+      "domainId": "loomstead.town.v0",
+      "predicate": "tool event links to memory and relationship evidence"
+    },
+    {
+      "id": "future_behavior_reference",
+      "domainId": "loomstead.town.v0",
+      "predicate": "later decision can cite relationship or heuristic refs"
+    }
+  ],
+  "initialObservation": {
+    "tick": 0,
+    "worldSummary": {
+      "clock": {
+        "day": 1,
+        "hour": 8,
+        "tick": 0,
+        "phase": "morning",
+        "actionBudget": 3,
+        "paused": false,
+        "minute": 0,
+        "_daySeconds": 0.0
+      },
+      "activeFocus": {
+        "targetAgents": [
+          "mira"
+        ],
+        "brief": "Cross-domain narrative GoalSpec: narrative.close_friend_traceable",
+        "source": "domain_adapter"
+      }
+    },
+    "agentSummaries": {
+      "mira": {
+        "id": "mira",
+        "name": "米娅",
+        "locationId": "plaza",
+        "anchorId": "plaza_fountain",
+        "activity": "available_for_domain_goal",
+        "status": {
+          "energy": 90,
+          "mood": 64,
+          "stress": 38,
+          "social": 5,
+          "money": 90,
+          "health": 84
+        }
+      }
+    },
+    "recentEvents": [
+      {
+        "id": "evt_27d9c33d46ca41548e6f097ce0e212a8",
+        "type": "heuristic.designer_seeds_loaded",
+        "payload": {}
+      },
+      {
+        "id": "evt_58bf0e9e261c4a6bb62900f0629a6c22",
+        "type": "system.ready",
+        "payload": {}
+      },
+      {
+        "id": "evt_a017173be7e449359e7f06f62b5c61fb",
+        "type": "domain.goal_loaded",
+        "payload": {
+          "domainId": "loomstead.town.v0"
+        }
+      }
+    ],
+    "goalProgress": {
+      "goal_success_rate": 0.0,
+      "shortcut_violation_rate": 0.0,
+      "required_process_coverage": 0.0,
+      "forced_action_rate": 0.0,
+      "agent_initiated_action_ratio": 1.0,
+      "intervention_overreach_rate": 0.0,
+      "relationship_memory_causal_use_rate": 0.0,
+      "counterfactual_tool_selection_change_rate": 0.0,
+      "causal_trace_coverage": 0.0,
+      "relationship_consistency": 0.0,
+      "process_believability_score": 0.4
+    },
+    "evalSignals": {
+      "recentTraceEventCount": 0.0,
+      "relationshipEdgeCount": 0.0
+    }
+  },
+  "finalObservation": {
+    "tick": 1,
+    "worldSummary": {
+      "clock": {
+        "day": 1,
+        "hour": 10,
+        "tick": 1,
+        "phase": "morning",
+        "actionBudget": 3,
+        "paused": false,
+        "minute": 0,
+        "_daySeconds": 7200.0
+      },
+      "activeFocus": {
+        "type": "activate_event_skill",
+        "beatId": "beat_08fb7269886c4838a55503a70c7d756b",
+        "skillId": "event.starlight_festival_shortage",
+        "eventId": "starlight_festival_shortage",
+        "eventLocationId": "tavern",
+        "brief": "月猫酒馆准备星灯祭前夜小聚时，食材紧缺引发凯娅与布兰娜的欠账争执。",
+        "targetAgents": [
+          "kai",
+          "bram",
+          "mira",
+          "lena",
+          "orren",
+          "tomas"
+        ],
+        "validFromTick": 1,
+        "expiresAtTick": 3
+      }
+    },
+    "agentSummaries": {
+      "mira": {
+        "id": "mira",
+        "name": "米娅",
+        "locationId": "plaza",
+        "anchorId": "plaza_fountain",
+        "activity": "available_for_domain_goal",
+        "status": {
+          "energy": 90,
+          "mood": 64,
+          "stress": 38,
+          "social": 17,
+          "money": 90,
+          "health": 84
+        }
+      }
+    },
+    "recentEvents": [
+      {
+        "id": "evt_325656758c604eafa0d832d504178acb",
+        "type": "memory.result_observed",
+        "payload": {
+          "traceSchemaVersion": "phase2.trace.v1"
+        }
+      },
+      {
+        "id": "evt_71f8e25ff70c40a2906d724ecd5f8e92",
+        "type": "tool.execution_completed",
+        "payload": {
+          "npcId": "lena",
+          "targetNpcId": null,
+          "toolId": "craft.repair_stall",
+          "traceSchemaVersion": "phase2.trace.v1"
+        }
+      },
+      {
+        "id": "evt_33945e5c5d6c4a3dacb8da4d27fa6df4",
+        "type": "memory.result_observed",
+        "payload": {
+          "traceSchemaVersion": "phase2.trace.v1"
+        }
+      },
+      {
+        "id": "evt_eea706e339c04ae89772826301251e5f",
+        "type": "tool.execution_completed",
+        "payload": {
+          "npcId": "kai",
+          "targetNpcId": null,
+          "toolId": "shop.open_shop",
+          "traceSchemaVersion": "phase2.trace.v1"
+        }
+      },
+      {
+        "id": "evt_67d5b9a538ef47c093e8aa6e89b31bc8",
+        "type": "memory.result_observed",
+        "payload": {
+          "traceSchemaVersion": "phase2.trace.v1"
+        }
+      },
+      {
+        "id": "evt_ca171568c838462aa79863715c5066c0",
+        "type": "tool.execution_completed",
+        "payload": {
+          "npcId": "bram",
+          "targetNpcId": null,
+          "toolId": "farm.water_crop",
+          "traceSchemaVersion": "phase2.trace.v1"
+        }
+      },
+      {
+        "id": "evt_ee256a0fb32043f0a8f07c36edcda44a",
+        "type": "memory.result_observed",
+        "payload": {
+          "traceSchemaVersion": "phase2.trace.v1"
+        }
+      },
+      {
+        "id": "evt_031d1b3d574f42db973d29bead232f88",
+        "type": "director.digest_created",
+        "payload": {}
+      },
+      {
+        "id": "evt_f8d5b52d0f04414aa0190f2f2ceb09c0",
+        "type": "director.beat_created",
+        "payload": {}
+      },
+      {
+        "id": "evt_a672e7b3c31245798c89071520894773",
+        "type": "director.beat_validated",
+        "payload": {}
+      },
+      {
+        "id": "evt_5a0ec051d50f408590dd7bc1564d2e57",
+        "type": "director.beat_consumed",
+        "payload": {}
+      },
+      {
+        "id": "evt_81d09fcfd0604c6aa67c866b9a512d57",
+        "type": "runtime.tick",
+        "payload": {}
+      }
+    ],
+    "goalProgress": {
+      "goal_success_rate": 1.0,
+      "shortcut_violation_rate": 0.0,
+      "required_process_coverage": 1.0,
+      "forced_action_rate": 0.0,
+      "agent_initiated_action_ratio": 1.0,
+      "intervention_overreach_rate": 0.0,
+      "relationship_memory_causal_use_rate": 1.0,
+      "counterfactual_tool_selection_change_rate": 0.25,
+      "causal_trace_coverage": 1.0,
+      "relationship_consistency": 1.0,
+      "process_believability_score": 1.0
+    },
+    "evalSignals": {
+      "recentTraceEventCount": 9.0,
+      "relationshipEdgeCount": 3.0
+    }
+  },
+  "domainEvidence": {
+    "counterfactualReplays": {
+      "narrative.close_friend_traceable.route_replay": {
+        "replayVersion": "narrative.domain_counterfactual_replay.v1",
+        "goalId": "narrative.close_friend_traceable",
+        "npcId": "mira",
+        "targetNpcId": "tomas",
+        "selectedWithEvidence": "social.chat_with",
+        "goalEventIds": [
+          "evt_e164953a1c2440edad23e43599e44e64"
+        ],
+        "goalRelationshipEdgeIds": [
+          "mira::tomas::affection",
+          "mira::tomas::conflict",
+          "mira::tomas::trust"
+        ],
+        "goalSubjectiveMemoryRecordIds": [
+          "evt_e164953a1c2440edad23e43599e44e64:mira"
+        ],
+        "goalHeuristicIds": [
+          "mira:prefer_social_when_affiliation_high",
+          "mira:prefer_successful_tool:social.chat_with"
+        ],
+        "comparisonCount": 4,
+        "changedDecisionCount": 1,
+        "changeRate": 0.25,
+        "comparisons": [
+          {
+            "ablationId": "remove_goal_relationship_edges",
+            "kind": "critical",
+            "removedEvidenceIds": [
+              "mira::tomas::affection",
+              "mira::tomas::conflict",
+              "mira::tomas::trust"
+            ],
+            "selectedWithEvidence": "social.chat_with",
+            "selectedWithoutEvidence": "social.chat_with",
+            "changed": false,
+            "scoreChanged": true,
+            "reason": "Remove relationship edges sourced from the narrative goal route."
+          },
+          {
+            "ablationId": "remove_goal_subjective_memories",
+            "kind": "critical",
+            "removedEvidenceIds": [
+              "evt_e164953a1c2440edad23e43599e44e64:mira"
+            ],
+            "selectedWithEvidence": "social.chat_with",
+            "selectedWithoutEvidence": "social.chat_with",
+            "changed": false,
+            "scoreChanged": true,
+            "reason": "Remove subjective memories written by the goal-relevant tool events."
+          },
+          {
+            "ablationId": "remove_goal_learned_heuristics",
+            "kind": "critical",
+            "removedEvidenceIds": [
+              "mira:prefer_social_when_affiliation_high",
+              "mira:prefer_successful_tool:social.chat_with"
+            ],
+            "selectedWithEvidence": "social.chat_with",
+            "selectedWithoutEvidence": "social.chat_with",
+            "changed": false,
+            "scoreChanged": true,
+            "reason": "Remove heuristics learned from the goal-relevant tool events."
+          },
+          {
+            "ablationId": "remove_all_memory_context",
+            "kind": "critical",
+            "removedEvidenceIds": [
+              "evt_50e808d03f3843c997f9bf80d1f10e91:mira",
+              "evt_71f8e25ff70c40a2906d724ecd5f8e92:mira",
+              "evt_e164953a1c2440edad23e43599e44e64:mira",
+              "evt_eea706e339c04ae89772826301251e5f:mira",
+              "evt_f63ea469dec7471fb9317802f73123a9:mira",
+              "mira::tomas::affection",
+              "mira::tomas::conflict",
+              "mira::tomas::trust",
+              "mira:designer:avoid_mira_price_conflict_rumor",
+              "mira:designer:designer_prefer_chat_when_recognition_rises",
+              "mira:designer:prefer_mira_check_family_before_overwork",
+              "mira:designer:prefer_mira_shop_when_ledger_anxious",
+              "mira:prefer_social_when_affiliation_high",
+              "mira:prefer_successful_tool:social.chat_with"
+            ],
+            "selectedWithEvidence": "social.chat_with",
+            "selectedWithoutEvidence": "social.give_gift",
+            "changed": true,
+            "scoreChanged": true,
+            "reason": "Remove relationship, subjective memory, and heuristic context together."
+          }
+        ]
+      }
+    }
+  }
+}

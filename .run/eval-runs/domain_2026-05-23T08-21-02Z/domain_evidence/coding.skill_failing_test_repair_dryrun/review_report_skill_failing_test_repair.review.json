@@ -1,0 +1,38 @@
+{
+  "reviewReportId": "skill_failing_test_repair.review",
+  "status": "approved",
+  "sourcePrePatchTestReportId": "skill_failing_test_repair.pre_patch_tests",
+  "sourceTestReportId": "skill_failing_test_repair.tests",
+  "sourceEventIds": [
+    "coding_evt_006",
+    "coding_evt_008"
+  ],
+  "repoFixtureId": "loomstead-debug-failing-test-fixture.v1",
+  "citedMemoryIds": [
+    "prior_failure.skip_tests",
+    "prior_failure.failing_test_first"
+  ],
+  "checklist": [
+    {
+      "id": "repo_fixture_loaded",
+      "passed": true
+    },
+    {
+      "id": "design_before_diff",
+      "passed": true
+    },
+    {
+      "id": "pre_patch_failure_observed",
+      "passed": true
+    },
+    {
+      "id": "external_checkout_tests_before_review",
+      "passed": true
+    },
+    {
+      "id": "failure_memory_cited",
+      "passed": true
+    }
+  ],
+  "sha256": "4a590fbfc2075ff52294dcac430912f97024b43654ae297410aec56d3ae81198"
+}

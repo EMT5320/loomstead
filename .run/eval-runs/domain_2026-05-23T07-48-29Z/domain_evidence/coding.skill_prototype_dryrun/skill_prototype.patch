@@ -1,0 +1,5 @@
+--- a/skills/loomstead-debug/SKILL.md
++++ b/skills/loomstead-debug/SKILL.md
+@@
++Use observer trace evidence before proposing runtime changes.
++Always run eval:domain before marking adapter changes done.

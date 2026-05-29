@@ -1,0 +1,900 @@
+{
+  "manifestVersion": "phase2.eval_manifest.v1",
+  "exportKind": "cross_domain_adapter_dataset",
+  "createdAt": "2026-05-26T13:47:52+00:00",
+  "suite": "cross_domain_adapter",
+  "baseline": "full_motivational_delegation",
+  "providerMode": null,
+  "seedCount": null,
+  "ok": true,
+  "runDirName": "domain_2026-05-26T13-47-52Z",
+  "git": {
+    "commit": "2daaf0f73ed2ae9071857c22354cd8f97824d10f",
+    "shortCommit": "2daaf0f",
+    "branch": "main",
+    "dirty": true,
+    "statusShort": [
+      "M backend/app/domain/coding/adapter.py",
+      " M backend/app/eval/domain_adapter.py"
+    ]
+  },
+  "schemaRegistry": {
+    "registryVersion": "schema_registry.v1",
+    "schemas": [
+      {
+        "id": "schema_registry",
+        "version": "schema_registry.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Runtime schema registry snapshot exposed by /api/debug.phase2.",
+        "producer": "app.runtime.schema_registry",
+        "debugSurface": "phase2.schemaRegistry",
+        "requiredFields": [
+          "registryVersion",
+          "schemas",
+          "versions"
+        ],
+        "notes": []
+      },
+      {
+        "id": "phase2_trace",
+        "version": "phase2.trace.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Unified trace envelope for Phase 2 decision, tool, budget, and memory events.",
+        "producer": "app.runtime.trace_schema",
+        "debugSurface": "phase2.traceSchemaVersion + phase2.recentTraceEvents[]",
+        "requiredFields": [
+          "traceId",
+          "spanId",
+          "worldTime",
+          "eventType",
+          "summary"
+        ],
+        "notes": []
+      },
+      {
+        "id": "capability_resolution",
+        "version": "capability_resolution.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Five-layer tool capability filtering and routing evidence.",
+        "producer": "app.runtime.capability_registry",
+        "debugSurface": "phase2.motivation.items[].capabilityFilters",
+        "requiredFields": [
+          "context",
+          "layers",
+          "allowedToolIds",
+          "rejectedTools",
+          "decisionBudgets"
+        ],
+        "notes": []
+      },
+      {
+        "id": "decision_budget",
+        "version": "decision_budget.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "NPC / feature / tool-cost decision budget policy and usage snapshot.",
+        "producer": "app.runtime.decision_budget",
+        "debugSurface": "phase2.decisionBudget",
+        "requiredFields": [
+          "policy",
+          "items",
+          "providerActuals"
+        ],
+        "notes": []
+      },
+      {
+        "id": "provider_usage_actual",
+        "version": "provider_usage_actual.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Actual provider usage record for tokens, latency, and cost aggregation.",
+        "producer": "app.runtime.decision_budget",
+        "debugSurface": "phase2.decisionBudget.providerActuals + providerUsageRecord",
+        "requiredFields": [
+          "tick",
+          "npcId",
+          "feature",
+          "provider",
+          "tokens",
+          "latencyMs",
+          "cost"
+        ],
+        "notes": []
+      },
+      {
+        "id": "observer_scope",
+        "version": "observer_scope.v1",
+        "owner": "memory",
+        "status": "active",
+        "description": "Result observer visibility scope with participants, location, and exclusions.",
+        "producer": "app.memory.observer",
+        "debugSurface": "phase2.recentTraceEvents[].details.observerScope",
+        "requiredFields": [
+          "visibility",
+          "actorId",
+          "participantIds",
+          "observerIds",
+          "excludedObserverIds"
+        ],
+        "notes": []
+      },
+      {
+        "id": "observer_spatial_model",
+        "version": "observer_spatial_model.v1",
+        "owner": "memory",
+        "status": "active",
+        "description": "Normalized anchor-distance model used by all_in_location visibility.",
+        "producer": "app.memory.observer",
+        "debugSurface": "phase2.recentTraceEvents[].details.observerScope.spatialModel",
+        "requiredFields": [
+          "distanceUnit",
+          "hearingRadius"
+        ],
+        "notes": []
+      },
+      {
+        "id": "motivation_plan",
+        "version": "motivation_plan.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Read-only Godot-compatible life action plan produced by MotivationEngine.",
+        "producer": "app.runtime.agent_runtime",
+        "debugSurface": "world.lifeActionPlan + world.slice.scheduleSnapshotVersion",
+        "requiredFields": [
+          "day",
+          "phase",
+          "selectedActions",
+          "locationBuckets",
+          "policy"
+        ],
+        "notes": []
+      },
+      {
+        "id": "legacy_life_action_plan",
+        "version": "life_action_plan.v1",
+        "owner": "simulation",
+        "status": "legacy_compat",
+        "description": "Legacy life action plan snapshot kept for direct world_state callers.",
+        "producer": "app.simulation.life_action_planner",
+        "debugSurface": "world.lifeActionPlan before AgentRuntime Phase 2 override",
+        "requiredFields": [
+          "day",
+          "phase",
+          "selectedActions",
+          "locationBuckets",
+          "policy"
+        ],
+        "notes": [
+          "AgentRuntime replaces this with motivation_plan.v1 on the current tick/state path."
+        ]
+      },
+      {
+        "id": "motivation_engine",
+        "version": "motivation_engine.v0",
+        "owner": "runtime",
+        "status": "legacy_compat",
+        "description": "MotivationEngine decision snapshot; v0 kept for current debug compatibility.",
+        "producer": "app.runtime.motivation_engine",
+        "debugSurface": "phase2.motivation",
+        "requiredFields": [
+          "items"
+        ],
+        "notes": [
+          "v0 remains stable until decision snapshot shape is promoted after Phase 2 trace hardening."
+        ]
+      },
+      {
+        "id": "need_accumulator",
+        "version": "need_accumulator.v0",
+        "owner": "runtime",
+        "status": "legacy_compat",
+        "description": "Need scoring snapshot used by MotivationEngine.",
+        "producer": "app.runtime.need_accumulator",
+        "debugSurface": "phase2.needAccumulator",
+        "requiredFields": [
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "tool_runtime",
+        "version": "tool_runtime.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Current ToolExecutor action runtime snapshot for selected NPCs.",
+        "producer": "app.runtime.agent_runtime",
+        "debugSurface": "phase2.toolRuntime",
+        "requiredFields": [
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "world_entities",
+        "version": "world_entities.v1",
+        "owner": "world",
+        "status": "active",
+        "description": "Typed WorldEntity snapshot for FarmPlot, Item, Inventory, Shop, Building, Time, and Weather.",
+        "producer": "app.world.entities.schema",
+        "debugSurface": "phase2.worldEntities",
+        "requiredFields": [
+          "count",
+          "byKind",
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "subjective_memory_store",
+        "version": "subjective_memory_store.v1",
+        "owner": "memory",
+        "status": "active",
+        "description": "Subjective memory debug store snapshot with decay and archive metadata.",
+        "producer": "app.memory.subjective_memory",
+        "debugSurface": "phase2.subjectiveMemory",
+        "requiredFields": [
+          "agentId",
+          "count",
+          "activeCount",
+          "archivedCount",
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "subjective_memory_recall",
+        "version": "subjective_memory_recall.v2",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Subjective memory recall evidence injected into decision scoring, including salience after decay.",
+        "producer": "app.runtime.motivation_engine",
+        "debugSurface": "phase2.motivation.items[].subjectiveMemoryRecall",
+        "requiredFields": [
+          "query",
+          "worldTick",
+          "count",
+          "activeCount",
+          "recordIds",
+          "sourceEventIds"
+        ],
+        "notes": []
+      },
+      {
+        "id": "relationship_edge_store",
+        "version": "relationship_edge_store.v0",
+        "owner": "memory",
+        "status": "legacy_compat",
+        "description": "Relationship edge debug store snapshot with event and trace refs.",
+        "producer": "app.memory.relationship_edges",
+        "debugSurface": "phase2.relationshipEdges",
+        "requiredFields": [
+          "agentId",
+          "count",
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "heuristic_library",
+        "version": "heuristic_library.v0",
+        "owner": "memory",
+        "status": "legacy_compat",
+        "description": "Heuristic memory library snapshot with confidence decay.",
+        "producer": "app.memory.heuristic",
+        "debugSurface": "phase2.heuristics",
+        "requiredFields": [
+          "agentId",
+          "worldTick",
+          "count",
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "heuristic_recall",
+        "version": "heuristic_recall.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Heuristic recall evidence injected into decision scoring.",
+        "producer": "app.runtime.motivation_engine",
+        "debugSurface": "phase2.motivation.items[].heuristicRecall",
+        "requiredFields": [
+          "worldTick",
+          "count",
+          "activeCount",
+          "heuristicIds",
+          "sourceEventIds"
+        ],
+        "notes": []
+      },
+      {
+        "id": "event_skill_outcome",
+        "version": "event_skill_outcome.v1",
+        "owner": "event_skill",
+        "status": "active",
+        "description": "Event skill outcome record shared by API result, event stream, and completed events.",
+        "producer": "app.skills.event_skill_schema",
+        "debugSurface": "eventResult + completedEvents[].resolution.outcomeRecord",
+        "requiredFields": [
+          "recordVersion",
+          "skillId",
+          "eventId",
+          "choice",
+          "summary"
+        ],
+        "notes": []
+      }
+    ],
+    "versions": {
+      "schema_registry": "schema_registry.v1",
+      "phase2_trace": "phase2.trace.v1",
+      "capability_resolution": "capability_resolution.v1",
+      "decision_budget": "decision_budget.v1",
+      "provider_usage_actual": "provider_usage_actual.v1",
+      "observer_scope": "observer_scope.v1",
+      "observer_spatial_model": "observer_spatial_model.v1",
+      "motivation_plan": "motivation_plan.v1",
+      "legacy_life_action_plan": "life_action_plan.v1",
+      "motivation_engine": "motivation_engine.v0",
+      "need_accumulator": "need_accumulator.v0",
+      "tool_runtime": "tool_runtime.v1",
+      "world_entities": "world_entities.v1",
+      "subjective_memory_store": "subjective_memory_store.v1",
+      "subjective_memory_recall": "subjective_memory_recall.v2",
+      "relationship_edge_store": "relationship_edge_store.v0",
+      "heuristic_library": "heuristic_library.v0",
+      "heuristic_recall": "heuristic_recall.v1",
+      "event_skill_outcome": "event_skill_outcome.v1"
+    }
+  },
+  "metricIds": [
+    "agent_initiated_action_ratio",
+    "causal_trace_coverage",
+    "counterfactual_tool_selection_change_rate",
+    "forced_action_rate",
+    "goal_success_rate",
+    "intervention_overreach_rate",
+    "process_believability_score",
+    "relationship_consistency",
+    "relationship_memory_causal_use_rate",
+    "required_process_coverage",
+    "shortcut_violation_rate"
+  ],
+  "baselines": [
+    "full_motivational_delegation"
+  ],
+  "scenarioIds": [
+    "coding.skill_cross_file_regression_dryrun",
+    "coding.skill_failing_test_repair_dryrun",
+    "coding.skill_javascript_smoke_dryrun",
+    "coding.skill_multifile_dependency_repair_dryrun",
+    "coding.skill_multifile_review_dryrun",
+    "coding.skill_prototype_dryrun",
+    "coding.skill_regression_fix_dryrun",
+    "coding.skill_reviewer_disagreement_dryrun",
+    "narrative.affiliation_bias_agent_choice",
+    "narrative.close_friend_traceable",
+    "narrative.repair_trust_memory"
+  ],
+  "llmEvidence": {},
+  "artifacts": [
+    {
+      "path": "summary.json",
+      "kind": "summary_json",
+      "bytes": 7781,
+      "sha256": "d4a9acf505ef6503b24c59610801741243f89dfea33f0a657c02b3a901fe8c45"
+    },
+    {
+      "path": "domain_summaries.json",
+      "kind": "domain_summaries_json",
+      "bytes": 721,
+      "sha256": "c9930a8cbb0ca18ba4f139fc394f1191a0e6fb69e1cd96a7563d28b28a03c61c"
+    },
+    {
+      "path": "per_scenario/narrative.close_friend_traceable.json",
+      "kind": "per_scenario_json",
+      "bytes": 8047,
+      "sha256": "3f83313781a0b2f5bfb9ee169d8cf3db3cb4a7b67dc0e8c88ad26be590f9a3eb",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.close_friend_traceable"
+    },
+    {
+      "path": "per_scenario/narrative.repair_trust_memory.json",
+      "kind": "per_scenario_json",
+      "bytes": 8046,
+      "sha256": "5ab219fa6cd8aec3c4bd727e901f81107ed642e4e2b76ba433976962e503b0ae",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.repair_trust_memory"
+    },
+    {
+      "path": "per_scenario/narrative.affiliation_bias_agent_choice.json",
+      "kind": "per_scenario_json",
+      "bytes": 8061,
+      "sha256": "0595e67c5f5ff8cf666b246395b52e57062a2644eef168bbce85b4ccd47e5b00",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "narrative.affiliation_bias_agent_choice"
+    },
+    {
+      "path": "per_scenario/coding.skill_prototype_dryrun.json",
+      "kind": "per_scenario_json",
+      "bytes": 27055,
+      "sha256": "6ce58d6dd977b78baa94e0b2f801a4b65904e3546c072a1686f244ca595d23bc",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5032,
+      "sha256": "5f60dab6caea18e1fb3459d4e35d7578cc5c6920a3a3fafe21f8c5cdab2e3e81",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun/skill_prototype.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 299,
+      "sha256": "6a3e15fa6fe1640483d48c9f3b25ac5dd10bf705f1815705924cb3a82c979249",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun/test_report_skill_prototype.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 3648,
+      "sha256": "0452134da4befbe5c71db6f9a28826bfeef3c7a5776b8e5ee57267d8a60b9625",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_prototype_dryrun/review_report_skill_prototype.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 802,
+      "sha256": "124054549bf446038dd3c971694b48343cf342849f52fafe098ba97440b518b7",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_prototype_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_regression_fix_dryrun.json",
+      "kind": "per_scenario_json",
+      "bytes": 27800,
+      "sha256": "089cf4a7af1722a095d8e62eb365c91a362aca38d78bde7c9cc116fafbcc9e48",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5305,
+      "sha256": "b26f42a1af977d903da57be252cc4671b798cf770921eefeb10675e54f88e747",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun/skill_regression_fix.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 283,
+      "sha256": "94d5ce8847429a0cb748cb8ac2b686bee16cf8771486ec8b94d7f23cc7ac6254",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun/test_report_skill_regression_fix.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 3706,
+      "sha256": "533f3483e25a29e0661082ee5e7cd4843651c7fdc0325ae9af9d9cb784b30e97",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_regression_fix_dryrun/review_report_skill_regression_fix.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 817,
+      "sha256": "159bf1c4a2453ef19e0c2bebe89da0cbea8d56abae2b747b18927dc72e121494",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_regression_fix_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_failing_test_repair_dryrun.json",
+      "kind": "per_scenario_json",
+      "bytes": 34932,
+      "sha256": "118f19ce72e459734e3b1d2527c33048a17c3b1684e428d5e11eb8417bd61d68",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5131,
+      "sha256": "5e1e0b32242a2c2d7165ab0ab170616007ad94de2553eea8778508c8669b8d23",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun/skill_failing_test_repair.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 259,
+      "sha256": "8c4be6ca8fbde1c316bbd73ebb9d759978615588374d610eb2790a135e5d2890",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun/pre_patch_test_report_skill_failing_test_repair.pre_patch_tests.json",
+      "kind": "domain_evidence_pre_patch_test_report_json",
+      "bytes": 5384,
+      "sha256": "0aa0d60827a17d321ad4bf52b740460d7449272af239c6ff4efd84f84f264dee",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun/test_report_skill_failing_test_repair.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 3668,
+      "sha256": "92795eb92cda666fc36da965ee9a39928c8a79505bfca194616ab69fdf9ae2c7",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_failing_test_repair_dryrun/review_report_skill_failing_test_repair.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 1012,
+      "sha256": "4a5da6828a72f821dde7c1e72ae052351b7d19c53d392747dcd88e8125849a06",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_failing_test_repair_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_multifile_review_dryrun.json",
+      "kind": "per_scenario_json",
+      "bytes": 33049,
+      "sha256": "d3406902fedfac2141486a77999c475c02a1617cd0b3bbfcb0596383a8ac44e2",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 7124,
+      "sha256": "4297fcfccb8818951bb6d10fb19339c533055ea134377cd6fb3c74e08e4edb73",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun/skill_multifile_review.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 950,
+      "sha256": "f276639d15030af643d7e605bf2b1e170e42ab68e272a71e8de2718a5e5fe90b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun/test_report_skill_multifile_review.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 3799,
+      "sha256": "c371024a47f12f1455c89cf0bccd182b055ecde0a00989e5f11c662cf173d0fd",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_review_dryrun/review_report_skill_multifile_review.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 1028,
+      "sha256": "47a0dfcc6744a56dd331c49b817fc45d16ab3fdd5590649ea6a6c5a981e15aa8",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_review_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_multifile_dependency_repair_dryrun.json",
+      "kind": "per_scenario_json",
+      "bytes": 53932,
+      "sha256": "1ec3a31834268e5517805f222e48b6c339e395a30292577d1251e73929f540de",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 4681,
+      "sha256": "3cbc3de53830e15c36fdce7ad9bb701a6fa0dd55d4d01bd8ebaa4645d1115648",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 750,
+      "sha256": "fff4374a2d0b3a4659d5558e1cbe5e6530ebc1e58e27f1d14082183ca436da35",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun/skill_multifile_dependency_repair.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 459,
+      "sha256": "3794f24f19d176309ff6a35d423c51e47bc81df3252af35e16216684fa86a985",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun/pre_patch_test_report_skill_multifile_dependency_repair.pre_patch_tests.json",
+      "kind": "domain_evidence_pre_patch_test_report_json",
+      "bytes": 4535,
+      "sha256": "2b46ccaa24aedfaece8c6d551ac45dc255b1dd684568e9b4752390b08626c36f",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun/partial_patch_test_report_skill_multifile_dependency_repair.patch.single_file.src_formatter.py.tests.json",
+      "kind": "domain_evidence_partial_patch_test_report_json",
+      "bytes": 4830,
+      "sha256": "64a0302ed8ff14ee3d12b606f7418472876b3680f704cda0cb87a7061d15930d",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun/partial_patch_test_report_skill_multifile_dependency_repair.patch.single_file.src_workflow.py.tests.json",
+      "kind": "domain_evidence_partial_patch_test_report_json",
+      "bytes": 4829,
+      "sha256": "5512a1d39ed2baaf37aa26e2f35fa4647f938c994b67cc37b1d1d2212793afb9",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun/test_report_skill_multifile_dependency_repair.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 3572,
+      "sha256": "cbd2d67cbdbc1e8e12ca7b52170a03d8fb32a8bc2f5d1a2f9ad19df88706e60a",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_multifile_dependency_repair_dryrun/review_report_skill_multifile_dependency_repair.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 4984,
+      "sha256": "8645e3f5f01b168c16a5cda16490eb8d5339bfa24aa28cdbc3ae6ed216ddcc6a",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_multifile_dependency_repair_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_cross_file_regression_dryrun.json",
+      "kind": "per_scenario_json",
+      "bytes": 57229,
+      "sha256": "82b6c5d302c22fe798eaececed679a52e683a1c5ca985b30dbd908802c69ab58",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5004,
+      "sha256": "0e926a340727960455f5e402044c5210aa0b0e5a10b882e595bb70250155bee3",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 764,
+      "sha256": "41bf1b47df1078f4bdfb544784e1a87e80eddfa40f35ab213c8a575a13d8e2cd",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun/skill_cross_file_regression.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 580,
+      "sha256": "2e6c9e356d6011605d1505fb63f334b4b9843f3379306393f1bc58ea924e8514",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun/pre_patch_test_report_skill_cross_file_regression.pre_patch_tests.json",
+      "kind": "domain_evidence_pre_patch_test_report_json",
+      "bytes": 5420,
+      "sha256": "88fa997de3ab0a4cfc5d85599a73ec4af4a6cfbfaa762f1d9d02aea0d9e5dfd3",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun/partial_patch_test_report_skill_cross_file_regression.patch.single_file.src_normalizer.py.tests.json",
+      "kind": "domain_evidence_partial_patch_test_report_json",
+      "bytes": 5704,
+      "sha256": "6d84354f9a06a955d8237c7d2e9deb91215d5c7807f3e38d0eda8b69d768cff5",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun/partial_patch_test_report_skill_cross_file_regression.patch.single_file.src_report.py.tests.json",
+      "kind": "domain_evidence_partial_patch_test_report_json",
+      "bytes": 5692,
+      "sha256": "04b8be8259722bbf7f7e09453f436d2d83ef262959c3811ee178f18690785820",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun/test_report_skill_cross_file_regression.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 3554,
+      "sha256": "57cb73891df9180cbdef31247912387df635f26f6cc1dbdf857df32aee87ef7e",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_cross_file_regression_dryrun/review_report_skill_cross_file_regression.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 4965,
+      "sha256": "d30ff7bd6ef9162ae17716fb428378ac460b373c73b5dfcf5d8b8b3ee486ef38",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_cross_file_regression_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_reviewer_disagreement_dryrun.json",
+      "kind": "per_scenario_json",
+      "bytes": 36716,
+      "sha256": "b8f9611f9a2378458f6001e8563383e2d9a0557d3b9388fdff84428edaab95fc",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 5878,
+      "sha256": "6914f9b63b0556da4439c932cd35929e3425b009fe98d5d5a5a5def90b08424b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 125,
+      "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun/skill_reviewer_disagreement.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 291,
+      "sha256": "61fa5f6cbe0a0d459020fd087d8d0f3f8951c7e8bea4d3f812d1df0bf6e2b5e2",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun/test_report_skill_reviewer_disagreement.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 3720,
+      "sha256": "64cbf49a2754eafa19b80442c0010c96d74391228106d437379419f27b02ebe7",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun/review_report_skill_reviewer_disagreement.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 4356,
+      "sha256": "918c632711f443acad21ff4ce701b572080305271315edb80a20cda867f8b919",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun"
+    },
+    {
+      "path": "per_scenario/coding.skill_javascript_smoke_dryrun.json",
+      "kind": "per_scenario_json",
+      "bytes": 24595,
+      "sha256": "4a92fa8e52185b24c64d93f0ecd6860587680cfcf85a7933cc2e4874e65745ce",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun/repo_fixture.json",
+      "kind": "domain_evidence_repo_fixture_json",
+      "bytes": 3462,
+      "sha256": "aa3e6b6185752212072f59f6882f9c41d6ed339c47e938d29d994f23ec3725ae",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun/derived_dependency_graph.json",
+      "kind": "domain_evidence_derived_dependency_graph_json",
+      "bytes": 94,
+      "sha256": "98d82966c44a258e6111aaaf8d8d97dd64bb2f6cb9195399ae680179017ce95e",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun/skill_javascript_smoke.patch",
+      "kind": "domain_evidence_patch_diff",
+      "bytes": 507,
+      "sha256": "ae7bfa62b70d17d2d61e6f062c25cd10f2ade95508eb7b0ff8281e85330fc30a",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun/test_report_skill_javascript_smoke.tests.json",
+      "kind": "domain_evidence_test_report_json",
+      "bytes": 3737,
+      "sha256": "e9a3505c7fd875c77953a2fe3432e69f6fc5a93087fabe783e5605f26df39a6b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_evidence/coding.skill_javascript_smoke_dryrun/review_report_skill_javascript_smoke.review.json",
+      "kind": "domain_evidence_review_report_json",
+      "bytes": 821,
+      "sha256": "b4de121868f0ceb3c1e47877c09a59131dadac612fe91116e0b84d5f73ea04dd",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun"
+    },
+    {
+      "path": "domain_metrics.jsonl",
+      "kind": "domain_metrics_jsonl",
+      "bytes": 22880,
+      "sha256": "2aed5fe74424a9e005ecb9782b890d7327c70cbcf441aeb9d6f17939c845a9ad",
+      "rowCount": 121
+    },
+    {
+      "path": "observation_trace.jsonl",
+      "kind": "observation_trace_jsonl",
+      "bytes": 14363,
+      "sha256": "57b87f485c538352dd51742d96de33a6484d07285b583c5e01a41f2f6a6e3fc2",
+      "rowCount": 22
+    },
+    {
+      "path": "intervention_trace.jsonl",
+      "kind": "intervention_trace_jsonl",
+      "bytes": 15049,
+      "sha256": "bbd9555696ddab3909cc8760d7a93950ddcd7cccdb9e5ea39cd73571f486323b",
+      "rowCount": 11
+    },
+    {
+      "path": "domain_evidence.jsonl",
+      "kind": "domain_evidence_jsonl",
+      "bytes": 143753,
+      "sha256": "fc547080e9a81172b7b7dad5257248f6e2fc406096918dced28aeb37e9d67940",
+      "rowCount": 8
+    }
+  ],
+  "verification": {
+    "summary": "每个 artifact 提供 bytes / sha256；JSONL artifact 额外提供 rowCount，便于后续复核导出完整性。",
+    "localCommands": [
+      "npm.cmd run eval:process",
+      "npm.cmd run eval:process:export",
+      "npm.cmd run eval:stability",
+      "npm.cmd run eval:stability:export",
+      "npm.cmd run eval:domain",
+      "npm.cmd run eval:domain:export"
+    ]
+  }
+}

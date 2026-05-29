@@ -1,0 +1,117 @@
+{
+  "testReportId": "skill_reviewer_disagreement.tests",
+  "command": "python check_skill.py",
+  "testPhase": "post_patch",
+  "passed": true,
+  "caseResults": [
+    {
+      "caseId": "loads_skill_md",
+      "passed": true
+    },
+    {
+      "caseId": "records_reviewer_disagreement",
+      "passed": true
+    },
+    {
+      "caseId": "records_arbitration_trace_refs",
+      "passed": true
+    },
+    {
+      "caseId": "keeps_existing_doc_guidance",
+      "passed": true
+    }
+  ],
+  "execution": {
+    "executed": true,
+    "testPhase": "post_patch",
+    "workspaceKind": "git_external_repo_checkout",
+    "sourceRepoKind": "deterministic_local_git_repository",
+    "checkoutMethod": "git clone",
+    "command": "python check_skill.py",
+    "commandTemplate": "python check_skill.py",
+    "testCommandSource": "repo_fixture",
+    "pythonExecutable": "python.exe",
+    "exitCode": 0,
+    "durationMs": 309.988,
+    "stdout": "{\"caseResults\": [{\"caseId\": \"loads_skill_md\", \"passed\": true}, {\"caseId\": \"records_reviewer_disagreement\", \"passed\": true}, {\"caseId\": \"records_arbitration_trace_refs\", \"passed\": true}, {\"caseId\": \"keeps_existing_doc_guidance\", \"passed\": true}]}\n",
+    "stderr": "",
+    "checkoutSteps": [
+      {
+        "command": "git init --quiet",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git checkout -B main",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "Switched to a new branch 'main'\n"
+      },
+      {
+        "command": "git config user.email fixture@example.invalid",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git config user.name Loomstead Fixture",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git add --all",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "warning: unable to access 'C:/Users/Administrator/.config/git/ignore': Permission denied\n"
+      },
+      {
+        "command": "git commit --quiet -m initial fixture repo",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git clone --quiet <source-repo> <checkout>",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "warning: unable to access 'C:/Users/Administrator/.config/git/ignore': Permission denied\n"
+      }
+    ],
+    "git": {
+      "defaultBranch": "main",
+      "sourceHead": "d87e1b0266eae23aeec719cf31574e65333be5b4",
+      "checkoutHead": "d87e1b0266eae23aeec719cf31574e65333be5b4",
+      "statusAfterPatch": [
+        " M skills/loomstead-debug/SKILL.md"
+      ]
+    },
+    "sourceRepoFiles": [
+      "README.md",
+      "check_skill.py",
+      "docs/review_rubric.md",
+      "skills/loomstead-debug/SKILL.md",
+      "skills/loomstead-debug/metadata.json"
+    ],
+    "workspaceFiles": [
+      "README.md",
+      "check_skill.py",
+      "docs/review_rubric.md",
+      "skills/loomstead-debug/SKILL.md",
+      "skills/loomstead-debug/metadata.json"
+    ],
+    "workspaceFileHashes": {
+      "README.md": "b603311279d95465518b947526822a4d81f2cbef7c4362dd197868b5bb466860",
+      "skills/loomstead-debug/SKILL.md": "0b8b08f657415d97084e4c0b87c3ffcb667844681a53c8143db8879d785e7d4e",
+      "skills/loomstead-debug/metadata.json": "3fed5d3f9e7609cbf31878e8b83c173efc55c50dcc2dd7afc6db2538b34786cb",
+      "docs/review_rubric.md": "d9559858a56896b5cb0f6864c5b01a108428f0dcb760b84393847969a8196df3",
+      "check_skill.py": "16d39a162018cc621cf856961679c747375476baaad2b3842cc31a3e6facdbdb"
+    }
+  },
+  "sourceArtifactId": "skill_reviewer_disagreement.patch",
+  "sourceEventIds": [
+    "coding_evt_006"
+  ],
+  "sha256": "b18c6ad55718624e491e6c54494e0b470d0b7f5c468b8dab503ce9662623afcf"
+}

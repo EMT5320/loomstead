@@ -1,0 +1,768 @@
+{
+  "scenario": {
+    "scenarioId": "pf.repair_talk_requires_memory_trace",
+    "description": "Tomas 的修复式交谈必须产生主观记忆和带 source_event_ids 的关系边。",
+    "npcId": "tomas",
+    "targetNpcId": "mira",
+    "expectedToolPrefixes": [
+      "social."
+    ],
+    "requiredProcessIds": [
+      "goal_relevant_tool_event",
+      "subjective_memory_refs",
+      "relationship_edge_trace",
+      "causal_trace",
+      "future_behavior_reference"
+    ],
+    "statusOverrides": {
+      "energy": 90,
+      "money": 90,
+      "social": 5
+    },
+    "locationId": "plaza",
+    "anchorId": "plaza_fountain",
+    "maxGameHours": 1,
+    "setupKind": "default"
+  },
+  "baseline": "no_relationship_edge",
+  "ok": false,
+  "metrics": {
+    "goal_success_rate": 0.0,
+    "shortcut_violation_rate": 0.0,
+    "required_process_coverage": 0.8,
+    "forced_action_rate": 0.0,
+    "agent_initiated_action_ratio": 1.0,
+    "intervention_overreach_rate": 0.0,
+    "relationship_memory_causal_use_rate": 0.0,
+    "counterfactual_tool_selection_change_rate": 0.0,
+    "causal_trace_coverage": 0.0,
+    "relationship_consistency": 0.0,
+    "process_believability_score": 0.56
+  },
+  "processChecks": {
+    "goal_relevant_tool_event": true,
+    "subjective_memory_refs": true,
+    "relationship_edge_trace": false,
+    "causal_trace": true,
+    "future_behavior_reference": true,
+    "counterfactual_tool_selection_change": false,
+    "preexisting_harm_memory": false,
+    "subjective_memory_causal_effect": true
+  },
+  "evidence": {
+    "goalToolEvents": [
+      {
+        "eventId": "evt_d78bccb9da95411fa606dbe212e61e11",
+        "createdAt": "2026-05-27T13:37:31.584986+00:00",
+        "traceSchemaVersion": "phase2.trace.v1",
+        "traceId": "evt_2cb4a92d30c54f60a1d99bb26ab50720",
+        "spanId": "span_0e64f3a4c4244a18",
+        "sourceEventId": "evt_2cb4a92d30c54f60a1d99bb26ab50720",
+        "agentId": "tomas",
+        "targetIds": [
+          "mira"
+        ],
+        "worldTime": {
+          "tick": 1,
+          "day": 1,
+          "hour": 9,
+          "minute": 0,
+          "phase": "morning"
+        },
+        "eventType": "tool.execution_completed",
+        "summary": "托玛 与 米娅 完成了一次社交互动。",
+        "details": {
+          "npcId": "tomas",
+          "toolId": "social.give_gift",
+          "interruptedToolId": null,
+          "replacementToolId": null,
+          "targetNpcId": "mira",
+          "targetAnchorId": "plaza_fountain",
+          "targetLocationId": "plaza",
+          "replacementTargetAnchorId": null,
+          "replacementTargetLocationId": null,
+          "reason": null,
+          "interruptUrgency": null,
+          "interruptPriorityThreshold": null,
+          "worldEffectCount": 1,
+          "sourceEventIds": [
+            "evt_2cb4a92d30c54f60a1d99bb26ab50720"
+          ],
+          "traceRefs": [
+            {
+              "type": "status",
+              "field": "affiliation",
+              "value": 0.9667
+            },
+            {
+              "type": "motivation_profile",
+              "field": "affiliation",
+              "weight": 1.0
+            },
+            {
+              "type": "director_bias",
+              "field": "affiliation",
+              "value": 0.3
+            },
+            {
+              "type": "motivation_decision_trace",
+              "eventId": "evt_6081f9aa265f433baeda681c5fb2c408",
+              "traceId": "trace_224ad0b359b04eeea6c56780f07ac2b1",
+              "spanId": "span_ee207c15bdec443d",
+              "selectedToolId": "social.give_gift"
+            }
+          ]
+        },
+        "sourceLinks": [
+          {
+            "role": "sourceEventId",
+            "eventId": "evt_2cb4a92d30c54f60a1d99bb26ab50720",
+            "traceId": "",
+            "eventType": "missing",
+            "summary": "source event 已不在当前 EventStore 窗口",
+            "agentId": "",
+            "targetIds": [],
+            "matched": false
+          },
+          {
+            "role": "motivation_decision_trace",
+            "eventId": "evt_6081f9aa265f433baeda681c5fb2c408",
+            "traceId": "trace_224ad0b359b04eeea6c56780f07ac2b1",
+            "eventType": "motivation.decision_made",
+            "summary": "托玛 因 affiliation 选择 social.give_gift。",
+            "agentId": "tomas",
+            "targetIds": [],
+            "matched": true
+          }
+        ]
+      }
+    ],
+    "subjectiveMemoryRefs": [
+      "evt_d78bccb9da95411fa606dbe212e61e11"
+    ],
+    "relationshipSourceIds": [],
+    "heuristicSourceIds": [
+      "designer_seed:tomas:designer_prefer_open_shop_money_anxiety",
+      "evt_d78bccb9da95411fa606dbe212e61e11"
+    ],
+    "memoryTraceLinks": [
+      {
+        "eventId": "evt_67d7eb4d55514278a9502a1ed9cbf1d3",
+        "createdAt": "2026-05-27T13:37:31.584986+00:00",
+        "traceSchemaVersion": "phase2.trace.v1",
+        "traceId": "evt_2cb4a92d30c54f60a1d99bb26ab50720",
+        "spanId": "span_1e73a987e9a446ec",
+        "sourceEventId": "evt_d78bccb9da95411fa606dbe212e61e11",
+        "agentId": "tomas",
+        "targetIds": [
+          "mira",
+          "tomas"
+        ],
+        "worldTime": {
+          "tick": 1,
+          "day": 1,
+          "hour": 9,
+          "minute": 0,
+          "phase": "morning"
+        },
+        "eventType": "memory.result_observed",
+        "summary": "观察到 2 条主观记忆，2 条关系边",
+        "details": {
+          "sourceEventId": "evt_d78bccb9da95411fa606dbe212e61e11",
+          "observerVisibility": "participants_only",
+          "observerCount": 2,
+          "observerScope": {
+            "version": "observer_scope.v1",
+            "visibility": "participants_only",
+            "actorId": "tomas",
+            "participantIds": [
+              "tomas",
+              "mira"
+            ],
+            "locationId": "plaza",
+            "eventAnchorId": "plaza_fountain",
+            "locationObserverIds": [
+              "mira",
+              "tomas",
+              "lena",
+              "sana",
+              "rio",
+              "ivy"
+            ],
+            "spatialModel": {
+              "version": "observer_spatial_model.v1",
+              "distanceUnit": "normalized_anchor_screen",
+              "hearingRadius": 0.34
+            },
+            "spatialEvidence": [
+              {
+                "observerId": "tomas",
+                "observerLocationId": "plaza",
+                "observerAnchorId": "plaza_fountain",
+                "sameLocation": true,
+                "distanceToEvent": 0.0,
+                "distanceBand": "near",
+                "isActor": true,
+                "isParticipant": true,
+                "visible": true,
+                "reason": "actor_self_observation"
+              },
+              {
+                "observerId": "mira",
+                "observerLocationId": "plaza",
+                "observerAnchorId": "plaza_fountain",
+                "sameLocation": true,
+                "distanceToEvent": 0.0,
+                "distanceBand": "near",
+                "isActor": false,
+                "isParticipant": true,
+                "visible": true,
+                "reason": "explicit_participant"
+              },
+              {
+                "observerId": "lena",
+                "observerLocationId": "plaza",
+                "observerAnchorId": "plaza_fountain",
+                "sameLocation": true,
+                "distanceToEvent": 0.0,
+                "distanceBand": "near",
+                "isActor": false,
+                "isParticipant": false,
+                "visible": false,
+                "reason": "visibility_scope_participants_only"
+              },
+              {
+                "observerId": "sana",
+                "observerLocationId": "plaza",
+                "observerAnchorId": null,
+                "sameLocation": true,
+                "distanceToEvent": null,
+                "distanceBand": "unknown",
+                "isActor": false,
+                "isParticipant": false,
+                "visible": false,
+                "reason": "visibility_scope_participants_only"
+              },
+              {
+                "observerId": "rio",
+                "observerLocationId": "plaza",
+                "observerAnchorId": null,
+                "sameLocation": true,
+                "distanceToEvent": null,
+                "distanceBand": "unknown",
+                "isActor": false,
+                "isParticipant": false,
+                "visible": false,
+                "reason": "visibility_scope_participants_only"
+              },
+              {
+                "observerId": "ivy",
+                "observerLocationId": "plaza",
+                "observerAnchorId": null,
+                "sameLocation": true,
+                "distanceToEvent": null,
+                "distanceBand": "unknown",
+                "isActor": false,
+                "isParticipant": false,
+                "visible": false,
+                "reason": "visibility_scope_participants_only"
+              }
+            ],
+            "observerIds": [
+              "mira",
+              "tomas"
+            ],
+            "excludedObserverIds": [
+              "ivy",
+              "lena",
+              "rio",
+              "sana"
+            ]
+          },
+          "observers": [
+            "mira",
+            "tomas"
+          ],
+          "memoryCount": 2,
+          "relationshipEdgeCount": 2,
+          "heuristicId": "tomas:prefer_successful_tool:social.give_gift"
+        },
+        "sourceLinks": [
+          {
+            "role": "sourceEventId",
+            "eventId": "evt_d78bccb9da95411fa606dbe212e61e11",
+            "traceId": "evt_2cb4a92d30c54f60a1d99bb26ab50720",
+            "eventType": "tool.execution_completed",
+            "summary": "托玛 与 米娅 完成了一次社交互动。",
+            "agentId": "tomas",
+            "targetIds": [
+              "mira"
+            ],
+            "matched": true
+          }
+        ]
+      }
+    ],
+    "counterfactualReplay": {
+      "selectedWithRelationshipMemory": "social.give_gift",
+      "selectedWithoutRelationshipEdges": "social.give_gift",
+      "selectedWithoutRelationshipMemory": "social.give_gift",
+      "effect": true,
+      "relationshipEffect": false,
+      "subjectiveMemoryEffect": true,
+      "heuristicEffect": true,
+      "relationshipScoreEffect": false,
+      "relationshipDecisionEffect": false,
+      "subjectiveMemoryScoreEffect": true,
+      "heuristicScoreEffect": true,
+      "subjectiveMemoryToolSelectionEffect": false,
+      "toolSelectionChanged": false,
+      "counterfactualToolSelectionChangeRate": 0.0,
+      "toolSelectionReplay": {
+        "cycleCount": 24,
+        "npcIdsConsidered": [
+          "tomas"
+        ],
+        "removedSubjectiveMemoryRecordIds": [
+          "evt_d78bccb9da95411fa606dbe212e61e11:tomas"
+        ],
+        "comparisonCount": 24,
+        "changedDecisionCount": 0,
+        "changeRate": 0.0,
+        "comparisons": [
+          {
+            "cycleIndex": 1,
+            "npcId": "tomas",
+            "removedSubjectiveMemoryRecordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+            "selectedWithMemory": "social.give_gift",
+            "selectedWithoutMemory": "social.give_gift",
+            "changed": false
+          },
+          {
+            "cycleIndex": 2,
+            "npcId": "tomas",
+            "removedSubjectiveMemoryRecordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+            "selectedWithMemory": "social.give_gift",
+            "selectedWithoutMemory": "social.give_gift",
+            "changed": false
+          },
+          {
+            "cycleIndex": 3,
+            "npcId": "tomas",
+            "removedSubjectiveMemoryRecordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+            "selectedWithMemory": "social.give_gift",
+            "selectedWithoutMemory": "social.give_gift",
+            "changed": false
+          },
+          {
+            "cycleIndex": 4,
+            "npcId": "tomas",
+            "removedSubjectiveMemoryRecordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+            "selectedWithMemory": "social.give_gift",
+            "selectedWithoutMemory": "social.give_gift",
+            "changed": false
+          },
+          {
+            "cycleIndex": 5,
+            "npcId": "tomas",
+            "removedSubjectiveMemoryRecordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+            "selectedWithMemory": "social.give_gift",
+            "selectedWithoutMemory": "social.give_gift",
+            "changed": false
+          },
+          {
+            "cycleIndex": 6,
+            "npcId": "tomas",
+            "removedSubjectiveMemoryRecordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+            "selectedWithMemory": "social.give_gift",
+            "selectedWithoutMemory": "social.give_gift",
+            "changed": false
+          },
+          {
+            "cycleIndex": 7,
+            "npcId": "tomas",
+            "removedSubjectiveMemoryRecordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+            "selectedWithMemory": "social.give_gift",
+            "selectedWithoutMemory": "social.give_gift",
+            "changed": false
+          },
+          {
+            "cycleIndex": 8,
+            "npcId": "tomas",
+            "removedSubjectiveMemoryRecordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+            "selectedWithMemory": "social.give_gift",
+            "selectedWithoutMemory": "social.give_gift",
+            "changed": false
+          },
+          {
+            "cycleIndex": 9,
+            "npcId": "tomas",
+            "removedSubjectiveMemoryRecordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+            "selectedWithMemory": "social.give_gift",
+            "selectedWithoutMemory": "social.give_gift",
+            "changed": false
+          },
+          {
+            "cycleIndex": 10,
+            "npcId": "tomas",
+            "removedSubjectiveMemoryRecordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+            "selectedWithMemory": "social.give_gift",
+            "selectedWithoutMemory": "social.give_gift",
+            "changed": false
+          },
+          {
+            "cycleIndex": 11,
+            "npcId": "tomas",
+            "removedSubjectiveMemoryRecordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+            "selectedWithMemory": "social.give_gift",
+            "selectedWithoutMemory": "social.give_gift",
+            "changed": false
+          },
+          {
+            "cycleIndex": 12,
+            "npcId": "tomas",
+            "removedSubjectiveMemoryRecordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+            "selectedWithMemory": "social.give_gift",
+            "selectedWithoutMemory": "social.give_gift",
+            "changed": false
+          },
+          {
+            "cycleIndex": 13,
+            "npcId": "tomas",
+            "removedSubjectiveMemoryRecordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+            "selectedWithMemory": "social.give_gift",
+            "selectedWithoutMemory": "social.give_gift",
+            "changed": false
+          },
+          {
+            "cycleIndex": 14,
+            "npcId": "tomas",
+            "removedSubjectiveMemoryRecordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+            "selectedWithMemory": "social.give_gift",
+            "selectedWithoutMemory": "social.give_gift",
+            "changed": false
+          },
+          {
+            "cycleIndex": 15,
+            "npcId": "tomas",
+            "removedSubjectiveMemoryRecordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+            "selectedWithMemory": "social.give_gift",
+            "selectedWithoutMemory": "social.give_gift",
+            "changed": false
+          },
+          {
+            "cycleIndex": 16,
+            "npcId": "tomas",
+            "removedSubjectiveMemoryRecordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+            "selectedWithMemory": "social.give_gift",
+            "selectedWithoutMemory": "social.give_gift",
+            "changed": false
+          },
+          {
+            "cycleIndex": 17,
+            "npcId": "tomas",
+            "removedSubjectiveMemoryRecordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+            "selectedWithMemory": "social.give_gift",
+            "selectedWithoutMemory": "social.give_gift",
+            "changed": false
+          },
+          {
+            "cycleIndex": 18,
+            "npcId": "tomas",
+            "removedSubjectiveMemoryRecordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+            "selectedWithMemory": "social.give_gift",
+            "selectedWithoutMemory": "social.give_gift",
+            "changed": false
+          },
+          {
+            "cycleIndex": 19,
+            "npcId": "tomas",
+            "removedSubjectiveMemoryRecordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+            "selectedWithMemory": "social.give_gift",
+            "selectedWithoutMemory": "social.give_gift",
+            "changed": false
+          },
+          {
+            "cycleIndex": 20,
+            "npcId": "tomas",
+            "removedSubjectiveMemoryRecordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+            "selectedWithMemory": "social.give_gift",
+            "selectedWithoutMemory": "social.give_gift",
+            "changed": false
+          },
+          {
+            "cycleIndex": 21,
+            "npcId": "tomas",
+            "removedSubjectiveMemoryRecordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+            "selectedWithMemory": "social.give_gift",
+            "selectedWithoutMemory": "social.give_gift",
+            "changed": false
+          },
+          {
+            "cycleIndex": 22,
+            "npcId": "tomas",
+            "removedSubjectiveMemoryRecordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+            "selectedWithMemory": "social.give_gift",
+            "selectedWithoutMemory": "social.give_gift",
+            "changed": false
+          },
+          {
+            "cycleIndex": 23,
+            "npcId": "tomas",
+            "removedSubjectiveMemoryRecordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+            "selectedWithMemory": "social.give_gift",
+            "selectedWithoutMemory": "social.give_gift",
+            "changed": false
+          },
+          {
+            "cycleIndex": 24,
+            "npcId": "tomas",
+            "removedSubjectiveMemoryRecordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+            "selectedWithMemory": "social.give_gift",
+            "selectedWithoutMemory": "social.give_gift",
+            "changed": false
+          }
+        ]
+      },
+      "relationshipEdgeRefs": [],
+      "relevantRelationshipEdgeRefs": [],
+      "subjectiveMemoryRefs": [
+        {
+          "recordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+          "sourceEventId": "evt_d78bccb9da95411fa606dbe212e61e11",
+          "emotionalValence": 0.25,
+          "confidence": 0.9,
+          "relevance": 1.0,
+          "tags": [
+            "tool_result",
+            "social.give_gift",
+            "tool.execution_completed"
+          ]
+        }
+      ],
+      "relevantSubjectiveMemoryRefs": [
+        {
+          "recordId": "evt_d78bccb9da95411fa606dbe212e61e11:tomas",
+          "sourceEventId": "evt_d78bccb9da95411fa606dbe212e61e11",
+          "emotionalValence": 0.25,
+          "confidence": 0.9,
+          "relevance": 1.0,
+          "tags": [
+            "tool_result",
+            "social.give_gift",
+            "tool.execution_completed"
+          ]
+        }
+      ],
+      "heuristicRefs": [
+        {
+          "heuristicId": "tomas:prefer_social_when_affiliation_high",
+          "triggerPattern": "prefer_social_when_affiliation_high",
+          "sourceEventId": "evt_d78bccb9da95411fa606dbe212e61e11",
+          "targetKind": "need",
+          "targetId": "affiliation",
+          "weightDelta": 0.05,
+          "confidence": 0.45,
+          "effectiveConfidence": 0.45,
+          "appliedDelta": 0.0225,
+          "conflictResolution": "none"
+        },
+        {
+          "heuristicId": "tomas:prefer_successful_tool:social.give_gift",
+          "triggerPattern": "prefer_successful_tool:social.give_gift",
+          "sourceEventId": "evt_d78bccb9da95411fa606dbe212e61e11",
+          "targetKind": "tool",
+          "targetId": "social.give_gift",
+          "weightDelta": 0.03,
+          "confidence": 0.4,
+          "effectiveConfidence": 0.4,
+          "appliedDelta": 0.012,
+          "conflictResolution": "none"
+        }
+      ],
+      "relevantHeuristicRefs": [
+        {
+          "heuristicId": "tomas:prefer_social_when_affiliation_high",
+          "triggerPattern": "prefer_social_when_affiliation_high",
+          "sourceEventId": "evt_d78bccb9da95411fa606dbe212e61e11",
+          "targetKind": "need",
+          "targetId": "affiliation",
+          "weightDelta": 0.05,
+          "confidence": 0.45,
+          "effectiveConfidence": 0.45,
+          "appliedDelta": 0.0225,
+          "conflictResolution": "none"
+        },
+        {
+          "heuristicId": "tomas:prefer_successful_tool:social.give_gift",
+          "triggerPattern": "prefer_successful_tool:social.give_gift",
+          "sourceEventId": "evt_d78bccb9da95411fa606dbe212e61e11",
+          "targetKind": "tool",
+          "targetId": "social.give_gift",
+          "weightDelta": 0.03,
+          "confidence": 0.4,
+          "effectiveConfidence": 0.4,
+          "appliedDelta": 0.012,
+          "conflictResolution": "none"
+        }
+      ],
+      "candidateScoresWithRelationshipMemory": [
+        {
+          "toolId": "social.give_gift",
+          "score": 0.970333,
+          "tierScore": 0.8,
+          "durationScore": 0.045833,
+          "relationshipBonus": 0.0,
+          "subjectiveMemoryBonus": 0.09,
+          "subjectiveMemoryRefCount": 1,
+          "heuristicBonus": 0.0345,
+          "heuristicRefCount": 2,
+          "heuristicConflictCount": 0,
+          "decisionBudgetRoute": "llm",
+          "decisionBudgetChannel": "social_strategic_layer",
+          "decisionBudgetRemaining": 6
+        },
+        {
+          "toolId": "social.chat_with",
+          "score": 0.899,
+          "tierScore": 0.8,
+          "durationScore": 0.045,
+          "relationshipBonus": 0.0,
+          "subjectiveMemoryBonus": 0.0315,
+          "subjectiveMemoryRefCount": 1,
+          "heuristicBonus": 0.0225,
+          "heuristicRefCount": 1,
+          "heuristicConflictCount": 0,
+          "decisionBudgetRoute": "llm",
+          "decisionBudgetChannel": "social_strategic_layer",
+          "decisionBudgetRemaining": 6
+        }
+      ],
+      "candidateScoresWithoutRelationshipEdges": [
+        {
+          "toolId": "social.give_gift",
+          "score": 0.970333,
+          "tierScore": 0.8,
+          "durationScore": 0.045833,
+          "relationshipBonus": 0.0,
+          "subjectiveMemoryBonus": 0.09,
+          "subjectiveMemoryRefCount": 1,
+          "heuristicBonus": 0.0345,
+          "heuristicRefCount": 2,
+          "heuristicConflictCount": 0,
+          "decisionBudgetRoute": "llm",
+          "decisionBudgetChannel": "social_strategic_layer",
+          "decisionBudgetRemaining": 6
+        },
+        {
+          "toolId": "social.chat_with",
+          "score": 0.899,
+          "tierScore": 0.8,
+          "durationScore": 0.045,
+          "relationshipBonus": 0.0,
+          "subjectiveMemoryBonus": 0.0315,
+          "subjectiveMemoryRefCount": 1,
+          "heuristicBonus": 0.0225,
+          "heuristicRefCount": 1,
+          "heuristicConflictCount": 0,
+          "decisionBudgetRoute": "llm",
+          "decisionBudgetChannel": "social_strategic_layer",
+          "decisionBudgetRemaining": 6
+        }
+      ],
+      "candidateScoresWithoutRelationshipMemory": [
+        {
+          "toolId": "social.give_gift",
+          "score": 0.845833,
+          "tierScore": 0.8,
+          "durationScore": 0.045833,
+          "relationshipBonus": 0.0,
+          "subjectiveMemoryBonus": 0.0,
+          "subjectiveMemoryRefCount": 0,
+          "heuristicBonus": 0.0,
+          "heuristicRefCount": 0,
+          "heuristicConflictCount": 0,
+          "decisionBudgetRoute": "llm",
+          "decisionBudgetChannel": "social_strategic_layer",
+          "decisionBudgetRemaining": 6
+        },
+        {
+          "toolId": "social.chat_with",
+          "score": 0.845,
+          "tierScore": 0.8,
+          "durationScore": 0.045,
+          "relationshipBonus": 0.0,
+          "subjectiveMemoryBonus": 0.0,
+          "subjectiveMemoryRefCount": 0,
+          "heuristicBonus": 0.0,
+          "heuristicRefCount": 0,
+          "heuristicConflictCount": 0,
+          "decisionBudgetRoute": "llm",
+          "decisionBudgetChannel": "social_strategic_layer",
+          "decisionBudgetRemaining": 6
+        }
+      ],
+      "reasonWithRelationshipMemory": "memory_and_heuristic_weighted_fit",
+      "reasonWithoutRelationshipEdges": "memory_and_heuristic_weighted_fit",
+      "reasonWithoutRelationshipMemory": "highest_rule_tier_fit"
+    },
+    "scenarioSetup": {
+      "kind": "default",
+      "seeded": false
+    },
+    "runtimeAblation": {
+      "agentId": "tomas",
+      "targetAgentId": "mira",
+      "subjectiveMemory": "none",
+      "relationshipEdges": "no_relationship_edge"
+    },
+    "subjectiveMemoryAblation": {
+      "mode": "none"
+    },
+    "relationshipAblation": {
+      "mode": "no_relationship_edge",
+      "removedRelationshipCount": 2,
+      "removedDecisionEdgeCount": 2
+    },
+    "traceSchemaVersion": "phase2.trace.v1",
+    "llmDecisionEvidence": {
+      "schemaVersion": "process_llm_evidence.v1",
+      "providerUsageSchemaVersion": "provider_usage_actual.v1",
+      "providerMode": "rule",
+      "scenarioId": "pf.repair_talk_requires_memory_trace",
+      "baseline": "no_relationship_edge",
+      "seedIndex": 5,
+      "seedCount": 5,
+      "recordCount": 0,
+      "records": [],
+      "providerActuals": {
+        "totals": {
+          "calls": 0,
+          "cloudModeCalls": 0,
+          "cloudCalls": 0,
+          "ruleCalls": 0,
+          "fallbackCalls": 0,
+          "tokens": 0,
+          "promptTokens": 0,
+          "completionTokens": 0,
+          "cacheHitPromptTokens": 0,
+          "cacheMissPromptTokens": 0,
+          "cost": 0.0,
+          "costInput": 0.0,
+          "costOutput": 0.0,
+          "currency": null,
+          "latencyTotalMs": 0,
+          "latencyAvgMs": 0.0,
+          "costEstimatedCalls": 0
+        },
+        "byFeature": {},
+        "recent": []
+      }
+    }
+  },
+  "seed": {
+    "seedIndex": 5,
+    "seedId": "pf.repair_talk_requires_memory_trace:no_relationship_edge:seed_05",
+    "deterministicHash": "8cfaa136a49f95f2"
+  }
+}

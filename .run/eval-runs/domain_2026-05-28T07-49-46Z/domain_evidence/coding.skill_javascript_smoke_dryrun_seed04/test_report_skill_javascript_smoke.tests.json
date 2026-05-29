@@ -1,0 +1,114 @@
+{
+  "testReportId": "skill_javascript_smoke.tests",
+  "command": "node --test tests/skill_summary.test.mjs",
+  "testRunner": "node_test",
+  "durationMs": 1247.487,
+  "exitCode": 0,
+  "testPhase": "post_patch",
+  "passed": true,
+  "caseResults": [
+    {
+      "caseId": "node_test_suite",
+      "passed": true,
+      "runner": "node_test",
+      "exitCode": 0,
+      "passedCount": 0,
+      "failedCount": 0,
+      "summary": "TAP version 13"
+    }
+  ],
+  "execution": {
+    "executed": true,
+    "testPhase": "post_patch",
+    "testRunner": "node_test",
+    "workspaceKind": "git_external_repo_checkout",
+    "sourceRepoKind": "deterministic_local_git_repository",
+    "checkoutMethod": "git clone",
+    "command": "node --test tests/skill_summary.test.mjs",
+    "commandTemplate": "node --test tests/skill_summary.test.mjs",
+    "testCommandSource": "metadata.testRunner",
+    "pythonExecutable": null,
+    "exitCode": 0,
+    "durationMs": 1247.487,
+    "stdout": "TAP version 13\n# Subtest: summarizeSkillChange counts evidence before review\nok 1 - summarizeSkillChange counts evidence before review\n  ---\n  duration_ms: 1.6226\n  type: 'test'\n  ...\n# Subtest: summarizeSkillChange blocks high-risk review readiness\nok 2 - summarizeSkillChange blocks high-risk review readiness\n  ---\n  duration_ms: 0.2184\n  type: 'test'\n  ...\n1..2\n# tests 2\n# suites 0\n# pass 2\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 189.4682\n",
+    "stderr": "",
+    "checkoutSteps": [
+      {
+        "command": "git init --quiet",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git checkout -B main",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "Switched to a new branch 'main'\n"
+      },
+      {
+        "command": "git config user.email fixture@example.invalid",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git config user.name Loomstead Fixture",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git add --all",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "warning: in the working copy of 'README.md', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'package.json', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'src/skill_summary.mjs', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'tests/skill_summary.test.mjs', CRLF will be replaced by LF the next time Git touches it\n"
+      },
+      {
+        "command": "git commit --quiet -m initial fixture repo",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git clone --quiet <source-repo> <checkout>",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "git": {
+      "defaultBranch": "main",
+      "sourceHead": "07437b54b1f5e4f9641ab390b37c80343a121c78",
+      "checkoutHead": "07437b54b1f5e4f9641ab390b37c80343a121c78",
+      "statusAfterPatch": [
+        " M README.md",
+        " M package.json",
+        " M src/skill_summary.mjs",
+        " M tests/skill_summary.test.mjs"
+      ]
+    },
+    "sourceRepoFiles": [
+      "README.md",
+      "package.json",
+      "src/skill_summary.mjs",
+      "tests/skill_summary.test.mjs"
+    ],
+    "workspaceFiles": [
+      "README.md",
+      "package.json",
+      "src/skill_summary.mjs",
+      "tests/skill_summary.test.mjs"
+    ],
+    "workspaceFileHashes": {
+      "README.md": "5f1abc17b95d42d7a14a0a3433b48ac0480a6a92578c3ac6ead2977f5f3820b9",
+      "package.json": "2f5587366338f05e4ca796397e371ee1be82ba3e78f039f359eabd496790e09a",
+      "src/skill_summary.mjs": "b69531d25237e572b478bf69c0e4114f6384ad2eab874d9059c5eda676b754f0",
+      "tests/skill_summary.test.mjs": "c21fd58a7a4a194623eca57c0d84f845ea0104ef287068569c1b4e816076198f"
+    }
+  },
+  "sourceArtifactId": "skill_javascript_smoke.patch",
+  "sourceEventIds": [
+    "coding_evt_006"
+  ],
+  "sha256": "21310ae8559456736085b6441aa5a5a28d5686a54250a8224ce8fb53dd19de21"
+}

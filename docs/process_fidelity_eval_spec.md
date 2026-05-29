@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: eval
-last_verified: 2026-05-27
+last_verified: 2026-05-28
 startup_load: on-demand
 source_of_truth: true
 scope: process fidelity metrics, hard delegation baseline, ablation protocol, dataset outputs
@@ -100,6 +100,10 @@ Evidence robustness suite 导出结构：
 - `llmEvidence`：当手动运行 cloud / mixed process eval 时，记录 `process_llm_evidence.v1` 汇总和逐次 `provider_usage_actual.v1` 证据，包括 token、latency、cost、fallbackReason 与 final selectedToolId；规则导出可附带最近一次 `.run/process-llm-evidence/latest.json` 的手动 cloud 证据，字段 `source=latest_cache`。
 - `evalGates`：当前用于 robustness suite，压缩记录 strict gate、signature kinds 与 domain groups，供 archive drift / promotion 快速复核。
 - `artifacts[]`：每个导出文件的相对 `path`、`kind`、`bytes`、`sha256`；JSONL 文件额外记录 `rowCount`。
+
+Process scenario artifact 的 `processChecks` / `evidence` 会额外保留 `decision_budget_trace`、`decision_budget_source_link` 和 `decisionBudgetTrace` 摘要，用于复核 `budget.decision_consumed` / `budget.decision_fallback` 是否带 `phase2.trace.v1`、`sourceEventIds` 与 motivation decision trace ref。
+
+Stability summary 的硬门禁包含 `budget_trace_links_decision`；`final_evidence.json` 记录 `budgetDecisionCount`、`budgetTraceSchemaOkCount`、`budgetSourceLinkCount` 和 `budgetTraceRefCount`。
 
 ### 2.3 本地导出索引与归档
 

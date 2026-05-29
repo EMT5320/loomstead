@@ -1,0 +1,1419 @@
+{
+  "manifestVersion": "phase2.eval_manifest.v1",
+  "exportKind": "process_fidelity_dataset",
+  "createdAt": "2026-05-28T07:43:32+00:00",
+  "suite": "process_fidelity",
+  "baseline": "full_motivational_delegation",
+  "providerMode": "rule",
+  "seedCount": 5,
+  "ok": true,
+  "runDirName": "run_2026-05-28T07-43-32Z",
+  "git": {
+    "commit": "b1c006fbf141f2d19122ef3cd517778029cc7290",
+    "shortCommit": "b1c006f",
+    "branch": "main",
+    "dirty": false,
+    "statusShort": []
+  },
+  "schemaRegistry": {
+    "registryVersion": "schema_registry.v1",
+    "schemas": [
+      {
+        "id": "schema_registry",
+        "version": "schema_registry.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Runtime schema registry snapshot exposed by /api/debug.phase2.",
+        "producer": "app.runtime.schema_registry",
+        "debugSurface": "phase2.schemaRegistry",
+        "requiredFields": [
+          "registryVersion",
+          "schemas",
+          "versions"
+        ],
+        "notes": []
+      },
+      {
+        "id": "phase2_trace",
+        "version": "phase2.trace.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Unified trace envelope for Phase 2 decision, tool, budget, and memory events.",
+        "producer": "app.runtime.trace_schema",
+        "debugSurface": "phase2.traceSchemaVersion + phase2.recentTraceEvents[]",
+        "requiredFields": [
+          "traceId",
+          "spanId",
+          "worldTime",
+          "eventType",
+          "summary"
+        ],
+        "notes": []
+      },
+      {
+        "id": "capability_resolution",
+        "version": "capability_resolution.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Five-layer tool capability filtering and routing evidence.",
+        "producer": "app.runtime.capability_registry",
+        "debugSurface": "phase2.motivation.items[].capabilityFilters",
+        "requiredFields": [
+          "context",
+          "layers",
+          "allowedToolIds",
+          "rejectedTools",
+          "decisionBudgets"
+        ],
+        "notes": []
+      },
+      {
+        "id": "decision_budget",
+        "version": "decision_budget.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "NPC / feature / tool-cost decision budget policy and usage snapshot.",
+        "producer": "app.runtime.decision_budget",
+        "debugSurface": "phase2.decisionBudget",
+        "requiredFields": [
+          "policy",
+          "items",
+          "providerActuals"
+        ],
+        "notes": []
+      },
+      {
+        "id": "provider_usage_actual",
+        "version": "provider_usage_actual.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Actual provider usage record for tokens, latency, and cost aggregation.",
+        "producer": "app.runtime.decision_budget",
+        "debugSurface": "phase2.decisionBudget.providerActuals + providerUsageRecord",
+        "requiredFields": [
+          "tick",
+          "npcId",
+          "feature",
+          "provider",
+          "tokens",
+          "latencyMs",
+          "cost"
+        ],
+        "notes": []
+      },
+      {
+        "id": "observer_scope",
+        "version": "observer_scope.v1",
+        "owner": "memory",
+        "status": "active",
+        "description": "Result observer visibility scope with participants, location, and exclusions.",
+        "producer": "app.memory.observer",
+        "debugSurface": "phase2.recentTraceEvents[].details.observerScope",
+        "requiredFields": [
+          "visibility",
+          "actorId",
+          "participantIds",
+          "observerIds",
+          "excludedObserverIds"
+        ],
+        "notes": []
+      },
+      {
+        "id": "observer_spatial_model",
+        "version": "observer_spatial_model.v1",
+        "owner": "memory",
+        "status": "active",
+        "description": "Normalized anchor-distance model used by all_in_location visibility.",
+        "producer": "app.memory.observer",
+        "debugSurface": "phase2.recentTraceEvents[].details.observerScope.spatialModel",
+        "requiredFields": [
+          "distanceUnit",
+          "hearingRadius"
+        ],
+        "notes": []
+      },
+      {
+        "id": "motivation_plan",
+        "version": "motivation_plan.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Read-only Godot-compatible life action plan produced by MotivationEngine.",
+        "producer": "app.runtime.agent_runtime",
+        "debugSurface": "world.lifeActionPlan + world.slice.scheduleSnapshotVersion",
+        "requiredFields": [
+          "day",
+          "phase",
+          "selectedActions",
+          "locationBuckets",
+          "policy"
+        ],
+        "notes": []
+      },
+      {
+        "id": "legacy_life_action_plan",
+        "version": "life_action_plan.v1",
+        "owner": "simulation",
+        "status": "legacy_compat",
+        "description": "Legacy life action plan snapshot kept for direct world_state callers.",
+        "producer": "app.simulation.life_action_planner",
+        "debugSurface": "world.lifeActionPlan before AgentRuntime Phase 2 override",
+        "requiredFields": [
+          "day",
+          "phase",
+          "selectedActions",
+          "locationBuckets",
+          "policy"
+        ],
+        "notes": [
+          "AgentRuntime replaces this with motivation_plan.v1 on the current tick/state path."
+        ]
+      },
+      {
+        "id": "motivation_engine",
+        "version": "motivation_engine.v0",
+        "owner": "runtime",
+        "status": "legacy_compat",
+        "description": "MotivationEngine decision snapshot; v0 kept for current debug compatibility.",
+        "producer": "app.runtime.motivation_engine",
+        "debugSurface": "phase2.motivation",
+        "requiredFields": [
+          "items"
+        ],
+        "notes": [
+          "v0 remains stable until decision snapshot shape is promoted after Phase 2 trace hardening."
+        ]
+      },
+      {
+        "id": "need_accumulator",
+        "version": "need_accumulator.v0",
+        "owner": "runtime",
+        "status": "legacy_compat",
+        "description": "Need scoring snapshot used by MotivationEngine.",
+        "producer": "app.runtime.need_accumulator",
+        "debugSurface": "phase2.needAccumulator",
+        "requiredFields": [
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "tool_runtime",
+        "version": "tool_runtime.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Current ToolExecutor action runtime snapshot for selected NPCs.",
+        "producer": "app.runtime.agent_runtime",
+        "debugSurface": "phase2.toolRuntime",
+        "requiredFields": [
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "world_entities",
+        "version": "world_entities.v1",
+        "owner": "world",
+        "status": "active",
+        "description": "Typed WorldEntity snapshot for FarmPlot, Item, Inventory, Shop, Building, Time, and Weather.",
+        "producer": "app.world.entities.schema",
+        "debugSurface": "phase2.worldEntities",
+        "requiredFields": [
+          "count",
+          "byKind",
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "subjective_memory_store",
+        "version": "subjective_memory_store.v1",
+        "owner": "memory",
+        "status": "active",
+        "description": "Subjective memory debug store snapshot with decay and archive metadata.",
+        "producer": "app.memory.subjective_memory",
+        "debugSurface": "phase2.subjectiveMemory",
+        "requiredFields": [
+          "agentId",
+          "count",
+          "activeCount",
+          "archivedCount",
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "subjective_memory_recall",
+        "version": "subjective_memory_recall.v2",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Subjective memory recall evidence injected into decision scoring, including salience after decay.",
+        "producer": "app.runtime.motivation_engine",
+        "debugSurface": "phase2.motivation.items[].subjectiveMemoryRecall",
+        "requiredFields": [
+          "query",
+          "worldTick",
+          "count",
+          "activeCount",
+          "recordIds",
+          "sourceEventIds"
+        ],
+        "notes": []
+      },
+      {
+        "id": "relationship_edge_store",
+        "version": "relationship_edge_store.v0",
+        "owner": "memory",
+        "status": "legacy_compat",
+        "description": "Relationship edge debug store snapshot with event and trace refs.",
+        "producer": "app.memory.relationship_edges",
+        "debugSurface": "phase2.relationshipEdges",
+        "requiredFields": [
+          "agentId",
+          "count",
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "heuristic_library",
+        "version": "heuristic_library.v0",
+        "owner": "memory",
+        "status": "legacy_compat",
+        "description": "Heuristic memory library snapshot with confidence decay.",
+        "producer": "app.memory.heuristic",
+        "debugSurface": "phase2.heuristics",
+        "requiredFields": [
+          "agentId",
+          "worldTick",
+          "count",
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "heuristic_recall",
+        "version": "heuristic_recall.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Heuristic recall evidence injected into decision scoring.",
+        "producer": "app.runtime.motivation_engine",
+        "debugSurface": "phase2.motivation.items[].heuristicRecall",
+        "requiredFields": [
+          "worldTick",
+          "count",
+          "activeCount",
+          "heuristicIds",
+          "sourceEventIds"
+        ],
+        "notes": []
+      },
+      {
+        "id": "event_skill_outcome",
+        "version": "event_skill_outcome.v1",
+        "owner": "event_skill",
+        "status": "active",
+        "description": "Event skill outcome record shared by API result, event stream, and completed events.",
+        "producer": "app.skills.event_skill_schema",
+        "debugSurface": "eventResult + completedEvents[].resolution.outcomeRecord",
+        "requiredFields": [
+          "recordVersion",
+          "skillId",
+          "eventId",
+          "choice",
+          "summary"
+        ],
+        "notes": []
+      }
+    ],
+    "versions": {
+      "schema_registry": "schema_registry.v1",
+      "phase2_trace": "phase2.trace.v1",
+      "capability_resolution": "capability_resolution.v1",
+      "decision_budget": "decision_budget.v1",
+      "provider_usage_actual": "provider_usage_actual.v1",
+      "observer_scope": "observer_scope.v1",
+      "observer_spatial_model": "observer_spatial_model.v1",
+      "motivation_plan": "motivation_plan.v1",
+      "legacy_life_action_plan": "life_action_plan.v1",
+      "motivation_engine": "motivation_engine.v0",
+      "need_accumulator": "need_accumulator.v0",
+      "tool_runtime": "tool_runtime.v1",
+      "world_entities": "world_entities.v1",
+      "subjective_memory_store": "subjective_memory_store.v1",
+      "subjective_memory_recall": "subjective_memory_recall.v2",
+      "relationship_edge_store": "relationship_edge_store.v0",
+      "heuristic_library": "heuristic_library.v0",
+      "heuristic_recall": "heuristic_recall.v1",
+      "event_skill_outcome": "event_skill_outcome.v1"
+    }
+  },
+  "metricIds": [
+    "agent_initiated_action_ratio",
+    "causal_trace_coverage",
+    "counterfactual_tool_selection_change_rate",
+    "forced_action_rate",
+    "goal_success_rate",
+    "intervention_overreach_rate",
+    "process_believability_score",
+    "relationship_consistency",
+    "relationship_memory_causal_use_rate",
+    "required_process_coverage",
+    "shortcut_violation_rate"
+  ],
+  "baselines": [
+    "evidence_link_removal",
+    "full_motivational_delegation",
+    "hard_delegation",
+    "no_relationship_edge",
+    "no_subjective_memory",
+    "shuffled_memory_owner"
+  ],
+  "scenarioIds": [
+    "pf.affiliation_bias_remains_agent_initiated",
+    "pf.branna_forgiveness_requires_memory",
+    "pf.repair_talk_requires_memory_trace",
+    "pf.shared_chat_builds_traceable_trust"
+  ],
+  "llmEvidence": {
+    "schemaVersion": "process_llm_evidence.v1",
+    "providerUsageSchemaVersion": "provider_usage_actual.v1",
+    "source": "current_run",
+    "providerMode": "rule",
+    "seedCount": 5,
+    "recordCount": 0,
+    "cloudCallCount": 0,
+    "fallbackCount": 0,
+    "totals": {
+      "calls": 0,
+      "tokens": 0,
+      "promptTokens": 0,
+      "completionTokens": 0,
+      "latencyTotalMs": 0,
+      "latencyAvgMs": 0.0,
+      "cost": 0.0,
+      "currency": null
+    },
+    "byScenario": {},
+    "byBaseline": {},
+    "records": []
+  },
+  "evalGates": {},
+  "artifacts": [
+    {
+      "path": "summary.json",
+      "kind": "summary_json",
+      "bytes": 21105,
+      "sha256": "2e5c42f432b48f39f4944b6e948085e24d600dc38d0c8aab59f6cc6b347c3915"
+    },
+    {
+      "path": "ablation_comparison.json",
+      "kind": "ablation_comparison_json",
+      "bytes": 6851,
+      "sha256": "98bcc4c51bbc03320f68759a17c8dbc160354d045d764ad81e408e3ca7bcb158"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_full_motivational_delegation_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 55823,
+      "sha256": "a14c06776abd961a431145894ae7e5a10dfea1840f1f28c51bc623984dea54ec",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 42710,
+      "sha256": "26b765d6fdd88995ddb39526cbef5222eb4f9e7a31107666db87b8f619cd8de4",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_full_motivational_delegation_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 44560,
+      "sha256": "62350b23e0c31c9eea090106616921cdb224bffc4331336c624c07cb9a37523a",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 54665,
+      "sha256": "77717a475ef39909e06d75ff011c81ac33a3e97125a54e37b1c7014cd2c483e3",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_full_motivational_delegation_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 55823,
+      "sha256": "bbc40858db8b0290d2bd7fe8392b6f1b1bcbd68b111253f73c1c156b1f0bed1e",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 42710,
+      "sha256": "78585a4932bb4142257f721f2694010cde66fd49e5af0f2550997e88ba7675ba",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_full_motivational_delegation_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 44560,
+      "sha256": "df78cbc9d0082bf1d6e4564ad25a7703432b7b08a04bae782bc0f85573a9b39c",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 54665,
+      "sha256": "cc65194f27f2d5d33f1cf81f297550896a9c51d713d8f94e32c1243dc9fb2b6f",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_full_motivational_delegation_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 55823,
+      "sha256": "2c3e38e0f4c9c9535af4f7b7ebff74b37d5846af3e4a4ee89c1024400cd12fb8",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 42710,
+      "sha256": "777178123f677054dcaea979451b281ec6f6980710e4b32ff1275760ee7c4505",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_full_motivational_delegation_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 44560,
+      "sha256": "c2d5335c7e9f5541bb07ef057553915a46edc4432fe6d532a62c73a05463b449",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 54665,
+      "sha256": "605e3ba96d1864a4ce3c5fca6a65faccfc8cf1710bd8a3233ce4c78069e1f577",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_full_motivational_delegation_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 55823,
+      "sha256": "9e07c3af560f8e273b87973215302e64c1f56ac1d65d00861ff63cc311a15379",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 42710,
+      "sha256": "b3841c7f3b05195a9b17e0791d5f43844e925e3517b0993bc829db79c65af64b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_full_motivational_delegation_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 44560,
+      "sha256": "980e7d0b5f3d015a717914ef78f3c34d85ef54d0c250db1d2c332c5c56e737a2",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 54665,
+      "sha256": "0db98114a862d9f049459272154ddadb9fc787aa6e9fd116d67be782437a7d64",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_full_motivational_delegation_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 55823,
+      "sha256": "7629206cfcb8b4bdd581739ab8cf12d625b0953b597a42310f04c4bddad9e2cd",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 42710,
+      "sha256": "1306960cdd15a29ff2ba87c89165f961277d77f7b0121dc2626a82e206c187bc",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_full_motivational_delegation_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 44560,
+      "sha256": "521ff0bc8f4ee880ca19f02621f786eff4517095fdf6117b2d678b8cd3eaaa00",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 54665,
+      "sha256": "f714ecad4975f9d8344c031d13a9dab031b37a115524d5cacc6d8773b638636b",
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_hard_delegation_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 1792,
+      "sha256": "3eee351e5dc803e9eb8d398b84971a02479ff29583533a839c2fe6f5032414d8",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_hard_delegation_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 1808,
+      "sha256": "4608c2ccb275318e516ba1d5911e539c4c0a2fcb153aea1664d943504a98126f",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_hard_delegation_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 1821,
+      "sha256": "611f548a477cc01665628e546122e816b91dd8a2ff8d510b530111e8fd615af1",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_hard_delegation_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 1944,
+      "sha256": "ea6fff0b8d81859f2bb865686bb8443d984f920094e061c879c6b62c9a05ff58",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_hard_delegation_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 1792,
+      "sha256": "8aec020f4ab30293cbfa9e3a041a12ccfaeab4d6a4800979219be09c076171a1",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_hard_delegation_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 1808,
+      "sha256": "a30d42ab636343b50bb7f9a2b629c99b97c4eb2d047848c3a89d87ac031e5c37",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_hard_delegation_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 1821,
+      "sha256": "5d39d86e2cdbe3776753e87da1cc87aab49c003cc03fc0d14ef81bf5ad761455",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_hard_delegation_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 1944,
+      "sha256": "b01dc8ed682e17251916efe56095cb9a1c05d0403a7cb3d87eee33e752e97e15",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_hard_delegation_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 1792,
+      "sha256": "7d1b365798e212e2088f9702374be930e7435e934afed49530e47832811b117a",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_hard_delegation_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 1808,
+      "sha256": "5b412217ec6e9013cf0a188705f0dedb94d52d14dc54bfa4cfe847203850659d",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_hard_delegation_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 1821,
+      "sha256": "a56ccacc9e1dec9a506d5672e7dc162ab03679631b8698cf1c998b1cf19f969c",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_hard_delegation_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 1944,
+      "sha256": "3d3900b7548b071a547eaa25074fa7c0c859c7d582cd15f128d80b012c4b799a",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_hard_delegation_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 1792,
+      "sha256": "991229990b2b205dce7519d7c8edcd02bd6189fac06eb74aa0556aff1402e238",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_hard_delegation_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 1808,
+      "sha256": "74942242aa15d29815e6817f9c0cec7f0dfd2856ad464aebe7fa538b609675cb",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_hard_delegation_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 1821,
+      "sha256": "d498651175f5c6bddc44673b2fefd5ee93357e3b20ad686f95dd343da9e176be",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_hard_delegation_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 1944,
+      "sha256": "67ffa91717af8c6c5a7ded54d2c35c73dc3877ab20db344c87eeed6ed58c834b",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_hard_delegation_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 1792,
+      "sha256": "9639491e86f38b3d589c3d7807752e7ee44b390d73a7af2894b021f27cc7ae46",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_hard_delegation_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 1808,
+      "sha256": "53952807bcb1ac7f1ed80c45a1eed22f35925abd3416ec68119d126972c890dc",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_hard_delegation_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 1821,
+      "sha256": "e3aa788502e5504ae21462d7187e64632c5f13cbb06bd2309d493691376aff89",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_hard_delegation_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 1944,
+      "sha256": "88b0461afe8c2c86b38ce1d342523313823986367f0a006fa1b832953268e18c",
+      "baseline": "hard_delegation",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_subjective_memory_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 34522,
+      "sha256": "00cfa9a1e89f2afd2daa07bd41f1df2285a8678a12a449d8abab1298fe79806d",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_subjective_memory_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 30391,
+      "sha256": "8b92cf823cdfba5e8e151fcda1490de2ca0cfa820ddc9e518e5b36b52bbdc90b",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_subjective_memory_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 33252,
+      "sha256": "19be74004ffd7d22b1649a222208750c9ca3c01650bf0eef898cf0377a1d539b",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_subjective_memory_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 32808,
+      "sha256": "3671d97ea97b50e539c60d7a07e07a4e3b8dc447bd13c681ca4144f0f41bf113",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_subjective_memory_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 34522,
+      "sha256": "a72b85ad987fafe353846bbdb45224ec83aebb459e2701a6f75696fc0adb34ff",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_subjective_memory_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 30391,
+      "sha256": "270a0c669422d9fe81fc612900065d5b514de3b294aa3676dea5e1cc9194571b",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_subjective_memory_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 33252,
+      "sha256": "5fb8bbefe004aa7f47509758bc43b27b210ce6ecefd15b59d41263114cc87f39",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_subjective_memory_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 32808,
+      "sha256": "d6bac2f55ad4856bac6da6f9229b69c8c35c2f9adf70fc005715e9f004a8f4f7",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_subjective_memory_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 34522,
+      "sha256": "e3553a512849d9694b3f297eb9f970867bdf342958aa072ce95239654d727752",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_subjective_memory_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 30391,
+      "sha256": "6a2afddc6426b9cd91afd6fd863588fd421d91cfe7368eff854c334329a3d66e",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_subjective_memory_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 33252,
+      "sha256": "ec3b484687a4a2b2c86800747790283b6fa0505972704be34ac5e6f2699245a3",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_subjective_memory_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 32808,
+      "sha256": "0c812ee3d90c1c9d04af403c9fd787e530c0e939af0538c8c5d38064d6271617",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_subjective_memory_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 34522,
+      "sha256": "116b0567f01cebf3f67eeac9fa67bd5c7239dff99baeb946f0cb3ac2af105d9c",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_subjective_memory_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 30391,
+      "sha256": "fb6b0c5c6fada32b4749773ebd843ee00694d4ed7ac08466b8cf42242071a749",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_subjective_memory_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 33252,
+      "sha256": "27264acf89c21e580aeed874035e60946de68a46c26c11ff6470f98a2356be21",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_subjective_memory_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 32808,
+      "sha256": "dd406342217bc35daf05e161ed6306c2dc0fd45813a15d177526cda4b616ee33",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_subjective_memory_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 34522,
+      "sha256": "9e0373a29e90997f096cb000cfac188c1414ea76f1eb4f5f16e31f773502921a",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_subjective_memory_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 30391,
+      "sha256": "4ec23645159b2577dcc97a54f0c8101f724ba45538cddaa3670ce4324f2b6b75",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_subjective_memory_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 33252,
+      "sha256": "5eb30858fe1d00f66869291ed981b92803190867cfee50c060c1690a56dce7e1",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_subjective_memory_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 32808,
+      "sha256": "afce44a1eb6e6190f8343d4919d6ac10bba13091de5c30e13c5506e5f56afbd9",
+      "baseline": "no_subjective_memory",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_relationship_edge_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 52159,
+      "sha256": "7773f92ffd12b2804298f7734e4b6c375554be959855026961b4b669ad28089c",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_relationship_edge_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 39704,
+      "sha256": "95f3e81fcdd23d5d59340ba286a82a3c9874fdf8d63a6e684ec261de03de4609",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_relationship_edge_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 41545,
+      "sha256": "4313048312d9f7a9b83c4251b275f0a4e248c8f465c34eef0bbef9e46add5e16",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_relationship_edge_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 51580,
+      "sha256": "ec974011b7ab2c4fa7335e45af364f75e36973d32fbf10b04b245a3c4e0594be",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_relationship_edge_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 52159,
+      "sha256": "1794c381ed3305603ab5022c83e9ae5a8191a222a1241b4296c30b27880fb60a",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_relationship_edge_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 39704,
+      "sha256": "475ef55e6bb42acd0d4c44f2aa6bd345f368f6e2e805ae11179ac9e0b8662014",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_relationship_edge_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 41545,
+      "sha256": "9f79ed053ef887b6e2bf19248efd3c1c3fff233c3c57eaa5cfc69007031364e5",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_relationship_edge_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 51580,
+      "sha256": "4ca719b50afd4fcfa89dbd40518c4d384c48762c77ca07275b34172b7da3db72",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_relationship_edge_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 52159,
+      "sha256": "b82030179cc4680c9c648eb1d2567552da55dbd00773038d4c3fda33447b3dbe",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_relationship_edge_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 39704,
+      "sha256": "93894567b7cbbff1f0ce3f498c837f7db9d63487bf50bc7a1c40e202338817a5",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_relationship_edge_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 41545,
+      "sha256": "fe220e89323c01fc568ca820424a608c9ea42050482e067739becd928b3ec308",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_relationship_edge_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 51580,
+      "sha256": "0784da5ae1e8c76d807736de00bcb765b4e794610258b45ee137b3c75ab2793b",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_relationship_edge_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 52159,
+      "sha256": "6780caedc4f81e16edeb8df1dec3117223c32ed3d314c4b34fb4aaa18c146edd",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_relationship_edge_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 39704,
+      "sha256": "e17f6aad12e8d074d5e7f660b65f4c484b04d8fead323d261949babd60d30fae",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_relationship_edge_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 41545,
+      "sha256": "a4ac2858ba8ef33a9570ca54e9318037445850909be4f732453a3f49f4ca4d6f",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_relationship_edge_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 51580,
+      "sha256": "f8a8ea52be457c6c8258e55374255dae3e1adb22ce456e53da25e057b7d600f6",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_no_relationship_edge_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 52159,
+      "sha256": "9fc5f8ec0ba14dd6edf6b8e0e0a850afa9ea1cb965639fc05d9c6dfeff6c8f38",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_no_relationship_edge_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 39704,
+      "sha256": "92e54a9dd54617e01bd2f317493e6c9df1b73d0f0e4678ba99c13878d7baae72",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_no_relationship_edge_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 41545,
+      "sha256": "f05ff655df1330dc5f370125387273b11802980b87e16d89629209d9ef01e76e",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_relationship_edge_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 51580,
+      "sha256": "1a76cdbb706e99a3ae2eb7f619c62855e6db4b1b61c266b17af31fbc85e1fe80",
+      "baseline": "no_relationship_edge",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_shuffled_memory_owner_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 52164,
+      "sha256": "55011461bb48052f3d763469a64ee2b543a5bcf20e878af65a609c32759ec7a1",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_shuffled_memory_owner_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 39709,
+      "sha256": "2e1b7e6f69640251b7a8361b60975d93cc9cbcf7361ac3a7dc9084ad669f44ad",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_shuffled_memory_owner_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 41550,
+      "sha256": "5ad2e94b230a6f44687194506e34dae7b6cd6da711710e84102e6b5005344f04",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_shuffled_memory_owner_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 51585,
+      "sha256": "8faa6e603c0d89817f90716cb1f23243bfa45e0e72fa7a3ad9ac2772273cfed1",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_shuffled_memory_owner_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 52164,
+      "sha256": "8126ff0fd6340a7e2ce5869ae00490085867300b0f63272bfa74ca95c6048162",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_shuffled_memory_owner_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 39709,
+      "sha256": "d739f261d52bebe12769031858b5fe24a074e089f8224faddeff846ed55571d7",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_shuffled_memory_owner_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 41550,
+      "sha256": "8b0e815db32e0e66f689935c208a074ed8e73d0a3720fdaa7cb76db27f5cf851",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_shuffled_memory_owner_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 51585,
+      "sha256": "01416ee8067aba159e0cf62129044610bec090f406c7ee3d476f52640a9bdd99",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_shuffled_memory_owner_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 52164,
+      "sha256": "ca8185d5873835facf55c60929e1603b377ca6467db6fe8fa3cf7e43fb5a8918",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_shuffled_memory_owner_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 39709,
+      "sha256": "ce71475a0045787e2997d5a485cd58a97d8b9f131ae328633bc3611a416d8534",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_shuffled_memory_owner_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 41550,
+      "sha256": "ec89ca7e3eeccb935cacc42b443e474364cf10404a10b4249c21973fd26d5683",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_shuffled_memory_owner_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 51585,
+      "sha256": "c0b3d6ff25ecb0e5baa66bc192822c2689f261f31075da926ee9341009f58311",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_shuffled_memory_owner_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 52164,
+      "sha256": "2b4bd16ed4f51958ec0d589054bb644e4c1e0c2be4846bca365170427774684c",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_shuffled_memory_owner_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 39709,
+      "sha256": "208c75ef493f27281236a2b2566b672107a96800aa3cea89dbca8441875132c8",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_shuffled_memory_owner_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 41550,
+      "sha256": "9ee275b3589fdad1d7fd63b47af8bbdc9ee27e0299156eabf9a4e93378d8d39c",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_shuffled_memory_owner_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 51585,
+      "sha256": "eedcd2d2abcb72ea8e72c64b060bcb2eb4feb57f05c24901ba0fae7d1992a180",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_shuffled_memory_owner_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 52164,
+      "sha256": "71561b9ed5ce3c1c4469544233c0ce8557367536f17bf0abb079dbe18e1b5aa6",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_shuffled_memory_owner_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 39709,
+      "sha256": "753244e4983daee8b1a41bbb023ca38ad7d27e14bb0aec2654df8bdc4dbf1d16",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_shuffled_memory_owner_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 41550,
+      "sha256": "d02db9f09cfbe0342f84349a8b63a7bb73faa98cbb1f213d4df5ab5b1c1fbefb",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_shuffled_memory_owner_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 51585,
+      "sha256": "f62dc1a906c7bee837b809128cb6a4907968c44e03d5a9a57b430f2b7d98351d",
+      "baseline": "shuffled_memory_owner",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_evidence_link_removal_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 52163,
+      "sha256": "c03b19a50830302d0403b1b11d2a3c2b45db2f350521cf455b882d5031582945",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_evidence_link_removal_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 39707,
+      "sha256": "84a6f5dcd125ef6779a7d4146d0f8cd1e5e1e5e4650f7c8af254afcd769810c7",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_evidence_link_removal_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 41548,
+      "sha256": "c0b11f980cfb55b2f63671b75aa8c6446e3f1061dc0b7d32733dabc57956f3e5",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_evidence_link_removal_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 51583,
+      "sha256": "aaa73b513a290a02b6a498e5db3ab3e67b7b127cf8bfa91d5790a880592eacaf",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_evidence_link_removal_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 52163,
+      "sha256": "5580352798577e5d08e7a8929b37a8421fb616274256ac4aa3ec9e282d624398",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_evidence_link_removal_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 39707,
+      "sha256": "a2b8dec3ad68f46f088009a87562b90137febc8791505b798fec56f44b77e067",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_evidence_link_removal_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 41548,
+      "sha256": "d44dd7524e50dab0ecf553cd17b0ede8468971c2288c9e12dcdf62b3941bc447",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_evidence_link_removal_seed02.json",
+      "kind": "per_scenario_json",
+      "bytes": 51583,
+      "sha256": "a803b130ed13e201048f0a63a38b1340500ea39da7d1ec9efb617413ef5fbbf6",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_evidence_link_removal_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 52163,
+      "sha256": "50d164c8adb341a57196f90b1db0066f2f204e9b8b728e39038b52dac29131e5",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_evidence_link_removal_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 39707,
+      "sha256": "9552e414c78581b6b05b4a0b4665a0795c20c6b86ec50c140bd7f31673063eb9",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_evidence_link_removal_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 41548,
+      "sha256": "7ba79a77feaf631ee2d45247a42be17597d0319b20568c444c17a4351a0acf66",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_evidence_link_removal_seed03.json",
+      "kind": "per_scenario_json",
+      "bytes": 51583,
+      "sha256": "3777bf7ff5dfa8514326b1aaaa2960f9722de7381551b549ba9ee897414ef58a",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_evidence_link_removal_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 52163,
+      "sha256": "1d568deeb9271e128536331df59f708ba3cad8e0c792b04d20cadb6758648b0e",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_evidence_link_removal_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 39707,
+      "sha256": "64d31b84f069508939750c22f4a5c9e524386c69e08f6092b591f609fc7d0b00",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_evidence_link_removal_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 41548,
+      "sha256": "e83218070d11f6014398798d4f60922de7538c38d75e8a5086130227cc3a40e8",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_evidence_link_removal_seed04.json",
+      "kind": "per_scenario_json",
+      "bytes": 51583,
+      "sha256": "ba60410b696195ee299028a87c6403c598b73d5cbc60f272c29b8d05afe63491",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "per_scenario/pf.shared_chat_builds_traceable_trust_evidence_link_removal_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 52163,
+      "sha256": "5554a9e0a7c728d0836856d4887bfe02fbd4561f9ec5979d6cd3bb3681700da0",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust"
+    },
+    {
+      "path": "per_scenario/pf.repair_talk_requires_memory_trace_evidence_link_removal_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 39707,
+      "sha256": "0223890f25b5ddffc652612d40039834a117334140d8c1f4d9017469bebb1117",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.repair_talk_requires_memory_trace"
+    },
+    {
+      "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_evidence_link_removal_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 41548,
+      "sha256": "ff02731183798c0d1cb2e18883925558ffbab5a295bbbea292c92981fb3b49b9",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated"
+    },
+    {
+      "path": "per_scenario/pf.branna_forgiveness_requires_memory_evidence_link_removal_seed05.json",
+      "kind": "per_scenario_json",
+      "bytes": 51583,
+      "sha256": "81ebaac9f21ca83dcb4772e615d66c57ddbcfc4c811cbed663e65e95b6c3095c",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "pf.branna_forgiveness_requires_memory"
+    },
+    {
+      "path": "intervention_trace.jsonl",
+      "kind": "intervention_trace_jsonl",
+      "bytes": 29935,
+      "sha256": "765f6bda3787bf699b10b4079515692ba3df95c8dcfc3169c562ffdfca6965d3",
+      "rowCount": 20,
+      "baseline": "hard_delegation"
+    },
+    {
+      "path": "goal_progress_trace.jsonl",
+      "kind": "goal_progress_trace_jsonl",
+      "bytes": 637230,
+      "sha256": "263774dc48d91bc80d76f72fdd30707fdf51ec9f8dcf04ab352f51c007a6cfd9",
+      "rowCount": 20,
+      "baseline": "full_motivational_delegation"
+    },
+    {
+      "path": "counterfactual_replay.jsonl",
+      "kind": "counterfactual_replay_jsonl",
+      "bytes": 477550,
+      "sha256": "578cfcc3578c8955a0f44dafbe6428e4c91eb0e32cc0cb9ea9718c48fc1a8fd7",
+      "rowCount": 20,
+      "baseline": "full_motivational_delegation"
+    },
+    {
+      "path": "memory_ablation_trace.jsonl",
+      "kind": "memory_ablation_trace_jsonl",
+      "bytes": 109500,
+      "sha256": "5614b9bc1979912924e0ba8c1a4abe7699fd703bda3a6be8c0ffcef1ab0520a5",
+      "rowCount": 80
+    }
+  ],
+  "verification": {
+    "summary": "每个 artifact 提供 bytes / sha256；JSONL artifact 额外提供 rowCount，便于后续复核导出完整性。",
+    "localCommands": [
+      "npm.cmd run eval:process",
+      "npm.cmd run eval:process:export",
+      "npm.cmd run eval:stability",
+      "npm.cmd run eval:stability:export",
+      "npm.cmd run eval:domain",
+      "npm.cmd run eval:domain:export",
+      "npm.cmd run eval:robustness",
+      "npm.cmd run eval:robustness:export"
+    ]
+  }
+}

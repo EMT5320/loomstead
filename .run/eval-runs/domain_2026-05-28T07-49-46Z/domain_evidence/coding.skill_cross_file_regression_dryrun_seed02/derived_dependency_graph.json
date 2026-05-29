@@ -1,0 +1,34 @@
+{
+  "graphVersion": "coding.derived_dependency_graph.v1",
+  "nodes": [
+    "src/__init__.py",
+    "src/normalizer.py",
+    "src/report.py",
+    "tests/test_skill.py"
+  ],
+  "edges": [
+    {
+      "from": "src/report.py",
+      "imports": "src/normalizer.py",
+      "symbols": [
+        "normalize_status",
+        "severity_label"
+      ],
+      "sourceLine": 3
+    },
+    {
+      "from": "tests/test_skill.py",
+      "imports": "src/report.py",
+      "symbols": [
+        "build_status_report"
+      ],
+      "sourceLine": 9
+    }
+  ],
+  "declaredGraphVersion": "manual_import_graph.v1",
+  "declaredEdgeCount": 2,
+  "derivedEdgeCount": 2,
+  "missingDeclaredEdges": [],
+  "extraDerivedEdges": [],
+  "declaredEdgesCovered": true
+}

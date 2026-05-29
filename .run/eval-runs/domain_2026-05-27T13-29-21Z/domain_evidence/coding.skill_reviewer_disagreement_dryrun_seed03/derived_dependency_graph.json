@@ -1,0 +1,7 @@
+{
+  "graphVersion": "coding.derived_dependency_graph.v1",
+  "nodes": [
+    "tests/test_skill.py"
+  ],
+  "edges": []
+}

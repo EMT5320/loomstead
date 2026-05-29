@@ -1,0 +1,684 @@
+{
+  "baseEvalOk": true,
+  "scenarioCount": 8,
+  "selectedScenarioIds": [
+    "pf.shared_chat_builds_traceable_trust",
+    "pf.repair_talk_requires_memory_trace",
+    "pf.affiliation_bias_remains_agent_initiated",
+    "pf.branna_forgiveness_requires_memory"
+  ],
+  "perturbations": [
+    {
+      "perturbationId": "source_order_shuffle",
+      "stableCount": 8,
+      "total": 8,
+      "invarianceRate": 1.0
+    },
+    {
+      "perturbationId": "source_variation_weak_noise",
+      "stableCount": 8,
+      "total": 8,
+      "invarianceRate": 1.0
+    },
+    {
+      "perturbationId": "source_variation_duplicate",
+      "stableCount": 8,
+      "total": 8,
+      "invarianceRate": 1.0
+    },
+    {
+      "perturbationId": "source_variation_irrelevant",
+      "stableCount": 8,
+      "total": 8,
+      "invarianceRate": 1.0
+    }
+  ],
+  "stableCount": 32,
+  "totalChecks": 32,
+  "overallInvarianceRate": 1.0,
+  "allStable": true,
+  "groups": [
+    {
+      "groupId": "process",
+      "stableCount": 32,
+      "total": 32,
+      "overallInvarianceRate": 1.0,
+      "allStable": true,
+      "perturbations": [
+        {
+          "perturbationId": "source_order_shuffle",
+          "stableCount": 8,
+          "total": 8,
+          "invarianceRate": 1.0
+        },
+        {
+          "perturbationId": "source_variation_weak_noise",
+          "stableCount": 8,
+          "total": 8,
+          "invarianceRate": 1.0
+        },
+        {
+          "perturbationId": "source_variation_duplicate",
+          "stableCount": 8,
+          "total": 8,
+          "invarianceRate": 1.0
+        },
+        {
+          "perturbationId": "source_variation_irrelevant",
+          "stableCount": 8,
+          "total": 8,
+          "invarianceRate": 1.0
+        }
+      ]
+    }
+  ],
+  "signatureKinds": [
+    {
+      "groupId": "process",
+      "signatureId": "process_signature.v1",
+      "itemCount": 8
+    }
+  ],
+  "items": [
+    {
+      "suite": "process",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust",
+      "groupId": "process",
+      "domainId": "",
+      "baseline": "full_motivational_delegation",
+      "seed": {
+        "seedIndex": 1,
+        "seedId": "pf.shared_chat_builds_traceable_trust:full_motivational_delegation:seed_01",
+        "deterministicHash": "1ed6584336102310"
+      },
+      "baseSignature": {
+        "goalEventCount": 1,
+        "subjectiveGoalLinkCount": 1,
+        "relationshipGoalLinkCount": 1,
+        "memoryTraceGoalLinkCount": 1,
+        "futureBehaviorReference": true,
+        "subjectiveMemoryCausalEffect": true,
+        "counterfactualToolSelectionChanged": false
+      },
+      "perturbations": [
+        {
+          "perturbationId": "source_order_shuffle",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": false
+          }
+        },
+        {
+          "perturbationId": "source_variation_weak_noise",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": false
+          }
+        },
+        {
+          "perturbationId": "source_variation_duplicate",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": false
+          }
+        },
+        {
+          "perturbationId": "source_variation_irrelevant",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": false
+          }
+        }
+      ]
+    },
+    {
+      "suite": "process",
+      "scenarioId": "pf.repair_talk_requires_memory_trace",
+      "groupId": "process",
+      "domainId": "",
+      "baseline": "full_motivational_delegation",
+      "seed": {
+        "seedIndex": 1,
+        "seedId": "pf.repair_talk_requires_memory_trace:full_motivational_delegation:seed_01",
+        "deterministicHash": "3ac777d651d37575"
+      },
+      "baseSignature": {
+        "goalEventCount": 1,
+        "subjectiveGoalLinkCount": 1,
+        "relationshipGoalLinkCount": 1,
+        "memoryTraceGoalLinkCount": 1,
+        "futureBehaviorReference": true,
+        "subjectiveMemoryCausalEffect": true,
+        "counterfactualToolSelectionChanged": true
+      },
+      "perturbations": [
+        {
+          "perturbationId": "source_order_shuffle",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": true
+          }
+        },
+        {
+          "perturbationId": "source_variation_weak_noise",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": true
+          }
+        },
+        {
+          "perturbationId": "source_variation_duplicate",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": true
+          }
+        },
+        {
+          "perturbationId": "source_variation_irrelevant",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": true
+          }
+        }
+      ]
+    },
+    {
+      "suite": "process",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated",
+      "groupId": "process",
+      "domainId": "",
+      "baseline": "full_motivational_delegation",
+      "seed": {
+        "seedIndex": 1,
+        "seedId": "pf.affiliation_bias_remains_agent_initiated:full_motivational_delegation:seed_01",
+        "deterministicHash": "8636a5acfa1b7b98"
+      },
+      "baseSignature": {
+        "goalEventCount": 1,
+        "subjectiveGoalLinkCount": 1,
+        "relationshipGoalLinkCount": 1,
+        "memoryTraceGoalLinkCount": 1,
+        "futureBehaviorReference": true,
+        "subjectiveMemoryCausalEffect": true,
+        "counterfactualToolSelectionChanged": false
+      },
+      "perturbations": [
+        {
+          "perturbationId": "source_order_shuffle",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": false
+          }
+        },
+        {
+          "perturbationId": "source_variation_weak_noise",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": false
+          }
+        },
+        {
+          "perturbationId": "source_variation_duplicate",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": false
+          }
+        },
+        {
+          "perturbationId": "source_variation_irrelevant",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": false
+          }
+        }
+      ]
+    },
+    {
+      "suite": "process",
+      "scenarioId": "pf.branna_forgiveness_requires_memory",
+      "groupId": "process",
+      "domainId": "",
+      "baseline": "full_motivational_delegation",
+      "seed": {
+        "seedIndex": 1,
+        "seedId": "pf.branna_forgiveness_requires_memory:full_motivational_delegation:seed_01",
+        "deterministicHash": "49836105dc3a9166"
+      },
+      "baseSignature": {
+        "goalEventCount": 1,
+        "subjectiveGoalLinkCount": 1,
+        "relationshipGoalLinkCount": 1,
+        "memoryTraceGoalLinkCount": 1,
+        "futureBehaviorReference": true,
+        "subjectiveMemoryCausalEffect": true,
+        "counterfactualToolSelectionChanged": true
+      },
+      "perturbations": [
+        {
+          "perturbationId": "source_order_shuffle",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": true
+          }
+        },
+        {
+          "perturbationId": "source_variation_weak_noise",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": true
+          }
+        },
+        {
+          "perturbationId": "source_variation_duplicate",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": true
+          }
+        },
+        {
+          "perturbationId": "source_variation_irrelevant",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": true
+          }
+        }
+      ]
+    },
+    {
+      "suite": "process",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust",
+      "groupId": "process",
+      "domainId": "",
+      "baseline": "full_motivational_delegation",
+      "seed": {
+        "seedIndex": 2,
+        "seedId": "pf.shared_chat_builds_traceable_trust:full_motivational_delegation:seed_02",
+        "deterministicHash": "007ac8aef7d951cc"
+      },
+      "baseSignature": {
+        "goalEventCount": 1,
+        "subjectiveGoalLinkCount": 1,
+        "relationshipGoalLinkCount": 1,
+        "memoryTraceGoalLinkCount": 1,
+        "futureBehaviorReference": true,
+        "subjectiveMemoryCausalEffect": true,
+        "counterfactualToolSelectionChanged": false
+      },
+      "perturbations": [
+        {
+          "perturbationId": "source_order_shuffle",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": false
+          }
+        },
+        {
+          "perturbationId": "source_variation_weak_noise",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": false
+          }
+        },
+        {
+          "perturbationId": "source_variation_duplicate",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": false
+          }
+        },
+        {
+          "perturbationId": "source_variation_irrelevant",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": false
+          }
+        }
+      ]
+    },
+    {
+      "suite": "process",
+      "scenarioId": "pf.repair_talk_requires_memory_trace",
+      "groupId": "process",
+      "domainId": "",
+      "baseline": "full_motivational_delegation",
+      "seed": {
+        "seedIndex": 2,
+        "seedId": "pf.repair_talk_requires_memory_trace:full_motivational_delegation:seed_02",
+        "deterministicHash": "14dbcb81da43eb93"
+      },
+      "baseSignature": {
+        "goalEventCount": 1,
+        "subjectiveGoalLinkCount": 1,
+        "relationshipGoalLinkCount": 1,
+        "memoryTraceGoalLinkCount": 1,
+        "futureBehaviorReference": true,
+        "subjectiveMemoryCausalEffect": true,
+        "counterfactualToolSelectionChanged": true
+      },
+      "perturbations": [
+        {
+          "perturbationId": "source_order_shuffle",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": true
+          }
+        },
+        {
+          "perturbationId": "source_variation_weak_noise",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": true
+          }
+        },
+        {
+          "perturbationId": "source_variation_duplicate",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": true
+          }
+        },
+        {
+          "perturbationId": "source_variation_irrelevant",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": true
+          }
+        }
+      ]
+    },
+    {
+      "suite": "process",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated",
+      "groupId": "process",
+      "domainId": "",
+      "baseline": "full_motivational_delegation",
+      "seed": {
+        "seedIndex": 2,
+        "seedId": "pf.affiliation_bias_remains_agent_initiated:full_motivational_delegation:seed_02",
+        "deterministicHash": "4f353eb4ae82ec36"
+      },
+      "baseSignature": {
+        "goalEventCount": 1,
+        "subjectiveGoalLinkCount": 1,
+        "relationshipGoalLinkCount": 1,
+        "memoryTraceGoalLinkCount": 1,
+        "futureBehaviorReference": true,
+        "subjectiveMemoryCausalEffect": true,
+        "counterfactualToolSelectionChanged": false
+      },
+      "perturbations": [
+        {
+          "perturbationId": "source_order_shuffle",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": false
+          }
+        },
+        {
+          "perturbationId": "source_variation_weak_noise",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": false
+          }
+        },
+        {
+          "perturbationId": "source_variation_duplicate",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": false
+          }
+        },
+        {
+          "perturbationId": "source_variation_irrelevant",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": false
+          }
+        }
+      ]
+    },
+    {
+      "suite": "process",
+      "scenarioId": "pf.branna_forgiveness_requires_memory",
+      "groupId": "process",
+      "domainId": "",
+      "baseline": "full_motivational_delegation",
+      "seed": {
+        "seedIndex": 2,
+        "seedId": "pf.branna_forgiveness_requires_memory:full_motivational_delegation:seed_02",
+        "deterministicHash": "9702d7b48799a321"
+      },
+      "baseSignature": {
+        "goalEventCount": 1,
+        "subjectiveGoalLinkCount": 1,
+        "relationshipGoalLinkCount": 1,
+        "memoryTraceGoalLinkCount": 1,
+        "futureBehaviorReference": true,
+        "subjectiveMemoryCausalEffect": true,
+        "counterfactualToolSelectionChanged": true
+      },
+      "perturbations": [
+        {
+          "perturbationId": "source_order_shuffle",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": true
+          }
+        },
+        {
+          "perturbationId": "source_variation_weak_noise",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": true
+          }
+        },
+        {
+          "perturbationId": "source_variation_duplicate",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": true
+          }
+        },
+        {
+          "perturbationId": "source_variation_irrelevant",
+          "stable": true,
+          "signature": {
+            "goalEventCount": 1,
+            "subjectiveGoalLinkCount": 1,
+            "relationshipGoalLinkCount": 1,
+            "memoryTraceGoalLinkCount": 1,
+            "futureBehaviorReference": true,
+            "subjectiveMemoryCausalEffect": true,
+            "counterfactualToolSelectionChanged": true
+          }
+        }
+      ]
+    }
+  ]
+}

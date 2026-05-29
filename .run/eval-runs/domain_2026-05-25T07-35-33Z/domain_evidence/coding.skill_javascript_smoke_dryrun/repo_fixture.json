@@ -1,0 +1,51 @@
+{
+  "fixtureId": "loomstead-debug-javascript-fixture.v1",
+  "repoName": "fixture/loomstead-debug-skill",
+  "defaultBranch": "main",
+  "files": {
+    "README.md": "# JavaScript Fixture\n\nA tiny ESM repo verified with node --test.\n",
+    "package.json": "{\n  \"name\": \"loomstead-javascript-smoke-fixture\",\n  \"private\": true,\n  \"type\": \"module\"\n}\n",
+    "src/skill_summary.mjs": "export function summarizeSkillChange(input = {}) {\n  const title = String(input.title ?? '').trim();\n  return { title, evidenceCount: 0, readyForReview: false };\n}\n",
+    "tests/skill_summary.test.mjs": "import test from 'node:test';\nimport assert from 'node:assert/strict';\n\nimport { summarizeSkillChange } from '../src/skill_summary.mjs';\n\ntest('summarizeSkillChange counts evidence before review', () => {\n  const result = summarizeSkillChange({\n    title: '  Debug adapter  ',\n    evidence: ['patch', 'test-report'],\n    risk: 'low',\n  });\n  assert.deepEqual(result, {\n    title: 'Debug adapter',\n    evidenceCount: 2,\n    readyForReview: true,\n  });\n});\n\ntest('summarizeSkillChange blocks high-risk review readiness', () => {\n  const result = summarizeSkillChange({ title: 'Risky', evidence: ['patch'], risk: 'high' });\n  assert.equal(result.readyForReview, false);\n});\n"
+  },
+  "fileHashes": {
+    "README.md": "5f1abc17b95d42d7a14a0a3433b48ac0480a6a92578c3ac6ead2977f5f3820b9",
+    "package.json": "2f5587366338f05e4ca796397e371ee1be82ba3e78f039f359eabd496790e09a",
+    "src/skill_summary.mjs": "07f7ae1e8a2eee0db2fd1f99dc29ba468f5050ab9cb2fea537b270d4572cd86f",
+    "tests/skill_summary.test.mjs": "c21fd58a7a4a194623eca57c0d84f845ea0104ef287068569c1b4e816076198f"
+  },
+  "targetPath": "src/skill_summary.mjs",
+  "targetPaths": [
+    "src/skill_summary.mjs"
+  ],
+  "artifactId": "skill_javascript_smoke.patch",
+  "prePatchTestReportId": null,
+  "testReportId": "skill_javascript_smoke.tests",
+  "reviewReportId": "skill_javascript_smoke.review",
+  "metadataPath": null,
+  "reviewRubricPath": null,
+  "metadata": {
+    "testRunner": "node_test",
+    "commandTemplate": "node --test tests/skill_summary.test.mjs",
+    "language": "javascript"
+  },
+  "testCommand": "node --test tests/skill_summary.test.mjs",
+  "commandTemplate": "node --test tests/skill_summary.test.mjs",
+  "testCommandSource": "metadata.testRunner",
+  "importGraph": {},
+  "reviewerRubrics": [],
+  "plannedAdditions": [],
+  "plannedFileUpdates": [
+    {
+      "path": "src/skill_summary.mjs",
+      "replace": {
+        "export function summarizeSkillChange(input = {}) {\n  const title = String(input.title ?? '').trim();\n  return { title, evidenceCount: 0, readyForReview: false };\n}\n": "export function summarizeSkillChange(input = {}) {\n  const title = String(input.title ?? '').trim();\n  const evidence = Array.isArray(input.evidence) ? input.evidence.filter(Boolean) : [];\n  const risk = String(input.risk ?? 'low').toLowerCase();\n  return { title, evidenceCount: evidence.length, readyForReview: evidence.length > 0 && risk !== 'high' };\n}\n"
+      }
+    }
+  ],
+  "testExpectations": [],
+  "requiresPrePatchFailure": false,
+  "requiresSingleFileFailureEvidence": false,
+  "requiresReviewerDisagreement": false,
+  "sourceRepoKind": "deterministic_local_git_repository"
+}

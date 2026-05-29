@@ -1,0 +1,274 @@
+{
+  "domainId": "loomstead.coding.v0",
+  "scenarioId": "coding.skill_prototype_dryrun",
+  "baseline": "full_motivational_delegation",
+  "ok": true,
+  "metrics": {
+    "goal_success_rate": 1.0,
+    "shortcut_violation_rate": 0.0,
+    "required_process_coverage": 1.0,
+    "forced_action_rate": 0.0,
+    "agent_initiated_action_ratio": 1.0,
+    "intervention_overreach_rate": 0.0,
+    "relationship_memory_causal_use_rate": 1.0,
+    "causal_trace_coverage": 1.0,
+    "relationship_consistency": 1.0,
+    "process_believability_score": 1.0
+  },
+  "allowedInterventions": [
+    "event_skill_load",
+    "constraint_injection",
+    "evaluation_checkpoint"
+  ],
+  "appliedInterventionCount": 3,
+  "appliedEventCount": 3,
+  "stepEventCount": 4,
+  "milestones": [
+    {
+      "id": "design_review_loaded",
+      "domainId": "loomstead.coding.v0",
+      "predicate": "design review event is loaded before implementation"
+    },
+    {
+      "id": "implementation_diff",
+      "domainId": "loomstead.coding.v0",
+      "predicate": "implementer creates an artifact diff"
+    },
+    {
+      "id": "tests_executed",
+      "domainId": "loomstead.coding.v0",
+      "predicate": "evaluation checkpoint runs tests"
+    },
+    {
+      "id": "review_completed",
+      "domainId": "loomstead.coding.v0",
+      "predicate": "reviewer records approval with source evidence"
+    },
+    {
+      "id": "failure_pattern_memory",
+      "domainId": "loomstead.coding.v0",
+      "predicate": "review cites a prior failure or constraint memory"
+    }
+  ],
+  "initialObservation": {
+    "tick": 0,
+    "worldSummary": {
+      "artifactCount": 0.0,
+      "constraintCount": 0.0
+    },
+    "agentSummaries": {
+      "pm": {
+        "role": "PM",
+        "state": "scoping"
+      },
+      "architect": {
+        "role": "Architect",
+        "state": "waiting"
+      },
+      "implementer": {
+        "role": "Implementer",
+        "state": "waiting"
+      },
+      "reviewer": {
+        "role": "Reviewer",
+        "state": "waiting"
+      }
+    },
+    "recentEvents": [
+      {
+        "id": "coding_evt_000",
+        "type": "domain.goal_loaded",
+        "payload": {
+          "domainId": "loomstead.coding.v0",
+          "goalId": "coding.skill_prototype_dryrun"
+        }
+      }
+    ],
+    "goalProgress": {
+      "goal_success_rate": 0.0,
+      "shortcut_violation_rate": 0.0,
+      "required_process_coverage": 0.0,
+      "forced_action_rate": 0.0,
+      "agent_initiated_action_ratio": 1.0,
+      "intervention_overreach_rate": 0.0,
+      "relationship_memory_causal_use_rate": 0.0,
+      "causal_trace_coverage": 0.0,
+      "relationship_consistency": 0.0,
+      "process_believability_score": 0.4
+    },
+    "evalSignals": {
+      "eventCount": 1.0
+    }
+  },
+  "finalObservation": {
+    "tick": 4,
+    "worldSummary": {
+      "artifactCount": 1.0,
+      "constraintCount": 1.0
+    },
+    "agentSummaries": {
+      "pm": {
+        "role": "PM",
+        "state": "scoping"
+      },
+      "architect": {
+        "role": "Architect",
+        "state": "design_reviewed"
+      },
+      "implementer": {
+        "role": "Implementer",
+        "state": "diff_created"
+      },
+      "reviewer": {
+        "role": "Reviewer",
+        "state": "approved"
+      }
+    },
+    "recentEvents": [
+      {
+        "id": "coding_evt_000",
+        "type": "domain.goal_loaded",
+        "payload": {
+          "domainId": "loomstead.coding.v0",
+          "goalId": "coding.skill_prototype_dryrun"
+        }
+      },
+      {
+        "id": "coding_evt_001",
+        "tick": 0,
+        "type": "domain.intervention_applied",
+        "payload": {
+          "domainId": "loomstead.coding.v0",
+          "intervention": {
+            "interventionId": "coding.skill_prototype_dryrun.intervention.01",
+            "interventionType": "event_skill_load",
+            "targetAgents": [
+              "pm",
+              "architect",
+              "implementer",
+              "reviewer"
+            ],
+            "payload": {
+              "goalId": "coding.skill_prototype_dryrun",
+              "constraintId": null
+            },
+            "expiresAtTick": null,
+            "reason": "Cross-domain adapter dry-run for coding.skill_prototype_dryrun"
+          },
+          "shortcutMutationApplied": false
+        }
+      },
+      {
+        "id": "coding_evt_002",
+        "tick": 0,
+        "type": "domain.intervention_applied",
+        "payload": {
+          "domainId": "loomstead.coding.v0",
+          "intervention": {
+            "interventionId": "coding.skill_prototype_dryrun.intervention.02",
+            "interventionType": "constraint_injection",
+            "targetAgents": [
+              "pm",
+              "architect",
+              "implementer",
+              "reviewer"
+            ],
+            "payload": {
+              "goalId": "coding.skill_prototype_dryrun",
+              "constraintId": "must_run_tests"
+            },
+            "expiresAtTick": null,
+            "reason": "Cross-domain adapter dry-run for coding.skill_prototype_dryrun"
+          },
+          "shortcutMutationApplied": false
+        }
+      },
+      {
+        "id": "coding_evt_003",
+        "tick": 0,
+        "type": "domain.intervention_applied",
+        "payload": {
+          "domainId": "loomstead.coding.v0",
+          "intervention": {
+            "interventionId": "coding.skill_prototype_dryrun.intervention.03",
+            "interventionType": "evaluation_checkpoint",
+            "targetAgents": [
+              "pm",
+              "architect",
+              "implementer",
+              "reviewer"
+            ],
+            "payload": {
+              "goalId": "coding.skill_prototype_dryrun",
+              "constraintId": null
+            },
+            "expiresAtTick": null,
+            "reason": "Cross-domain adapter dry-run for coding.skill_prototype_dryrun"
+          },
+          "shortcutMutationApplied": false
+        }
+      },
+      {
+        "id": "coding_evt_004",
+        "tick": 1,
+        "type": "coding.design_review_loaded",
+        "payload": {
+          "agentId": "architect"
+        }
+      },
+      {
+        "id": "coding_evt_005",
+        "tick": 2,
+        "type": "coding.implementation_diff_created",
+        "payload": {
+          "agentId": "implementer",
+          "sourceEventIds": [
+            "coding_evt_004"
+          ]
+        }
+      },
+      {
+        "id": "coding_evt_006",
+        "tick": 3,
+        "type": "coding.tests_executed",
+        "payload": {
+          "agentId": "reviewer",
+          "passed": true,
+          "sourceEventIds": [
+            "coding_evt_005"
+          ]
+        }
+      },
+      {
+        "id": "coding_evt_007",
+        "tick": 4,
+        "type": "coding.review_completed",
+        "payload": {
+          "agentId": "reviewer",
+          "status": "approved",
+          "sourceEventIds": [
+            "coding_evt_006"
+          ],
+          "citedMemoryIds": [
+            "prior_failure.skip_tests"
+          ]
+        }
+      }
+    ],
+    "goalProgress": {
+      "goal_success_rate": 1.0,
+      "shortcut_violation_rate": 0.0,
+      "required_process_coverage": 1.0,
+      "forced_action_rate": 0.0,
+      "agent_initiated_action_ratio": 1.0,
+      "intervention_overreach_rate": 0.0,
+      "relationship_memory_causal_use_rate": 1.0,
+      "causal_trace_coverage": 1.0,
+      "relationship_consistency": 1.0,
+      "process_believability_score": 1.0
+    },
+    "evalSignals": {
+      "eventCount": 8.0
+    }
+  }
+}

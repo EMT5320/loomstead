@@ -1,0 +1,204 @@
+{
+  "packetVersion": "phase2.eval_reviewer_sampling_packet.v1",
+  "packetId": "packet_2026-05-27_manual_reviewer_main_review",
+  "createdAt": "2026-05-27T14:00:31+00:00",
+  "samplingPolicy": {
+    "seed": 20260527,
+    "suiteSampleCounts": {
+      "process_fidelity": 2,
+      "cross_domain_adapter": 2
+    },
+    "rule": "优先场景覆盖，每个场景先抽 1 个 seed，再按需要补齐。"
+  },
+  "sourceRuns": [
+    {
+      "suite": "process_fidelity",
+      "runDirName": "run_2026-05-27T13-37-33Z",
+      "manifestPath": ".run/eval-runs/run_2026-05-27T13-37-33Z/manifest.json",
+      "manifestSha256": "b6d956fb68d672302ee8874eb567164eb3e5975cbe748dd9323d92ef14f1818f",
+      "createdAt": "2026-05-27T13:37:33+00:00",
+      "ok": true,
+      "git": {
+        "commit": "71e9f07dd68a2ee1643448884e5739002ed8cc7c",
+        "shortCommit": "71e9f07",
+        "dirty": false
+      }
+    },
+    {
+      "suite": "cross_domain_adapter",
+      "runDirName": "domain_2026-05-27T13-29-21Z",
+      "manifestPath": ".run/eval-runs/domain_2026-05-27T13-29-21Z/manifest.json",
+      "manifestSha256": "991252ecdda729b3cfe691f3e9b2b9dae7ceab16b87ef6d19b5440f7525e0f8b",
+      "createdAt": "2026-05-27T13:29:21+00:00",
+      "ok": true,
+      "git": {
+        "commit": "f85d4294dca74c6c6b46d1dd8d24db7f8b588fc5",
+        "shortCommit": "f85d429",
+        "dirty": false
+      }
+    }
+  ],
+  "manualGate": {
+    "status": "manual_review_required",
+    "reason": "需要人工 reviewer 对抽样条目进行 1-5 分主观打分与文字判断；脚本不自动评分。",
+    "stopCondition": "完成 reviewer_score_sheet.csv 后，人工在 PR/报告中回填结论。"
+  },
+  "reviewChecklist": [
+    "核对 per_scenario 与 companionArtifacts 的 sha256 与 manifest 一致。",
+    "给每条样本填写 process_believability_score_1_to_5。",
+    "给每条样本填写 causal_trace_clarity_1_to_5，并补充一句证据解释。",
+    "若发现 shortcut 或 trace 断链，标记 pass_fail_judgement=fail 并记录原因。"
+  ],
+  "samples": [
+    {
+      "sampleId": "run_2026-05-27T13-37-33Z:pf.branna_forgiveness_requires_memory:seed04",
+      "suite": "process_fidelity",
+      "runDirName": "run_2026-05-27T13-37-33Z",
+      "runManifestPath": ".run/eval-runs/run_2026-05-27T13-37-33Z/manifest.json",
+      "scenarioId": "pf.branna_forgiveness_requires_memory",
+      "baseline": "full_motivational_delegation",
+      "seed": 4,
+      "perScenarioArtifact": {
+        "path": "per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed04.json",
+        "repoPath": ".run/eval-runs/run_2026-05-27T13-37-33Z/per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed04.json",
+        "kind": "per_scenario_json",
+        "bytes": 39091,
+        "sha256": "3d50139a8c5abcfb5b823c1b58c7da9d30799fb88eb541592e4df24293fce798"
+      },
+      "companionArtifacts": [
+        {
+          "path": "counterfactual_replay.jsonl",
+          "repoPath": ".run/eval-runs/run_2026-05-27T13-37-33Z/counterfactual_replay.jsonl",
+          "kind": "counterfactual_replay_jsonl",
+          "bytes": 306805,
+          "sha256": "bc19afa976b6bf51553f7e41604e970ab59e65fba6dccbdec321a5d5e30041bd"
+        },
+        {
+          "path": "memory_ablation_trace.jsonl",
+          "repoPath": ".run/eval-runs/run_2026-05-27T13-37-33Z/memory_ablation_trace.jsonl",
+          "kind": "memory_ablation_trace_jsonl",
+          "bytes": 109500,
+          "sha256": "da4cca3b1a87234d12c07d23ffe028900508cb06db7d7cdaf3c4b98c145734df"
+        }
+      ]
+    },
+    {
+      "sampleId": "run_2026-05-27T13-37-33Z:pf.repair_talk_requires_memory_trace:seed03",
+      "suite": "process_fidelity",
+      "runDirName": "run_2026-05-27T13-37-33Z",
+      "runManifestPath": ".run/eval-runs/run_2026-05-27T13-37-33Z/manifest.json",
+      "scenarioId": "pf.repair_talk_requires_memory_trace",
+      "baseline": "shuffled_memory_owner",
+      "seed": 3,
+      "perScenarioArtifact": {
+        "path": "per_scenario/pf.repair_talk_requires_memory_trace_shuffled_memory_owner_seed03.json",
+        "repoPath": ".run/eval-runs/run_2026-05-27T13-37-33Z/per_scenario/pf.repair_talk_requires_memory_trace_shuffled_memory_owner_seed03.json",
+        "kind": "per_scenario_json",
+        "bytes": 27457,
+        "sha256": "5c06ce9035aaa8884ec5c45bb1cf100fad05efd2efb44e6b80614bb89dfa92fa"
+      },
+      "companionArtifacts": [
+        {
+          "path": "counterfactual_replay.jsonl",
+          "repoPath": ".run/eval-runs/run_2026-05-27T13-37-33Z/counterfactual_replay.jsonl",
+          "kind": "counterfactual_replay_jsonl",
+          "bytes": 306805,
+          "sha256": "bc19afa976b6bf51553f7e41604e970ab59e65fba6dccbdec321a5d5e30041bd"
+        },
+        {
+          "path": "memory_ablation_trace.jsonl",
+          "repoPath": ".run/eval-runs/run_2026-05-27T13-37-33Z/memory_ablation_trace.jsonl",
+          "kind": "memory_ablation_trace_jsonl",
+          "bytes": 109500,
+          "sha256": "da4cca3b1a87234d12c07d23ffe028900508cb06db7d7cdaf3c4b98c145734df"
+        }
+      ]
+    },
+    {
+      "sampleId": "domain_2026-05-27T13-29-21Z:narrative.repair_trust_memory:seed02",
+      "suite": "cross_domain_adapter",
+      "runDirName": "domain_2026-05-27T13-29-21Z",
+      "runManifestPath": ".run/eval-runs/domain_2026-05-27T13-29-21Z/manifest.json",
+      "scenarioId": "narrative.repair_trust_memory",
+      "baseline": "full_motivational_delegation",
+      "seed": 2,
+      "perScenarioArtifact": {
+        "path": "per_scenario/narrative.repair_trust_memory_seed02.json",
+        "repoPath": ".run/eval-runs/domain_2026-05-27T13-29-21Z/per_scenario/narrative.repair_trust_memory_seed02.json",
+        "kind": "per_scenario_json",
+        "bytes": 11925,
+        "sha256": "4853ec493885366001e66dfb72b746efa9d4d8c232406e6e76b19fc0aa70585c"
+      },
+      "companionArtifacts": [
+        {
+          "path": "domain_evidence/narrative.repair_trust_memory_seed02/counterfactual_replay_narrative.repair_trust_memory.route_replay.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-27T13-29-21Z/domain_evidence/narrative.repair_trust_memory_seed02/counterfactual_replay_narrative.repair_trust_memory.route_replay.json",
+          "kind": "domain_evidence_counterfactual_replay_json",
+          "bytes": 3079,
+          "sha256": "cea55098030eb081d4402a5f898573a12003320cb6f85450ef3b01f6aeb35ddb"
+        }
+      ]
+    },
+    {
+      "sampleId": "domain_2026-05-27T13-29-21Z:coding.skill_prototype_dryrun:seed03",
+      "suite": "cross_domain_adapter",
+      "runDirName": "domain_2026-05-27T13-29-21Z",
+      "runManifestPath": ".run/eval-runs/domain_2026-05-27T13-29-21Z/manifest.json",
+      "scenarioId": "coding.skill_prototype_dryrun",
+      "baseline": "full_motivational_delegation",
+      "seed": 3,
+      "perScenarioArtifact": {
+        "path": "per_scenario/coding.skill_prototype_dryrun_seed03.json",
+        "repoPath": ".run/eval-runs/domain_2026-05-27T13-29-21Z/per_scenario/coding.skill_prototype_dryrun_seed03.json",
+        "kind": "per_scenario_json",
+        "bytes": 30020,
+        "sha256": "01521a828a9ddf05bf104783d08a51effe9b2edc7898d8ff1063e2f257d143fc"
+      },
+      "companionArtifacts": [
+        {
+          "path": "domain_evidence/coding.skill_prototype_dryrun_seed03/counterfactual_replay_skill_prototype.review.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-27T13-29-21Z/domain_evidence/coding.skill_prototype_dryrun_seed03/counterfactual_replay_skill_prototype.review.json",
+          "kind": "domain_evidence_counterfactual_replay_json",
+          "bytes": 2149,
+          "sha256": "003a13d541c4d7714faffd0bade00d02902c38fc107e3cf2697791816f9c00a8"
+        },
+        {
+          "path": "domain_evidence/coding.skill_prototype_dryrun_seed03/derived_dependency_graph.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-27T13-29-21Z/domain_evidence/coding.skill_prototype_dryrun_seed03/derived_dependency_graph.json",
+          "kind": "domain_evidence_derived_dependency_graph_json",
+          "bytes": 125,
+          "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6"
+        },
+        {
+          "path": "domain_evidence/coding.skill_prototype_dryrun_seed03/repo_fixture.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-27T13-29-21Z/domain_evidence/coding.skill_prototype_dryrun_seed03/repo_fixture.json",
+          "kind": "domain_evidence_repo_fixture_json",
+          "bytes": 5032,
+          "sha256": "5f60dab6caea18e1fb3459d4e35d7578cc5c6920a3a3fafe21f8c5cdab2e3e81"
+        },
+        {
+          "path": "domain_evidence/coding.skill_prototype_dryrun_seed03/review_report_skill_prototype.review.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-27T13-29-21Z/domain_evidence/coding.skill_prototype_dryrun_seed03/review_report_skill_prototype.review.json",
+          "kind": "domain_evidence_review_report_json",
+          "bytes": 802,
+          "sha256": "124054549bf446038dd3c971694b48343cf342849f52fafe098ba97440b518b7"
+        },
+        {
+          "path": "domain_evidence/coding.skill_prototype_dryrun_seed03/skill_prototype.patch",
+          "repoPath": ".run/eval-runs/domain_2026-05-27T13-29-21Z/domain_evidence/coding.skill_prototype_dryrun_seed03/skill_prototype.patch",
+          "kind": "domain_evidence_patch_diff",
+          "bytes": 299,
+          "sha256": "6a3e15fa6fe1640483d48c9f3b25ac5dd10bf705f1815705924cb3a82c979249"
+        },
+        {
+          "path": "domain_evidence/coding.skill_prototype_dryrun_seed03/test_report_skill_prototype.tests.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-27T13-29-21Z/domain_evidence/coding.skill_prototype_dryrun_seed03/test_report_skill_prototype.tests.json",
+          "kind": "domain_evidence_test_report_json",
+          "bytes": 3826,
+          "sha256": "2a6291722643313a48f7b734bcbba66f43a6084648ca09da33db19dc8d257e09"
+        }
+      ]
+    }
+  ],
+  "packetSha256": "416a15e2ee5c37e05227b1948b29de89280b5cf193548aebd3f55a60f9f1f359"
+}

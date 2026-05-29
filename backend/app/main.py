@@ -197,7 +197,7 @@ def create_handler(app: TownApplication, project_root: Path):
 
         def log_message(self, format: str, *args: Any) -> None:
             # 开发期减少请求日志噪音，核心事件已进入 EventStore。
-            if os.getenv("AGENT_TOWN_HTTP_LOG") == "1":
+            if os.getenv("LOOMSTEAD_HTTP_LOG") == "1" or os.getenv("AGENT_TOWN_HTTP_LOG") == "1":
                 super().log_message(format, *args)
 
     return Handler

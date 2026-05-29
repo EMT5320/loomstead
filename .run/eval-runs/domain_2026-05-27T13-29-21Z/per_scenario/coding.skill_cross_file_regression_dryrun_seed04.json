@@ -1,0 +1,1481 @@
+{
+  "domainId": "loomstead.coding.v0",
+  "scenarioId": "coding.skill_cross_file_regression_dryrun",
+  "baseline": "full_motivational_delegation",
+  "seed": {
+    "seedIndex": 4,
+    "seedCount": 5,
+    "seedValue": 30,
+    "seedId": "coding.skill_cross_file_regression_dryrun:seed_04",
+    "deterministicHash": "b0982c3728a0b6d3"
+  },
+  "ok": true,
+  "metrics": {
+    "goal_success_rate": 1.0,
+    "shortcut_violation_rate": 0.0,
+    "required_process_coverage": 1.0,
+    "forced_action_rate": 0.0,
+    "agent_initiated_action_ratio": 1.0,
+    "intervention_overreach_rate": 0.0,
+    "relationship_memory_causal_use_rate": 1.0,
+    "counterfactual_tool_selection_change_rate": 0.857143,
+    "causal_trace_coverage": 1.0,
+    "relationship_consistency": 1.0,
+    "process_believability_score": 1.0
+  },
+  "allowedInterventions": [
+    "event_skill_load",
+    "constraint_injection",
+    "evaluation_checkpoint"
+  ],
+  "appliedInterventionCount": 3,
+  "appliedEventCount": 3,
+  "stepEventCount": 6,
+  "milestones": [
+    {
+      "id": "repo_fixture_loaded",
+      "domainId": "loomstead.coding.v0",
+      "predicate": "external repo fixture is loaded before design"
+    },
+    {
+      "id": "design_review_loaded",
+      "domainId": "loomstead.coding.v0",
+      "predicate": "design review event is loaded before implementation"
+    },
+    {
+      "id": "import_graph_recorded",
+      "domainId": "loomstead.coding.v0",
+      "predicate": "fixture records source import graph before the patch"
+    },
+    {
+      "id": "real_dependency_graph_recorded",
+      "domainId": "loomstead.coding.v0",
+      "predicate": "adapter derives a dependency graph from actual fixture imports"
+    },
+    {
+      "id": "implementation_diff",
+      "domainId": "loomstead.coding.v0",
+      "predicate": "implementer creates an artifact diff"
+    },
+    {
+      "id": "pre_patch_failure_observed",
+      "domainId": "loomstead.coding.v0",
+      "predicate": "evaluation checkpoint records the failing test before implementation"
+    },
+    {
+      "id": "patch_covers_multiple_source_files",
+      "domainId": "loomstead.coding.v0",
+      "predicate": "patch changes at least two dependency-linked source files"
+    },
+    {
+      "id": "single_file_patch_still_fails",
+      "domainId": "loomstead.coding.v0",
+      "predicate": "single-file partial patch replay still fails the repo tests"
+    },
+    {
+      "id": "dependency_evidence_chain_confirmed",
+      "domainId": "loomstead.coding.v0",
+      "predicate": "review report links pre/partial/post test evidence with command and exitCode"
+    },
+    {
+      "id": "regression_case_covered",
+      "domainId": "loomstead.coding.v0",
+      "predicate": "cross-file regression case remains red until both linked files are patched"
+    },
+    {
+      "id": "external_repo_checkout_tested",
+      "domainId": "loomstead.coding.v0",
+      "predicate": "evaluation checkpoint checks out external repo and runs its test command"
+    },
+    {
+      "id": "review_completed",
+      "domainId": "loomstead.coding.v0",
+      "predicate": "reviewer records approval with source evidence"
+    },
+    {
+      "id": "failure_pattern_memory",
+      "domainId": "loomstead.coding.v0",
+      "predicate": "review cites a prior failure or constraint memory"
+    }
+  ],
+  "initialObservation": {
+    "tick": 0,
+    "worldSummary": {
+      "artifactCount": 0.0,
+      "prePatchTestReportCount": 0.0,
+      "partialPatchTestReportCount": 0.0,
+      "testReportCount": 0.0,
+      "reviewReportCount": 0.0,
+      "constraintCount": 0.0,
+      "repoFixtureId": "loomstead-debug-cross-file-regression-fixture.v1",
+      "testRunner": "pytest",
+      "repoFileRefs": [
+        "README.md",
+        "src/__init__.py",
+        "src/normalizer.py",
+        "src/report.py",
+        "tests/test_skill.py"
+      ],
+      "artifactRefs": [],
+      "prePatchTestReportRefs": [],
+      "partialPatchTestReportRefs": [],
+      "testReportRefs": [],
+      "reviewReportRefs": []
+    },
+    "agentSummaries": {
+      "pm": {
+        "role": "PM",
+        "state": "scoping"
+      },
+      "architect": {
+        "role": "Architect",
+        "state": "waiting"
+      },
+      "implementer": {
+        "role": "Implementer",
+        "state": "waiting"
+      },
+      "reviewer": {
+        "role": "Reviewer",
+        "state": "waiting"
+      },
+      "process_reviewer": {
+        "role": "Process Reviewer",
+        "state": "waiting"
+      },
+      "risk_reviewer": {
+        "role": "Risk Reviewer",
+        "state": "waiting"
+      }
+    },
+    "recentEvents": [
+      {
+        "id": "coding_evt_000",
+        "type": "domain.goal_loaded",
+        "payload": {
+          "domainId": "loomstead.coding.v0",
+          "goalId": "coding.skill_cross_file_regression_dryrun"
+        }
+      },
+      {
+        "id": "coding_evt_001",
+        "type": "coding.repo_fixture_loaded",
+        "payload": {
+          "repoFixtureId": "loomstead-debug-cross-file-regression-fixture.v1",
+          "fileCount": 5,
+          "metadataPath": null,
+          "reviewRubricPath": null,
+          "testCommand": "python -m pytest tests/test_skill.py -q",
+          "testRunner": "pytest",
+          "commandTemplate": "python -m pytest tests/test_skill.py -q"
+        }
+      }
+    ],
+    "goalProgress": {
+      "goal_success_rate": 0.0,
+      "shortcut_violation_rate": 0.0,
+      "required_process_coverage": 0.230769,
+      "forced_action_rate": 0.0,
+      "agent_initiated_action_ratio": 1.0,
+      "intervention_overreach_rate": 0.0,
+      "relationship_memory_causal_use_rate": 0.0,
+      "counterfactual_tool_selection_change_rate": 0.0,
+      "causal_trace_coverage": 0.0,
+      "relationship_consistency": 0.0,
+      "process_believability_score": 0.446154
+    },
+    "evalSignals": {
+      "eventCount": 2.0
+    }
+  },
+  "finalObservation": {
+    "tick": 5,
+    "worldSummary": {
+      "artifactCount": 1.0,
+      "prePatchTestReportCount": 1.0,
+      "partialPatchTestReportCount": 2.0,
+      "testReportCount": 1.0,
+      "reviewReportCount": 1.0,
+      "constraintCount": 1.0,
+      "repoFixtureId": "loomstead-debug-cross-file-regression-fixture.v1",
+      "testRunner": "pytest",
+      "repoFileRefs": [
+        "README.md",
+        "src/__init__.py",
+        "src/normalizer.py",
+        "src/report.py",
+        "tests/test_skill.py"
+      ],
+      "artifactRefs": [
+        "skill_cross_file_regression.patch"
+      ],
+      "prePatchTestReportRefs": [
+        "skill_cross_file_regression.pre_patch_tests"
+      ],
+      "partialPatchTestReportRefs": [
+        "skill_cross_file_regression.patch.single_file.src_normalizer.py.tests",
+        "skill_cross_file_regression.patch.single_file.src_report.py.tests"
+      ],
+      "testReportRefs": [
+        "skill_cross_file_regression.tests"
+      ],
+      "reviewReportRefs": [
+        "skill_cross_file_regression.review"
+      ]
+    },
+    "agentSummaries": {
+      "pm": {
+        "role": "PM",
+        "state": "scoping"
+      },
+      "architect": {
+        "role": "Architect",
+        "state": "design_reviewed"
+      },
+      "implementer": {
+        "role": "Implementer",
+        "state": "diff_created"
+      },
+      "reviewer": {
+        "role": "Reviewer",
+        "state": "approved"
+      },
+      "process_reviewer": {
+        "role": "Process Reviewer",
+        "state": "waiting"
+      },
+      "risk_reviewer": {
+        "role": "Risk Reviewer",
+        "state": "waiting"
+      }
+    },
+    "recentEvents": [
+      {
+        "id": "coding_evt_000",
+        "type": "domain.goal_loaded",
+        "payload": {
+          "domainId": "loomstead.coding.v0",
+          "goalId": "coding.skill_cross_file_regression_dryrun"
+        }
+      },
+      {
+        "id": "coding_evt_001",
+        "type": "coding.repo_fixture_loaded",
+        "payload": {
+          "repoFixtureId": "loomstead-debug-cross-file-regression-fixture.v1",
+          "fileCount": 5,
+          "metadataPath": null,
+          "reviewRubricPath": null,
+          "testCommand": "python -m pytest tests/test_skill.py -q",
+          "testRunner": "pytest",
+          "commandTemplate": "python -m pytest tests/test_skill.py -q"
+        }
+      },
+      {
+        "id": "coding_evt_002",
+        "tick": 0,
+        "type": "domain.intervention_applied",
+        "payload": {
+          "domainId": "loomstead.coding.v0",
+          "intervention": {
+            "interventionId": "coding.skill_cross_file_regression_dryrun.intervention.01",
+            "interventionType": "event_skill_load",
+            "targetAgents": [
+              "pm",
+              "architect",
+              "implementer",
+              "reviewer"
+            ],
+            "payload": {
+              "goalId": "coding.skill_cross_file_regression_dryrun",
+              "constraintId": null
+            },
+            "expiresAtTick": null,
+            "reason": "Cross-domain adapter dry-run for coding.skill_cross_file_regression_dryrun"
+          },
+          "shortcutMutationApplied": false
+        }
+      },
+      {
+        "id": "coding_evt_003",
+        "tick": 0,
+        "type": "domain.intervention_applied",
+        "payload": {
+          "domainId": "loomstead.coding.v0",
+          "intervention": {
+            "interventionId": "coding.skill_cross_file_regression_dryrun.intervention.02",
+            "interventionType": "constraint_injection",
+            "targetAgents": [
+              "pm",
+              "architect",
+              "implementer",
+              "reviewer"
+            ],
+            "payload": {
+              "goalId": "coding.skill_cross_file_regression_dryrun",
+              "constraintId": "must_run_tests"
+            },
+            "expiresAtTick": null,
+            "reason": "Cross-domain adapter dry-run for coding.skill_cross_file_regression_dryrun"
+          },
+          "shortcutMutationApplied": false
+        }
+      },
+      {
+        "id": "coding_evt_004",
+        "tick": 0,
+        "type": "domain.intervention_applied",
+        "payload": {
+          "domainId": "loomstead.coding.v0",
+          "intervention": {
+            "interventionId": "coding.skill_cross_file_regression_dryrun.intervention.03",
+            "interventionType": "evaluation_checkpoint",
+            "targetAgents": [
+              "pm",
+              "architect",
+              "implementer",
+              "reviewer"
+            ],
+            "payload": {
+              "goalId": "coding.skill_cross_file_regression_dryrun",
+              "constraintId": null
+            },
+            "expiresAtTick": null,
+            "reason": "Cross-domain adapter dry-run for coding.skill_cross_file_regression_dryrun"
+          },
+          "shortcutMutationApplied": false
+        }
+      },
+      {
+        "id": "coding_evt_005",
+        "tick": 1,
+        "type": "coding.design_review_loaded",
+        "payload": {
+          "agentId": "architect",
+          "designDocRef": "design.skill_prototype.v1",
+          "repoFixtureId": "loomstead-debug-cross-file-regression-fixture.v1",
+          "acceptedConstraints": [
+            "must_run_tests"
+          ],
+          "reviewRubricPath": null
+        }
+      },
+      {
+        "id": "coding_evt_006",
+        "tick": 2,
+        "type": "coding.pre_patch_tests_failed",
+        "payload": {
+          "agentId": "reviewer",
+          "testReportId": "skill_cross_file_regression.pre_patch_tests",
+          "expectedFailure": true,
+          "failureObserved": true,
+          "failingCaseIds": [
+            "pytest_suite"
+          ],
+          "exitCode": 1,
+          "testRunner": "pytest",
+          "command": "python -m pytest tests/test_skill.py -q",
+          "workspaceKind": "git_external_repo_checkout",
+          "sourceEventIds": [
+            "coding_evt_005"
+          ],
+          "testReportSha256": "2dafb45cc5ab9e8ae7106be5a202c58b0c9b05805bfff80652fe6660484fe348"
+        }
+      },
+      {
+        "id": "coding_evt_007",
+        "tick": 3,
+        "type": "coding.implementation_diff_created",
+        "payload": {
+          "agentId": "implementer",
+          "artifactId": "skill_cross_file_regression.patch",
+          "sourceEventIds": [
+            "coding_evt_005"
+          ],
+          "artifactSha256": "bfd385454b15f88afd3338d1bb307b2ddfb19120a419da6e96b473efd3020596",
+          "changedFiles": [
+            "src/normalizer.py",
+            "src/report.py"
+          ],
+          "patchCoverageFileCount": 2
+        }
+      },
+      {
+        "id": "coding_evt_008",
+        "tick": 4,
+        "type": "coding.tests_executed",
+        "payload": {
+          "agentId": "reviewer",
+          "testReportId": "skill_cross_file_regression.tests",
+          "passed": true,
+          "exitCode": 0,
+          "testRunner": "pytest",
+          "command": "python -m pytest tests/test_skill.py -q",
+          "workspaceKind": "git_external_repo_checkout",
+          "sourceArtifactId": "skill_cross_file_regression.patch",
+          "sourceEventIds": [
+            "coding_evt_007"
+          ],
+          "testReportSha256": "fbb5e7859b377730e1c77159a0c53b8beef6d532d3d8e4a00e61455a8a0dc1be"
+        }
+      },
+      {
+        "id": "coding_evt_009",
+        "tick": 4,
+        "type": "coding.partial_patch_tests_failed",
+        "payload": {
+          "agentId": "reviewer",
+          "partialPatchTestReportIds": [
+            "skill_cross_file_regression.patch.single_file.src_normalizer.py.tests",
+            "skill_cross_file_regression.patch.single_file.src_report.py.tests"
+          ],
+          "expectedFailure": true,
+          "failureObserved": true,
+          "testRunner": "pytest",
+          "command": "python -m pytest tests/test_skill.py -q",
+          "sourceArtifactId": "skill_cross_file_regression.patch",
+          "sourceEventIds": [
+            "coding_evt_007"
+          ]
+        }
+      },
+      {
+        "id": "coding_evt_010",
+        "tick": 5,
+        "type": "coding.review_completed",
+        "payload": {
+          "agentId": "reviewer",
+          "reviewReportId": "skill_cross_file_regression.review",
+          "status": "approved",
+          "sourceTestReportId": "skill_cross_file_regression.tests",
+          "sourceEventIds": [
+            "coding_evt_006",
+            "coding_evt_008"
+          ],
+          "citedMemoryIds": [
+            "prior_failure.skip_tests",
+            "prior_failure.failing_test_first"
+          ],
+          "reviewReportSha256": "67b5724030102128b65764b2fbe7440a1d76303b5c673f798d726ba147a98ad4"
+        }
+      }
+    ],
+    "goalProgress": {
+      "goal_success_rate": 1.0,
+      "shortcut_violation_rate": 0.0,
+      "required_process_coverage": 1.0,
+      "forced_action_rate": 0.0,
+      "agent_initiated_action_ratio": 1.0,
+      "intervention_overreach_rate": 0.0,
+      "relationship_memory_causal_use_rate": 1.0,
+      "counterfactual_tool_selection_change_rate": 0.857143,
+      "causal_trace_coverage": 1.0,
+      "relationship_consistency": 1.0,
+      "process_believability_score": 1.0
+    },
+    "evalSignals": {
+      "eventCount": 11.0
+    }
+  },
+  "domainEvidence": {
+    "repoFixture": {
+      "fixtureId": "loomstead-debug-cross-file-regression-fixture.v1",
+      "repoName": "fixture/loomstead-debug-skill",
+      "defaultBranch": "main",
+      "files": {
+        "README.md": "# Cross-file Regression Fixture\n\nA tiny Python repo where status report formatting crosses two source files.\n",
+        "src/__init__.py": "",
+        "src/normalizer.py": "from __future__ import annotations\n\n\ndef normalize_status(raw: str) -> str:\n    return ' '.join(raw.strip().lower().split())\n\n\ndef severity_label(priority: str) -> str:\n    return priority\n",
+        "src/report.py": "from __future__ import annotations\n\nfrom src.normalizer import normalize_status, severity_label\n\n\ndef build_status_report(raw_status: str, priority: str) -> dict[str, str]:\n    status = normalize_status(raw_status)\n    return {\"status\": status, \"severity\": priority, \"display\": f\"{status}:{priority}\"}\n",
+        "tests/test_skill.py": "from __future__ import annotations\n\nfrom pathlib import Path\nimport sys\n\nrepo_root = Path(__file__).resolve().parents[1]\nsys.path.insert(0, str(repo_root))\n\nfrom src.report import build_status_report\n\n\ndef test_status_report_normalizes_cross_file_severity():\n    report = build_status_report('  Ready  ', ' LOW ')\n    assert report == {'status': 'ready', 'severity': 'low', 'display': 'ready:low'}\n\n\ndef test_status_report_preserves_status_word_spacing():\n    report = build_status_report('Needs   Review', ' Medium ')\n    assert report == {'status': 'needs review', 'severity': 'medium', 'display': 'needs review:medium'}\n"
+      },
+      "fileHashes": {
+        "README.md": "b103f613c1e586660feeff19cc8a7c65b6396391c1e032ac3b7948389d33e055",
+        "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/normalizer.py": "bbaf2c707a7742b6a3c191be84145e08237167eacce39ef35b146eb2e288d7dd",
+        "src/report.py": "5541288be4d3d1cfe643f83052297dded066bfce32028a64e7aca8b298b5b08d",
+        "tests/test_skill.py": "a1433943132fc14d9b867f857e44c7c5780e17916a8765ee068703a1e0c73bac"
+      },
+      "targetPath": "src/normalizer.py",
+      "targetPaths": [
+        "src/normalizer.py",
+        "src/report.py"
+      ],
+      "artifactId": "skill_cross_file_regression.patch",
+      "prePatchTestReportId": "skill_cross_file_regression.pre_patch_tests",
+      "testReportId": "skill_cross_file_regression.tests",
+      "reviewReportId": "skill_cross_file_regression.review",
+      "metadataPath": null,
+      "reviewRubricPath": null,
+      "metadata": {
+        "testRunner": "pytest",
+        "commandTemplate": "python -m pytest tests/test_skill.py -q",
+        "language": "python"
+      },
+      "testCommand": "python -m pytest tests/test_skill.py -q",
+      "commandTemplate": "python -m pytest tests/test_skill.py -q",
+      "testCommandSource": "metadata.testRunner",
+      "importGraph": {
+        "nodes": [
+          "src/normalizer.py",
+          "src/report.py",
+          "tests/test_skill.py"
+        ],
+        "edges": [
+          {
+            "from": "src/report.py",
+            "imports": "src/normalizer.py",
+            "symbols": [
+              "normalize_status",
+              "severity_label"
+            ]
+          },
+          {
+            "from": "tests/test_skill.py",
+            "imports": "src/report.py",
+            "symbols": [
+              "build_status_report"
+            ]
+          }
+        ]
+      },
+      "derivedDependencyGraph": {
+        "graphVersion": "coding.derived_dependency_graph.v1",
+        "nodes": [
+          "src/__init__.py",
+          "src/normalizer.py",
+          "src/report.py",
+          "tests/test_skill.py"
+        ],
+        "edges": [
+          {
+            "from": "src/report.py",
+            "imports": "src/normalizer.py",
+            "symbols": [
+              "normalize_status",
+              "severity_label"
+            ],
+            "sourceLine": 3
+          },
+          {
+            "from": "tests/test_skill.py",
+            "imports": "src/report.py",
+            "symbols": [
+              "build_status_report"
+            ],
+            "sourceLine": 9
+          }
+        ],
+        "declaredGraphVersion": "manual_import_graph.v1",
+        "declaredEdgeCount": 2,
+        "derivedEdgeCount": 2,
+        "missingDeclaredEdges": [],
+        "extraDerivedEdges": [],
+        "declaredEdgesCovered": true
+      },
+      "reviewerRubrics": [],
+      "plannedAdditions": [],
+      "plannedFileUpdates": [
+        {
+          "path": "src/normalizer.py",
+          "replace": {
+            "def severity_label(priority: str) -> str:\n    return priority\n": "def severity_label(priority: str) -> str:\n    return priority.strip().lower()\n"
+          }
+        },
+        {
+          "path": "src/report.py",
+          "replace": {
+            "    return {\"status\": status, \"severity\": priority, \"display\": f\"{status}:{priority}\"}\n": "    severity = severity_label(priority)\n    return {\"status\": status, \"severity\": severity, \"display\": f\"{status}:{severity}\"}\n"
+          }
+        }
+      ],
+      "testExpectations": [],
+      "requiresPrePatchFailure": true,
+      "requiresSingleFileFailureEvidence": true,
+      "requiresReviewerDisagreement": false,
+      "sourceRepoKind": "deterministic_local_git_repository"
+    },
+    "artifacts": {
+      "skill_cross_file_regression.patch": {
+        "artifactId": "skill_cross_file_regression.patch",
+        "kind": "repo_patch",
+        "repoFixtureId": "loomstead-debug-cross-file-regression-fixture.v1",
+        "path": "src/normalizer.py",
+        "status": "created",
+        "sourceEventIds": [
+          "coding_evt_005"
+        ],
+        "changedFiles": [
+          "src/normalizer.py",
+          "src/report.py"
+        ],
+        "patchCoverageFileCount": 2,
+        "baseFileSha256": "bbaf2c707a7742b6a3c191be84145e08237167eacce39ef35b146eb2e288d7dd",
+        "patchedFileSha256": "b454750d8e393aadba401d0d39e5fc5fa04d8ef80057bd78594c4c8600993004",
+        "fileSha256": {
+          "src/normalizer.py": {
+            "base": "bbaf2c707a7742b6a3c191be84145e08237167eacce39ef35b146eb2e288d7dd",
+            "patched": "b454750d8e393aadba401d0d39e5fc5fa04d8ef80057bd78594c4c8600993004"
+          },
+          "src/report.py": {
+            "base": "5541288be4d3d1cfe643f83052297dded066bfce32028a64e7aca8b298b5b08d",
+            "patched": "3893b79d87deee0f6ebd5c20321a9d75b5ca618ad3c02ea9c6ccf6bfbeff73d0"
+          }
+        },
+        "patchText": "--- a/src/normalizer.py\n+++ b/src/normalizer.py\n@@ -6,4 +6,4 @@\n \n \n def severity_label(priority: str) -> str:\n-    return priority\n+    return priority.strip().lower()\n--- a/src/report.py\n+++ b/src/report.py\n@@ -5,4 +5,5 @@\n \n def build_status_report(raw_status: str, priority: str) -> dict[str, str]:\n     status = normalize_status(raw_status)\n-    return {\"status\": status, \"severity\": priority, \"display\": f\"{status}:{priority}\"}\n+    severity = severity_label(priority)\n+    return {\"status\": status, \"severity\": severity, \"display\": f\"{status}:{severity}\"}",
+        "patchedFiles": {
+          "README.md": "# Cross-file Regression Fixture\n\nA tiny Python repo where status report formatting crosses two source files.\n",
+          "src/__init__.py": "",
+          "src/normalizer.py": "from __future__ import annotations\n\n\ndef normalize_status(raw: str) -> str:\n    return ' '.join(raw.strip().lower().split())\n\n\ndef severity_label(priority: str) -> str:\n    return priority.strip().lower()\n",
+          "src/report.py": "from __future__ import annotations\n\nfrom src.normalizer import normalize_status, severity_label\n\n\ndef build_status_report(raw_status: str, priority: str) -> dict[str, str]:\n    status = normalize_status(raw_status)\n    severity = severity_label(priority)\n    return {\"status\": status, \"severity\": severity, \"display\": f\"{status}:{severity}\"}\n",
+          "tests/test_skill.py": "from __future__ import annotations\n\nfrom pathlib import Path\nimport sys\n\nrepo_root = Path(__file__).resolve().parents[1]\nsys.path.insert(0, str(repo_root))\n\nfrom src.report import build_status_report\n\n\ndef test_status_report_normalizes_cross_file_severity():\n    report = build_status_report('  Ready  ', ' LOW ')\n    assert report == {'status': 'ready', 'severity': 'low', 'display': 'ready:low'}\n\n\ndef test_status_report_preserves_status_word_spacing():\n    report = build_status_report('Needs   Review', ' Medium ')\n    assert report == {'status': 'needs review', 'severity': 'medium', 'display': 'needs review:medium'}\n"
+        },
+        "sha256": "bfd385454b15f88afd3338d1bb307b2ddfb19120a419da6e96b473efd3020596",
+        "dependencyEvidence": {
+          "baseFileHashes": {
+            "README.md": "b103f613c1e586660feeff19cc8a7c65b6396391c1e032ac3b7948389d33e055",
+            "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "src/normalizer.py": "bbaf2c707a7742b6a3c191be84145e08237167eacce39ef35b146eb2e288d7dd",
+            "src/report.py": "5541288be4d3d1cfe643f83052297dded066bfce32028a64e7aca8b298b5b08d",
+            "tests/test_skill.py": "a1433943132fc14d9b867f857e44c7c5780e17916a8765ee068703a1e0c73bac"
+          },
+          "patchedFileHashes": {
+            "README.md": "b103f613c1e586660feeff19cc8a7c65b6396391c1e032ac3b7948389d33e055",
+            "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "src/normalizer.py": "b454750d8e393aadba401d0d39e5fc5fa04d8ef80057bd78594c4c8600993004",
+            "src/report.py": "3893b79d87deee0f6ebd5c20321a9d75b5ca618ad3c02ea9c6ccf6bfbeff73d0",
+            "tests/test_skill.py": "a1433943132fc14d9b867f857e44c7c5780e17916a8765ee068703a1e0c73bac"
+          },
+          "importGraph": {
+            "nodes": [
+              "src/normalizer.py",
+              "src/report.py",
+              "tests/test_skill.py"
+            ],
+            "edges": [
+              {
+                "from": "src/report.py",
+                "imports": "src/normalizer.py",
+                "symbols": [
+                  "normalize_status",
+                  "severity_label"
+                ]
+              },
+              {
+                "from": "tests/test_skill.py",
+                "imports": "src/report.py",
+                "symbols": [
+                  "build_status_report"
+                ]
+              }
+            ]
+          },
+          "derivedDependencyGraph": {
+            "graphVersion": "coding.derived_dependency_graph.v1",
+            "nodes": [
+              "src/__init__.py",
+              "src/normalizer.py",
+              "src/report.py",
+              "tests/test_skill.py"
+            ],
+            "edges": [
+              {
+                "from": "src/report.py",
+                "imports": "src/normalizer.py",
+                "symbols": [
+                  "normalize_status",
+                  "severity_label"
+                ],
+                "sourceLine": 3
+              },
+              {
+                "from": "tests/test_skill.py",
+                "imports": "src/report.py",
+                "symbols": [
+                  "build_status_report"
+                ],
+                "sourceLine": 9
+              }
+            ],
+            "declaredGraphVersion": "manual_import_graph.v1",
+            "declaredEdgeCount": 2,
+            "derivedEdgeCount": 2,
+            "missingDeclaredEdges": [],
+            "extraDerivedEdges": [],
+            "declaredEdgesCovered": true
+          },
+          "patchCoverageFileCount": 2,
+          "changedFiles": [
+            "src/normalizer.py",
+            "src/report.py"
+          ],
+          "changedSourceFiles": [
+            "src/normalizer.py",
+            "src/report.py"
+          ]
+        }
+      }
+    },
+    "prePatchTestReports": {
+      "skill_cross_file_regression.pre_patch_tests": {
+        "testReportId": "skill_cross_file_regression.pre_patch_tests",
+        "command": "python -m pytest tests/test_skill.py -q",
+        "testRunner": "pytest",
+        "durationMs": 489.987,
+        "exitCode": 1,
+        "testPhase": "pre_patch",
+        "passed": false,
+        "expectedFailure": true,
+        "failureObserved": true,
+        "failingCaseIds": [
+          "pytest_suite"
+        ],
+        "caseResults": [
+          {
+            "caseId": "pytest_suite",
+            "passed": false,
+            "runner": "pytest",
+            "exitCode": 1,
+            "passedCount": 0,
+            "failedCount": 2,
+            "summary": "FF                                                                       [100%]",
+            "parseNote": "JSONDecodeError('Expecting value: line 1 column 1 (char 0)')"
+          }
+        ],
+        "execution": {
+          "executed": true,
+          "testPhase": "pre_patch",
+          "testRunner": "pytest",
+          "workspaceKind": "git_external_repo_checkout",
+          "sourceRepoKind": "deterministic_local_git_repository",
+          "checkoutMethod": "git clone",
+          "command": "python -m pytest tests/test_skill.py -q",
+          "commandTemplate": "python -m pytest tests/test_skill.py -q",
+          "testCommandSource": "metadata.testRunner",
+          "pythonExecutable": "python.exe",
+          "exitCode": 1,
+          "durationMs": 489.987,
+          "stdout": "FF                                                                       [100%]\n================================== FAILURES ===================================\n______________ test_status_report_normalizes_cross_file_severity ______________\n\n    def test_status_report_normalizes_cross_file_severity():\n        report = build_status_report('  Ready  ', ' LOW ')\n>       assert report == {'status': 'ready', 'severity': 'low', 'display': 'ready:low'}\nE       AssertionError: assert {'display': '...tus': 'ready'} == {'display': '...tus': 'ready'}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Differing items:\nE         {'display': 'ready: LOW '} != {'display': 'ready:low'}\nE         {'severity': ' LOW '} != {'severity': 'low'}\nE         Use -v to get more diff\n\ntests\\test_skill.py:14: AssertionError\n______________ test_status_report_preserves_status_word_spacing _______________\n\n    def test_status_report_preserves_status_word_spacing():\n        report = build_status_report('Needs   Review', ' Medium ')\n>       assert report == {'status': 'needs review', 'severity': 'medium', 'display': 'needs review:medium'}\nE       AssertionError: assert {'display': '...needs review'} == {'display': '...needs review'}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Differing items:\nE         {'display': 'needs review: Medium '} != {'display': 'needs review:medium'}\nE         {'severity': ' Medium '} != {'severity': 'medium'}\nE         Use -v to get more diff\n\ntests\\test_skill.py:19: AssertionError\n=========================== short test summary info ===========================\nFAILED tests/test_skill.py::test_status_report_normalizes_cross_file_severity\nFAILED tests/test_skill.py::test_status_report_preserves_status_word_spacing\n2 failed in 0.04s\n",
+          "stderr": "",
+          "checkoutSteps": [
+            {
+              "command": "git init --quiet",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "git checkout -B main",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "Switched to a new branch 'main'\n"
+            },
+            {
+              "command": "git config user.email fixture@example.invalid",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "git config user.name Loomstead Fixture",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "git add --all",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "warning: unable to access 'C:/Users/Administrator/.config/git/ignore': Permission denied\n"
+            },
+            {
+              "command": "git commit --quiet -m initial fixture repo",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "git clone --quiet <source-repo> <checkout>",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "warning: unable to access 'C:/Users/Administrator/.config/git/ignore': Permission denied\n"
+            }
+          ],
+          "git": {
+            "defaultBranch": "main",
+            "sourceHead": "7fc553dc36ff14df903f07ff8479f7835add94ad",
+            "checkoutHead": "7fc553dc36ff14df903f07ff8479f7835add94ad",
+            "statusAfterPatch": []
+          },
+          "sourceRepoFiles": [
+            "README.md",
+            "src/__init__.py",
+            "src/normalizer.py",
+            "src/report.py",
+            "tests/test_skill.py"
+          ],
+          "workspaceFiles": [
+            "README.md",
+            "src/__init__.py",
+            "src/normalizer.py",
+            "src/report.py",
+            "tests/test_skill.py"
+          ],
+          "workspaceFileHashes": {
+            "README.md": "b103f613c1e586660feeff19cc8a7c65b6396391c1e032ac3b7948389d33e055",
+            "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "src/normalizer.py": "bbaf2c707a7742b6a3c191be84145e08237167eacce39ef35b146eb2e288d7dd",
+            "src/report.py": "5541288be4d3d1cfe643f83052297dded066bfce32028a64e7aca8b298b5b08d",
+            "tests/test_skill.py": "a1433943132fc14d9b867f857e44c7c5780e17916a8765ee068703a1e0c73bac"
+          }
+        },
+        "sourceArtifactId": "pre_patch_fixture_state",
+        "sourceEventIds": [
+          "coding_evt_005"
+        ],
+        "sha256": "2dafb45cc5ab9e8ae7106be5a202c58b0c9b05805bfff80652fe6660484fe348"
+      }
+    },
+    "partialPatchTestReports": {
+      "skill_cross_file_regression.patch.single_file.src_normalizer.py.tests": {
+        "testReportId": "skill_cross_file_regression.patch.single_file.src_normalizer.py.tests",
+        "command": "python -m pytest tests/test_skill.py -q",
+        "testRunner": "pytest",
+        "durationMs": 492.572,
+        "exitCode": 1,
+        "testPhase": "single_file_patch",
+        "patchedFile": "src/normalizer.py",
+        "passed": false,
+        "expectedFailure": true,
+        "failureObserved": true,
+        "failingCaseIds": [
+          "pytest_suite"
+        ],
+        "caseResults": [
+          {
+            "caseId": "pytest_suite",
+            "passed": false,
+            "runner": "pytest",
+            "exitCode": 1,
+            "passedCount": 0,
+            "failedCount": 2,
+            "summary": "FF                                                                       [100%]",
+            "parseNote": "JSONDecodeError('Expecting value: line 1 column 1 (char 0)')"
+          }
+        ],
+        "execution": {
+          "executed": true,
+          "testPhase": "single_file_patch",
+          "testRunner": "pytest",
+          "workspaceKind": "git_external_repo_checkout",
+          "sourceRepoKind": "deterministic_local_git_repository",
+          "checkoutMethod": "git clone",
+          "command": "python -m pytest tests/test_skill.py -q",
+          "commandTemplate": "python -m pytest tests/test_skill.py -q",
+          "testCommandSource": "metadata.testRunner",
+          "pythonExecutable": "python.exe",
+          "exitCode": 1,
+          "durationMs": 492.572,
+          "stdout": "FF                                                                       [100%]\n================================== FAILURES ===================================\n______________ test_status_report_normalizes_cross_file_severity ______________\n\n    def test_status_report_normalizes_cross_file_severity():\n        report = build_status_report('  Ready  ', ' LOW ')\n>       assert report == {'status': 'ready', 'severity': 'low', 'display': 'ready:low'}\nE       AssertionError: assert {'display': '...tus': 'ready'} == {'display': '...tus': 'ready'}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Differing items:\nE         {'display': 'ready: LOW '} != {'display': 'ready:low'}\nE         {'severity': ' LOW '} != {'severity': 'low'}\nE         Use -v to get more diff\n\ntests\\test_skill.py:14: AssertionError\n______________ test_status_report_preserves_status_word_spacing _______________\n\n    def test_status_report_preserves_status_word_spacing():\n        report = build_status_report('Needs   Review', ' Medium ')\n>       assert report == {'status': 'needs review', 'severity': 'medium', 'display': 'needs review:medium'}\nE       AssertionError: assert {'display': '...needs review'} == {'display': '...needs review'}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Differing items:\nE         {'display': 'needs review: Medium '} != {'display': 'needs review:medium'}\nE         {'severity': ' Medium '} != {'severity': 'medium'}\nE         Use -v to get more diff\n\ntests\\test_skill.py:19: AssertionError\n=========================== short test summary info ===========================\nFAILED tests/test_skill.py::test_status_report_normalizes_cross_file_severity\nFAILED tests/test_skill.py::test_status_report_preserves_status_word_spacing\n2 failed in 0.04s\n",
+          "stderr": "",
+          "checkoutSteps": [
+            {
+              "command": "git init --quiet",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "git checkout -B main",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "Switched to a new branch 'main'\n"
+            },
+            {
+              "command": "git config user.email fixture@example.invalid",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "git config user.name Loomstead Fixture",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "git add --all",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "warning: unable to access 'C:/Users/Administrator/.config/git/ignore': Permission denied\n"
+            },
+            {
+              "command": "git commit --quiet -m initial fixture repo",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "git clone --quiet <source-repo> <checkout>",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "warning: unable to access 'C:/Users/Administrator/.config/git/ignore': Permission denied\n"
+            }
+          ],
+          "git": {
+            "defaultBranch": "main",
+            "sourceHead": "bb51a4f731354fea3dd47063c76cb30ae0cbb873",
+            "checkoutHead": "bb51a4f731354fea3dd47063c76cb30ae0cbb873",
+            "statusAfterPatch": [
+              " M src/normalizer.py"
+            ]
+          },
+          "sourceRepoFiles": [
+            "README.md",
+            "src/__init__.py",
+            "src/normalizer.py",
+            "src/report.py",
+            "tests/test_skill.py"
+          ],
+          "workspaceFiles": [
+            "README.md",
+            "src/__init__.py",
+            "src/normalizer.py",
+            "src/report.py",
+            "tests/test_skill.py"
+          ],
+          "workspaceFileHashes": {
+            "README.md": "b103f613c1e586660feeff19cc8a7c65b6396391c1e032ac3b7948389d33e055",
+            "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "src/normalizer.py": "b454750d8e393aadba401d0d39e5fc5fa04d8ef80057bd78594c4c8600993004",
+            "src/report.py": "5541288be4d3d1cfe643f83052297dded066bfce32028a64e7aca8b298b5b08d",
+            "tests/test_skill.py": "a1433943132fc14d9b867f857e44c7c5780e17916a8765ee068703a1e0c73bac"
+          }
+        },
+        "sourceArtifactId": "skill_cross_file_regression.patch",
+        "sha256": "985b5db3262e71c9c5f196d418c08eaeb3b69c2dacbaf9e01b88bcf2f7e6ac7c",
+        "sourceEventIds": [
+          "coding_evt_007"
+        ],
+        "sourcePostPatchTestReportId": "skill_cross_file_regression.tests",
+        "sourcePrePatchTestReportId": "skill_cross_file_regression.pre_patch_tests"
+      },
+      "skill_cross_file_regression.patch.single_file.src_report.py.tests": {
+        "testReportId": "skill_cross_file_regression.patch.single_file.src_report.py.tests",
+        "command": "python -m pytest tests/test_skill.py -q",
+        "testRunner": "pytest",
+        "durationMs": 490.803,
+        "exitCode": 1,
+        "testPhase": "single_file_patch",
+        "patchedFile": "src/report.py",
+        "passed": false,
+        "expectedFailure": true,
+        "failureObserved": true,
+        "failingCaseIds": [
+          "pytest_suite"
+        ],
+        "caseResults": [
+          {
+            "caseId": "pytest_suite",
+            "passed": false,
+            "runner": "pytest",
+            "exitCode": 1,
+            "passedCount": 0,
+            "failedCount": 2,
+            "summary": "FF                                                                       [100%]",
+            "parseNote": "JSONDecodeError('Expecting value: line 1 column 1 (char 0)')"
+          }
+        ],
+        "execution": {
+          "executed": true,
+          "testPhase": "single_file_patch",
+          "testRunner": "pytest",
+          "workspaceKind": "git_external_repo_checkout",
+          "sourceRepoKind": "deterministic_local_git_repository",
+          "checkoutMethod": "git clone",
+          "command": "python -m pytest tests/test_skill.py -q",
+          "commandTemplate": "python -m pytest tests/test_skill.py -q",
+          "testCommandSource": "metadata.testRunner",
+          "pythonExecutable": "python.exe",
+          "exitCode": 1,
+          "durationMs": 490.803,
+          "stdout": "FF                                                                       [100%]\n================================== FAILURES ===================================\n______________ test_status_report_normalizes_cross_file_severity ______________\n\n    def test_status_report_normalizes_cross_file_severity():\n        report = build_status_report('  Ready  ', ' LOW ')\n>       assert report == {'status': 'ready', 'severity': 'low', 'display': 'ready:low'}\nE       AssertionError: assert {'display': '...tus': 'ready'} == {'display': '...tus': 'ready'}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Differing items:\nE         {'severity': ' LOW '} != {'severity': 'low'}\nE         {'display': 'ready: LOW '} != {'display': 'ready:low'}\nE         Use -v to get more diff\n\ntests\\test_skill.py:14: AssertionError\n______________ test_status_report_preserves_status_word_spacing _______________\n\n    def test_status_report_preserves_status_word_spacing():\n        report = build_status_report('Needs   Review', ' Medium ')\n>       assert report == {'status': 'needs review', 'severity': 'medium', 'display': 'needs review:medium'}\nE       AssertionError: assert {'display': '...needs review'} == {'display': '...needs review'}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Differing items:\nE         {'severity': ' Medium '} != {'severity': 'medium'}\nE         {'display': 'needs review: Medium '} != {'display': 'needs review:medium'}\nE         Use -v to get more diff\n\ntests\\test_skill.py:19: AssertionError\n=========================== short test summary info ===========================\nFAILED tests/test_skill.py::test_status_report_normalizes_cross_file_severity\nFAILED tests/test_skill.py::test_status_report_preserves_status_word_spacing\n2 failed in 0.05s\n",
+          "stderr": "",
+          "checkoutSteps": [
+            {
+              "command": "git init --quiet",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "git checkout -B main",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "Switched to a new branch 'main'\n"
+            },
+            {
+              "command": "git config user.email fixture@example.invalid",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "git config user.name Loomstead Fixture",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "git add --all",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "warning: unable to access 'C:/Users/Administrator/.config/git/ignore': Permission denied\n"
+            },
+            {
+              "command": "git commit --quiet -m initial fixture repo",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "git clone --quiet <source-repo> <checkout>",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "warning: unable to access 'C:/Users/Administrator/.config/git/ignore': Permission denied\n"
+            }
+          ],
+          "git": {
+            "defaultBranch": "main",
+            "sourceHead": "bb51a4f731354fea3dd47063c76cb30ae0cbb873",
+            "checkoutHead": "bb51a4f731354fea3dd47063c76cb30ae0cbb873",
+            "statusAfterPatch": [
+              " M src/report.py"
+            ]
+          },
+          "sourceRepoFiles": [
+            "README.md",
+            "src/__init__.py",
+            "src/normalizer.py",
+            "src/report.py",
+            "tests/test_skill.py"
+          ],
+          "workspaceFiles": [
+            "README.md",
+            "src/__init__.py",
+            "src/normalizer.py",
+            "src/report.py",
+            "tests/test_skill.py"
+          ],
+          "workspaceFileHashes": {
+            "README.md": "b103f613c1e586660feeff19cc8a7c65b6396391c1e032ac3b7948389d33e055",
+            "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "src/normalizer.py": "bbaf2c707a7742b6a3c191be84145e08237167eacce39ef35b146eb2e288d7dd",
+            "src/report.py": "3893b79d87deee0f6ebd5c20321a9d75b5ca618ad3c02ea9c6ccf6bfbeff73d0",
+            "tests/test_skill.py": "a1433943132fc14d9b867f857e44c7c5780e17916a8765ee068703a1e0c73bac"
+          }
+        },
+        "sourceArtifactId": "skill_cross_file_regression.patch",
+        "sha256": "a425d0fff9b938a13a372516637bd98ba944decfc9cc940f8f3d28ed618fff54",
+        "sourceEventIds": [
+          "coding_evt_007"
+        ],
+        "sourcePostPatchTestReportId": "skill_cross_file_regression.tests",
+        "sourcePrePatchTestReportId": "skill_cross_file_regression.pre_patch_tests"
+      }
+    },
+    "testReports": {
+      "skill_cross_file_regression.tests": {
+        "testReportId": "skill_cross_file_regression.tests",
+        "command": "python -m pytest tests/test_skill.py -q",
+        "testRunner": "pytest",
+        "durationMs": 449.517,
+        "exitCode": 0,
+        "testPhase": "post_patch",
+        "passed": true,
+        "caseResults": [
+          {
+            "caseId": "pytest_suite",
+            "passed": true,
+            "runner": "pytest",
+            "exitCode": 0,
+            "passedCount": 2,
+            "failedCount": 0,
+            "summary": "..                                                                       [100%]"
+          }
+        ],
+        "execution": {
+          "executed": true,
+          "testPhase": "post_patch",
+          "testRunner": "pytest",
+          "workspaceKind": "git_external_repo_checkout",
+          "sourceRepoKind": "deterministic_local_git_repository",
+          "checkoutMethod": "git clone",
+          "command": "python -m pytest tests/test_skill.py -q",
+          "commandTemplate": "python -m pytest tests/test_skill.py -q",
+          "testCommandSource": "metadata.testRunner",
+          "pythonExecutable": "python.exe",
+          "exitCode": 0,
+          "durationMs": 449.517,
+          "stdout": "..                                                                       [100%]\n2 passed in 0.01s\n",
+          "stderr": "",
+          "checkoutSteps": [
+            {
+              "command": "git init --quiet",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "git checkout -B main",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "Switched to a new branch 'main'\n"
+            },
+            {
+              "command": "git config user.email fixture@example.invalid",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "git config user.name Loomstead Fixture",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "git add --all",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "warning: unable to access 'C:/Users/Administrator/.config/git/ignore': Permission denied\n"
+            },
+            {
+              "command": "git commit --quiet -m initial fixture repo",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "git clone --quiet <source-repo> <checkout>",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "warning: unable to access 'C:/Users/Administrator/.config/git/ignore': Permission denied\n"
+            }
+          ],
+          "git": {
+            "defaultBranch": "main",
+            "sourceHead": "7fc553dc36ff14df903f07ff8479f7835add94ad",
+            "checkoutHead": "7fc553dc36ff14df903f07ff8479f7835add94ad",
+            "statusAfterPatch": [
+              " M src/normalizer.py",
+              " M src/report.py"
+            ]
+          },
+          "sourceRepoFiles": [
+            "README.md",
+            "src/__init__.py",
+            "src/normalizer.py",
+            "src/report.py",
+            "tests/test_skill.py"
+          ],
+          "workspaceFiles": [
+            "README.md",
+            "src/__init__.py",
+            "src/normalizer.py",
+            "src/report.py",
+            "tests/test_skill.py"
+          ],
+          "workspaceFileHashes": {
+            "README.md": "b103f613c1e586660feeff19cc8a7c65b6396391c1e032ac3b7948389d33e055",
+            "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "src/normalizer.py": "b454750d8e393aadba401d0d39e5fc5fa04d8ef80057bd78594c4c8600993004",
+            "src/report.py": "3893b79d87deee0f6ebd5c20321a9d75b5ca618ad3c02ea9c6ccf6bfbeff73d0",
+            "tests/test_skill.py": "a1433943132fc14d9b867f857e44c7c5780e17916a8765ee068703a1e0c73bac"
+          }
+        },
+        "sourceArtifactId": "skill_cross_file_regression.patch",
+        "sourceEventIds": [
+          "coding_evt_007"
+        ],
+        "sha256": "fbb5e7859b377730e1c77159a0c53b8beef6d532d3d8e4a00e61455a8a0dc1be"
+      }
+    },
+    "reviewReports": {
+      "skill_cross_file_regression.review": {
+        "reviewReportId": "skill_cross_file_regression.review",
+        "status": "approved",
+        "sourcePrePatchTestReportId": "skill_cross_file_regression.pre_patch_tests",
+        "sourceTestReportId": "skill_cross_file_regression.tests",
+        "sourceEventIds": [
+          "coding_evt_006",
+          "coding_evt_008"
+        ],
+        "repoFixtureId": "loomstead-debug-cross-file-regression-fixture.v1",
+        "reviewRubricPath": null,
+        "metadataPath": null,
+        "citedMemoryIds": [
+          "prior_failure.skip_tests",
+          "prior_failure.failing_test_first"
+        ],
+        "checklist": [
+          {
+            "id": "repo_fixture_loaded",
+            "passed": true
+          },
+          {
+            "id": "design_before_diff",
+            "passed": true
+          },
+          {
+            "id": "pre_patch_failure_observed",
+            "passed": true
+          },
+          {
+            "id": "real_dependency_graph_recorded",
+            "passed": true
+          },
+          {
+            "id": "dependency_evidence_chain_confirmed",
+            "passed": true
+          },
+          {
+            "id": "regression_case_covered",
+            "passed": true
+          },
+          {
+            "id": "single_file_patch_still_fails",
+            "passed": true
+          },
+          {
+            "id": "external_checkout_tests_before_review",
+            "passed": true
+          },
+          {
+            "id": "failure_memory_cited",
+            "passed": true
+          }
+        ],
+        "dependencyEvidenceChain": {
+          "chainVersion": "coding.dependency_evidence_chain.v2",
+          "prePatch": {
+            "testReportId": "skill_cross_file_regression.pre_patch_tests",
+            "testRunner": "pytest",
+            "command": "python -m pytest tests/test_skill.py -q",
+            "exitCode": 1,
+            "failingCaseIds": [
+              "pytest_suite"
+            ],
+            "sourceEventIds": [
+              "coding_evt_005"
+            ],
+            "sha256": "2dafb45cc5ab9e8ae7106be5a202c58b0c9b05805bfff80652fe6660484fe348"
+          },
+          "postPatch": {
+            "testReportId": "skill_cross_file_regression.tests",
+            "testRunner": "pytest",
+            "command": "python -m pytest tests/test_skill.py -q",
+            "exitCode": 0,
+            "passingCaseIds": [
+              "pytest_suite"
+            ],
+            "sourceEventIds": [
+              "coding_evt_007"
+            ],
+            "sha256": "fbb5e7859b377730e1c77159a0c53b8beef6d532d3d8e4a00e61455a8a0dc1be"
+          },
+          "partialPatchFailures": [
+            {
+              "testReportId": "skill_cross_file_regression.patch.single_file.src_normalizer.py.tests",
+              "patchedFile": "src/normalizer.py",
+              "testRunner": "pytest",
+              "command": "python -m pytest tests/test_skill.py -q",
+              "exitCode": 1,
+              "failureObserved": true,
+              "failingCaseIds": [
+                "pytest_suite"
+              ],
+              "sourceEventIds": [
+                "coding_evt_007"
+              ],
+              "sha256": "985b5db3262e71c9c5f196d418c08eaeb3b69c2dacbaf9e01b88bcf2f7e6ac7c"
+            },
+            {
+              "testReportId": "skill_cross_file_regression.patch.single_file.src_report.py.tests",
+              "patchedFile": "src/report.py",
+              "testRunner": "pytest",
+              "command": "python -m pytest tests/test_skill.py -q",
+              "exitCode": 1,
+              "failureObserved": true,
+              "failingCaseIds": [
+                "pytest_suite"
+              ],
+              "sourceEventIds": [
+                "coding_evt_007"
+              ],
+              "sha256": "a425d0fff9b938a13a372516637bd98ba944decfc9cc940f8f3d28ed618fff54"
+            }
+          ],
+          "consistentRunner": true,
+          "allExpectedFailuresObserved": true,
+          "transitionEdges": [
+            {
+              "from": "skill_cross_file_regression.pre_patch_tests",
+              "to": "skill_cross_file_regression.patch.single_file.src_normalizer.py.tests",
+              "reason": "single_file_partial_patch_replays_pre_patch_failure",
+              "patchedFile": "src/normalizer.py"
+            },
+            {
+              "from": "skill_cross_file_regression.patch.single_file.src_normalizer.py.tests",
+              "to": "skill_cross_file_regression.tests",
+              "reason": "coordinated_cross_file_patch_resolves_failure",
+              "patchedFile": "src/normalizer.py"
+            },
+            {
+              "from": "skill_cross_file_regression.pre_patch_tests",
+              "to": "skill_cross_file_regression.patch.single_file.src_report.py.tests",
+              "reason": "single_file_partial_patch_replays_pre_patch_failure",
+              "patchedFile": "src/report.py"
+            },
+            {
+              "from": "skill_cross_file_regression.patch.single_file.src_report.py.tests",
+              "to": "skill_cross_file_regression.tests",
+              "reason": "coordinated_cross_file_patch_resolves_failure",
+              "patchedFile": "src/report.py"
+            }
+          ],
+          "caseEvidence": {
+            "prePatchFailingCaseIds": [
+              "pytest_suite"
+            ],
+            "partialPatchFailingCaseIdsByFile": {
+              "src/normalizer.py": [
+                "pytest_suite"
+              ],
+              "src/report.py": [
+                "pytest_suite"
+              ]
+            },
+            "postPatchPassingCaseIds": [
+              "pytest_suite"
+            ]
+          }
+        },
+        "sha256": "67b5724030102128b65764b2fbe7440a1d76303b5c673f798d726ba147a98ad4"
+      }
+    },
+    "counterfactualReplays": {
+      "skill_cross_file_regression.review": {
+        "replayVersion": "coding.domain_counterfactual_replay.v1",
+        "goalId": "coding.skill_cross_file_regression_dryrun",
+        "selectedWithEvidence": "review.approve_patch",
+        "featureSnapshot": {
+          "repo_fixture_loaded": true,
+          "non_python_fixture_loaded": false,
+          "implementation_diff": true,
+          "metadata_dependency_updated": false,
+          "pre_patch_failure_observed": true,
+          "post_patch_tests_passed": true,
+          "derived_dependency_graph_recorded": true,
+          "single_file_replay_failed": true,
+          "dependency_chain_confirmed": true,
+          "reviewer_conflict_observed": false,
+          "arbitration_contributing_sources": false,
+          "review_source_links": true,
+          "review_approved": true,
+          "optional_readme_context": true
+        },
+        "comparisonCount": 7,
+        "changedDecisionCount": 6,
+        "criticalChangeCount": 6,
+        "controlStableCount": 1,
+        "changeRate": 0.857143,
+        "criticalChangeRate": 1.0,
+        "controlStabilityRate": 1.0,
+        "comparisons": [
+          {
+            "ablationId": "remove_pre_patch_failure",
+            "kind": "critical",
+            "removedEvidenceIds": [
+              "pre_patch_failure_observed"
+            ],
+            "selectedWithEvidence": "review.approve_patch",
+            "selectedWithoutEvidence": "evaluation.record_pre_patch_failure",
+            "changed": true,
+            "reason": "repair scenarios must show the red test before applying a fix"
+          },
+          {
+            "ablationId": "remove_post_patch_tests",
+            "kind": "critical",
+            "removedEvidenceIds": [
+              "post_patch_tests_passed"
+            ],
+            "selectedWithEvidence": "review.approve_patch",
+            "selectedWithoutEvidence": "evaluation.run_external_checkout_tests",
+            "changed": true,
+            "reason": "post-patch checkout test is the final approval gate"
+          },
+          {
+            "ablationId": "remove_review_source_links",
+            "kind": "critical",
+            "removedEvidenceIds": [
+              "review_source_links"
+            ],
+            "selectedWithEvidence": "review.approve_patch",
+            "selectedWithoutEvidence": "review.request_source_event_links",
+            "changed": true,
+            "reason": "review approval must stay linked to test/source events"
+          },
+          {
+            "ablationId": "remove_optional_readme_context",
+            "kind": "control",
+            "removedEvidenceIds": [
+              "optional_readme_context"
+            ],
+            "selectedWithEvidence": "review.approve_patch",
+            "selectedWithoutEvidence": "review.approve_patch",
+            "changed": false,
+            "reason": "non-gating context removal should keep the process route stable"
+          },
+          {
+            "ablationId": "remove_derived_dependency_graph",
+            "kind": "critical",
+            "removedEvidenceIds": [
+              "derived_dependency_graph_recorded"
+            ],
+            "selectedWithEvidence": "review.approve_patch",
+            "selectedWithoutEvidence": "evaluation.derive_dependency_graph",
+            "changed": true,
+            "reason": "cross-file repair needs import graph evidence derived from real files"
+          },
+          {
+            "ablationId": "remove_single_file_replay_failures",
+            "kind": "critical",
+            "removedEvidenceIds": [
+              "single_file_replay_failed"
+            ],
+            "selectedWithEvidence": "review.approve_patch",
+            "selectedWithoutEvidence": "evaluation.run_single_file_replays",
+            "changed": true,
+            "reason": "single-file partial replay proves the repair needs coordinated edits"
+          },
+          {
+            "ablationId": "remove_dependency_chain",
+            "kind": "critical",
+            "removedEvidenceIds": [
+              "dependency_chain_confirmed"
+            ],
+            "selectedWithEvidence": "review.approve_patch",
+            "selectedWithoutEvidence": "review.request_dependency_evidence_chain",
+            "changed": true,
+            "reason": "review requires pre/partial/post dependency evidence chain"
+          }
+        ]
+      }
+    },
+    "dependencies": {
+      "repoFixtureId": "loomstead-debug-cross-file-regression-fixture.v1",
+      "testRunner": "pytest"
+    }
+  }
+}

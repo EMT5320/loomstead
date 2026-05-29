@@ -1,0 +1,572 @@
+{
+  "packetVersion": "phase2.eval_reviewer_sampling_packet.v1",
+  "packetId": "packet_2026-05-28_manual_reviewer_local",
+  "createdAt": "2026-05-28T07:50:26+00:00",
+  "samplingPolicy": {
+    "seed": 20260527,
+    "suiteSampleCounts": {
+      "process_fidelity": 6,
+      "cross_domain_adapter": 6
+    },
+    "rule": "优先场景覆盖，每个场景先抽 1 个 seed，再按需要补齐。"
+  },
+  "sourceRuns": [
+    {
+      "suite": "process_fidelity",
+      "runDirName": "run_2026-05-28T07-43-32Z",
+      "manifestPath": ".run/eval-runs/run_2026-05-28T07-43-32Z/manifest.json",
+      "manifestSha256": "f8b3fe4e4254999b304a95ec1a336c16502bc484a36ddc136514fd1c76d86f19",
+      "createdAt": "2026-05-28T07:43:32+00:00",
+      "ok": true,
+      "git": {
+        "commit": "b1c006fbf141f2d19122ef3cd517778029cc7290",
+        "shortCommit": "b1c006f",
+        "dirty": false
+      }
+    },
+    {
+      "suite": "cross_domain_adapter",
+      "runDirName": "domain_2026-05-28T07-49-46Z",
+      "manifestPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/manifest.json",
+      "manifestSha256": "75e8c4be26851bbe35992e39b140a745e7d6eef3592391697ea20cd55dbe8a32",
+      "createdAt": "2026-05-28T07:49:46+00:00",
+      "ok": true,
+      "git": {
+        "commit": "b1c006fbf141f2d19122ef3cd517778029cc7290",
+        "shortCommit": "b1c006f",
+        "dirty": false
+      }
+    }
+  ],
+  "manualGate": {
+    "status": "manual_review_required",
+    "reason": "需要人工 reviewer 对抽样条目进行 1-5 分主观打分与文字判断；脚本不自动评分。",
+    "stopCondition": "完成 reviewer_score_sheet.csv 后，人工在 PR/报告中回填结论。"
+  },
+  "reviewChecklist": [
+    "核对 per_scenario 与 companionArtifacts 的 sha256 与 manifest 一致。",
+    "给每条样本填写 process_believability_score_1_to_5。",
+    "给每条样本填写 causal_trace_clarity_1_to_5，并补充一句证据解释。",
+    "若发现 shortcut 或 trace 断链，标记 pass_fail_judgement=fail 并记录原因。"
+  ],
+  "samples": [
+    {
+      "sampleId": "run_2026-05-28T07-43-32Z:pf.branna_forgiveness_requires_memory:seed04",
+      "suite": "process_fidelity",
+      "runDirName": "run_2026-05-28T07-43-32Z",
+      "runManifestPath": ".run/eval-runs/run_2026-05-28T07-43-32Z/manifest.json",
+      "scenarioId": "pf.branna_forgiveness_requires_memory",
+      "baseline": "full_motivational_delegation",
+      "seed": 4,
+      "perScenarioArtifact": {
+        "path": "per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed04.json",
+        "repoPath": ".run/eval-runs/run_2026-05-28T07-43-32Z/per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed04.json",
+        "kind": "per_scenario_json",
+        "bytes": 54665,
+        "sha256": "0db98114a862d9f049459272154ddadb9fc787aa6e9fd116d67be782437a7d64"
+      },
+      "companionArtifacts": [
+        {
+          "path": "counterfactual_replay.jsonl",
+          "repoPath": ".run/eval-runs/run_2026-05-28T07-43-32Z/counterfactual_replay.jsonl",
+          "kind": "counterfactual_replay_jsonl",
+          "bytes": 477550,
+          "sha256": "578cfcc3578c8955a0f44dafbe6428e4c91eb0e32cc0cb9ea9718c48fc1a8fd7"
+        },
+        {
+          "path": "memory_ablation_trace.jsonl",
+          "repoPath": ".run/eval-runs/run_2026-05-28T07-43-32Z/memory_ablation_trace.jsonl",
+          "kind": "memory_ablation_trace_jsonl",
+          "bytes": 109500,
+          "sha256": "5614b9bc1979912924e0ba8c1a4abe7699fd703bda3a6be8c0ffcef1ab0520a5"
+        }
+      ]
+    },
+    {
+      "sampleId": "run_2026-05-28T07-43-32Z:pf.repair_talk_requires_memory_trace:seed03",
+      "suite": "process_fidelity",
+      "runDirName": "run_2026-05-28T07-43-32Z",
+      "runManifestPath": ".run/eval-runs/run_2026-05-28T07-43-32Z/manifest.json",
+      "scenarioId": "pf.repair_talk_requires_memory_trace",
+      "baseline": "shuffled_memory_owner",
+      "seed": 3,
+      "perScenarioArtifact": {
+        "path": "per_scenario/pf.repair_talk_requires_memory_trace_shuffled_memory_owner_seed03.json",
+        "repoPath": ".run/eval-runs/run_2026-05-28T07-43-32Z/per_scenario/pf.repair_talk_requires_memory_trace_shuffled_memory_owner_seed03.json",
+        "kind": "per_scenario_json",
+        "bytes": 39709,
+        "sha256": "ce71475a0045787e2997d5a485cd58a97d8b9f131ae328633bc3611a416d8534"
+      },
+      "companionArtifacts": [
+        {
+          "path": "counterfactual_replay.jsonl",
+          "repoPath": ".run/eval-runs/run_2026-05-28T07-43-32Z/counterfactual_replay.jsonl",
+          "kind": "counterfactual_replay_jsonl",
+          "bytes": 477550,
+          "sha256": "578cfcc3578c8955a0f44dafbe6428e4c91eb0e32cc0cb9ea9718c48fc1a8fd7"
+        },
+        {
+          "path": "memory_ablation_trace.jsonl",
+          "repoPath": ".run/eval-runs/run_2026-05-28T07-43-32Z/memory_ablation_trace.jsonl",
+          "kind": "memory_ablation_trace_jsonl",
+          "bytes": 109500,
+          "sha256": "5614b9bc1979912924e0ba8c1a4abe7699fd703bda3a6be8c0ffcef1ab0520a5"
+        }
+      ]
+    },
+    {
+      "sampleId": "run_2026-05-28T07-43-32Z:pf.shared_chat_builds_traceable_trust:seed02",
+      "suite": "process_fidelity",
+      "runDirName": "run_2026-05-28T07-43-32Z",
+      "runManifestPath": ".run/eval-runs/run_2026-05-28T07-43-32Z/manifest.json",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust",
+      "baseline": "hard_delegation",
+      "seed": 2,
+      "perScenarioArtifact": {
+        "path": "per_scenario/pf.shared_chat_builds_traceable_trust_hard_delegation_seed02.json",
+        "repoPath": ".run/eval-runs/run_2026-05-28T07-43-32Z/per_scenario/pf.shared_chat_builds_traceable_trust_hard_delegation_seed02.json",
+        "kind": "per_scenario_json",
+        "bytes": 1792,
+        "sha256": "8aec020f4ab30293cbfa9e3a041a12ccfaeab4d6a4800979219be09c076171a1"
+      },
+      "companionArtifacts": [
+        {
+          "path": "counterfactual_replay.jsonl",
+          "repoPath": ".run/eval-runs/run_2026-05-28T07-43-32Z/counterfactual_replay.jsonl",
+          "kind": "counterfactual_replay_jsonl",
+          "bytes": 477550,
+          "sha256": "578cfcc3578c8955a0f44dafbe6428e4c91eb0e32cc0cb9ea9718c48fc1a8fd7"
+        },
+        {
+          "path": "memory_ablation_trace.jsonl",
+          "repoPath": ".run/eval-runs/run_2026-05-28T07-43-32Z/memory_ablation_trace.jsonl",
+          "kind": "memory_ablation_trace_jsonl",
+          "bytes": 109500,
+          "sha256": "5614b9bc1979912924e0ba8c1a4abe7699fd703bda3a6be8c0ffcef1ab0520a5"
+        }
+      ]
+    },
+    {
+      "sampleId": "run_2026-05-28T07-43-32Z:pf.affiliation_bias_remains_agent_initiated:seed02",
+      "suite": "process_fidelity",
+      "runDirName": "run_2026-05-28T07-43-32Z",
+      "runManifestPath": ".run/eval-runs/run_2026-05-28T07-43-32Z/manifest.json",
+      "scenarioId": "pf.affiliation_bias_remains_agent_initiated",
+      "baseline": "hard_delegation",
+      "seed": 2,
+      "perScenarioArtifact": {
+        "path": "per_scenario/pf.affiliation_bias_remains_agent_initiated_hard_delegation_seed02.json",
+        "repoPath": ".run/eval-runs/run_2026-05-28T07-43-32Z/per_scenario/pf.affiliation_bias_remains_agent_initiated_hard_delegation_seed02.json",
+        "kind": "per_scenario_json",
+        "bytes": 1821,
+        "sha256": "5d39d86e2cdbe3776753e87da1cc87aab49c003cc03fc0d14ef81bf5ad761455"
+      },
+      "companionArtifacts": [
+        {
+          "path": "counterfactual_replay.jsonl",
+          "repoPath": ".run/eval-runs/run_2026-05-28T07-43-32Z/counterfactual_replay.jsonl",
+          "kind": "counterfactual_replay_jsonl",
+          "bytes": 477550,
+          "sha256": "578cfcc3578c8955a0f44dafbe6428e4c91eb0e32cc0cb9ea9718c48fc1a8fd7"
+        },
+        {
+          "path": "memory_ablation_trace.jsonl",
+          "repoPath": ".run/eval-runs/run_2026-05-28T07-43-32Z/memory_ablation_trace.jsonl",
+          "kind": "memory_ablation_trace_jsonl",
+          "bytes": 109500,
+          "sha256": "5614b9bc1979912924e0ba8c1a4abe7699fd703bda3a6be8c0ffcef1ab0520a5"
+        }
+      ]
+    },
+    {
+      "sampleId": "run_2026-05-28T07-43-32Z:pf.branna_forgiveness_requires_memory:seed05",
+      "suite": "process_fidelity",
+      "runDirName": "run_2026-05-28T07-43-32Z",
+      "runManifestPath": ".run/eval-runs/run_2026-05-28T07-43-32Z/manifest.json",
+      "scenarioId": "pf.branna_forgiveness_requires_memory",
+      "baseline": "no_relationship_edge",
+      "seed": 5,
+      "perScenarioArtifact": {
+        "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_relationship_edge_seed05.json",
+        "repoPath": ".run/eval-runs/run_2026-05-28T07-43-32Z/per_scenario/pf.branna_forgiveness_requires_memory_no_relationship_edge_seed05.json",
+        "kind": "per_scenario_json",
+        "bytes": 51580,
+        "sha256": "1a76cdbb706e99a3ae2eb7f619c62855e6db4b1b61c266b17af31fbc85e1fe80"
+      },
+      "companionArtifacts": [
+        {
+          "path": "counterfactual_replay.jsonl",
+          "repoPath": ".run/eval-runs/run_2026-05-28T07-43-32Z/counterfactual_replay.jsonl",
+          "kind": "counterfactual_replay_jsonl",
+          "bytes": 477550,
+          "sha256": "578cfcc3578c8955a0f44dafbe6428e4c91eb0e32cc0cb9ea9718c48fc1a8fd7"
+        },
+        {
+          "path": "memory_ablation_trace.jsonl",
+          "repoPath": ".run/eval-runs/run_2026-05-28T07-43-32Z/memory_ablation_trace.jsonl",
+          "kind": "memory_ablation_trace_jsonl",
+          "bytes": 109500,
+          "sha256": "5614b9bc1979912924e0ba8c1a4abe7699fd703bda3a6be8c0ffcef1ab0520a5"
+        }
+      ]
+    },
+    {
+      "sampleId": "run_2026-05-28T07-43-32Z:pf.branna_forgiveness_requires_memory:seed02",
+      "suite": "process_fidelity",
+      "runDirName": "run_2026-05-28T07-43-32Z",
+      "runManifestPath": ".run/eval-runs/run_2026-05-28T07-43-32Z/manifest.json",
+      "scenarioId": "pf.branna_forgiveness_requires_memory",
+      "baseline": "no_relationship_edge",
+      "seed": 2,
+      "perScenarioArtifact": {
+        "path": "per_scenario/pf.branna_forgiveness_requires_memory_no_relationship_edge_seed02.json",
+        "repoPath": ".run/eval-runs/run_2026-05-28T07-43-32Z/per_scenario/pf.branna_forgiveness_requires_memory_no_relationship_edge_seed02.json",
+        "kind": "per_scenario_json",
+        "bytes": 51580,
+        "sha256": "4ca719b50afd4fcfa89dbd40518c4d384c48762c77ca07275b34172b7da3db72"
+      },
+      "companionArtifacts": [
+        {
+          "path": "counterfactual_replay.jsonl",
+          "repoPath": ".run/eval-runs/run_2026-05-28T07-43-32Z/counterfactual_replay.jsonl",
+          "kind": "counterfactual_replay_jsonl",
+          "bytes": 477550,
+          "sha256": "578cfcc3578c8955a0f44dafbe6428e4c91eb0e32cc0cb9ea9718c48fc1a8fd7"
+        },
+        {
+          "path": "memory_ablation_trace.jsonl",
+          "repoPath": ".run/eval-runs/run_2026-05-28T07-43-32Z/memory_ablation_trace.jsonl",
+          "kind": "memory_ablation_trace_jsonl",
+          "bytes": 109500,
+          "sha256": "5614b9bc1979912924e0ba8c1a4abe7699fd703bda3a6be8c0ffcef1ab0520a5"
+        }
+      ]
+    },
+    {
+      "sampleId": "domain_2026-05-28T07-49-46Z:narrative.repair_trust_memory:seed05",
+      "suite": "cross_domain_adapter",
+      "runDirName": "domain_2026-05-28T07-49-46Z",
+      "runManifestPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/manifest.json",
+      "scenarioId": "narrative.repair_trust_memory",
+      "baseline": "full_motivational_delegation",
+      "seed": 5,
+      "perScenarioArtifact": {
+        "path": "per_scenario/narrative.repair_trust_memory_seed05.json",
+        "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/per_scenario/narrative.repair_trust_memory_seed05.json",
+        "kind": "per_scenario_json",
+        "bytes": 11926,
+        "sha256": "1950cf94d4da692b56791fe136211cfa085451d7dc47e1a4c267d2d825c38238"
+      },
+      "companionArtifacts": [
+        {
+          "path": "domain_evidence/narrative.repair_trust_memory_seed05/counterfactual_replay_narrative.repair_trust_memory.route_replay.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/narrative.repair_trust_memory_seed05/counterfactual_replay_narrative.repair_trust_memory.route_replay.json",
+          "kind": "domain_evidence_counterfactual_replay_json",
+          "bytes": 3079,
+          "sha256": "b033efe025a94385491b0ca7a6603368a725de32b2288f8be5f4a45043c964f8"
+        }
+      ]
+    },
+    {
+      "sampleId": "domain_2026-05-28T07-49-46Z:coding.skill_javascript_smoke_dryrun:seed01",
+      "suite": "cross_domain_adapter",
+      "runDirName": "domain_2026-05-28T07-49-46Z",
+      "runManifestPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/manifest.json",
+      "scenarioId": "coding.skill_javascript_smoke_dryrun",
+      "baseline": "full_motivational_delegation",
+      "seed": 1,
+      "perScenarioArtifact": {
+        "path": "per_scenario/coding.skill_javascript_smoke_dryrun_seed01.json",
+        "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/per_scenario/coding.skill_javascript_smoke_dryrun_seed01.json",
+        "kind": "per_scenario_json",
+        "bytes": 28421,
+        "sha256": "3b7f5a73a0d889de94372f6cff36af8ddddf0ef0fd72305d91b476d022efede6"
+      },
+      "companionArtifacts": [
+        {
+          "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed01/counterfactual_replay_skill_javascript_smoke.review.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_javascript_smoke_dryrun_seed01/counterfactual_replay_skill_javascript_smoke.review.json",
+          "kind": "domain_evidence_counterfactual_replay_json",
+          "bytes": 2553,
+          "sha256": "e1aee95cbc10c57eb09694074b38074cfe464556654e4cae265ca380b896b3b6"
+        },
+        {
+          "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed01/derived_dependency_graph.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_javascript_smoke_dryrun_seed01/derived_dependency_graph.json",
+          "kind": "domain_evidence_derived_dependency_graph_json",
+          "bytes": 94,
+          "sha256": "98d82966c44a258e6111aaaf8d8d97dd64bb2f6cb9195399ae680179017ce95e"
+        },
+        {
+          "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed01/repo_fixture.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_javascript_smoke_dryrun_seed01/repo_fixture.json",
+          "kind": "domain_evidence_repo_fixture_json",
+          "bytes": 3462,
+          "sha256": "aa3e6b6185752212072f59f6882f9c41d6ed339c47e938d29d994f23ec3725ae"
+        },
+        {
+          "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed01/review_report_skill_javascript_smoke.review.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_javascript_smoke_dryrun_seed01/review_report_skill_javascript_smoke.review.json",
+          "kind": "domain_evidence_review_report_json",
+          "bytes": 821,
+          "sha256": "b4de121868f0ceb3c1e47877c09a59131dadac612fe91116e0b84d5f73ea04dd"
+        },
+        {
+          "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed01/skill_javascript_smoke.patch",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_javascript_smoke_dryrun_seed01/skill_javascript_smoke.patch",
+          "kind": "domain_evidence_patch_diff",
+          "bytes": 507,
+          "sha256": "ae7bfa62b70d17d2d61e6f062c25cd10f2ade95508eb7b0ff8281e85330fc30a"
+        },
+        {
+          "path": "domain_evidence/coding.skill_javascript_smoke_dryrun_seed01/test_report_skill_javascript_smoke.tests.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_javascript_smoke_dryrun_seed01/test_report_skill_javascript_smoke.tests.json",
+          "kind": "domain_evidence_test_report_json",
+          "bytes": 4283,
+          "sha256": "d27144f4c2c2f596df71ba231e81c93ac4c3d84aa2c338f00fd6b77cbce3841b"
+        }
+      ]
+    },
+    {
+      "sampleId": "domain_2026-05-28T07-49-46Z:coding.skill_prototype_dryrun:seed03",
+      "suite": "cross_domain_adapter",
+      "runDirName": "domain_2026-05-28T07-49-46Z",
+      "runManifestPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/manifest.json",
+      "scenarioId": "coding.skill_prototype_dryrun",
+      "baseline": "full_motivational_delegation",
+      "seed": 3,
+      "perScenarioArtifact": {
+        "path": "per_scenario/coding.skill_prototype_dryrun_seed03.json",
+        "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/per_scenario/coding.skill_prototype_dryrun_seed03.json",
+        "kind": "per_scenario_json",
+        "bytes": 30601,
+        "sha256": "01ece862d89bd3aecf50b3fc1565fe1d8ba05eeeb8c62d7490ed3360be026b52"
+      },
+      "companionArtifacts": [
+        {
+          "path": "domain_evidence/coding.skill_prototype_dryrun_seed03/counterfactual_replay_skill_prototype.review.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_prototype_dryrun_seed03/counterfactual_replay_skill_prototype.review.json",
+          "kind": "domain_evidence_counterfactual_replay_json",
+          "bytes": 2149,
+          "sha256": "003a13d541c4d7714faffd0bade00d02902c38fc107e3cf2697791816f9c00a8"
+        },
+        {
+          "path": "domain_evidence/coding.skill_prototype_dryrun_seed03/derived_dependency_graph.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_prototype_dryrun_seed03/derived_dependency_graph.json",
+          "kind": "domain_evidence_derived_dependency_graph_json",
+          "bytes": 125,
+          "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6"
+        },
+        {
+          "path": "domain_evidence/coding.skill_prototype_dryrun_seed03/repo_fixture.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_prototype_dryrun_seed03/repo_fixture.json",
+          "kind": "domain_evidence_repo_fixture_json",
+          "bytes": 5032,
+          "sha256": "5f60dab6caea18e1fb3459d4e35d7578cc5c6920a3a3fafe21f8c5cdab2e3e81"
+        },
+        {
+          "path": "domain_evidence/coding.skill_prototype_dryrun_seed03/review_report_skill_prototype.review.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_prototype_dryrun_seed03/review_report_skill_prototype.review.json",
+          "kind": "domain_evidence_review_report_json",
+          "bytes": 802,
+          "sha256": "124054549bf446038dd3c971694b48343cf342849f52fafe098ba97440b518b7"
+        },
+        {
+          "path": "domain_evidence/coding.skill_prototype_dryrun_seed03/skill_prototype.patch",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_prototype_dryrun_seed03/skill_prototype.patch",
+          "kind": "domain_evidence_patch_diff",
+          "bytes": 299,
+          "sha256": "6a3e15fa6fe1640483d48c9f3b25ac5dd10bf705f1815705924cb3a82c979249"
+        },
+        {
+          "path": "domain_evidence/coding.skill_prototype_dryrun_seed03/test_report_skill_prototype.tests.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_prototype_dryrun_seed03/test_report_skill_prototype.tests.json",
+          "kind": "domain_evidence_test_report_json",
+          "bytes": 4383,
+          "sha256": "0985f625ee8d0b03dc4e18b0ae69e800f2b18d7e1598d24bd43f54415d6b2123"
+        }
+      ]
+    },
+    {
+      "sampleId": "domain_2026-05-28T07-49-46Z:coding.skill_multifile_review_dryrun:seed04",
+      "suite": "cross_domain_adapter",
+      "runDirName": "domain_2026-05-28T07-49-46Z",
+      "runManifestPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/manifest.json",
+      "scenarioId": "coding.skill_multifile_review_dryrun",
+      "baseline": "full_motivational_delegation",
+      "seed": 4,
+      "perScenarioArtifact": {
+        "path": "per_scenario/coding.skill_multifile_review_dryrun_seed04.json",
+        "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/per_scenario/coding.skill_multifile_review_dryrun_seed04.json",
+        "kind": "per_scenario_json",
+        "bytes": 36992,
+        "sha256": "4e69aece63a3faa1ab6b35635c02a6b994b06ef17a7068352ba9824a2fb0e935"
+      },
+      "companionArtifacts": [
+        {
+          "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed04/counterfactual_replay_skill_multifile_review.review.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_multifile_review_dryrun_seed04/counterfactual_replay_skill_multifile_review.review.json",
+          "kind": "domain_evidence_counterfactual_replay_json",
+          "bytes": 2573,
+          "sha256": "49deeb4f3852ff7fd81c0fd313e8292f7de563d4237691500ad5a8eb2f1f77ec"
+        },
+        {
+          "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed04/derived_dependency_graph.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_multifile_review_dryrun_seed04/derived_dependency_graph.json",
+          "kind": "domain_evidence_derived_dependency_graph_json",
+          "bytes": 125,
+          "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6"
+        },
+        {
+          "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed04/repo_fixture.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_multifile_review_dryrun_seed04/repo_fixture.json",
+          "kind": "domain_evidence_repo_fixture_json",
+          "bytes": 7124,
+          "sha256": "4297fcfccb8818951bb6d10fb19339c533055ea134377cd6fb3c74e08e4edb73"
+        },
+        {
+          "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed04/review_report_skill_multifile_review.review.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_multifile_review_dryrun_seed04/review_report_skill_multifile_review.review.json",
+          "kind": "domain_evidence_review_report_json",
+          "bytes": 1028,
+          "sha256": "47a0dfcc6744a56dd331c49b817fc45d16ab3fdd5590649ea6a6c5a981e15aa8"
+        },
+        {
+          "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed04/skill_multifile_review.patch",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_multifile_review_dryrun_seed04/skill_multifile_review.patch",
+          "kind": "domain_evidence_patch_diff",
+          "bytes": 950,
+          "sha256": "f276639d15030af643d7e605bf2b1e170e42ab68e272a71e8de2718a5e5fe90b"
+        },
+        {
+          "path": "domain_evidence/coding.skill_multifile_review_dryrun_seed04/test_report_skill_multifile_review.tests.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_multifile_review_dryrun_seed04/test_report_skill_multifile_review.tests.json",
+          "kind": "domain_evidence_test_report_json",
+          "bytes": 4447,
+          "sha256": "2b0ff0422c92814406dc62addb4f6f3529b0b32f6d54aea843b56f823fc077c7"
+        }
+      ]
+    },
+    {
+      "sampleId": "domain_2026-05-28T07-49-46Z:coding.skill_reviewer_disagreement_dryrun:seed03",
+      "suite": "cross_domain_adapter",
+      "runDirName": "domain_2026-05-28T07-49-46Z",
+      "runManifestPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/manifest.json",
+      "scenarioId": "coding.skill_reviewer_disagreement_dryrun",
+      "baseline": "full_motivational_delegation",
+      "seed": 3,
+      "perScenarioArtifact": {
+        "path": "per_scenario/coding.skill_reviewer_disagreement_dryrun_seed03.json",
+        "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/per_scenario/coding.skill_reviewer_disagreement_dryrun_seed03.json",
+        "kind": "per_scenario_json",
+        "bytes": 41220,
+        "sha256": "9f4d6e854bf81289e52131e2af6f43ec5cadb37654ef3d668c1e0496448ab6f3"
+      },
+      "companionArtifacts": [
+        {
+          "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed03/counterfactual_replay_skill_reviewer_disagreement.review.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed03/counterfactual_replay_skill_reviewer_disagreement.review.json",
+          "kind": "domain_evidence_counterfactual_replay_json",
+          "bytes": 2959,
+          "sha256": "5ba9c2d824dbbfa00f42c07d4874b4246ca6021aa55a94de8a8130d1b0c47392"
+        },
+        {
+          "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed03/derived_dependency_graph.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed03/derived_dependency_graph.json",
+          "kind": "domain_evidence_derived_dependency_graph_json",
+          "bytes": 125,
+          "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6"
+        },
+        {
+          "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed03/repo_fixture.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed03/repo_fixture.json",
+          "kind": "domain_evidence_repo_fixture_json",
+          "bytes": 5878,
+          "sha256": "6914f9b63b0556da4439c932cd35929e3425b009fe98d5d5a5a5def90b08424b"
+        },
+        {
+          "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed03/review_report_skill_reviewer_disagreement.review.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed03/review_report_skill_reviewer_disagreement.review.json",
+          "kind": "domain_evidence_review_report_json",
+          "bytes": 4356,
+          "sha256": "918c632711f443acad21ff4ce701b572080305271315edb80a20cda867f8b919"
+        },
+        {
+          "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed03/skill_reviewer_disagreement.patch",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed03/skill_reviewer_disagreement.patch",
+          "kind": "domain_evidence_patch_diff",
+          "bytes": 291,
+          "sha256": "61fa5f6cbe0a0d459020fd087d8d0f3f8951c7e8bea4d3f812d1df0bf6e2b5e2"
+        },
+        {
+          "path": "domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed03/test_report_skill_reviewer_disagreement.tests.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_reviewer_disagreement_dryrun_seed03/test_report_skill_reviewer_disagreement.tests.json",
+          "kind": "domain_evidence_test_report_json",
+          "bytes": 4457,
+          "sha256": "7ae66d4144823ca7cb547d3fc9e2298f0c44a5c6bc4926d5ccc868626337eb4b"
+        }
+      ]
+    },
+    {
+      "sampleId": "domain_2026-05-28T07-49-46Z:coding.skill_regression_fix_dryrun:seed02",
+      "suite": "cross_domain_adapter",
+      "runDirName": "domain_2026-05-28T07-49-46Z",
+      "runManifestPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/manifest.json",
+      "scenarioId": "coding.skill_regression_fix_dryrun",
+      "baseline": "full_motivational_delegation",
+      "seed": 2,
+      "perScenarioArtifact": {
+        "path": "per_scenario/coding.skill_regression_fix_dryrun_seed02.json",
+        "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/per_scenario/coding.skill_regression_fix_dryrun_seed02.json",
+        "kind": "per_scenario_json",
+        "bytes": 31363,
+        "sha256": "8a42e2b5fea1156001c7288b7d673e972cc5cdee9d97072eefd47e4698351de8"
+      },
+      "companionArtifacts": [
+        {
+          "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed02/counterfactual_replay_skill_regression_fix.review.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_regression_fix_dryrun_seed02/counterfactual_replay_skill_regression_fix.review.json",
+          "kind": "domain_evidence_counterfactual_replay_json",
+          "bytes": 2154,
+          "sha256": "6228ab3e1cc4c0fd37f4fcd4143bfed0eb7aeb8560f0503018bb86b8608c67da"
+        },
+        {
+          "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed02/derived_dependency_graph.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_regression_fix_dryrun_seed02/derived_dependency_graph.json",
+          "kind": "domain_evidence_derived_dependency_graph_json",
+          "bytes": 125,
+          "sha256": "c744a21c5525ad15e9335fd595154a5269031824bc248a56867f619abd9ca5d6"
+        },
+        {
+          "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed02/repo_fixture.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_regression_fix_dryrun_seed02/repo_fixture.json",
+          "kind": "domain_evidence_repo_fixture_json",
+          "bytes": 5305,
+          "sha256": "b26f42a1af977d903da57be252cc4671b798cf770921eefeb10675e54f88e747"
+        },
+        {
+          "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed02/review_report_skill_regression_fix.review.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_regression_fix_dryrun_seed02/review_report_skill_regression_fix.review.json",
+          "kind": "domain_evidence_review_report_json",
+          "bytes": 817,
+          "sha256": "159bf1c4a2453ef19e0c2bebe89da0cbea8d56abae2b747b18927dc72e121494"
+        },
+        {
+          "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed02/skill_regression_fix.patch",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_regression_fix_dryrun_seed02/skill_regression_fix.patch",
+          "kind": "domain_evidence_patch_diff",
+          "bytes": 283,
+          "sha256": "94d5ce8847429a0cb748cb8ac2b686bee16cf8771486ec8b94d7f23cc7ac6254"
+        },
+        {
+          "path": "domain_evidence/coding.skill_regression_fix_dryrun_seed02/test_report_skill_regression_fix.tests.json",
+          "repoPath": ".run/eval-runs/domain_2026-05-28T07-49-46Z/domain_evidence/coding.skill_regression_fix_dryrun_seed02/test_report_skill_regression_fix.tests.json",
+          "kind": "domain_evidence_test_report_json",
+          "bytes": 4443,
+          "sha256": "3e421b89661abce22f98d319de18875b3c76af0c9f555d441bfcba43131c531b"
+        }
+      ]
+    }
+  ],
+  "packetSha256": "4c04ed79c3373d8bda9d4f456401628ef5c1a9c48795c373a04671edb87568a0"
+}

@@ -4,87 +4,90 @@ owner_lane: context-governance
 last_verified: 2026-05-28
 startup_load: first-read
 source_of_truth: true
-scope: new-session entrypoint, boundaries, commands, and next steps
+scope: 新对话入口、当前边界、最近下一步
 ---
 
 # Loomstead 新对话入口
 
-> 更新时间：2026-05-28（Paper generated tables、Table 5 prose 和 claim evidence refs 已对齐当前 clean process/domain runs；Godot 最新窗口复验暂缓到展示层集中处理）
-> 用途：新对话、跨机器切换、子代理任务和多助手接手时的第一入口。
+> 自管理层文档，软上限 250 行，只记当前事实，不写历史流水。
 
-## 1. 启动路线
+## 1. 启动顺序
 
-- 首选运行 `npm.cmd run context:resume`，用短摘要确认分支、脏区、当前阶段、manual gate 和最小验证命令。
-- 只做项目定位时读本文；需要事实核对时读 `docs/current_status.md`；需要深入实现时按开发线读取源文档。
-- 长期方向以 `docs/project_vision.md` 为准；研究 framing 以 `docs/research_framing_motivational_delegation.md` 为准。
-- NPC agent loop 设计以 `docs/agent_loop_architecture.md` 为准；世界实体 schema 以 `docs/world_entity_model.md` 为准。
-- Eval 与跨域验证以 `docs/process_fidelity_eval_spec.md`、`docs/cross_domain_adapter.md`、`docs/eval_dataset_archive.md` 为准。
-- 跨助手接续协议见 `docs/assistant_continuity.md`；既有 workflow 索引见 `docs/workflows.md`。
-- 历史草案和旧 handoff 在 `docs/archive/`，通常不作为当前事实源。
+1. `npm.cmd run context:resume`：分支、脏区、manual gate、最近下一步。
+2. 读 `docs/context_governance.md`：三层文档边界、改动权限、推进感约束。
+3. 读 `AGENTS.md`：跨助手指令与开发风格硬约束。
+4. 读本入口（你正在读）。
+5. 读 `docs/phase_checkpoints.md`：当前阶段位置与下一阶段候选。
+6. 涉及实现 / 状态时核对 `docs/current_status.md`。
+7. 跨环境 / 多助手 / 子代理接续时参考 `docs/assistant_continuity.md`。
 
 ## 2. 一句话定位
 
-`Loomstead` 是一个 narrative-primary 的可解释多 Agent 叙事运行时与研究环境：通过 Director / Event Skill、主观记忆、关系演化、启发式学习与 Debug Trace，研究 Director 如何以 Motivational Delegation 间接驱动少量深度 NPC 朝过程约束目标演化，并用 Process Fidelity Eval 验证过程是否可信。
+`Loomstead` 是 narrative-primary 的可解释多 Agent 叙事运行时与研究环境：Director 用 Motivational Delegation 间接驱动少量深度 NPC 朝过程约束目标演化，用 Process Fidelity Eval 验证过程可信度。差异化主轴：**少而深 + 可解释 + 可评估**。
 
-## 3. 当前状态摘要
+## 3. 当前阶段
 
-- Phase 1（活着的世界）已收口；`world_main.tscn` 是当前完成基线，旧 `LifeActionExecutor` 只保留回归修复。
-- Phase 2（骨架建立期）首轮已落地，当前主线是 trace / eval 收紧和可解释证据复用。
-- 后端权威路径已切到 `MotivationEngine -> ToolExecutor -> ResultObserver`，`/api/world/tick`、`/api/debug.phase2`、`phase2.trace.v1` 和 `schema_registry.v1` 是核心观察入口；arbitration `candidateScores` 已输出组件级来源和解释引用。
-- CapabilityRegistry 已从 legacy tool-prefix 路由推进到 `ToolDefinition.served_needs` 显式需求匹配，并保留 legacy fallback；`scripts/check_capability_served_needs.py` 已进入 `npm.cmd run check`。
-- Process Fidelity Eval 已包含 rule process suite、stability / determinism、memory / relationship ablation、counterfactual replay、domain adapter suite、evidence robustness suite 和 eval archive manifest。
-- 最新 clean 证据：process suite five-repeat `.run/eval-runs/run_2026-05-28T07-43-32Z` 为 20/20；domain suite five-repeat `.run/eval-runs/domain_2026-05-28T07-49-46Z` 为 55/55，aggregate counterfactual mean 为 `0.645238`、town mean 为 `0.333333`；robustness five-seed 为 300/300 source perturbation checks，coding / narrative 分域 invariance rate 均为 `1.0`。
-- Robustness 已 promote 为 regression 候选；`paper/research_claim_review_2026-05-28.md` 已记录 claim review 与 drift 说明，当前 promotion 仍是 `needs_manual_review`，原因是 scenarioIds 索引补齐触发零容忍 drift policy，而非 strict gate / metric / baseline 回退。
-- Godot Research Dock 已接入 Phase 2 debug 摘要、trace timeline、来源跳转按钮、Copy trace JSON、Trace Copy 空态 / tooltip / 成功反馈、Phase 2 Debug 错误提示、Prev/Next 循环导航、单条 trace 提示、`[C]` / `[,]` / `[.]` / 左右方括号热键、NPC 高亮和三 Tab UI；`memory.result_observed` 行与来源跳转可发现性已通过真实窗口复验，最新导航和中断布局补修仍待真实窗口复验。
-- Web Debug 已有 provider / fallback / cost 总览、Heuristic Library、Arbitration Trace 和 Rashomon Memory 三卡片。
-- 6 名首发 NPC 深度卡已入库；4 核心 NPC（kai / mira / bram / lena）已有实际 motivation / capability / heuristic seed，tomas / orren 保持 stub。
-- 资产 manifest 登记 55 条资产；表情差分、行动反馈图标和生活行动 UI 小组件仍是 `prompt_ready` backlog。
+- Phase 1（活着的世界）已收口；`world_main.tscn` 是默认完成基线。
+- Phase 2（骨架建立期）rule-level scaffold 已超额完成，正在 `P2.skeleton` checkpoint，等待主人选定下一阶段方向。
+- 候选方向见 `docs/phase_checkpoints.md` §P2.skeleton。浮浮酱推荐 `B 真实 LLM 证据线 → A 求职展示线`。
+- 不再扩 Phase 1 旧玩法线；不在已稳定基础设施层（manifest / archive / promote / drift / strict gate）继续无 trigger 加固。
 
 ## 4. 当前边界
 
-- 后端持有权威世界状态；Godot 只做表现、本地交互缓存和 API 调用。
+- 后端持有权威世界状态；Godot 只做表现 + 合法工具调用。
 - LLM 输出进入可见结果前必须经过解析、规则校验、fallback 和事件记录。
-- 密钥只放 `config/models.local.json`、`config/models.json` 或环境变量，不写入仓库。
+- 密钥只放 `config/models.local.json`、`config/models.json` 或环境变量。
 - 常规 `check` / `smoke` 不访问真实 LLM；真实 provider 证据由 `npm.cmd run llm:smoke` 单独刷新。
-- Godot headless / dry-run 不等于真实窗口手感验收；真实窗口行为需要人工记录。
-- 新增 schema、事件字段、Debug 字段、eval artifact 或 Godot 消费字段前，先明确数据契约。
+- Godot headless / dry-run 不等同真实窗口验收；真实窗口体验需要人工记录。
+- 新增 schema、事件字段、Debug 字段、eval artifact、Godot 消费字段前先明确数据契约。
+- claim level 升级只能由主人显式确认；AI 助手只能维持或降级。
 
-## 5. 最近下一步
+## 5. 最近下一步（待主人选定方向）
 
-- Eval 线已让 coding + narrative domain 的 counterfactual route replay 拉开指标，并支持 domain `--seeds`；`eval:robustness` 已接入 strict gate、manifest `evalGates`、scenarioIds 索引和 coding / narrative 分域签名，且已有 clean five-seed promoted regression 候选；research claim review 与 promotion drift 说明已补；当前 clean-run reviewer packet 已生成到 `.run/eval-reviewer-packets/packet_2026-05-28_manual_reviewer_current_clean`，Figure 3、generated tables、claim evidence refs 和 Table 5 prose 已对齐当前 clean process/domain exports。下一步是人工填写 reviewer_score_sheet，或在需要质量抽样时补少量 provider-backed eval。
-- Godot 线暂缓中间态 UI 迭代；真实窗口复验等后端 Agent / Eval 主线稳定后集中处理。
-- Research 线当前 clean domain export 为 `.run/eval-runs/domain_2026-05-28T07-49-46Z`；C2 / C3 / C4 / C7 / C15 / C16 已做 claim review，Table 5 prose 明确保持 contract-level / interface evidence 口径。
-- 不要重新扩 Phase 1 旧玩法线。
-- 主人 2026-05-28 表示真实 provider 余额已充值；切换模型、key、profile、prompt，或需要质量抽样 / provider-backed eval / 真实成本证据时，再单独运行 `npm.cmd run llm:smoke`。
-- 资产线按 `docs/asset_batches/prompt_ready_export.md` 推进，但先按 `docs/open_questions.md` 的资产范围调整重新评估优先级。
+按治理协议 §5 输出 checkpoint review 后停下：
+
+- B 真实 LLM 证据线（推荐）：1 GoalSpec × 5 seed × 3 baseline 真实 provider 证据，升级 C2/C3/C4 claim level
+- A 求职展示线：60 秒 demo 录屏 + 技术博客主文 + README portfolio 化
+- C Phase 4 玩家成为变量线：gossip 真扩散 + 1 跨日 emergence scenario
+- D Phase 3 内容深度线：4 核心 NPC 完整数据 + 5 作物 / 25 物品 / 30 工具
 
 ## 6. 按开发线读取
 
-- 后端 / Agent Loop：`docs/agent_loop_architecture.md`、`docs/world_entity_model.md`、`backend/app/runtime/`、`backend/app/tools/`、`backend/app/memory/`。
-- Eval / Research：`docs/process_fidelity_eval_spec.md`、`docs/cross_domain_adapter.md`、`backend/app/eval/`、`backend/app/domain/`、`scripts/run_agent_eval.py`。
-- Godot 客户端：`docs/gameplay_system_architecture.md`、`docs/game_client_environment.md`、`clients/godot/README.md`、`clients/godot/`。
-- Content / NPC：`docs/game_content_storyline.md`、`docs/npc_deep_card_spec.md`、`backend/app/content/`。
-- LLM / Debug：`docs/model_profile_template_guide.md`、`config/`、`backend/app/providers/`、`frontend/`、`GET /api/debug.phase2` 消费侧。
-- 资产：`docs/art_direction.md`、`docs/asset_generation_prompts.md`、`docs/map_sprite_style_guide.md`、`assets/manifests/asset_manifest.json`。
-- 上下文治理：`AGENTS.md`、`CLAUDE.md`、`docs/assistant_continuity.md`、`docs/workflows.md`、`scripts/build_agent_context.py`。
+- 后端 / Agent Loop：`docs/agent_loop_architecture.md`、`docs/world_entity_model.md`、`backend/app/runtime/`、`backend/app/tools/`、`backend/app/memory/`
+- Eval / Research：`docs/process_fidelity_eval_spec.md`、`docs/cross_domain_adapter.md`、`docs/eval_dataset_archive.md`、`backend/app/eval/`、`backend/app/domain/`、`scripts/run_agent_eval.py`
+- Godot 客户端：`docs/game_client_environment.md`、`docs/production_roadmap.md`、`clients/godot/`
+- LLM / Debug：`docs/model_profile_template_guide.md`、`config/`、`backend/app/providers/`、`frontend/`、`GET /api/debug.phase2`
+- Content / NPC：`backend/app/content/`（旧设计文档已归档至 `docs/archive/`）
+- 资产：`docs/art_direction.md`、`docs/asset_generation_prompts.md`、`docs/map_sprite_style_guide.md`、`assets/manifests/asset_manifest.json`
+- 上下文治理：`docs/context_governance.md`、`AGENTS.md`、`CLAUDE.md`、`docs/assistant_continuity.md`、`docs/workflows.md`、`scripts/build_agent_context.py`
 
 ## 7. 验证命令
 
-- 接续摘要：`npm.cmd run context:resume`。
-- 收工交接：`npm.cmd run context:handoff`。
-- 上下文治理：`npm.cmd run context:check; git diff --check`。
-- 常规离线门禁：`npm.cmd run check; npm.cmd run smoke`。
-- 后端 trace / schema：`npm.cmd run schema:check`。
-- Eval：`npm.cmd run eval:process; npm.cmd run eval:stability; npm.cmd run eval:stability:determinism; npm.cmd run eval:domain; npm.cmd run eval:robustness`。
-- Eval archive / research evidence：`npm.cmd run eval:archive:check; npm.cmd run eval:archive:drift; npm.cmd run research:evidence:check`。
-- Eval reviewer：`npm.cmd run eval:reviewer:packet -- --process-run run_2026-05-28T07-43-32Z --domain-run domain_2026-05-28T07-49-46Z`。
-- Godot 环境：`npm.cmd run client:env; npm.cmd run client:run:check`。
-- 内容 / 资产：`npm.cmd run content:check; npm.cmd run asset:check`。
-- 真实 LLM：`npm.cmd run llm:smoke`，只在 provider / key / profile / prompt 或真实证据刷新任务中运行。
+```powershell
+npm.cmd run context:resume
+npm.cmd run context:check
+npm.cmd run context:handoff
+npm.cmd run check
+npm.cmd run smoke
+npm.cmd run schema:check
+npm.cmd run eval:process
+npm.cmd run eval:stability
+npm.cmd run eval:domain
+npm.cmd run eval:robustness
+npm.cmd run eval:archive:check
+npm.cmd run eval:archive:drift
+npm.cmd run research:evidence:check
+npm.cmd run client:env
+npm.cmd run client:run:check
+npm.cmd run llm:smoke
+git diff --check
+```
+
+按任务线选最小必要命令。`llm:smoke` 只在切换 model / key / profile / prompt 或刷新真实证据时运行。
 
 ## 8. 协作约束
 
-- 状态更新必须区分 `code integrated`、`command checked`、`manual verified`、`manual unverified`。
-- 修改 `docs/current_status.md`、`docs/agent_context.md` 等治理入口时保持短、准、可验证，不复制源设计长文。
-- 多子代理并行时避免同时修改治理入口；由主会话串行合并事实。
-- 家里 / 公司切换时不要提交本机绝对路径、私有 key、临时 overlay 或 `.run/` 中未整理 artifact。
+- 状态文档区分 `code integrated` / `command checked` / `artifact backed` / `manual verified` / `manual unverified`。
+- 自管理层文档不复制源设计长文，不堆历史流水；超过软上限触发"是否拆分"检讨。
+- 多子代理并行时治理入口（本文、`current_status.md`、`AGENTS.md`、`context_governance.md`）由主会话串行修改。
+- 跨家里 / 公司同步时 `.run/eval-promoted/` / `.run/eval-reviewer-packets/` / `.run/process-llm-evidence/` 可随 Git 同步；`.run/eval-runs/` 滚动导出区按本地临时产物处理。

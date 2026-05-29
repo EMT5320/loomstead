@@ -5,6 +5,8 @@ from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any
 
+from app.config.env_compat import loom_env
+
 
 FEATURE_AGENT_DECISION = "agent_decision"
 FEATURE_DIALOGUE = "dialogue"
@@ -53,8 +55,8 @@ def is_profile_api_key_configured(profile: dict[str, Any]) -> bool:
     if _looks_like_inline_secret(env_name):
         return True
     if env_name:
-        return bool(os.getenv(str(env_name))) or bool(os.getenv("AGENT_TOWN_API_KEY")) or bool(os.getenv("OPENAI_API_KEY"))
-    return bool(os.getenv("AGENT_TOWN_API_KEY")) or bool(os.getenv("OPENAI_API_KEY"))
+        return bool(os.getenv(str(env_name))) or bool(loom_env("LOOMSTEAD_API_KEY")) or bool(os.getenv("OPENAI_API_KEY"))
+    return bool(loom_env("LOOMSTEAD_API_KEY")) or bool(os.getenv("OPENAI_API_KEY"))
 
 
 def sanitize_profile_for_debug(profile: dict[str, Any]) -> dict[str, Any]:

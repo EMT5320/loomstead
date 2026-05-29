@@ -1,0 +1,112 @@
+{
+  "testReportId": "skill_multifile_dependency_repair.patch.single_file.src_formatter.py.tests",
+  "command": "python tests/test_workflow.py",
+  "testPhase": "single_file_patch",
+  "patchedFile": "src/formatter.py",
+  "passed": false,
+  "expectedFailure": true,
+  "failureObserved": true,
+  "failingCaseIds": [
+    "slug_uses_formatter_dependency"
+  ],
+  "caseResults": [
+    {
+      "caseId": "slug_uses_formatter_dependency",
+      "passed": false
+    },
+    {
+      "caseId": "blank_name_stays_invalid",
+      "passed": true
+    }
+  ],
+  "execution": {
+    "executed": true,
+    "testPhase": "single_file_patch",
+    "workspaceKind": "git_external_repo_checkout",
+    "sourceRepoKind": "deterministic_local_git_repository",
+    "checkoutMethod": "git clone",
+    "command": "python tests/test_workflow.py",
+    "commandTemplate": "python tests/test_workflow.py",
+    "testCommandSource": "repo_fixture",
+    "pythonExecutable": "python.exe",
+    "exitCode": 1,
+    "durationMs": 312.139,
+    "stdout": "{\"caseResults\": [{\"caseId\": \"slug_uses_formatter_dependency\", \"passed\": false}, {\"caseId\": \"blank_name_stays_invalid\", \"passed\": true}]}\n",
+    "stderr": "",
+    "checkoutSteps": [
+      {
+        "command": "git init --quiet",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git checkout -B main",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "Switched to a new branch 'main'\n"
+      },
+      {
+        "command": "git config user.email fixture@example.invalid",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git config user.name Loomstead Fixture",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git add --all",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "warning: unable to access 'C:/Users/Administrator/.config/git/ignore': Permission denied\n"
+      },
+      {
+        "command": "git commit --quiet -m initial fixture repo",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git clone --quiet <source-repo> <checkout>",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "warning: unable to access 'C:/Users/Administrator/.config/git/ignore': Permission denied\n"
+      }
+    ],
+    "git": {
+      "defaultBranch": "main",
+      "sourceHead": "7bb65dd5e814d0c6dd6a3b00b15214c538287047",
+      "checkoutHead": "7bb65dd5e814d0c6dd6a3b00b15214c538287047",
+      "statusAfterPatch": [
+        " M src/formatter.py"
+      ]
+    },
+    "sourceRepoFiles": [
+      "README.md",
+      "src/__init__.py",
+      "src/formatter.py",
+      "src/workflow.py",
+      "tests/test_workflow.py"
+    ],
+    "workspaceFiles": [
+      "README.md",
+      "src/__init__.py",
+      "src/formatter.py",
+      "src/workflow.py",
+      "tests/test_workflow.py"
+    ],
+    "workspaceFileHashes": {
+      "README.md": "ba2872f46fc02679b32842490aa76f255c6390d4c36ea971c7d091190037c0b3",
+      "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "src/formatter.py": "d459447ec22475f933d4df31b09de5cba1b1c0418607422f8e4bcb0cec93f518",
+      "src/workflow.py": "7da38f500e8fc115370e0e2f82e3702bbb229524e8e08a64e6768ce69e46f24e",
+      "tests/test_workflow.py": "911870bb7958f9fd751c2181b89b5f44ccffea2a5792a1163859391696569795"
+    }
+  },
+  "sourceArtifactId": "skill_multifile_dependency_repair.patch",
+  "sha256": "09fa713d23d47faee5ca347f6dd8935afb19d7613107b3cd526858767f91380b"
+}

@@ -1,0 +1,274 @@
+{
+  "full_baseline": "full_motivational_delegation",
+  "comparison": {
+    "full_motivational_delegation": {
+      "goal_success_rate": {
+        "mean": 1.0,
+        "std": 0.0,
+        "n": 20
+      },
+      "required_process_coverage": {
+        "mean": 1.0,
+        "std": 0.0,
+        "n": 20
+      },
+      "process_believability_score": {
+        "mean": 1.0,
+        "std": 0.0,
+        "n": 20
+      },
+      "causal_trace_coverage": {
+        "mean": 1.0,
+        "std": 0.0,
+        "n": 20
+      },
+      "relationship_memory_causal_use_rate": {
+        "mean": 1.0,
+        "std": 0.0,
+        "n": 20
+      },
+      "counterfactual_tool_selection_change_rate": {
+        "mean": 0.375,
+        "std": 0.414578,
+        "n": 20
+      },
+      "shortcut_violation_rate": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 20
+      }
+    },
+    "hard_delegation": {
+      "goal_success_rate": {
+        "mean": 1.0,
+        "std": 0.0,
+        "n": 20
+      },
+      "required_process_coverage": {
+        "mean": 0.185714,
+        "std": 0.024744,
+        "n": 20
+      },
+      "process_believability_score": {
+        "mean": 0.037143,
+        "std": 0.004949,
+        "n": 20
+      },
+      "causal_trace_coverage": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 20
+      },
+      "relationship_memory_causal_use_rate": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 20
+      },
+      "counterfactual_tool_selection_change_rate": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 20
+      },
+      "shortcut_violation_rate": {
+        "mean": 1.0,
+        "std": 0.0,
+        "n": 20
+      }
+    },
+    "no_subjective_memory": {
+      "goal_success_rate": {
+        "mean": 1.0,
+        "std": 0.0,
+        "n": 20
+      },
+      "required_process_coverage": {
+        "mean": 0.742857,
+        "std": 0.098974,
+        "n": 20
+      },
+      "process_believability_score": {
+        "mean": 0.948572,
+        "std": 0.019795,
+        "n": 20
+      },
+      "causal_trace_coverage": {
+        "mean": 1.0,
+        "std": 0.0,
+        "n": 20
+      },
+      "relationship_memory_causal_use_rate": {
+        "mean": 1.0,
+        "std": 0.0,
+        "n": 20
+      },
+      "counterfactual_tool_selection_change_rate": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 20
+      },
+      "shortcut_violation_rate": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 20
+      }
+    },
+    "no_relationship_edge": {
+      "goal_success_rate": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 20
+      },
+      "required_process_coverage": {
+        "mean": 0.814286,
+        "std": 0.024744,
+        "n": 20
+      },
+      "process_believability_score": {
+        "mean": 0.562857,
+        "std": 0.004949,
+        "n": 20
+      },
+      "causal_trace_coverage": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 20
+      },
+      "relationship_memory_causal_use_rate": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 20
+      },
+      "counterfactual_tool_selection_change_rate": {
+        "mean": 0.25,
+        "std": 0.25,
+        "n": 20
+      },
+      "shortcut_violation_rate": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 20
+      }
+    },
+    "shuffled_memory_owner": {
+      "goal_success_rate": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 20
+      },
+      "required_process_coverage": {
+        "mean": 0.814286,
+        "std": 0.024744,
+        "n": 20
+      },
+      "process_believability_score": {
+        "mean": 0.762857,
+        "std": 0.004949,
+        "n": 20
+      },
+      "causal_trace_coverage": {
+        "mean": 1.0,
+        "std": 0.0,
+        "n": 20
+      },
+      "relationship_memory_causal_use_rate": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 20
+      },
+      "counterfactual_tool_selection_change_rate": {
+        "mean": 0.25,
+        "std": 0.25,
+        "n": 20
+      },
+      "shortcut_violation_rate": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 20
+      }
+    },
+    "evidence_link_removal": {
+      "goal_success_rate": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 20
+      },
+      "required_process_coverage": {
+        "mean": 0.814286,
+        "std": 0.024744,
+        "n": 20
+      },
+      "process_believability_score": {
+        "mean": 0.362857,
+        "std": 0.004949,
+        "n": 20
+      },
+      "causal_trace_coverage": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 20
+      },
+      "relationship_memory_causal_use_rate": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 20
+      },
+      "counterfactual_tool_selection_change_rate": {
+        "mean": 0.25,
+        "std": 0.25,
+        "n": 20
+      },
+      "shortcut_violation_rate": {
+        "mean": 1.0,
+        "std": 0.0,
+        "n": 20
+      }
+    }
+  },
+  "delta_vs_full": {
+    "hard_delegation": {
+      "goal_success_rate": 0.0,
+      "required_process_coverage": -0.814286,
+      "process_believability_score": -0.962857,
+      "causal_trace_coverage": -1.0,
+      "relationship_memory_causal_use_rate": -1.0,
+      "counterfactual_tool_selection_change_rate": -0.375,
+      "shortcut_violation_rate": 1.0
+    },
+    "no_subjective_memory": {
+      "goal_success_rate": 0.0,
+      "required_process_coverage": -0.257143,
+      "process_believability_score": -0.051428,
+      "causal_trace_coverage": 0.0,
+      "relationship_memory_causal_use_rate": 0.0,
+      "counterfactual_tool_selection_change_rate": -0.375,
+      "shortcut_violation_rate": 0.0
+    },
+    "no_relationship_edge": {
+      "goal_success_rate": -1.0,
+      "required_process_coverage": -0.185714,
+      "process_believability_score": -0.437143,
+      "causal_trace_coverage": -1.0,
+      "relationship_memory_causal_use_rate": -1.0,
+      "counterfactual_tool_selection_change_rate": -0.125,
+      "shortcut_violation_rate": 0.0
+    },
+    "shuffled_memory_owner": {
+      "goal_success_rate": -1.0,
+      "required_process_coverage": -0.185714,
+      "process_believability_score": -0.237143,
+      "causal_trace_coverage": 0.0,
+      "relationship_memory_causal_use_rate": -1.0,
+      "counterfactual_tool_selection_change_rate": -0.125,
+      "shortcut_violation_rate": 0.0
+    },
+    "evidence_link_removal": {
+      "goal_success_rate": -1.0,
+      "required_process_coverage": -0.185714,
+      "process_believability_score": -0.637143,
+      "causal_trace_coverage": -1.0,
+      "relationship_memory_causal_use_rate": -1.0,
+      "counterfactual_tool_selection_change_rate": -0.125,
+      "shortcut_violation_rate": 1.0
+    }
+  }
+}

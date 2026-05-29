@@ -1,0 +1,191 @@
+{
+  "scenario": {
+    "scenarioId": "pf.repair_talk_requires_memory_trace",
+    "description": "Tomas 的修复式交谈必须产生主观记忆和带 source_event_ids 的关系边。",
+    "npcId": "tomas",
+    "targetNpcId": "mira",
+    "expectedToolPrefixes": [
+      "social."
+    ],
+    "requiredProcessIds": [
+      "goal_relevant_tool_event",
+      "subjective_memory_refs",
+      "relationship_edge_trace",
+      "causal_trace",
+      "future_behavior_reference"
+    ],
+    "statusOverrides": {
+      "energy": 90,
+      "money": 90,
+      "social": 5
+    },
+    "locationId": "plaza",
+    "anchorId": "plaza_fountain",
+    "maxGameHours": 1
+  },
+  "baseline": "full_motivational_delegation",
+  "ok": true,
+  "metrics": {
+    "goal_success_rate": 1.0,
+    "shortcut_violation_rate": 0.0,
+    "required_process_coverage": 1.0,
+    "forced_action_rate": 0.0,
+    "agent_initiated_action_ratio": 1.0,
+    "intervention_overreach_rate": 0.0,
+    "relationship_memory_causal_use_rate": 1.0,
+    "causal_trace_coverage": 1.0,
+    "relationship_consistency": 1.0,
+    "process_believability_score": 1.0
+  },
+  "processChecks": {
+    "goal_relevant_tool_event": true,
+    "subjective_memory_refs": true,
+    "relationship_edge_trace": true,
+    "causal_trace": true,
+    "future_behavior_reference": true
+  },
+  "evidence": {
+    "goalToolEvents": [
+      {
+        "eventId": "evt_a6e424410c2346f4941a9e20f22873f7",
+        "createdAt": "2026-05-21T14:27:06.407648+00:00",
+        "traceSchemaVersion": "phase2.trace.v1",
+        "traceId": "evt_6f7e76fb8617408d96d4a44c608da67a",
+        "spanId": "span_29f51cd50b3c43dd",
+        "sourceEventId": "evt_6f7e76fb8617408d96d4a44c608da67a",
+        "agentId": "tomas",
+        "targetIds": [
+          "mira"
+        ],
+        "worldTime": {
+          "tick": 1,
+          "day": 1,
+          "hour": 9,
+          "minute": 0,
+          "phase": "morning"
+        },
+        "eventType": "tool.execution_completed",
+        "summary": "托玛 与 米娅 完成了一次社交互动。"
+      }
+    ],
+    "subjectiveMemoryRefs": [
+      "evt_a6e424410c2346f4941a9e20f22873f7"
+    ],
+    "relationshipSourceIds": [
+      "evt_178c4fef515f4b63b269da232344ef9f",
+      "evt_a6e424410c2346f4941a9e20f22873f7"
+    ],
+    "memoryTraceLinks": [
+      {
+        "eventId": "evt_355d8604e50e4a0ea357c63560d5eba1",
+        "createdAt": "2026-05-21T14:27:06.407648+00:00",
+        "traceSchemaVersion": "phase2.trace.v1",
+        "traceId": "evt_6f7e76fb8617408d96d4a44c608da67a",
+        "spanId": "span_f6d63417bdf646f9",
+        "sourceEventId": "evt_a6e424410c2346f4941a9e20f22873f7",
+        "agentId": "tomas",
+        "targetIds": [
+          "mira",
+          "tomas"
+        ],
+        "worldTime": {
+          "tick": 1,
+          "day": 1,
+          "hour": 9,
+          "minute": 0,
+          "phase": "morning"
+        },
+        "eventType": "memory.result_observed",
+        "summary": "观察到 2 条主观记忆，2 条关系边"
+      }
+    ],
+    "counterfactualReplay": {
+      "selectedWithRelationshipMemory": "social.chat_with",
+      "selectedWithoutRelationshipMemory": "social.give_gift",
+      "effect": true,
+      "relationshipEdgeRefs": [
+        {
+          "edgeId": "mira::tomas::trust",
+          "sourceAgentId": "mira",
+          "targetAgentId": "tomas",
+          "edgeType": "trust",
+          "strength": 0.54,
+          "sourceEventIds": [
+            "evt_178c4fef515f4b63b269da232344ef9f",
+            "evt_a6e424410c2346f4941a9e20f22873f7"
+          ]
+        },
+        {
+          "edgeId": "mira::tomas::affection",
+          "sourceAgentId": "mira",
+          "targetAgentId": "tomas",
+          "edgeType": "affection",
+          "strength": 0.58,
+          "sourceEventIds": [
+            "evt_178c4fef515f4b63b269da232344ef9f",
+            "evt_a6e424410c2346f4941a9e20f22873f7"
+          ]
+        }
+      ],
+      "relevantRelationshipEdgeRefs": [
+        {
+          "edgeId": "mira::tomas::trust",
+          "sourceAgentId": "mira",
+          "targetAgentId": "tomas",
+          "edgeType": "trust",
+          "strength": 0.54,
+          "sourceEventIds": [
+            "evt_178c4fef515f4b63b269da232344ef9f",
+            "evt_a6e424410c2346f4941a9e20f22873f7"
+          ]
+        },
+        {
+          "edgeId": "mira::tomas::affection",
+          "sourceAgentId": "mira",
+          "targetAgentId": "tomas",
+          "edgeType": "affection",
+          "strength": 0.58,
+          "sourceEventIds": [
+            "evt_178c4fef515f4b63b269da232344ef9f",
+            "evt_a6e424410c2346f4941a9e20f22873f7"
+          ]
+        }
+      ],
+      "candidateScoresWithRelationshipMemory": [
+        {
+          "toolId": "social.chat_with",
+          "score": 0.9122,
+          "tierScore": 0.8,
+          "durationScore": 0.045,
+          "relationshipBonus": 0.0672
+        },
+        {
+          "toolId": "social.give_gift",
+          "score": 0.862633,
+          "tierScore": 0.8,
+          "durationScore": 0.045833,
+          "relationshipBonus": 0.0168
+        }
+      ],
+      "candidateScoresWithoutRelationshipMemory": [
+        {
+          "toolId": "social.give_gift",
+          "score": 0.845833,
+          "tierScore": 0.8,
+          "durationScore": 0.045833,
+          "relationshipBonus": 0.0
+        },
+        {
+          "toolId": "social.chat_with",
+          "score": 0.845,
+          "tierScore": 0.8,
+          "durationScore": 0.045,
+          "relationshipBonus": 0.0
+        }
+      ],
+      "reasonWithRelationshipMemory": "relationship_memory_weighted_fit",
+      "reasonWithoutRelationshipMemory": "highest_rule_tier_fit"
+    },
+    "traceSchemaVersion": "phase2.trace.v1"
+  }
+}

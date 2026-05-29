@@ -1,0 +1,103 @@
+{
+  "ok": false,
+  "suite": "evidence_robustness",
+  "baseline": "full_motivational_delegation",
+  "passed": 32,
+  "total": 48,
+  "metrics": [
+    {
+      "metric": "process_evidence_invariance.source_order_shuffle",
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "process_evidence_invariance.source_variation_weak_noise",
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "process_evidence_invariance.source_variation_duplicate",
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "process_evidence_invariance.source_variation_irrelevant",
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "process_evidence_invariance.source_order_shuffle",
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 11,
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "process_evidence_invariance.source_variation_weak_noise",
+      "mean": 0.272727,
+      "std": 0.445362,
+      "n": 11,
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "process_evidence_invariance.source_variation_duplicate",
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 11,
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "process_evidence_invariance.source_variation_irrelevant",
+      "mean": 0.272727,
+      "std": 0.445362,
+      "n": 11,
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "process_evidence_robustness_score",
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "domain_evidence_robustness_score",
+      "mean": 0.636364,
+      "std": 0.0,
+      "n": 1,
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "aggregate"
+    },
+    {
+      "metric": "evidence_robustness_score",
+      "mean": 0.818182,
+      "std": 0.181818,
+      "n": 2,
+      "baseline": "full_motivational_delegation",
+      "scenarioId": "aggregate"
+    }
+  ],
+  "ablation_comparison": null,
+  "providerMode": "rule",
+  "seedCount": {
+    "process": 1,
+    "domain": 1
+  }
+}

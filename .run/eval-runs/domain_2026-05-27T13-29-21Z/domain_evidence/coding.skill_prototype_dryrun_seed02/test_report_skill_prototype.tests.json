@@ -1,0 +1,114 @@
+{
+  "testReportId": "skill_prototype.tests",
+  "command": "python -m pytest tests/test_skill.py -q",
+  "testRunner": "pytest",
+  "durationMs": 506.214,
+  "exitCode": 0,
+  "testPhase": "post_patch",
+  "passed": true,
+  "caseResults": [
+    {
+      "caseId": "pytest_suite",
+      "passed": true,
+      "runner": "pytest",
+      "exitCode": 0,
+      "passedCount": 4,
+      "failedCount": 0,
+      "summary": "....                                                                     [100%]"
+    }
+  ],
+  "execution": {
+    "executed": true,
+    "testPhase": "post_patch",
+    "testRunner": "pytest",
+    "workspaceKind": "git_external_repo_checkout",
+    "sourceRepoKind": "deterministic_local_git_repository",
+    "checkoutMethod": "git clone",
+    "command": "python -m pytest tests/test_skill.py -q",
+    "commandTemplate": "python -m pytest tests/test_skill.py -q",
+    "testCommandSource": "metadata.testRunner",
+    "pythonExecutable": "python.exe",
+    "exitCode": 0,
+    "durationMs": 506.214,
+    "stdout": "....                                                                     [100%]\n4 passed in 0.01s\n",
+    "stderr": "",
+    "checkoutSteps": [
+      {
+        "command": "git init --quiet",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git checkout -B main",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "Switched to a new branch 'main'\n"
+      },
+      {
+        "command": "git config user.email fixture@example.invalid",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git config user.name Loomstead Fixture",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git add --all",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "warning: unable to access 'C:/Users/Administrator/.config/git/ignore': Permission denied\n"
+      },
+      {
+        "command": "git commit --quiet -m initial fixture repo",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": "git clone --quiet <source-repo> <checkout>",
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "warning: unable to access 'C:/Users/Administrator/.config/git/ignore': Permission denied\n"
+      }
+    ],
+    "git": {
+      "defaultBranch": "main",
+      "sourceHead": "440393aab531498a278494487f428dfd32081069",
+      "checkoutHead": "440393aab531498a278494487f428dfd32081069",
+      "statusAfterPatch": [
+        " M skills/loomstead-debug/SKILL.md"
+      ]
+    },
+    "sourceRepoFiles": [
+      "README.md",
+      "docs/review_rubric.md",
+      "skills/loomstead-debug/SKILL.md",
+      "skills/loomstead-debug/metadata.json",
+      "tests/test_skill.py"
+    ],
+    "workspaceFiles": [
+      "README.md",
+      "docs/review_rubric.md",
+      "skills/loomstead-debug/SKILL.md",
+      "skills/loomstead-debug/metadata.json",
+      "tests/test_skill.py"
+    ],
+    "workspaceFileHashes": {
+      "README.md": "b603311279d95465518b947526822a4d81f2cbef7c4362dd197868b5bb466860",
+      "skills/loomstead-debug/SKILL.md": "c9dad78497bf5f433105baf76fed9ab92bf2a4de274da12750a89e678c5b214b",
+      "skills/loomstead-debug/metadata.json": "3fed5d3f9e7609cbf31878e8b83c173efc55c50dcc2dd7afc6db2538b34786cb",
+      "docs/review_rubric.md": "d9559858a56896b5cb0f6864c5b01a108428f0dcb760b84393847969a8196df3",
+      "tests/test_skill.py": "549df4caf0628781f1e6828ce35178ebdad92a1ac71222ec1fcbaad8e7880a8b"
+    }
+  },
+  "sourceArtifactId": "skill_prototype.patch",
+  "sourceEventIds": [
+    "coding_evt_006"
+  ],
+  "sha256": "f3b693aa2429827fd0753e9e0d5dcb51c6e2f3e4d3c9f72caa3bab8fe6731c85"
+}

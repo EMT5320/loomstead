@@ -144,6 +144,7 @@ def _trace_event_details(event_type: str, payload: dict[str, Any]) -> dict[str, 
         }
     if event_type in {"budget.decision_consumed", "budget.decision_fallback"}:
         return {
+            "version": payload.get("version"),
             "npcId": payload.get("npcId"),
             "toolId": payload.get("toolId"),
             "channel": payload.get("channel"),
@@ -158,6 +159,8 @@ def _trace_event_details(event_type: str, payload: dict[str, Any]) -> dict[str, 
             "featureRemaining": payload.get("featureRemaining"),
             "featureRemainingBefore": payload.get("featureRemainingBefore"),
             "costBreakdown": _compact_cost_breakdown(payload.get("costBreakdown")),
+            "sourceEventIds": _compact_list(payload.get("sourceEventIds"), 4),
+            "traceRefs": _compact_list(payload.get("traceRefs"), 6),
         }
     return {}
 
