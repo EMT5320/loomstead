@@ -22,10 +22,19 @@ Hypothesis ``max_examples >= 100``。
 """
 
 # 骨架阶段：确认测试依赖可用（后续任务将基于这两个库填充实际测试）。
+import json
+import sys
+from pathlib import Path
+
 import hypothesis  # noqa: F401  pytest 收集时校验 Hypothesis 可导入
 import pytest  # noqa: F401  pytest 收集时校验 pytest 可导入
 
 from . import showcase_refs  # noqa: F401  参考实现落点（后续任务填充）
+
+ROOT = Path(__file__).resolve().parents[2]
+BACKEND_ROOT = ROOT / "backend"
+if str(BACKEND_ROOT) not in sys.path:
+    sys.path.insert(0, str(BACKEND_ROOT))
 
 
 # =============================================================================
@@ -1242,6 +1251,41 @@ def _has_line_with(lines: list, *keywords: str) -> bool:
     规避「数字落在别处、语义词落在别处」的误判（如 60 中的 6/0 与 5 的串扰）。
     """
     return any(all(kw in line for kw in keywords) for line in lines)
+
+
+def test_backend_showcase_starlight_contract_no_focus_no_trace() -> None:
+    """Showcase Mode v1 后端聚合包：无 active focus / 无 trace 时仍可展示且只读。"""
+    from app.main import create_town_app  # noqa: WPS433  测试内导入避免污染纯函数 PBT
+
+    app = create_town_app(provider_mode="rule")
+    app.runtime.world["activeFocus"] = None
+    before = json.dumps(app.runtime.world, ensure_ascii=False, sort_keys=True, default=str)
+    payload = app.showcase_starlight({})
+    after = json.dumps(app.runtime.world, ensure_ascii=False, sort_keys=True, default=str)
+
+    required_fields = {
+        "schemaVersion",
+        "scenario",
+        "goalCard",
+        "directorCard",
+        "eventSkillCard",
+        "npcDecisionCard",
+        "traceEvidenceCard",
+        "traceStrip",
+        "deepLinks",
+    }
+    required_card_fields = {"id", "title", "kicker", "summary", "fields", "evidenceRefs", "status"}
+    assert before == after
+    assert payload["schemaVersion"] == "showcase.starlight.v1"
+    assert required_fields <= set(payload)
+    assert payload["directorCard"]["status"] == "fallback"
+    assert payload["traceEvidenceCard"]["status"] == "fallback"
+    assert [item["stage"] for item in payload["traceStrip"]] == ["goal", "director", "skill", "decision", "trace"]
+    for card_key in ("goalCard", "directorCard", "eventSkillCard", "npcDecisionCard", "traceEvidenceCard"):
+        assert required_card_fields <= set(payload[card_key])
+        assert payload[card_key]["summary"]
+    for link_key in ("director", "skills", "phase2", "traceFocus"):
+        assert payload["deepLinks"][link_key].startswith("/api/")
 
 
 def test_example_capture_plan_criteria_present() -> None:

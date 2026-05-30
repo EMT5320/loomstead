@@ -65,6 +65,10 @@ class TownApplication:
         """Phase 2 可解释调试查询入口。"""
         return self.runtime.get_phase2_debug_snapshot(query or {})
 
+    def showcase_starlight(self, query: dict[str, Any] | None = None) -> dict[str, Any]:
+        """Showcase Mode v1 星灯祭只读聚合入口。"""
+        return self.runtime.get_starlight_showcase_snapshot(query or {})
+
     def debug_skill_explain(self, query: dict[str, Any] | None = None) -> dict[str, Any]:
         """单个 Event Skill 可解释说明入口。"""
         return self.runtime.explain_event_skill(query or {})
@@ -114,6 +118,8 @@ def create_handler(app: TownApplication, project_root: Path):
                     return self.write_json(app.debug_influence(query))
                 if route == "/api/debug.phase2":
                     return self.write_json(app.debug_phase2(query))
+                if route == "/api/showcase/starlight":
+                    return self.write_json(app.showcase_starlight(query))
                 if route == "/api/debug/skill":
                     return self.write_json(app.debug_skill_explain(query))
                 if route == "/api/memory/summary":

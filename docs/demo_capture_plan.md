@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: portfolio-showcase
-last_verified: 2026-05-29
+last_verified: 2026-05-30
 startup_load: on-demand
 source_of_truth: true
 scope: 60 秒求职展示录屏脚本、启动命令与人工验收边界
@@ -13,12 +13,12 @@ scope: 60 秒求职展示录屏脚本、启动命令与人工验收边界
 
 ## Goal
 
-Produce a short portfolio clip that shows:
+Produce a short portfolio clip that shows Showcase Mode v1:
 
-1. a playable Godot town slice,
-2. autonomous NPC interaction through the authoritative Python runtime,
-3. the Phase 2 observer dock for motivation / memory / relationships / heuristics,
-4. trace filtering and copyable evidence for Process Fidelity debugging.
+1. the Godot first screen with the ShowcasePanel visible by default,
+2. the fixed `星灯祭供应短缺` causal chain: Goal → Director Beat → Event Skill → NPC Decision → Trace Evidence,
+3. the town stage continuing to run behind the summary layer through the authoritative Python runtime,
+4. Observer Dock as the deep-dive sidecar for Phase 2 trace / JSON / source inspection.
 
 ## Local run commands
 
@@ -46,21 +46,20 @@ http://127.0.0.1:8787/api/world/state
 
 Identify which on-screen views MUST be visible during capture (R1.1):
 
-- Left side: browser / Web Debug or API response. Must keep the relevant Web Debug / API response view on screen for any shot that references it.
-- Right side: Godot game window. The Godot window (town slice, HUD, and Observer Dock when opened) must be visible for every NPC-life / Observer Dock / trace shot.
-- If only one window can be captured, prioritize the Godot game window; the Observer Dock and trace timeline must stay readable in frame.
+- Primary frame: Godot game window, starting from `world_main.tscn` with ShowcasePanel visible.
+- Sidecar frame, optional: Web Debug or API response only when the voiceover references raw JSON.
+- If only one window can be captured, prioritize the Godot window; use the ShowcasePanel summary first, then click `Deep dive` to open Observer Dock.
 
 ## 60-second shot list
 
 | Time | Shot | What to show |
 | --- | --- | --- |
-| 0-5s | Project identity | `Loomstead`, playable town slice, observer/debug angle. |
-| 5-15s | Living town | Move the player across farm / plaza / tavern and let the HUD tick. |
-| 15-25s | Interaction | Approach an NPC or event, reveal candidate actions, press `E` or `Space`. |
-| 25-35s | Event result | Inspect or attend an active event and let the VN result panel appear. |
-| 35-48s | Observer dock | Press `Tab`, select an NPC, show motivation, subjective memory, relationships, and heuristics. |
-| 48-58s | Trace evidence | Switch trace filters, use Prev / Next, copy a trace JSON item. |
-| 58-60s | Closing frame | Hold on the selected NPC plus `/api/debug.phase2`; caption: `World state + behavior trace + interactive debug`. |
+| 0-10s | Showcase first read | Godot opens with ShowcasePanel visible. Keep Goal, Director Beat, Event Skill readable in one frame. |
+| 10-20s | Town stage context | Keep the center town stage visible behind the panels; briefly move the player or let NPC/HUD activity show runtime continuity. |
+| 20-35s | NPC decision | Hold on the NPC Decision card and point to the selected NPC on the stage. Voiceover: motivation drives tool choice indirectly. |
+| 35-45s | Trace Evidence strip | Pan attention to the bottom Trace Evidence Strip; show the five-stage causal order and fallback/ready status. |
+| 45-55s | Deep dive | Click `Deep dive`; Observer Dock opens and focuses the relevant NPC / trace filter when trace is available. |
+| 55-60s | Closing frame | Hold ShowcasePanel + Observer Dock side by side if readable; caption: `C2/C3/C4 promoted with caveat`. |
 
 ### Subject → shot coverage (R1.1)
 
@@ -68,9 +67,10 @@ Each subject the Demo_Recording may present has at least one dedicated shot:
 
 | Demo subject | Covering shot(s) |
 | --- | --- |
-| NPC autonomous life | 5-15s Living town, 15-25s Interaction, 25-35s Event result |
-| Trace causal chain | 35-48s Observer dock, 48-58s Trace evidence |
-| Rashomon memory (subjective memory view) | 35-48s Observer dock (subjective memory tab; compare the same event across two NPCs) |
+| Director / Event Skill causal chain | 0-10s Showcase first read, 35-45s Trace Evidence strip |
+| NPC autonomous life | 10-20s Town stage context, 20-35s NPC decision |
+| Trace causal chain | 35-45s Trace Evidence strip, 45-55s Deep dive |
+| Rashomon memory (subjective memory view) | 45-55s Deep dive if the operator switches Observer Dock to memory/relationships |
 
 The Demo_Recording needs to present at least one of these subjects; the shot list above covers all three so the operator can choose.
 
@@ -100,12 +100,16 @@ If the backend runtime reports a tick failure before recording:
 3. Confirm the backend processes at least one tick without failure before capturing the Demo_Recording (watch the tick counter advance with no failure entry).
 4. Only after one clean tick is confirmed, start recording.
 
-## Godot window manual recheck (R2.1 / R2.2)
+## Godot Showcase Mode manual recheck (R2.1 / R2.2)
 
 Each behavior below requires manual window verification before recording. For each one, record a manual pass/fail using the stated expected observable result. These are Manual_Verification_Gate items and cannot be satisfied by an offline gate.
 
 | Behavior | Expected observable window result (operator records pass/fail) |
 | --- | --- |
+| ShowcasePanel default first screen | Opening `world_main.tscn` shows the ShowcasePanel by default. Pass = 10 seconds内可读到 Goal / Director Beat / Event Skill / NPC Decision / Trace Evidence；fail = first screen still requires hunting through debug lists. |
+| F1 / Tab shortcuts | Pressing `F1` hides/shows ShowcasePanel; pressing `Tab` still opens Observer Dock. Pass = both shortcuts work independently; fail = one shortcut blocks the other. |
+| Deep dive | Clicking `Deep dive` opens Observer Dock and selects the relevant NPC; if trace exists, the focused trace appears in Phase 2 Debug. Pass = dock opens and content changes; fail = click does nothing or loses NPC context. |
+| Backend unreachable card | With backend stopped, the window stays responsive and ShowcasePanel shows a readable error card. Pass = no freeze, clear endpoint/error text; fail = blank/frozen UI. |
 | Observer Dock trace filtering | Switching the trace filter among decision / tool / interrupt / memory updates the trace timeline to show only matching events, newest first, capped at the most recent 50. Pass = list visibly re-filters and re-orders; fail = stale or unfiltered list. |
 | Observer Dock Prev / Next navigation | Prev / Next moves the selected trace detail one step and the position indicator shows `current/total`; at the ends the index clamps (does not wrap past first/last). Pass = single-step move with a correct `current/total` indicator; fail = index out of range, no indicator, or no movement. |
 | Interruption layout | When an interruption occurs, the interruption view renders in its expected on-screen position without overlapping/clipping the Observer Dock or HUD, and remains readable. Pass = interruption layout is visible, correctly placed, and readable; fail = missing, overlapping, or clipped layout. |
@@ -113,8 +117,11 @@ Each behavior below requires manual window verification before recording. For ea
 ## Manual verification checklist
 
 - [ ] Backend running without tick failures (see tick-failure recovery above).
-- [ ] Godot window shows the default `world_main.tscn`.
-- [ ] Observer dock opens with `Tab`.
+- [ ] Godot window shows `world_main.tscn` with ShowcasePanel visible by default.
+- [ ] Within 10 seconds, Goal / Director Beat / Event Skill / NPC Decision / Trace Evidence are readable.
+- [ ] `F1` toggles ShowcasePanel.
+- [ ] `Tab` opens Observer Dock.
+- [ ] `Deep dive` opens Observer Dock and selects the relevant NPC / trace focus when available.
 - [ ] NPC selection updates the dock.
 - [ ] Trace filter and `Copy trace` feedback are visible.
 - [ ] Trace Prev / Next navigation steps correctly with a `current/total` indicator (R2.1/R2.2).
@@ -125,6 +132,7 @@ Each behavior below requires manual window verification before recording. For ea
 
 ## Known risks
 
+- ShowcasePanel real-window layout still needs Computer Use recheck before final recording.
 - Latest Trace navigation / interruption layout still needs real-window recheck.
 - `prompt_ready` expression variants and action icons are still asset backlog.
 - Backend downtime leaves the Godot scene visible but removes the live runtime story.

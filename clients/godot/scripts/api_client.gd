@@ -3,7 +3,7 @@ extends Node
 
 var base_url: String = "http://127.0.0.1:8787"
 var request_timeout_seconds: float = 10.0
-# 启动期连接尝试上限：R2.4 要求 5 秒内无法连到后端即视为不可达，
+# 启动期连接尝试上限：R2.4 要求 5 秒内无法连到后端即视为不可达。
 # 区别于常规请求的 10 秒超时，避免不可达时迟迟不回退到可见提示。
 var connect_attempt_timeout_seconds: float = 5.0
 var _http: HTTPRequest
@@ -15,9 +15,13 @@ func get_world_state() -> Dictionary:
 
 
 func get_world_state_initial_connect() -> Dictionary:
-	# 启动期可达性探测：用 5 秒连接尝试上限对齐 R2.4，不复用默认 10 秒请求超时，
-	# 确保后端不可达时能在 5 秒内回退到 HUD 可见的「后端不可达」提示（R2.4 / R2.5）。
+	# 启动期可达性探测：用 5 秒连接尝试上限对齐 R2.4。
 	return await _request_json("GET", "/api/world/state", {}, connect_attempt_timeout_seconds)
+
+
+func get_showcase_starlight() -> Dictionary:
+	# Showcase Mode v1 只读聚合接口：摘要层不直接拼接 Director / Skill / Trace 原始 API。
+	return await _request_json("GET", "/api/showcase/starlight", {})
 
 
 func post_player_action(action: Dictionary) -> Dictionary:

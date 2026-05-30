@@ -197,6 +197,365 @@ class AgentRuntime:
             "influenceChain": self.get_influence_chain_debug(filters),
         }
 
+    def get_starlight_showcase_snapshot(self, filters: dict[str, Any] | None = None) -> dict[str, Any]:
+        """输出 Showcase Mode v1 的只读星灯祭讲解聚合包。"""
+        filters = filters or {}
+        skill = get_event_skill(STARLIGHT_FESTIVAL_SHORTAGE_SKILL_ID)
+        skill_snapshot = self._event_skill_snapshot(skill)
+        active_event = self._showcase_event_for_skill(skill, skill_snapshot)
+        active_focus = self.world.get("activeFocus") if isinstance(self.world.get("activeFocus"), dict) else {}
+        trace_rows = self._phase2_all_trace_snapshots()
+        selected_trace = self._showcase_select_trace(trace_rows)
+        npc_id = self._showcase_primary_npc_id(filters, active_focus, selected_trace, skill)
+        decision = self._showcase_decision_for_npc(npc_id, selected_trace)
+        deep_links = self._showcase_deep_links(npc_id, selected_trace, skill)
+
+        scenario = {
+            "id": "starlight_festival_shortage",
+            "title": "星灯祭供应短缺",
+            "mode": "hybrid",
+            "audience": "portfolio_reviewer",
+            "locationId": active_event.get("locationId") or skill.trigger.location_id,
+            "eventId": skill.event_id,
+            "skillId": skill.skill_id,
+            "primaryNpcId": npc_id,
+            "status": skill_snapshot.get("status") or active_event.get("status") or "registered",
+            "caption": "固定讲解一条因果链，背后读取真实 runtime / trace / world state。",
+        }
+
+        goal_card = self._showcase_goal_card(scenario)
+        director_card = self._showcase_director_card(active_focus, skill, active_event)
+        event_skill_card = self._showcase_event_skill_card(skill_snapshot, active_event)
+        npc_decision_card = self._showcase_npc_decision_card(npc_id, decision, selected_trace)
+        trace_evidence_card = self._showcase_trace_evidence_card(selected_trace, trace_rows)
+
+        return {
+            "schemaVersion": "showcase.starlight.v1",
+            "scenario": scenario,
+            "goalCard": goal_card,
+            "directorCard": director_card,
+            "eventSkillCard": event_skill_card,
+            "npcDecisionCard": npc_decision_card,
+            "traceEvidenceCard": trace_evidence_card,
+            "traceStrip": self._showcase_trace_strip(
+                goal_card=goal_card,
+                director_card=director_card,
+                event_skill_card=event_skill_card,
+                npc_decision_card=npc_decision_card,
+                trace_evidence_card=trace_evidence_card,
+                active_focus=active_focus,
+                skill=skill,
+                selected_trace=selected_trace,
+            ),
+            "deepLinks": deep_links,
+        }
+
+    def _showcase_goal_card(self, scenario: dict[str, Any]) -> dict[str, Any]:
+        """生成面向评审的演示目标卡。"""
+        return self._showcase_card(
+            card_id="goal",
+            kicker="Goal",
+            title="展示目标：看见间接驱动链",
+            summary="Director 不直接操控 NPC 行为；它把星灯祭供应短缺推入注意力焦点，让 NPC 依照动机、关系与工具约束自行决策。",
+            fields=[
+                {"label": "场景", "value": str(scenario.get("title") or "星灯祭供应短缺")},
+                {"label": "评审 10 秒内应读到", "value": "目标、Director、Event Skill、NPC 决策、Trace 证据"},
+                {"label": "口径", "value": "promoted with caveat；本界面只做摘要导航"},
+            ],
+            evidence_refs=[{"source": "showcase", "path": "scenario"}],
+        )
+
+    def _showcase_director_card(self, active_focus: dict[str, Any], skill: EventSkillSchema, active_event: dict[str, Any]) -> dict[str, Any]:
+        """生成 Director 间接影响卡。"""
+        if active_focus:
+            beat_id = str(active_focus.get("beatId") or "active_focus")
+            target_agents = active_focus.get("targetAgents") if isinstance(active_focus.get("targetAgents"), list) else []
+            summary = "Director Beat 已把事件焦点推给世界状态，后续由 Event Skill 与 NPC 动机系统接力。"
+            status = "ready"
+            fields = [
+                {"label": "Beat", "value": beat_id},
+                {"label": "目标 NPC", "value": ", ".join(str(item) for item in target_agents) or "kai, bram"},
+                {"label": "事件", "value": str(active_focus.get("eventId") or active_event.get("id") or skill.event_id)},
+            ]
+            evidence_refs = [{"source": "world.activeFocus", "path": "activeFocus"}, {"source": "api", "path": "/api/debug/director"}]
+        else:
+            summary = "当前还没有 active focus；Showcase 使用已注册的星灯祭 Event Skill 与世界状态作为可读 fallback。"
+            status = "fallback"
+            fields = [
+                {"label": "Beat", "value": "等待 Director Beat"},
+                {"label": "可读链路", "value": "Goal → Event Skill → NPC Decision → Trace"},
+                {"label": "下一步", "value": "推进世界 tick 或打开 Deep dive 查看 Director 队列"},
+            ]
+            evidence_refs = [{"source": "api", "path": "/api/debug/director"}]
+        return self._showcase_card(
+            card_id="director",
+            kicker="Director Beat",
+            title="Director：只改变叙事条件",
+            summary=summary,
+            fields=fields,
+            evidence_refs=evidence_refs,
+            status=status,
+        )
+
+    def _showcase_event_skill_card(self, skill_snapshot: dict[str, Any], active_event: dict[str, Any]) -> dict[str, Any]:
+        """生成 Event Skill 讲解卡。"""
+        options = skill_snapshot.get("playerOptions") if isinstance(skill_snapshot.get("playerOptions"), list) else []
+        option_labels = [str(option.get("label") or option.get("id") or "") for option in options if isinstance(option, dict)]
+        fields = [
+            {"label": "Skill", "value": str(skill_snapshot.get("skillId") or STARLIGHT_FESTIVAL_SHORTAGE_SKILL_ID)},
+            {"label": "状态", "value": str(skill_snapshot.get("status") or active_event.get("status") or "registered")},
+            {"label": "玩家选项", "value": " / ".join(option_labels[:3]) + (" / …" if len(option_labels) > 3 else "")},
+        ]
+        return self._showcase_card(
+            card_id="eventSkill",
+            kicker="Event Skill",
+            title=str(skill_snapshot.get("title") or active_event.get("title") or "星灯祭供应短缺"),
+            summary=str(skill_snapshot.get("brief") or active_event.get("summary") or "事件 Skill 已注册，等待触发或结算。"),
+            fields=fields,
+            evidence_refs=[{"source": "skill_registry", "path": "event.starlight_festival_shortage"}, {"source": "api", "path": "/api/debug/skills"}],
+            status=str(skill_snapshot.get("status") or "registered"),
+        )
+
+    def _showcase_npc_decision_card(self, npc_id: str, decision: dict[str, Any], selected_trace: dict[str, Any] | None) -> dict[str, Any]:
+        """生成 NPC 决策摘要卡。"""
+        npc_name = str(decision.get("npcName") or npc_id or "kai")
+        primary_need = decision.get("primaryNeed") if isinstance(decision.get("primaryNeed"), dict) else {}
+        decision_payload = decision.get("decision") if isinstance(decision.get("decision"), dict) else {}
+        selected_tool = str(decision_payload.get("selectedToolId") or decision_payload.get("toolId") or "")
+        reason = str(decision_payload.get("reason") or decision_payload.get("decisionReason") or "rule_runtime")
+        urgency = primary_need.get("urgency", decision_payload.get("urgency", ""))
+        if selected_tool:
+            summary = f"{npc_name} 当前由 {primary_need.get('needId', 'primary_need')} 驱动，选择 {selected_tool}；Director 只提供事件压力。"
+            status = "ready"
+        else:
+            summary = f"{npc_name} 暂无可读决策；Showcase 保留卡位，等待下一次 Phase 2 motivation trace。"
+            status = "fallback"
+        fields = [
+            {"label": "NPC", "value": npc_name},
+            {"label": "主导动机", "value": str(primary_need.get("needId") or decision_payload.get("needId") or "pending")},
+            {"label": "工具选择", "value": selected_tool or "pending"},
+            {"label": "urgency", "value": str(urgency)},
+            {"label": "reason", "value": reason},
+        ]
+        evidence_refs = [{"source": "motivation_engine", "path": f"npc:{npc_id}"}]
+        if selected_trace:
+            evidence_refs.append({"source": "trace", "eventId": selected_trace.get("eventId"), "traceId": selected_trace.get("traceId")})
+        return self._showcase_card(
+            card_id="npcDecision",
+            kicker="NPC Decision",
+            title="NPC：动机间接驱动",
+            summary=summary,
+            fields=fields,
+            evidence_refs=evidence_refs,
+            status=status,
+        )
+
+    def _showcase_trace_evidence_card(self, selected_trace: dict[str, Any] | None, trace_rows: list[dict[str, Any]]) -> dict[str, Any]:
+        """生成 trace 证据卡。"""
+        if selected_trace:
+            details = selected_trace.get("details") if isinstance(selected_trace.get("details"), dict) else {}
+            fields = [
+                {"label": "eventType", "value": str(selected_trace.get("eventType") or "trace")},
+                {"label": "traceId", "value": str(selected_trace.get("traceId") or "")},
+                {"label": "eventId", "value": str(selected_trace.get("eventId") or "")},
+                {"label": "source refs", "value": str(len(details.get("contributingSources", [])) if isinstance(details.get("contributingSources"), list) else len(details.get("traceRefs", [])) if isinstance(details.get("traceRefs"), list) else 0)},
+            ]
+            return self._showcase_card(
+                card_id="traceEvidence",
+                kicker="Trace Evidence",
+                title="Trace：可追溯证据",
+                summary=str(selected_trace.get("summary") or "Trace 已记录决策或工具执行。"),
+                fields=fields,
+                evidence_refs=[{"source": "api", "path": "/api/debug.phase2"}, {"source": "trace", "eventId": selected_trace.get("eventId"), "traceId": selected_trace.get("traceId")}],
+                status="ready",
+            )
+
+        return self._showcase_card(
+            card_id="traceEvidence",
+            kicker="Trace Evidence",
+            title="Trace：等待证据写入",
+            summary="当前 EventStore 中还没有 Phase 2 trace；推进世界 tick 后会出现 motivation / tool / memory 证据。",
+            fields=[
+                {"label": "trace rows", "value": str(len(trace_rows))},
+                {"label": "fallback", "value": "界面保持可读，Deep dive 仍可打开 Observer Dock"},
+            ],
+            evidence_refs=[{"source": "api", "path": "/api/debug.phase2"}],
+            status="fallback",
+        )
+
+    def _showcase_trace_strip(
+        self,
+        *,
+        goal_card: dict[str, Any],
+        director_card: dict[str, Any],
+        event_skill_card: dict[str, Any],
+        npc_decision_card: dict[str, Any],
+        trace_evidence_card: dict[str, Any],
+        active_focus: dict[str, Any],
+        skill: EventSkillSchema,
+        selected_trace: dict[str, Any] | None,
+    ) -> list[dict[str, Any]]:
+        """生成底部 5 段式证据链。"""
+        trace_event_id = selected_trace.get("eventId") if selected_trace else ""
+        trace_id = selected_trace.get("traceId") if selected_trace else ""
+        return [
+            self._showcase_trace_item("goal", "Goal", goal_card, "showcase.goal", "", "", "scenario"),
+            self._showcase_trace_item(
+                "director",
+                "Director",
+                director_card,
+                "director.active_focus",
+                str(active_focus.get("beatId") or ""),
+                "",
+                "director",
+            ),
+            self._showcase_trace_item("skill", "Event Skill", event_skill_card, "event.skill", skill.event_id, "", "skills"),
+            self._showcase_trace_item("decision", "NPC Decision", npc_decision_card, "motivation.decision_made", str(trace_event_id or ""), str(trace_id or ""), "phase2"),
+            self._showcase_trace_item("trace", "Trace Evidence", trace_evidence_card, str(selected_trace.get("eventType") if selected_trace else "trace.pending"), str(trace_event_id or ""), str(trace_id or ""), "traceFocus"),
+        ]
+
+    def _showcase_trace_item(
+        self,
+        stage: str,
+        label: str,
+        card: dict[str, Any],
+        event_type: str,
+        event_id: str,
+        trace_id: str,
+        deep_link_key: str,
+    ) -> dict[str, Any]:
+        """把卡片摘要压成底部 trace strip 条目。"""
+        return {
+            "stage": stage,
+            "label": label,
+            "summary": self._short_debug_text(str(card.get("summary") or ""), 118),
+            "eventType": event_type,
+            "eventId": event_id,
+            "traceId": trace_id,
+            "status": str(card.get("status") or "ready"),
+            "deepLinkKey": deep_link_key,
+        }
+
+    def _showcase_card(
+        self,
+        *,
+        card_id: str,
+        kicker: str,
+        title: str,
+        summary: str,
+        fields: list[dict[str, Any]] | None = None,
+        evidence_refs: list[dict[str, Any]] | None = None,
+        status: str = "ready",
+    ) -> dict[str, Any]:
+        """统一 Showcase 卡片结构，方便 Godot 只按固定字段渲染。"""
+        return {
+            "id": card_id,
+            "kicker": kicker,
+            "title": title,
+            "summary": summary,
+            "fields": fields or [],
+            "evidenceRefs": evidence_refs or [],
+            "status": status,
+        }
+
+    def _showcase_event_for_skill(self, skill: EventSkillSchema, skill_snapshot: dict[str, Any]) -> dict[str, Any]:
+        """读取 Skill 关联事件，缺失时返回只读 fallback。"""
+        for key in ("activeEvent", "completedEvent"):
+            value = skill_snapshot.get(key)
+            if isinstance(value, dict):
+                return dict(value)
+        return {
+            "id": skill.event_id,
+            "title": skill.title,
+            "locationId": skill.trigger.location_id,
+            "phase": skill.trigger.phase,
+            "status": "registered",
+            "summary": skill.brief,
+            "participants": list(skill.participants),
+        }
+
+    def _showcase_primary_npc_id(
+        self,
+        filters: dict[str, Any],
+        active_focus: dict[str, Any],
+        selected_trace: dict[str, Any] | None,
+        skill: EventSkillSchema,
+    ) -> str:
+        """选择 Deep dive 默认 NPC。"""
+        requested = self._str_filter(filters, "agentId") or self._str_filter(filters, "npcId")
+        if requested:
+            return requested
+        targets = active_focus.get("targetAgents") if isinstance(active_focus.get("targetAgents"), list) else []
+        for target in targets:
+            target_id = str(target or "").strip()
+            if target_id and target_id != "player":
+                return target_id
+        if selected_trace:
+            trace_agent_id = str(selected_trace.get("agentId") or "").strip()
+            if trace_agent_id:
+                return trace_agent_id
+        for participant in skill.participants:
+            if participant in {"kai", "bram"}:
+                return participant
+        return "kai"
+
+    def _showcase_select_trace(self, trace_rows: list[dict[str, Any]]) -> dict[str, Any] | None:
+        """优先选择最能解释动机决策的 trace。"""
+        if not trace_rows:
+            return None
+        for event_type in ("motivation.decision_made", "tool.execution_completed", "memory.result_observed"):
+            for row in reversed(trace_rows):
+                if str(row.get("eventType") or "") == event_type:
+                    return dict(row)
+        return dict(trace_rows[-1])
+
+    def _showcase_decision_for_npc(self, npc_id: str, selected_trace: dict[str, Any] | None) -> dict[str, Any]:
+        """从 trace 或实时动机评估里提取 NPC 决策摘要，不写入世界状态。"""
+        if selected_trace:
+            details = selected_trace.get("details") if isinstance(selected_trace.get("details"), dict) else {}
+            if str(selected_trace.get("eventType") or "") == "motivation.decision_made" and details:
+                selected_tool = str(details.get("selectedToolId") or "")
+                return {
+                    "npcId": str(details.get("npcId") or selected_trace.get("agentId") or npc_id),
+                    "npcName": self._showcase_npc_name(str(details.get("npcId") or selected_trace.get("agentId") or npc_id)),
+                    "primaryNeed": {"needId": details.get("needId"), "urgency": details.get("urgency")},
+                    "decision": {
+                        "selectedToolId": selected_tool,
+                        "reason": details.get("decisionReason") or "trace",
+                        "candidateScores": details.get("candidateScores") if isinstance(details.get("candidateScores"), list) else [],
+                        "contributingSources": details.get("contributingSources") if isinstance(details.get("contributingSources"), list) else [],
+                    },
+                }
+        try:
+            decisions = self._phase2_decisions([npc_id])
+        except (KeyError, ValueError):
+            decisions = []
+        for decision in decisions:
+            if isinstance(decision, dict):
+                return decision
+        return {"npcId": npc_id, "npcName": self._showcase_npc_name(npc_id), "primaryNeed": {}, "decision": {}}
+
+    def _showcase_npc_name(self, npc_id: str) -> str:
+        """读取 NPC 显示名。"""
+        agent = self.world.get("agents", {}).get(npc_id) if isinstance(self.world.get("agents"), dict) else None
+        if isinstance(agent, dict):
+            return str(agent.get("name") or npc_id)
+        card = self.npc_deep_cards.get(npc_id)
+        if card is not None:
+            return str(getattr(card, "name", npc_id))
+        return npc_id
+
+    def _showcase_deep_links(self, npc_id: str, selected_trace: dict[str, Any] | None, skill: EventSkillSchema) -> dict[str, str]:
+        """生成只指向现有 Debug API 的 Deep dive 链接。"""
+        event_id = str(selected_trace.get("eventId") or "") if selected_trace else ""
+        trace_id = str(selected_trace.get("traceId") or "") if selected_trace else ""
+        return {
+            "director": "/api/debug/director?limit=30",
+            "skills": f"/api/debug/skills?skillId={skill.skill_id}",
+            "phase2": f"/api/debug.phase2?agentId={npc_id}&limit=50",
+            "traceFocus": f"/api/debug.phase2?agentId={npc_id}&focusEventId={event_id}&focusTraceId={trace_id}&limit=50",
+        }
+
     def get_phase2_debug_snapshot(self, filters: dict[str, Any] | None = None) -> dict[str, Any]:
         filters = filters or {}
         npc_id = self._str_filter(filters, "agentId") or self._str_filter(filters, "agent_id")

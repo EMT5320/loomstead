@@ -6,6 +6,7 @@ const AssetRegistryScript := preload("res://scripts/asset_registry.gd")
 const PlayerControllerScript := preload("res://scripts/world/player_controller.gd")
 const VnPanelScript := preload("res://scripts/ui/vn_panel.gd")
 const ObserverPanelScript := preload("res://scripts/ui/observer_panel.gd")
+const ShowcasePanelScript := preload("res://scripts/ui/showcase_panel.gd")
 const TopBannerScript := preload("res://scripts/ui/top_banner.gd")
 const ConnectionStatusBannerScript := preload("res://scripts/ui/connection_status_banner.gd")
 
@@ -103,6 +104,7 @@ var _player_controller
 var _camera: Camera2D
 var _vn_panel
 var _observer_panel
+var _showcase_panel
 var _top_banner
 var _connection_banner
 var _nearest_npc_id := ""
@@ -112,6 +114,7 @@ var _observer_phase2_request_msec: Dictionary = {}
 var _observer_phase2_in_flight: Dictionary = {}
 var _talk_in_flight := false
 var _snapshot_in_flight := false
+var _showcase_request_in_flight := false
 var _latest_clock: Dictionary = {}
 var _npc_plans: Dictionary = {}
 var _npc_statuses: Dictionary = {}
@@ -142,6 +145,7 @@ func _ready() -> void:
 	_build_observer_panel()
 	_build_top_banner()
 	_build_connection_banner()
+	_build_showcase_panel()
 	_connect_event_bus()
 	_connect_world_clock()
 	call_deferred("_request_initial_world_snapshot")
@@ -162,6 +166,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey:
 		var key_event := event as InputEventKey
 		if key_event.pressed and not key_event.echo:
+			if key_event.keycode == KEY_F1:
+				_toggle_showcase_panel()
+				get_viewport().set_input_as_handled()
+				return
 			if key_event.keycode == KEY_TAB:
 				_toggle_observer_panel()
 				get_viewport().set_input_as_handled()
@@ -416,6 +424,17 @@ func _build_observer_panel() -> void:
 			_observer_panel.trace_source_requested.connect(_on_observer_panel_trace_source_requested)
 
 
+func _build_showcase_panel() -> void:
+	# ShowcasePanel 是启动第一屏的摘要导览层；完整调试仍由 ObserverPanel 承担。
+	_showcase_panel = ShowcasePanelScript.new()
+	_showcase_panel.name = "ShowcasePanel"
+	add_child(_showcase_panel)
+	if not _showcase_panel.deep_dive_requested.is_connected(_on_showcase_deep_dive_requested):
+		_showcase_panel.deep_dive_requested.connect(_on_showcase_deep_dive_requested)
+	if not _showcase_panel.refresh_requested.is_connected(_request_showcase_payload):
+		_showcase_panel.refresh_requested.connect(_request_showcase_payload)
+
+
 func _build_top_banner() -> void:
 	_top_banner = TopBannerScript.new()
 	_top_banner.name = "TopBanner"
@@ -451,6 +470,14 @@ func _on_observer_panel_trace_source_requested(npc_id, event_id, trace_id) -> vo
 	if trimmed_npc_id == "":
 		return
 	_request_phase2_debug_for_observer(trimmed_npc_id, str(event_id).strip_edges(), str(trace_id).strip_edges())
+
+
+func _on_showcase_deep_dive_requested(npc_id, event_id, trace_id) -> void:
+	var trimmed_npc_id := str(npc_id).strip_edges()
+	if trimmed_npc_id == "":
+		trimmed_npc_id = "kai"
+	# Deep dive 打开现有 Observer Dock，并把 Showcase 选中的 trace 作为 focus 传入。
+	_select_observer_npc(trimmed_npc_id, str(event_id).strip_edges(), str(trace_id).strip_edges())
 
 
 func _on_observer_panel_highlight_npcs_requested(npc_ids) -> void:
@@ -506,6 +533,12 @@ func _toggle_observer_panel() -> void:
 	_refresh_observer_panel_for(_selected_observer_npc_id)
 
 
+func _toggle_showcase_panel() -> void:
+	if _showcase_panel == null:
+		return
+	_showcase_panel.toggle_panel_visible()
+
+
 func _select_observer_npc_by_mouse() -> bool:
 	var clicked_point := get_global_mouse_position()
 	var selected_id := ""
@@ -526,14 +559,14 @@ func _select_observer_npc_by_mouse() -> bool:
 	return true
 
 
-func _select_observer_npc(npc_id: String) -> void:
+func _select_observer_npc(npc_id: String, focus_event_id: String = "", focus_trace_id: String = "") -> void:
 	_selected_observer_npc_id = npc_id
 	if _observer_panel != null:
 		_observer_panel.set_panel_visible(true)
-	_refresh_observer_panel_for(npc_id)
+	_refresh_observer_panel_for(npc_id, focus_event_id, focus_trace_id)
 
 
-func _refresh_observer_panel_for(npc_id: String) -> void:
+func _refresh_observer_panel_for(npc_id: String, focus_event_id: String = "", focus_trace_id: String = "") -> void:
 	if _observer_panel == null:
 		return
 	var controller := _npc_nodes.get(npc_id, null) as NpcController
@@ -554,7 +587,9 @@ func _refresh_observer_panel_for(npc_id: String) -> void:
 	}
 	_observer_panel.set_selected_npc(npc_payload)
 	_apply_cached_phase2_debug(npc_id)
-	_request_phase2_debug_for_observer(npc_id)
+	if focus_event_id.strip_edges() != "" or focus_trace_id.strip_edges() != "":
+		_observer_phase2_cache.erase(npc_id)
+	_request_phase2_debug_for_observer(npc_id, focus_event_id, focus_trace_id)
 
 
 func _observer_anchor_for(controller: NpcController, plan_data) -> String:
@@ -989,6 +1024,8 @@ func _request_initial_world_snapshot() -> void:
 		# 连接级失败（连不上 / 解析不到 / 无响应 / 5 秒超时）→ 显示后端不可达指示。
 		if bool(response.get("unreachable", false)) and _connection_banner != null:
 			_connection_banner.show_unreachable("启动连接失败：%s" % reason)
+		if _showcase_panel != null:
+			_showcase_panel.show_backend_error(reason)
 		return
 	# 成功连到后端：确保不再显示不可达指示。
 	if _connection_banner != null:
@@ -996,6 +1033,35 @@ func _request_initial_world_snapshot() -> void:
 	var data = response.get("data", {})
 	if data is Dictionary:
 		_apply_world_state_snapshot(data)
+		call_deferred("_request_showcase_payload")
+
+
+func _request_showcase_payload() -> void:
+	if _showcase_panel == null or _api_client == null:
+		return
+	if _showcase_request_in_flight:
+		return
+	_showcase_request_in_flight = true
+	call_deferred("_fetch_showcase_payload")
+
+
+func _fetch_showcase_payload() -> void:
+	await _fetch_showcase_payload_async()
+
+
+func _fetch_showcase_payload_async() -> void:
+	var response := await _api_client.get_showcase_starlight()
+	_showcase_request_in_flight = false
+	if _showcase_panel == null:
+		return
+	if not bool(response.get("ok", false)):
+		_showcase_panel.show_backend_error(str(response.get("error", "unknown error")))
+		return
+	var payload = response.get("data", {})
+	if payload is Dictionary:
+		_showcase_panel.set_showcase_payload(payload as Dictionary)
+	else:
+		_showcase_panel.show_backend_error("showcase 响应格式错误")
 
 
 func _apply_world_state_snapshot(snapshot: Dictionary) -> void:

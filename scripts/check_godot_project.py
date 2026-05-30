@@ -29,6 +29,7 @@ required_files = [
     GODOT_ROOT / "scripts" / "ui" / "hud.gd",
     GODOT_ROOT / "scripts" / "ui" / "vn_panel.gd",
     GODOT_ROOT / "scripts" / "ui" / "observer_panel.gd",
+    GODOT_ROOT / "scripts" / "ui" / "showcase_panel.gd",
 ]
 
 for file_path in required_files:
@@ -50,6 +51,7 @@ town_map = read(GODOT_ROOT / "scripts" / "world" / "town_map.gd")
 hud = read(GODOT_ROOT / "scripts" / "ui" / "hud.gd")
 vn_panel = read(GODOT_ROOT / "scripts" / "ui" / "vn_panel.gd")
 observer_panel = read(GODOT_ROOT / "scripts" / "ui" / "observer_panel.gd")
+showcase_panel = read(GODOT_ROOT / "scripts" / "ui" / "showcase_panel.gd")
 
 checks = {
     "project main scene": 'run/main_scene="res://scenes/world_main.tscn"' in project,
@@ -58,6 +60,7 @@ checks = {
     "world main scene script": 'path="res://scripts/world/town_map.gd"' in world_main_scene,
     "world main scene hud": 'path="res://scripts/ui/hud.gd"' in world_main_scene,
     "world state endpoint": '"/api/world/state"' in api_client,
+    "showcase starlight endpoint": '"/api/showcase/starlight"' in api_client and "func get_showcase_starlight" in api_client,
     "player action endpoint": '"/api/player/action"' in api_client,
     "world tick endpoint": '"/api/world/tick"' in api_client and "func tick(" in api_client,
     "api class": "class_name ApiClient" in api_client,
@@ -95,6 +98,8 @@ checks = {
     "town map observer effective heuristic": "effectiveConfidence" in town_map,
     "town map vn panel": "VnPanelScript" in town_map and "show_dialogue" in town_map and "show_busy" in town_map,
     "town map observer panel": "ObserverPanelScript" in town_map and "get_phase2_debug" in town_map and "_build_phase2_observer_summary" in town_map,
+    "town map showcase panel": "ShowcasePanelScript" in town_map and "_build_showcase_panel" in town_map and "_request_showcase_payload" in town_map,
+    "town map showcase keys": "KEY_F1" in town_map and "_toggle_showcase_panel" in town_map and "_on_showcase_deep_dive_requested" in town_map,
     "town map camera follow": "Camera2D" in town_map and "make_current" in town_map,
     "town map npc wiring": "_ensure_npc_controller" in town_map and "_on_npc_motion_event" in town_map,
     "town map backend ids": "farm_house_door" in town_map and "tavern_stage" in town_map and "DEMO_SPAWN_ANCHORS" in town_map and "npc_kai" not in town_map,
@@ -115,6 +120,11 @@ checks = {
     "observer panel copy feedback duration": "TRACE_COPY_FEEDBACK_SECONDS := 2.0" in observer_panel,
     # 任务 9.4（R4.1/R4.3/R4.8/R4.9）：身份四字段 + loading 文案（SECTION_LOADING_TEXT + 四 section loading 渲染）+ placeholder（SECTION_EMPTY_TEXT）+ 同步失败语义指示。
     "observer panel loading vs placeholder states": "_identity_id_label" in observer_panel and "_identity_name_label" in observer_panel and "_identity_location_label" in observer_panel and "_identity_anchor_label" in observer_panel and "SECTION_LOADING_TEXT" in observer_panel and "_render_loading_motivation" in observer_panel and "_render_loading_memory" in observer_panel and "_render_loading_relationships" in observer_panel and "_render_loading_heuristics" in observer_panel and "SECTION_EMPTY_TEXT" in observer_panel and "同步失败" in observer_panel and "show_phase2_error" in observer_panel,
+    "showcase panel class": "class_name ShowcasePanel" in showcase_panel and "extends CanvasLayer" in showcase_panel,
+    "showcase panel default visible": "set_panel_visible(true)" in showcase_panel and "func toggle_panel_visible" in showcase_panel,
+    "showcase panel required cards": "goalCard" in showcase_panel and "directorCard" in showcase_panel and "eventSkillCard" in showcase_panel and "npcDecisionCard" in showcase_panel and "traceEvidenceCard" in showcase_panel,
+    "showcase panel deep dive": "signal deep_dive_requested" in showcase_panel and "Deep dive" in showcase_panel and "_trace_focus_from_strip" in showcase_panel,
+    "showcase panel backend fallback": "show_backend_error" in showcase_panel and "Backend error" in showcase_panel,
     "asset registry class": "class_name AssetRegistry" in asset_registry,
     "asset registry backgrounds": "farm_day_anime.png" in asset_registry and "tavern_evening_anime.png" in asset_registry,
     "asset registry portraits": "npc_orren_neutral.png" in asset_registry and "player_farmer_neutral.png" in asset_registry,

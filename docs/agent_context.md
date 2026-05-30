@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: context-governance
-last_verified: 2026-05-29
+last_verified: 2026-05-30
 startup_load: first-read
 source_of_truth: true
 scope: 新对话入口、当前边界、最近下一步
@@ -44,6 +44,7 @@ scope: 新对话入口、当前边界、最近下一步
 
 ## 5. 最近下一步
 
+- Showcase Mode v1 已进入收口批次：后端 `/api/showcase/starlight` + Godot 默认可见 `ShowcasePanel` + `F1` / `Tab` / `Deep dive` 路由已落地；离线门禁已通过，Computer Use 真实窗口 spot-check 已确认首屏摘要、`F1`、`Tab`、`Deep dive` 可用；最终 demo 视频 / GIF / 截图仍待录制。
 - B 真实 LLM 证据线：4 个 Process Fidelity GoalSpec × 5 seed × 5 baseline 的 cloud provider usage 已整理并 promote 到 `.run/eval-promoted/run_2026-05-29T13-57-50Z`；C2/C3/C4 已获主人确认使用 `promoted with caveat`，promotion note 已写入，机器状态仍保留 git.dirty / drift caveat。
 - A 求职展示线（进行中）：README Watch / Research 双入口、`paper/blog_main.md`、`docs/demo_capture_plan.md`、`docs/showcase_manifest.md` 与 `showcase:check` 已落地；Figure/Table 覆盖率已到 70%。下一步是人工真实窗口复验并录制 / 截取视频、GIF、截图素材。
 - C Phase 4 玩家成为变量线：gossip 真扩散 + 1 跨日 emergence scenario

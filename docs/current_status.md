@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: project-status
-last_verified: 2026-05-29
+last_verified: 2026-05-30
 startup_load: after-agent-context
 source_of_truth: true
 scope: 当前实现事实、验证状态、人工验收边界
@@ -33,6 +33,12 @@ scope: 当前实现事实、验证状态、人工验收边界
 | 上下文治理 | `docs/context_governance.md` 是治理协议；`AGENTS.md` / `CLAUDE.md` / `docs/agent_context.md` / 本文 / `docs/phase_checkpoints.md` 是当前事实入口；`scripts/build_agent_context.py` 提供 `context:check` / `context:brief` / `context:resume`；旧设计文档（agentic_game_design / gameplay_system_architecture / game_content_storyline / npc_deep_card_spec）已归档至 `docs/archive/`。 |
 | 跨环境 artifact | 双环境只同步已整理证据子树：`.run/eval-promoted/`、`.run/eval-reviewer-packets/`、`.run/process-llm-evidence/` 中的命名证据文件。`.run/eval-runs/` 已回归本地滚动区（`.gitignore` 忽略），`.run/process-llm-evidence/latest*.json` 也是本地 cache（`.gitignore` 忽略）；跨机复盘靠 `eval:archive:promote` 把被 claim 引用的 run 复制到 `eval-promoted`，并用 `cloud-*.json` / summary 命名 artifact 固定 provider usage。Godot 缓存、截图、Mermaid 临时配置、一次性脚本和日志继续按本地临时产物处理。 |
 
+## 2.1 Showcase Mode v1
+
+- `code integrated`：后端新增只读 `/api/showcase/starlight`，返回 `showcase.starlight.v1` 聚合包；Godot `world_main.tscn` 启动后默认可见 `ShowcasePanel`，摘要展示 `星灯祭供应短缺` 的 Goal / Director Beat / Event Skill / NPC Decision / Trace Evidence；`F1` 切换 ShowcasePanel，`Tab` 保留 Observer Dock，`Deep dive` 打开 Observer Dock 并传入 NPC / trace focus。
+- `manual verified`：Computer Use 真实窗口 spot-check 已确认启动 10 秒内可读 Goal / Director Beat / Event Skill / NPC Decision / Trace Evidence，`F1` 可切换 ShowcasePanel，`Tab` 可打开 Observer Dock，`Deep dive` 可定位到相关 NPC / trace。
+- `manual unverified`：最终 demo 视频 / GIF / 截图素材仍待录制；后端不可达错误卡后续可随最终录屏批次复验。
+
 ## 3. 当前缺口
 
 - **真实 LLM evidence**：cloud provider usage 已覆盖 4 个 Process Fidelity GoalSpec × 5 seed × 5 baseline，共 100 次 `CloudApiProvider` 调用、0 fallback、约 189,949 tokens / 0.02972032 USD。命名证据：`.run/process-llm-evidence/cloud-branna-forgiveness-2026-05-29.json`、`.run/process-llm-evidence/cloud-3goalspec-2026-05-29.json`、`.run/process-llm-evidence/cloud-4goalspec-summary-2026-05-29.json`；单 seed 跨机记录另存为 `cloud-branna-forgiveness-local-office-2026-05-29.json`。已通过 `eval:process:export` + `eval:archive:promote` 进入 `.run/eval-promoted/run_2026-05-29T13-57-50Z`，其 manifest `llmEvidence.recordCount=100`。C2/C3/C4 已由主人确认升级为 `promoted with caveat`。
@@ -55,7 +61,7 @@ scope: 当前实现事实、验证状态、人工验收边界
 
 ## 5. 人工验收
 
-- `manual verified`：2026-05-21 Phase 1 收口；2026-05-25 UI 重设计观感与可读性；2026-05-26 Trace `memory.result_observed` 可发现性 + 来源跳转；2026-05-29 C2/C3/C4 `promoted with caveat` claim-level 口径。
+- `manual verified`：2026-05-21 Phase 1 收口；2026-05-25 UI 重设计观感与可读性；2026-05-26 Trace `memory.result_observed` 可发现性 + 来源跳转；2026-05-29 C2/C3/C4 `promoted with caveat` claim-level 口径；2026-05-30 ShowcasePanel 首屏 / F1 / Tab / Deep dive Computer Use spot-check。
 - `manual unverified`：最新 Trace 50 条排序、Prev/Next clamp、Copy ≥2s、后端不可达横幅与中断布局真实窗口复验；`.run/eval-promoted/run_2026-05-29T13-57-50Z` 机器层 promotion status 仍是 `needs_manual_review`（git.dirty / drift caveat 已写说明）；`.run/eval-promoted/stability_2026-05-25T07-34-55Z` promotion 的 drift 人工说明；`prompt_ready` 资产生成与登记；求职展示线最终视频 / GIF / 截图。
 
 ## 6. 当前可运行命令

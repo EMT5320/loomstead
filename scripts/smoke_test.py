@@ -98,6 +98,19 @@ REQUIRED_DEBUG_SNAPSHOT_FIELDS = {
     "influenceChain",
 }
 
+REQUIRED_SHOWCASE_FIELDS = {
+    "schemaVersion",
+    "scenario",
+    "goalCard",
+    "directorCard",
+    "eventSkillCard",
+    "npcDecisionCard",
+    "traceEvidenceCard",
+    "traceStrip",
+    "deepLinks",
+}
+REQUIRED_SHOWCASE_CARD_FIELDS = {"id", "title", "kicker", "summary", "fields", "evidenceRefs", "status"}
+
 REQUIRED_DEBUG_TURN_FIELDS = {
     "eventId",
     "eventType",
@@ -1019,6 +1032,58 @@ def assert_phase2_schema_registry_contract(phase2: dict | None = None) -> dict:
     return {"registry": SCHEMA_REGISTRY_VERSION, "count": len(versions), "trace": versions["phase2_trace"]}
 
 
+def assert_showcase_starlight_contract(payload: dict, label: str) -> None:
+    """确认 Showcase Mode v1 聚合包可被 Godot 摘要层稳定消费。"""
+    missing = sorted(REQUIRED_SHOWCASE_FIELDS - set(payload))
+    if missing:
+        raise RuntimeError(f"{label} 缺少字段：{missing}")
+    if payload.get("schemaVersion") != "showcase.starlight.v1":
+        raise RuntimeError(f"{label}.schemaVersion 应为 showcase.starlight.v1")
+    scenario = payload.get("scenario")
+    if not isinstance(scenario, dict):
+        raise RuntimeError(f"{label}.scenario 应为对象")
+    for field in ("id", "title", "mode", "eventId", "skillId", "primaryNpcId", "status"):
+        if field not in scenario:
+            raise RuntimeError(f"{label}.scenario 缺少字段：{field}")
+    for card_key in ("goalCard", "directorCard", "eventSkillCard", "npcDecisionCard", "traceEvidenceCard"):
+        card = payload.get(card_key)
+        if not isinstance(card, dict):
+            raise RuntimeError(f"{label}.{card_key} 应为对象")
+        card_missing = sorted(REQUIRED_SHOWCASE_CARD_FIELDS - set(card))
+        if card_missing:
+            raise RuntimeError(f"{label}.{card_key} 缺少字段：{card_missing}")
+        if not str(card.get("summary") or "").strip():
+            raise RuntimeError(f"{label}.{card_key}.summary 不应为空")
+        if not isinstance(card.get("fields"), list):
+            raise RuntimeError(f"{label}.{card_key}.fields 应为数组")
+        if not isinstance(card.get("evidenceRefs"), list):
+            raise RuntimeError(f"{label}.{card_key}.evidenceRefs 应为数组")
+    trace_strip = payload.get("traceStrip")
+    if not isinstance(trace_strip, list) or len(trace_strip) != 5:
+        raise RuntimeError(f"{label}.traceStrip 应为 5 段因果条")
+    expected_stages = ["goal", "director", "skill", "decision", "trace"]
+    actual_stages = [str(item.get("stage") or "") for item in trace_strip if isinstance(item, dict)]
+    if actual_stages != expected_stages:
+        raise RuntimeError(f"{label}.traceStrip stage 顺序异常：{actual_stages}")
+    deep_links = payload.get("deepLinks")
+    if not isinstance(deep_links, dict):
+        raise RuntimeError(f"{label}.deepLinks 应为对象")
+    for key in ("director", "skills", "phase2", "traceFocus"):
+        if key not in deep_links or not str(deep_links[key]).startswith("/api/"):
+            raise RuntimeError(f"{label}.deepLinks.{key} 应指向现有 /api Debug 入口")
+
+
+def assert_showcase_starlight_readonly(app) -> None:
+    """确认 Showcase 聚合接口不会写入 world state。"""
+    app.runtime.get_game_state()
+    before = json.dumps(app.runtime.world, ensure_ascii=False, sort_keys=True, default=str)
+    payload = app.showcase_starlight({})
+    after = json.dumps(app.runtime.world, ensure_ascii=False, sort_keys=True, default=str)
+    assert_showcase_starlight_contract(payload, "direct /api/showcase/starlight")
+    if before != after:
+        raise RuntimeError("direct /api/showcase/starlight 不应改变 world state")
+
+
 def assert_debug_snapshot_contract(payload: dict, label: str) -> None:
     """确认 /api/debug 总览结构稳定，并复用压缩后的 Debug turn 契约。"""
     versions = schema_version_map()
@@ -1540,6 +1605,7 @@ def assert_http_debug_endpoints(api_app) -> dict:
         debug = fetch("/api/debug", {"skillId": STARLIGHT_FESTIVAL_SHORTAGE_SKILL_ID, "limit": "20"})
         world_tick_completed = post("/api/world/tick", {"deltaSeconds": 3600.0, "speed": 1.0})
         phase2_after_completion = fetch("/api/debug.phase2", {"limit": "40"})
+        showcase = fetch("/api/showcase/starlight")
         skill = fetch("/api/debug/skill", {"skillId": STARLIGHT_FESTIVAL_SHORTAGE_SKILL_ID})
         memory = fetch("/api/memory/search", {"query": "玩家", "tags": "night_reflection", "limit": "5"})
         influence = fetch("/api/debug/influence", {"skillId": STARLIGHT_FESTIVAL_SHORTAGE_SKILL_ID, "agentId": "kai", "query": "星灯祭", "limit": "30"})
@@ -1553,6 +1619,7 @@ def assert_http_debug_endpoints(api_app) -> dict:
         raise RuntimeError("HTTP /api/model-config/reload 应返回 ok=true")
     assert_model_config_contract(model_reload["modelConfig"], "HTTP /api/model-config/reload")
     assert_game_state_contract(world_state, "HTTP /api/world/state")
+    assert_showcase_starlight_contract(showcase, "HTTP /api/showcase/starlight")
     for field in ("clock", "events", "agents"):
         if field not in world_tick:
             raise RuntimeError(f"HTTP /api/world/tick 缺少字段：{field}")
@@ -1706,6 +1773,7 @@ assert_gossip_propagation_contract(app)
 
 game_state = app.get_game_state()
 assert_game_state_contract(game_state, "/api/world/state")
+assert_showcase_starlight_readonly(app)
 phase2_schema_summary = assert_phase2_schema_registry_contract(app.debug_phase2({}))
 if game_state["player"]["locationId"] != "farm":
     raise RuntimeError("玩家初始位置应为 farm")
