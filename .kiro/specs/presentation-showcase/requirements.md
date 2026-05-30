@@ -171,7 +171,7 @@
 
 #### Acceptance Criteria
 
-1. THE Showcase_Manifest SHALL record, for each of the five `P_demo.exit` exit criteria, a completion status that is exactly one of: pending, ready-for-owner-review, or not-accepted.
+1. THE Showcase_Manifest SHALL record, for each of the five `P_demo.exit` exit criteria, a completion status that is exactly one of: pending, done, or not-accepted.
 2. THE Showcase_Manifest SHALL record, for each deliverable tracked under a `P_demo.exit` exit criterion, a verification state that is exactly one of: code integrated, command checked, artifact backed, manual verified, or manual unverified.
 3. WHERE a deliverable depends on a real LLM, a human reviewer, or a real Godot window, THE Showcase_Manifest SHALL record that deliverable as a Manual_Verification_Gate item together with the specific manual dependency that blocks it, and SHALL NOT record that deliverable as satisfied by an offline gate.
 4. WHEN every one of the five `P_demo.exit` exit criteria has a completion status other than pending, THE Showcase_Manifest SHALL report the showcase line as ready for owner review.

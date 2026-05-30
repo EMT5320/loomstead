@@ -10,9 +10,10 @@
 
 ## 30-second portfolio path
 
-- **Watch the system shape**: run the Godot town slice and open the observer dock to see NPC motivation, subjective memory, relationship edges, heuristics, and trace events in one view. See the [60-second demo capture plan](docs/demo_capture_plan.md).
-- **Read the research spine**: start with [Motivational Delegation](docs/research_framing_motivational_delegation.md), [Process Fidelity Eval](docs/process_fidelity_eval_spec.md), and the owner-approved [claim evidence matrix](paper/claim_evidence_matrix.md).
-- **Inspect the strongest current evidence**: `C2`/`C3`/`C4` are now **promoted with caveat**, backed by `.run/eval-promoted/run_2026-05-29T13-57-50Z` and 100 cloud-provider arbitration records. Final empirical wording still requires human process ratings and broader scenario coverage.
+- **Watch the demo path**: run the Godot town slice and open the observer dock to see NPC motivation, subjective memory, relationship edges, heuristics, and trace events in one view. Start with the [60-second demo capture plan](docs/demo_capture_plan.md).
+- **Read the research path**: start with [Motivational Delegation](docs/research_framing_motivational_delegation.md), [Process Fidelity Eval](docs/process_fidelity_eval_spec.md), and the owner-approved [claim evidence matrix](paper/claim_evidence_matrix.md).
+
+Current evidence baseline: `C2`/`C3`/`C4` are **promoted with caveat**, backed by `.run/eval-promoted/run_2026-05-29T13-57-50Z` and 100 cloud-provider arbitration records. Final empirical wording still requires human process ratings and broader scenario coverage.
 
 Short research tagline:
 

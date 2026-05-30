@@ -30,6 +30,15 @@
 - LaTeX status: rendered PNG included in `paper/latex/sections/04_process_fidelity_eval.tex`.
 - Status: editable Mermaid source and rendered assets ready with two current clean-run trace examples plus aggregate guardrail annotation; publication-quality visual polish remains pending.
 
+## Figure 4: Relationship evidence path
+
+- Goal: visualize how an objective event becomes subjective memory, relationship-edge evidence, trace references, later NPC arbitration, and counterfactual replay evidence for C4.
+- Source files: `.run/eval-promoted/run_2026-05-29T13-57-50Z/summary.json`, `.run/eval-promoted/run_2026-05-29T13-57-50Z/per_scenario/*.json`, `paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md`.
+- Draft source: `paper/diagrams/relationship_evidence_figure4.mmd`.
+- Rendered assets: `paper/generated/figures/relationship_evidence_figure4.svg`.
+- LaTeX status: SVG asset exists for showcase coverage; paper placement and PNG / PDF export remain pending.
+- Status: draft source and SVG asset ready for showcase coverage; publication-quality visual polish and Mermaid CLI regeneration remain pending.
+
 ## Table 1: Metric families
 
 - Goal: summarize goal achievement, process fidelity, autonomy, memory causality, traceability, side effects.

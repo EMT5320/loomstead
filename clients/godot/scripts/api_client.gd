@@ -3,12 +3,21 @@ extends Node
 
 var base_url: String = "http://127.0.0.1:8787"
 var request_timeout_seconds: float = 10.0
+# 启动期连接尝试上限：R2.4 要求 5 秒内无法连到后端即视为不可达，
+# 区别于常规请求的 10 秒超时，避免不可达时迟迟不回退到可见提示。
+var connect_attempt_timeout_seconds: float = 5.0
 var _http: HTTPRequest
 
 
 func get_world_state() -> Dictionary:
 	# Godot 客户端只读取后端权威状态。
 	return await _request_json("GET", "/api/world/state", {})
+
+
+func get_world_state_initial_connect() -> Dictionary:
+	# 启动期可达性探测：用 5 秒连接尝试上限对齐 R2.4，不复用默认 10 秒请求超时，
+	# 确保后端不可达时能在 5 秒内回退到 HUD 可见的「后端不可达」提示（R2.4 / R2.5）。
+	return await _request_json("GET", "/api/world/state", {}, connect_attempt_timeout_seconds)
 
 
 func post_player_action(action: Dictionary) -> Dictionary:
@@ -67,10 +76,15 @@ func cancel_current_request() -> void:
 		_http.cancel_request()
 
 
-func _request_json(method: String, path: String, payload: Dictionary) -> Dictionary:
+func _request_json(method: String, path: String, payload: Dictionary, timeout_override: float = -1.0) -> Dictionary:
 	_ensure_http()
 	if _http.get_http_client_status() != HTTPClient.STATUS_DISCONNECTED:
 		_http.cancel_request()
+
+	# 允许单次请求覆盖默认超时（启动期连接尝试用 5 秒上限，对齐 R2.4）。
+	var previous_timeout := _http.timeout
+	if timeout_override > 0.0:
+		_http.timeout = timeout_override
 
 	var request_method := HTTPClient.METHOD_GET
 	var body := ""
@@ -80,9 +94,11 @@ func _request_json(method: String, path: String, payload: Dictionary) -> Diction
 
 	var error := _http.request(base_url + path, PackedStringArray(["Content-Type: application/json"]), request_method, body)
 	if error != OK:
-		return {"ok": false, "error": "HTTPRequest 启动失败：%s" % error}
+		_http.timeout = previous_timeout
+		return {"ok": false, "error": "HTTPRequest 启动失败：%s" % error, "unreachable": true}
 
 	var result: Array = await _http.request_completed
+	_http.timeout = previous_timeout
 	var request_result: int = result[0]
 	var response_code: int = result[1]
 	var raw_body: PackedByteArray = result[3]
@@ -92,6 +108,7 @@ func _request_json(method: String, path: String, payload: Dictionary) -> Diction
 			"ok": false,
 			"error": "HTTP 请求失败：%s" % _http_request_result_reason(request_result),
 			"requestResult": request_result,
+			"unreachable": _is_unreachable_result(request_result),
 		}
 
 	var text := raw_body.get_string_from_utf8()
@@ -108,6 +125,20 @@ func _request_json(method: String, path: String, payload: Dictionary) -> Diction
 		}
 
 	return {"ok": true, "data": parsed}
+
+
+func _is_unreachable_result(result_code: int) -> bool:
+	# 判定哪些 transport 结果码代表「后端整体不可达」（连不上/解析不到/无响应/超时），
+	# 供启动期连接尝试在 5 秒内回退到 HUD 可见的「后端不可达」提示（R2.4）。
+	match result_code:
+		HTTPRequest.RESULT_CANT_CONNECT, \
+		HTTPRequest.RESULT_CANT_RESOLVE, \
+		HTTPRequest.RESULT_CONNECTION_ERROR, \
+		HTTPRequest.RESULT_NO_RESPONSE, \
+		HTTPRequest.RESULT_TIMEOUT:
+			return true
+		_:
+			return false
 
 
 func _http_request_result_reason(result_code: int) -> String:

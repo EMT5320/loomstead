@@ -45,7 +45,7 @@ scope: 新对话入口、当前边界、最近下一步
 ## 5. 最近下一步
 
 - B 真实 LLM 证据线：4 个 Process Fidelity GoalSpec × 5 seed × 5 baseline 的 cloud provider usage 已整理并 promote 到 `.run/eval-promoted/run_2026-05-29T13-57-50Z`；C2/C3/C4 已获主人确认使用 `promoted with caveat`，promotion note 已写入，机器状态仍保留 git.dirty / drift caveat。
-- A 求职展示线（进行中）：README portfolio 化初版、`paper/blog_main.md` 初稿、`docs/demo_capture_plan.md` 60 秒录屏脚本已落地；下一步是人工录制/截图素材与 README 进一步视觉化。
+- A 求职展示线（进行中）：README Watch / Research 双入口、`paper/blog_main.md`、`docs/demo_capture_plan.md`、`docs/showcase_manifest.md` 与 `showcase:check` 已落地；Figure/Table 覆盖率已到 70%。下一步是人工真实窗口复验并录制 / 截取视频、GIF、截图素材。
 - C Phase 4 玩家成为变量线：gossip 真扩散 + 1 跨日 emergence scenario
 - D Phase 3 内容深度线：4 核心 NPC 完整数据 + 5 作物 / 25 物品 / 30 工具
 

@@ -40,6 +40,7 @@
     "client:run:check": "powershell -ExecutionPolicy Bypass -File scripts/open_godot_project.ps1 -Run -DryRun",
     "client:run:legacy:check": "powershell -ExecutionPolicy Bypass -File scripts/open_godot_project.ps1 -Run -Scene res://scenes/main.tscn -DryRun",
     "asset:check": "python scripts/check_asset_manifest.py",
+    "showcase:check": "python scripts/check_showcase.py",
     "paper:tooling": "python scripts/check_paper_tooling.py --json",
     "paper:tables": "python scripts/paper_extract_eval_tables.py",
     "paper:figures": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/render_mermaid_figures.ps1",

@@ -76,11 +76,11 @@ E. **Eval Framework 加固延续**（不推荐）
 
 ### Exit criteria
 
-- 1 段 ≤ 60 秒 demo 录屏：NPC 自主生活 / Trace 因果链 / Rashomon 不同记忆任选其一（录屏脚本已落 `docs/demo_capture_plan.md`，最终视频待人工录制）
-- 1 篇技术博客主文，覆盖：少而深 framing、Motivational Delegation、Process Fidelity 数据（初稿已落 `paper/blog_main.md`）
-- README 顶部新增"快速看 demo / 快速看研究"两条 30 秒入口（初版已落地）
-- 至少 1 段对外可分享的 GIF / 截图集
-- claim_evidence_matrix 全表的"Figure / Table target"列至少有 70% 已渲染
+- ⚠️ 1 段 ≤ 60 秒 demo 录屏：NPC 自主生活 / Trace 因果链 / Rashomon 不同记忆任选其一（录屏脚本已落 `docs/demo_capture_plan.md`，最终视频待人工录制）
+- ✅ 1 篇技术博客主文，覆盖：少而深 framing、Motivational Delegation、Process Fidelity 数据（初稿已落 `paper/blog_main.md`，C2/C3/C4 `promoted with caveat` 口径由 `showcase:check` 扫描）
+- ✅ README 顶部新增"快速看 demo / 快速看研究"两条 30 秒入口（已收敛为 Watch / Research 两条入口）
+- ⚠️ 至少 1 段对外可分享的 GIF / 截图集（待真实 Godot 窗口人工捕获）
+- ✅ claim_evidence_matrix 全表的"Figure / Table target"列至少有 70% 已渲染（Figure 4 SVG 已补齐；`showcase:check` 回填 coverage=0.70）
 
 ## P2.exit —— Phase 2 研究向硬验收
 

@@ -40,7 +40,7 @@ scope: 当前实现事实、验证状态、人工验收边界
 - **人工 reviewer 抽样**：packet 已生成，停在 `manual_review_required` gate，等待人工填表。
 - **真实 Godot 窗口复验**：最新 Trace 导航 / 中断布局补修代码已落地，真实窗口复验**暂缓**到后端 / Eval 主线稳定后集中处理（治理协议 §3.1：避免每次新增字段后反复进入中间态窗口验收和小修循环）。
 - **Phase 4 候选**：gossip 真扩散、玩家行为传播、emergence scenario 仍未启动。
-- **求职展示线**：README 顶部 portfolio 入口、`paper/blog_main.md` 技术博客初稿和 `docs/demo_capture_plan.md` 60 秒录屏脚本已落地；最终视频 / GIF / 截图仍待人工窗口录制。
+- **求职展示线**：README 顶部已收敛为 Watch / Research 两条入口；`paper/blog_main.md`、`docs/demo_capture_plan.md`、`docs/showcase_manifest.md`、`scripts/check_showcase.py` 已落地；Figure/Table 覆盖率已由 Figure 4 SVG 补到 70%（`showcase:check` 通过）。最终视频 / GIF / 截图与真实 Godot 窗口复验仍待人工执行。
 
 ## 4. 开发前硬约束
 
@@ -56,7 +56,7 @@ scope: 当前实现事实、验证状态、人工验收边界
 ## 5. 人工验收
 
 - `manual verified`：2026-05-21 Phase 1 收口；2026-05-25 UI 重设计观感与可读性；2026-05-26 Trace `memory.result_observed` 可发现性 + 来源跳转；2026-05-29 C2/C3/C4 `promoted with caveat` claim-level 口径。
-- `manual unverified`：最新 Trace 导航 / 中断布局补修真实窗口复验；`.run/eval-promoted/run_2026-05-29T13-57-50Z` 机器层 promotion status 仍是 `needs_manual_review`（git.dirty / drift caveat 已写说明）；`.run/eval-promoted/stability_2026-05-25T07-34-55Z` promotion 的 drift 人工说明；`prompt_ready` 资产生成与登记；求职展示线最终视频 / GIF / 截图。
+- `manual unverified`：最新 Trace 50 条排序、Prev/Next clamp、Copy ≥2s、后端不可达横幅与中断布局真实窗口复验；`.run/eval-promoted/run_2026-05-29T13-57-50Z` 机器层 promotion status 仍是 `needs_manual_review`（git.dirty / drift caveat 已写说明）；`.run/eval-promoted/stability_2026-05-25T07-34-55Z` promotion 的 drift 人工说明；`prompt_ready` 资产生成与登记；求职展示线最终视频 / GIF / 截图。
 
 ## 6. 当前可运行命令
 
@@ -90,4 +90,4 @@ git diff --check
 
 ## 7. 下一步
 
-`P_demo.exit` 求职展示线进行中；下一步优先录制 / 截取 60 秒 Godot + Trace 展示素材，并把 README / 博客中的占位链接替换为实际视频或 GIF。详见 `docs/demo_capture_plan.md` 与 `docs/phase_checkpoints.md`。
+`P_demo.exit` 求职展示线进行中；自动化文档、校验与 Figure/Table 覆盖已收口，下一步优先做真实 Godot 窗口复验并录制 / 截取 60 秒 Godot + Trace 展示素材、GIF 与截图，再把 README / 博客中的占位链接替换为实际素材。详见 `docs/demo_capture_plan.md` 与 `docs/showcase_manifest.md`。

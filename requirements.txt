@@ -1,3 +1,10 @@
 ﻿# Loomstead 后端依赖
 # 第一版 Python 后端当前仅使用标准库，便于主人无需安装依赖即可运行。
 # 后续接入 FastAPI / SQLite / 向量记忆时再逐步加入依赖。
+# ---- 开发 / 测试依赖（dev-only）----
+# 仅供展示层（presentation-showcase）纯函数 PBT/example 测试使用：
+#   - scripts/tests/ 下的 Property-Based Testing（Hypothesis）与 example/unit 测试（pytest）。
+# 运行时后端仍保持只依赖标准库，主人正常运行后端无需安装本区块依赖。
+# 安装（仅在需要跑测试时）：python -m pip install hypothesis pytest
+hypothesis>=6.100
+pytest>=8.0

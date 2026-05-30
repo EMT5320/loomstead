@@ -104,9 +104,17 @@ checks = {
     "observer panel phase2 sections": "subjectiveMemory" in observer_panel and "relationshipEdges" in observer_panel and "heuristics" in observer_panel,
     "observer panel recent trace": "recentTraceEvents" in observer_panel and "_summarize_phase2_recent_trace" in town_map,
     "observer panel trace copy empty state": "暂无 trace 可复制" in observer_panel and "当前过滤器暂无 trace，等待下一次 Phase 2 Debug 刷新" in observer_panel,
-    "observer panel phase2 error hint": "Phase 2 Debug 请求失败：可点击 Retry 重新拉取，trace 区将自动恢复。" in observer_panel and "trace details 暂不可用：请先点击 Retry 重试。" in observer_panel,
+    "observer panel phase2 error hint": "Phase 2 Debug 同步失败：可点击 Retry 重新拉取，trace 区将自动恢复。" in observer_panel and "trace details 暂不可用：Phase 2 Debug 同步失败，请先点击 Retry 重试。" in observer_panel,
     "observer panel trace filter": "traceFilter" in observer_panel and "recentTraceEventGroups" in town_map and "_phase2_trace_filter_matches" in town_map,
     "observer panel trace drilldown": "Copy trace" in observer_panel and "_on_trace_copy_pressed" in observer_panel and "recentTraceDetailGroups" in town_map and "_phase2_trace_detail_text" in town_map,
+    # 任务 7.3（R4.4）：trace 裁剪上限 50 条 + 共享纯逻辑 + 裁剪后 reverse 为 newest→oldest。
+    "observer panel trace clip limit": "TRACE_RECENT_LIMIT := 50" in town_map and "_clip_and_sort_trace_entries" in town_map and "clipped.reverse()" in town_map,
+    # 任务 8.3（R4.6）：Prev/Next 同帧导航守卫 + 同帧 Next 优先（基线索引 + 帧号守卫 + Engine.get_process_frames）。
+    "observer panel same-frame next priority": "_apply_trace_navigation" in observer_panel and "_last_trace_nav_frame" in observer_panel and "_trace_nav_baseline_index" in observer_panel and "_trace_nav_next_applied" in observer_panel and "Engine.get_process_frames()" in observer_panel,
+    # 任务 8.5（R4.7）：Copy trace 反馈时长常量 ≥2 秒。
+    "observer panel copy feedback duration": "TRACE_COPY_FEEDBACK_SECONDS := 2.0" in observer_panel,
+    # 任务 9.4（R4.1/R4.3/R4.8/R4.9）：身份四字段 + loading 文案（SECTION_LOADING_TEXT + 四 section loading 渲染）+ placeholder（SECTION_EMPTY_TEXT）+ 同步失败语义指示。
+    "observer panel loading vs placeholder states": "_identity_id_label" in observer_panel and "_identity_name_label" in observer_panel and "_identity_location_label" in observer_panel and "_identity_anchor_label" in observer_panel and "SECTION_LOADING_TEXT" in observer_panel and "_render_loading_motivation" in observer_panel and "_render_loading_memory" in observer_panel and "_render_loading_relationships" in observer_panel and "_render_loading_heuristics" in observer_panel and "SECTION_EMPTY_TEXT" in observer_panel and "同步失败" in observer_panel and "show_phase2_error" in observer_panel,
     "asset registry class": "class_name AssetRegistry" in asset_registry,
     "asset registry backgrounds": "farm_day_anime.png" in asset_registry and "tavern_evening_anime.png" in asset_registry,
     "asset registry portraits": "npc_orren_neutral.png" in asset_registry and "player_farmer_neutral.png" in asset_registry,

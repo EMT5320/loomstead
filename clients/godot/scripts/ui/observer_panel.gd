@@ -39,8 +39,9 @@ const TRACE_COPY_BUTTON_EMPTY_TEXT := "暂无 trace 可复制"
 const TRACE_COPY_READY_TOOLTIP_TEXT := "复制当前选中 trace 的完整 JSON 到剪贴板"
 const TRACE_COPY_EMPTY_TOOLTIP_TEXT := "当前过滤器暂无 trace，等待下一次 Phase 2 Debug 刷新"
 const TRACE_COPY_COPIED_TOOLTIP_TEXT := "复制成功，可直接粘贴到 issue / 文档"
-const TRACE_COPY_FEEDBACK_SECONDS := 0.85
-const TRACE_ERROR_HINT_TEXT := "Phase 2 Debug 请求失败：可点击 Retry 重新拉取，trace 区将自动恢复。"
+# R4.7：Copy trace 后「已复制 ✓」文案与 tooltip 至少维持 2 秒，确保 copy-confirmation 可被看清。
+const TRACE_COPY_FEEDBACK_SECONDS := 2.0
+const TRACE_ERROR_HINT_TEXT := "Phase 2 Debug 同步失败：可点击 Retry 重新拉取，trace 区将自动恢复。"
 const TRACE_SHORTCUT_HINT_TEXT := "快捷键：1-5 过滤，逗号/左方括号上一条，句号/右方括号下一条，[C] 复制，[Esc] 关闭弹层"
 const TRACE_ROW_SUMMARY_MAX_CHARS := 52
 const TRACE_TOOL_HINT_MAX_CHARS := 28
@@ -52,6 +53,15 @@ const SECTION_EMPTY_TEXT := {
 	"heuristics": "暂无 heuristics：该 NPC 暂无启发式学习记录。",
 	"recentTraceEvents": "暂无 recentTraceEvents：该 NPC 尚未产生可解释 trace。",
 	"traceDetails": "暂无 traceDetails：先等待 trace 产生，再查看明细。",
+}
+# R4.3：选中 NPC 后、Phase 2 Debug 数据尚未到达时，各 section 显示 loading 指示，
+# 与 SECTION_EMPTY_TEXT（已收到数据但为空的 placeholder）区分。loading 文案统一含
+# 「加载中…」前缀，便于人工与截图区分"等待中" vs "已确认为空"两种态。
+const SECTION_LOADING_TEXT := {
+	"motivation": "加载中…（等待 Phase 2 Debug）",
+	"subjectiveMemory": "加载中…（等待 Phase 2 Debug）",
+	"relationshipEdges": "加载中…（等待 Phase 2 Debug）",
+	"heuristics": "加载中…（等待 Phase 2 Debug）",
 }
 const TAB_PULSE := 0
 const TAB_INSPECTOR := 1
@@ -118,6 +128,12 @@ var _recent_trace_summaries: Dictionary = _empty_summary_dict()
 var _current_trace_focus: Dictionary = {}
 var _current_trace_filter := "all"
 var _current_trace_detail_index := 0
+# R4.6：同一输入帧内的 trace 导航帧号守卫——同帧 Prev+Next 只应用一次（Next 优先）。
+var _last_trace_nav_frame := -1
+# 同帧首个导航前的基线索引；Next 从基线重算以覆盖同帧 Prev 的结果。
+var _trace_nav_baseline_index := 0
+# 本帧是否已应用 Next：若已应用，则同帧后续 Prev 被忽略（Next 优先）。
+var _trace_nav_next_applied := false
 
 
 func _ready() -> void:
@@ -214,10 +230,12 @@ func set_selected_npc(snapshot: Dictionary) -> void:
 	if switched_npc:
 		_set_phase2_status("等待加载 Phase 2 Debug")
 		_set_retry_visible(false)
-		_render_empty_motivation()
-		_render_empty_memory()
-		_render_empty_relationships()
-		_render_empty_heuristics()
+		# R4.3：切换 NPC 后数据尚未到达，四个 section 显示 loading 指示，
+		# 区别于 set_phase2_debug_summary 收到数据但为空时的 placeholder（SECTION_EMPTY_TEXT）。
+		_render_loading_motivation()
+		_render_loading_memory()
+		_render_loading_relationships()
+		_render_loading_heuristics()
 		_reset_recent_trace_view()
 	# 选中 NPC 时自动跳到 Inspector Tab，方便人工核对当前决策。
 	if switched_npc and _current_tab == TAB_PULSE:
@@ -230,10 +248,12 @@ func show_phase2_loading() -> void:
 
 
 func show_phase2_error(error_message: String) -> void:
+	# R4.8：Phase 2 Debug 同步失败时显示明确的「同步失败」语义指示 + Retry，
+	# 面板保持可用（Tab 切换 / 快捷键 / set_panel_visible 均不受错误态影响，不崩溃）。
 	var text := error_message.strip_edges()
 	if text == "":
 		text = "unknown error"
-	_set_phase2_status("错误：%s" % text, true)
+	_set_phase2_status("同步失败：%s" % text, true)
 	_set_retry_visible(_current_npc_id != "")
 	_render_empty_motivation()
 	_render_empty_memory()
@@ -243,7 +263,7 @@ func show_phase2_error(error_message: String) -> void:
 	if _trace_summary_label != null:
 		_trace_summary_label.text = TRACE_ERROR_HINT_TEXT
 	if _trace_details_status_label != null:
-		_trace_details_status_label.text = "trace details 暂不可用：请先点击 Retry 重试。"
+		_trace_details_status_label.text = "trace details 暂不可用：Phase 2 Debug 同步失败，请先点击 Retry 重试。"
 
 
 func set_phase2_debug_summary(summary: Dictionary) -> void:
@@ -705,6 +725,18 @@ func _render_empty_motivation() -> void:
 		child.queue_free()
 
 
+# R4.3：数据尚未到达时的 loading 态——文案用 SECTION_LOADING_TEXT，与 _render_empty_motivation
+# 的"已确认为空"文案区分。
+func _render_loading_motivation() -> void:
+	if _motivation_need_label == null:
+		return
+	_motivation_need_label.text = SECTION_LOADING_TEXT["motivation"]
+	_motivation_need_bar.value = 0.0
+	_motivation_decision_label.text = "决策：加载中…"
+	for child in _motivation_sources_box.get_children():
+		child.queue_free()
+
+
 func _render_motivation(payload: Dictionary, summary: Dictionary) -> void:
 	var items := _payload_items(payload.get("motivation", {}))
 	if items.is_empty():
@@ -767,6 +799,15 @@ func _render_empty_memory() -> void:
 	_memory_summary_label.text = SECTION_EMPTY_TEXT["subjectiveMemory"]
 
 
+# R4.3：subjectiveMemory loading 态。
+func _render_loading_memory() -> void:
+	if _memory_list == null:
+		return
+	for child in _memory_list.get_children():
+		child.queue_free()
+	_memory_summary_label.text = SECTION_LOADING_TEXT["subjectiveMemory"]
+
+
 func _render_memory(payload: Dictionary, summary: Dictionary) -> void:
 	var items := _payload_items(payload.get("subjectiveMemory", {}))
 	for child in _memory_list.get_children():
@@ -823,6 +864,15 @@ func _render_empty_relationships() -> void:
 	_relationship_summary_label.text = SECTION_EMPTY_TEXT["relationshipEdges"]
 
 
+# R4.3：relationshipEdges loading 态。
+func _render_loading_relationships() -> void:
+	if _relationship_list == null:
+		return
+	for child in _relationship_list.get_children():
+		child.queue_free()
+	_relationship_summary_label.text = SECTION_LOADING_TEXT["relationshipEdges"]
+
+
 func _render_relationships(payload: Dictionary, summary: Dictionary) -> void:
 	var items := _payload_items(payload.get("relationshipEdges", {}))
 	for child in _relationship_list.get_children():
@@ -869,6 +919,15 @@ func _render_empty_heuristics() -> void:
 	for child in _heuristic_list.get_children():
 		child.queue_free()
 	_heuristic_summary_label.text = SECTION_EMPTY_TEXT["heuristics"]
+
+
+# R4.3：heuristics loading 态。
+func _render_loading_heuristics() -> void:
+	if _heuristic_list == null:
+		return
+	for child in _heuristic_list.get_children():
+		child.queue_free()
+	_heuristic_summary_label.text = SECTION_LOADING_TEXT["heuristics"]
 
 
 func _render_heuristics(payload: Dictionary, summary: Dictionary) -> void:
@@ -1344,33 +1403,42 @@ func _show_trace_navigation_notice(text: String) -> void:
 
 
 func _on_trace_prev_pressed() -> void:
-	var item_count := _trace_events_for_filter().size()
-	if item_count <= 0:
-		_show_trace_navigation_notice("当前过滤没有 trace：%s" % _trace_filter_display_name())
-		return
-	if item_count == 1:
-		_current_trace_detail_index = 0
-		_update_recent_trace_view()
-		_show_trace_navigation_notice("当前过滤只有 1 条 trace：%s 1/1" % _trace_filter_display_name())
-		return
-	_current_trace_detail_index = (_current_trace_detail_index - 1 + item_count) % item_count
-	_update_recent_trace_view()
-	_show_trace_navigation_notice("已切到上一条 trace：%s %d/%d" % [_trace_filter_display_name(), _current_trace_detail_index + 1, item_count])
+	_apply_trace_navigation(false)
 
 
 func _on_trace_next_pressed() -> void:
+	_apply_trace_navigation(true)
+
+
+func _apply_trace_navigation(is_next: bool) -> void:
+	# R4.5：索引始终 clamp 到 [0, max(0, total-1)]，不 wrap（到边界保持不动）。
+	# R4.6：同一输入帧 Prev+Next 同时触发时应用 Next——同帧首个导航前记录基线索引，
+	# Next 从基线 +1 覆盖同帧 Prev 的结果，且同帧 Next 应用后忽略后续 Prev。
 	var item_count := _trace_events_for_filter().size()
 	if item_count <= 0:
 		_show_trace_navigation_notice("当前过滤没有 trace：%s" % _trace_filter_display_name())
 		return
-	if item_count == 1:
-		_current_trace_detail_index = 0
-		_update_recent_trace_view()
-		_show_trace_navigation_notice("当前过滤只有 1 条 trace：%s 1/1" % _trace_filter_display_name())
-		return
-	_current_trace_detail_index = (_current_trace_detail_index + 1) % item_count
+	var max_index := item_count - 1
+	var current_frame := Engine.get_process_frames()
+	if current_frame != _last_trace_nav_frame:
+		_last_trace_nav_frame = current_frame
+		_trace_nav_baseline_index = _current_trace_detail_index
+		_trace_nav_next_applied = false
+	if is_next:
+		# Next 始终从基线 +1（覆盖同帧已应用的 Prev），clamp 不 wrap。
+		_current_trace_detail_index = int(min(max_index, _trace_nav_baseline_index + 1))
+		_trace_nav_next_applied = true
+	else:
+		# 同帧若 Next 已应用，则 Prev 被忽略（Next 优先）。
+		if _trace_nav_next_applied:
+			return
+		_current_trace_detail_index = int(max(0, _trace_nav_baseline_index - 1))
+	_current_trace_detail_index = int(clamp(_current_trace_detail_index, 0, max_index))
 	_update_recent_trace_view()
-	_show_trace_navigation_notice("已切到下一条 trace：%s %d/%d" % [_trace_filter_display_name(), _current_trace_detail_index + 1, item_count])
+	var action_text := "已切到下一条 trace" if is_next else "已切到上一条 trace"
+	if item_count == 1:
+		action_text = "当前过滤只有 1 条 trace"
+	_show_trace_navigation_notice("%s：%s %d/%d" % [action_text, _trace_filter_display_name(), _current_trace_detail_index + 1, item_count])
 
 
 func _on_trace_copy_pressed() -> void:
@@ -1684,7 +1752,7 @@ func _trace_summary_text_for_filter() -> String:
 
 func _trace_interaction_hint() -> String:
 	# 文案直接写出验收关键词，减少 Research Dock 的交互猜测成本。
-	return "点击 trace 行：memory.result_observed 会高亮观察者；证据链按钮会聚焦来源。Prev/Next 会循环切换；只有 1 条时会提示。"
+	return "点击 trace 行：memory.result_observed 会高亮观察者；证据链按钮会聚焦来源。Prev/Next 到边界会停留；只有 1 条时会提示。"
 
 
 func _trace_focus_status_text(focus: Dictionary) -> String:

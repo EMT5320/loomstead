@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="520" viewBox="0 0 1280 520" role="img" aria-labelledby="title desc">
+  <!-- Loomstead Figure 4: hand-authored SVG fallback for the showcase coverage gate.
+       The editable source lives in paper/diagrams/relationship_evidence_figure4.mmd;
+       PNG/PDF variants can be regenerated when Mermaid CLI is installed locally. -->
+  <title id="title">Figure 4: Relationship evidence path</title>
+  <desc id="desc">A relationship-evidence path from objective events to subjective memory, relationship edges, trace references, later NPC arbitration, counterfactual replay, and Process Fidelity checks.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="14" markerHeight="10" refX="12" refY="5" orient="auto">
+      <path d="M0,0 L14,5 L0,10 Z" fill="#5f6b7a" />
+    </marker>
+    <style>
+      .box { fill: #f8fbff; stroke: #6b85b7; stroke-width: 2; rx: 14; }
+      .eval { fill: #f7fff8; stroke: #57945f; stroke-width: 2; rx: 14; }
+      .replay { fill: #fff9ee; stroke: #c98838; stroke-width: 2; rx: 14; }
+      .title { font: 700 18px "Inter", "Segoe UI", Arial, sans-serif; fill: #223044; }
+      .text { font: 14px "Inter", "Segoe UI", Arial, sans-serif; fill: #344055; }
+      .caption { font: 13px "Inter", "Segoe UI", Arial, sans-serif; fill: #5f6b7a; }
+      .edge { stroke: #5f6b7a; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+      .dashed { stroke-dasharray: 8 7; }
+    </style>
+  </defs>
+
+  <rect width="1280" height="520" fill="#ffffff" />
+  <text x="48" y="48" class="title">Relationship edges as causal evidence for later NPC decisions</text>
+  <text x="48" y="72" class="caption">C4 showcase view: promoted with caveat; human trace review and broader relationship scenarios remain open.</text>
+
+  <g transform="translate(48 126)">
+    <rect class="box" width="170" height="105" />
+    <text x="20" y="32" class="title">Objective event</text>
+    <text x="20" y="60" class="text">conversation</text>
+    <text x="20" y="80" class="text">repair / conflict</text>
+  </g>
+
+  <g transform="translate(268 126)">
+    <rect class="box" width="180" height="105" />
+    <text x="20" y="32" class="title">Subjective memory</text>
+    <text x="20" y="60" class="text">observer-specific</text>
+    <text x="20" y="80" class="text">salience + text</text>
+  </g>
+
+  <g transform="translate(498 126)">
+    <rect class="box" width="190" height="105" />
+    <text x="20" y="32" class="title">Relationship edge</text>
+    <text x="20" y="60" class="text">trust / affinity</text>
+    <text x="20" y="80" class="text">source refs</text>
+  </g>
+
+  <g transform="translate(738 126)">
+    <rect class="box" width="185" height="105" />
+    <text x="20" y="32" class="title">Trace refs</text>
+    <text x="20" y="60" class="text">sourceEventIds</text>
+    <text x="20" y="80" class="text">score refs</text>
+  </g>
+
+  <g transform="translate(973 126)">
+    <rect class="box" width="210" height="105" />
+    <text x="20" y="32" class="title">Later arbitration</text>
+    <text x="20" y="60" class="text">need + capability</text>
+    <text x="20" y="80" class="text">evidence-informed</text>
+  </g>
+
+  <g transform="translate(738 314)">
+    <rect class="replay" width="185" height="105" />
+    <text x="20" y="32" class="title">Counterfactual</text>
+    <text x="20" y="60" class="text">remove relationship</text>
+    <text x="20" y="80" class="text">memory input</text>
+  </g>
+
+  <g transform="translate(973 314)">
+    <rect class="eval" width="210" height="105" />
+    <text x="20" y="32" class="title">Process Fidelity</text>
+    <text x="20" y="60" class="text">causal use</text>
+    <text x="20" y="80" class="text">trace coverage</text>
+  </g>
+
+  <path class="edge" d="M218 178 L268 178" />
+  <path class="edge" d="M448 178 L498 178" />
+  <path class="edge" d="M688 178 L738 178" />
+  <path class="edge" d="M923 178 L973 178" />
+  <path class="edge" d="M1078 231 L1078 314" />
+  <path class="edge dashed" d="M593 231 C610 310, 690 366, 738 366" />
+  <path class="edge" d="M923 366 L973 366" />
+</svg>

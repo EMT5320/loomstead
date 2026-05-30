@@ -1,0 +1,23 @@
+%% Loomstead Figure 4 draft source.
+%% Relationship evidence path for C4: relationship edges and source-linked evidence
+%% flow into later arbitration, with counterfactual replay checking causal use.
+flowchart LR
+  Event["Objective event\nconversation / repair / conflict"]
+  Memory["Subjective memory\nobserver-specific salience"]
+  Edge["Relationship edge\ntrust / affinity / tension\nsource refs"]
+  Trace["Trace refs\nsourceEventIds + score refs"]
+  Arbitration["Later NPC arbitration\nneed + capability + evidence"]
+  Action["Selected tool action\nagent-initiated"]
+  Replay["Counterfactual replay\nremove relationship memory"]
+  Eval["Process Fidelity checks\ncausal use + trace coverage"]
+
+  Event --> Memory
+  Event --> Edge
+  Memory --> Trace
+  Edge --> Trace
+  Trace --> Arbitration
+  Arbitration --> Action
+  Edge -. "removed in replay" .-> Replay
+  Replay --> Eval
+  Action --> Eval
+  Trace --> Eval

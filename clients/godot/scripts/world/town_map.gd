@@ -7,6 +7,7 @@ const PlayerControllerScript := preload("res://scripts/world/player_controller.g
 const VnPanelScript := preload("res://scripts/ui/vn_panel.gd")
 const ObserverPanelScript := preload("res://scripts/ui/observer_panel.gd")
 const TopBannerScript := preload("res://scripts/ui/top_banner.gd")
+const ConnectionStatusBannerScript := preload("res://scripts/ui/connection_status_banner.gd")
 
 const STAGE_WIDTH := 640.0
 const STAGE_HEIGHT := 1080.0
@@ -15,6 +16,7 @@ const OBSERVER_NPC_CLICK_RADIUS := 72.0
 const OBSERVER_PHASE2_CACHE_MSEC := 12000
 const OBSERVER_PHASE2_REQUEST_INTERVAL_MSEC := 800
 const OBSERVER_TRACE_HIGHLIGHT_MSEC := 2600
+const TRACE_RECENT_LIMIT := 50
 const ROUTE_LINE_VISIBLE_MSEC := 2200
 const PULSE_PANEL_MAX_LINES := 6
 const STAGE_ORDER := ["farm", "plaza", "tavern"]
@@ -102,6 +104,7 @@ var _camera: Camera2D
 var _vn_panel
 var _observer_panel
 var _top_banner
+var _connection_banner
 var _nearest_npc_id := ""
 var _selected_observer_npc_id := ""
 var _observer_phase2_cache: Dictionary = {}
@@ -138,6 +141,7 @@ func _ready() -> void:
 	_build_vn_panel()
 	_build_observer_panel()
 	_build_top_banner()
+	_build_connection_banner()
 	_connect_event_bus()
 	_connect_world_clock()
 	call_deferred("_request_initial_world_snapshot")
@@ -416,6 +420,13 @@ func _build_top_banner() -> void:
 	_top_banner = TopBannerScript.new()
 	_top_banner.name = "TopBanner"
 	add_child(_top_banner)
+
+
+func _build_connection_banner() -> void:
+	# 后端不可达指示横幅（R2.4 / R2.5）：独立 HUD 层，默认隐藏。
+	_connection_banner = ConnectionStatusBannerScript.new()
+	_connection_banner.name = "ConnectionStatusBanner"
+	add_child(_connection_banner)
 
 
 func _refresh_top_banner_stage() -> void:
@@ -740,7 +751,7 @@ func _build_phase2_trace_filter_summaries(section) -> Dictionary:
 
 
 func _build_phase2_trace_event_groups(section) -> Dictionary:
-	# 面板点击需要原始 trace envelope；这里只裁剪到可见的最近 4 条。
+	# 面板点击需要原始 trace envelope；裁剪到最近 TRACE_RECENT_LIMIT 条并按 newest→oldest 排序。
 	return {
 		"all": _phase2_trace_events_for_filter(section, "all"),
 		"decision": _phase2_trace_events_for_filter(section, "decision"),
@@ -771,21 +782,9 @@ func _build_phase2_trace_copy_detail_groups(section) -> Dictionary:
 
 
 func _phase2_trace_events_for_filter(section, filter_id: String) -> Array:
-	var items := _phase2_items(section)
 	var rows: Array = []
-	if items.is_empty():
-		return rows
-	var filtered_items: Array = []
-	for item in items:
-		if not (item is Dictionary):
-			continue
-		var entry := item as Dictionary
-		var event_type := str(entry.get("eventType", entry.get("type", "trace")))
-		if _phase2_trace_filter_matches(event_type, filter_id):
-			filtered_items.append(entry)
-	var start_index = max(0, filtered_items.size() - 4)
-	for index in range(start_index, filtered_items.size()):
-		var entry := filtered_items[index] as Dictionary
+	var clipped := _clip_and_sort_trace_entries(section, filter_id)
+	for entry in clipped:
 		rows.append(entry.duplicate(true))
 	return rows
 
@@ -827,10 +826,22 @@ func _summarize_phase2_recent_trace_for_filter(section, filter_id: String) -> St
 
 
 func _phase2_trace_details_for_filter(section, filter_id: String, full_detail: bool = false) -> Array[String]:
-	var items := _phase2_items(section)
 	var details: Array[String] = []
+	var clipped := _clip_and_sort_trace_entries(section, filter_id)
+	for entry in clipped:
+		details.append(_phase2_trace_detail_text(entry, full_detail))
+	return details
+
+
+# 过滤 + 裁剪 + 排序的共享纯逻辑：Prev/Next 事件分组与 details 分组共用此列表，
+# 保证两者索引一一对应。按类别过滤后裁剪至多 TRACE_RECENT_LIMIT 条最近记录，
+# 再 reverse 为 newest→oldest。空列表返回空数组（空态文本由调用方处理）。
+# 等价 Python 参考实现见 scripts/tests/showcase_refs.py::clip_and_sort_trace。
+func _clip_and_sort_trace_entries(section, filter_id: String) -> Array:
+	var items := _phase2_items(section)
+	var clipped: Array = []
 	if items.is_empty():
-		return details
+		return clipped
 	var filtered_items: Array = []
 	for item in items:
 		if not (item is Dictionary):
@@ -839,11 +850,11 @@ func _phase2_trace_details_for_filter(section, filter_id: String, full_detail: b
 		var event_type := str(entry.get("eventType", entry.get("type", "trace")))
 		if _phase2_trace_filter_matches(event_type, filter_id):
 			filtered_items.append(entry)
-	var start_index = max(0, filtered_items.size() - 4)
+	var start_index = max(0, filtered_items.size() - TRACE_RECENT_LIMIT)
 	for index in range(start_index, filtered_items.size()):
-		var entry := filtered_items[index] as Dictionary
-		details.append(_phase2_trace_detail_text(entry, full_detail))
-	return details
+		clipped.append(filtered_items[index] as Dictionary)
+	clipped.reverse()
+	return clipped
 
 
 func _summarize_phase2_trace_details(section) -> String:
@@ -967,12 +978,21 @@ func _request_initial_world_snapshot() -> void:
 	if _snapshot_in_flight:
 		return
 	_snapshot_in_flight = true
-	var response := await _api_client.get_world_state()
+	# 启动期可达性探测：用 5 秒连接尝试上限对齐 R2.4，
+	# 后端不可达时在 5 秒内回退到 HUD 可见的「后端不可达」提示。
+	var response := await _api_client.get_world_state_initial_connect()
 	_snapshot_in_flight = false
 	if not bool(response.get("ok", false)):
+		var reason := str(response.get("error", "unknown"))
 		if _pulse_event_label != null:
-			_pulse_event_label.text = "Event: state load failed - %s" % str(response.get("error", "unknown"))
+			_pulse_event_label.text = "Event: state load failed - %s" % reason
+		# 连接级失败（连不上 / 解析不到 / 无响应 / 5 秒超时）→ 显示后端不可达指示。
+		if bool(response.get("unreachable", false)) and _connection_banner != null:
+			_connection_banner.show_unreachable("启动连接失败：%s" % reason)
 		return
+	# 成功连到后端：确保不再显示不可达指示。
+	if _connection_banner != null:
+		_connection_banner.hide_unreachable()
 	var data = response.get("data", {})
 	if data is Dictionary:
 		_apply_world_state_snapshot(data)
