@@ -98,7 +98,7 @@ The same figure also references a Tomas repair trace to show the pattern across 
 This is research-preview evidence. External wording should keep these boundaries:
 
 - `C2`/`C3`/`C4` can be described as **promoted with caveat**.
-- Final empirical wording still needs human process ratings, broader scenario coverage, and stronger dynamic baselines.
+- Final empirical wording still needs human process ratings, broader scenario coverage, and stronger dynamic baselines; the current blind pilot gate is tracked in `docs/human_rating_pilot_gate.md`.
 - The promoted process run still carries a machine-level `needs_manual_review` status because it was exported during a dirty closure pass and drift policy asks for human explanation.
 - Godot observer-mode visuals are implemented, while the newest real-window capture remains a manual verification task.
 

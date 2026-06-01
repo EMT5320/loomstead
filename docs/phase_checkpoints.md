@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: planning
-last_verified: 2026-05-29
+last_verified: 2026-06-01
 startup_load: on-demand
 source_of_truth: true
 scope: 阶段推进 checkpoint 板与 exit criteria
@@ -72,13 +72,14 @@ E. **Eval Framework 加固延续**（不推荐）
 
 ## P_demo.exit —— 求职展示线收口
 
-> 状态：进行中
+> 状态：进行中。2026-06-01 优先级调整原因：核心价值主张讨论指出自动 Process Fidelity 需要 human-rating 外部效度，展示 polish 在 blind pilot v0 之前只做服务 packet 可读性的投入。
 
 ### Exit criteria
 
 - ⚠️ 1 段 ≤ 60 秒 demo 录屏：NPC 自主生活 / Trace 因果链 / Rashomon 不同记忆任选其一（录屏脚本已落 `docs/demo_capture_plan.md`，最终视频待人工录制）
 - ✅ 1 篇技术博客主文，覆盖：少而深 framing、Motivational Delegation、Process Fidelity 数据（初稿已落 `paper/blog_main.md`，C2/C3/C4 `promoted with caveat` 口径由 `showcase:check` 扫描）
 - ✅ README 顶部新增"快速看 demo / 快速看研究"两条 30 秒入口（已收敛为 Watch / Research 两条入口）
+- ✅ Human Rating Pilot Gate + 中文 blind packet v0：`docs/human_rating_pilot_gate.md` 与 `.run/eval-reviewer-packets/human_rating_pilot_2026-06-01_zh_v0/` 已落地；等待 3-5 名非作者 reviewer 评分，结果只用于决定扩样本 / 回炉 / 降级分支
 - ⚠️ 至少 1 段对外可分享的 GIF / 截图集（待真实 Godot 窗口人工捕获）
 - ✅ claim_evidence_matrix 全表的"Figure / Table target"列至少有 70% 已渲染（Figure 4 SVG 已补齐；`showcase:check` 回填 coverage=0.70）
 

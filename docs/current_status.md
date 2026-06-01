@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: project-status
-last_verified: 2026-05-30
+last_verified: 2026-06-01
 startup_load: after-agent-context
 source_of_truth: true
 scope: 当前实现事实、验证状态、人工验收边界
@@ -33,7 +33,13 @@ scope: 当前实现事实、验证状态、人工验收边界
 | 上下文治理 | `docs/context_governance.md` 是治理协议；`AGENTS.md` / `CLAUDE.md` / `docs/agent_context.md` / 本文 / `docs/phase_checkpoints.md` 是当前事实入口；`scripts/build_agent_context.py` 提供 `context:check` / `context:brief` / `context:resume`；旧设计文档（agentic_game_design / gameplay_system_architecture / game_content_storyline / npc_deep_card_spec）已归档至 `docs/archive/`。 |
 | 跨环境 artifact | 双环境只同步已整理证据子树：`.run/eval-promoted/`、`.run/eval-reviewer-packets/`、`.run/process-llm-evidence/` 中的命名证据文件。`.run/eval-runs/` 已回归本地滚动区（`.gitignore` 忽略），`.run/process-llm-evidence/latest*.json` 也是本地 cache（`.gitignore` 忽略）；跨机复盘靠 `eval:archive:promote` 把被 claim 引用的 run 复制到 `eval-promoted`，并用 `cloud-*.json` / summary 命名 artifact 固定 provider usage。Godot 缓存、截图、Mermaid 临时配置、一次性脚本和日志继续按本地临时产物处理。 |
 
-## 2.1 Showcase Mode v1
+## 2.1 Human Rating Pilot Gate
+
+- `code integrated`：`docs/human_rating_pilot_gate.md` 定义中文 blind pilot v0 的范围、rubric、Green / Red / Protocol failure 判据；`scripts/build_human_rating_pilot_packet.py` 从 promoted process artifact 生成盲评材料；`package.json` 提供 `eval:human-rating:packet`。
+- `artifact backed`：`.run/eval-reviewer-packets/human_rating_pilot_2026-06-01_zh_v0/` 已生成 6 张 reviewer card、`blind_score_sheet.csv`、`pairwise_preference_sheet.csv`、`INTERNAL_CONDITION_KEY.csv` 与 packet protocol；reviewer-facing 文件已检查不暴露 `full_motivational_delegation` / `hard_delegation` 条件标签。
+- `manual unverified`：等待 3-5 名非作者中文 reviewer 填写单样本评分与 pairwise preference；pilot 正信号只解锁扩样本和正式 protocol，不能升级 C2/C3/C4 claim。
+
+## 2.2 Showcase Mode v1
 
 - `code integrated`：后端新增只读 `/api/showcase/starlight`，返回 `showcase.starlight.v1` 聚合包；Godot `world_main.tscn` 启动后默认可见 `ShowcasePanel`，摘要展示 `星灯祭供应短缺` 的 Goal / Director Beat / Event Skill / NPC Decision / Trace Evidence；`F1` 切换 ShowcasePanel，`Tab` 保留 Observer Dock，`Deep dive` 打开 Observer Dock 并传入 NPC / trace focus。
 - `manual verified`：Computer Use 真实窗口 spot-check 已确认启动 10 秒内可读 Goal / Director Beat / Event Skill / NPC Decision / Trace Evidence，`F1` 可切换 ShowcasePanel，`Tab` 可打开 Observer Dock，`Deep dive` 可定位到相关 NPC / trace。
@@ -44,6 +50,7 @@ scope: 当前实现事实、验证状态、人工验收边界
 - **真实 LLM evidence**：cloud provider usage 已覆盖 4 个 Process Fidelity GoalSpec × 5 seed × 5 baseline，共 100 次 `CloudApiProvider` 调用、0 fallback、约 189,949 tokens / 0.02972032 USD。命名证据：`.run/process-llm-evidence/cloud-branna-forgiveness-2026-05-29.json`、`.run/process-llm-evidence/cloud-3goalspec-2026-05-29.json`、`.run/process-llm-evidence/cloud-4goalspec-summary-2026-05-29.json`；单 seed 跨机记录另存为 `cloud-branna-forgiveness-local-office-2026-05-29.json`。已通过 `eval:process:export` + `eval:archive:promote` 进入 `.run/eval-promoted/run_2026-05-29T13-57-50Z`，其 manifest `llmEvidence.recordCount=100`。C2/C3/C4 已由主人确认升级为 `promoted with caveat`。
 - **证据指针**：`paper/claim_evidence_matrix.md` 当前引用 promoted artifact；Process Fidelity 最新 paper 表来自 `.run/eval-promoted/run_2026-05-29T13-57-50Z`，domain / stability / robustness 仍引用已 promote 的 05-25 / 05-28 证据。05-29 process promotion 额外携带 cloud `llmEvidence`；promotion note 已写入主人确认口径，但 `promotionStatus=needs_manual_review` 仍保留机器层面的 git.dirty 与 drift caveat。
 - **人工 reviewer 抽样**：packet 已生成，停在 `manual_review_required` gate，等待人工填表。
+- **Human Rating blind pilot**：中文 v0 盲评包已生成，停在 `manual_review_required` gate，等待 3-5 名非作者 reviewer 填写；结果按 `docs/human_rating_pilot_gate.md` 预注册分支解释。
 - **真实 Godot 窗口复验**：最新 Trace 导航 / 中断布局补修代码已落地，真实窗口复验**暂缓**到后端 / Eval 主线稳定后集中处理（治理协议 §3.1：避免每次新增字段后反复进入中间态窗口验收和小修循环）。
 - **Phase 4 候选**：gossip 真扩散、玩家行为传播、emergence scenario 仍未启动。
 - **求职展示线**：README 顶部已收敛为 Watch / Research 两条入口；`paper/blog_main.md`、`docs/demo_capture_plan.md`、`docs/showcase_manifest.md`、`scripts/check_showcase.py` 已落地；Figure/Table 覆盖率已由 Figure 4 SVG 补到 70%（`showcase:check` 通过）。最终视频 / GIF / 截图与真实 Godot 窗口复验仍待人工执行。
@@ -82,6 +89,7 @@ npm.cmd run eval:robustness
 npm.cmd run eval:archive:check
 npm.cmd run eval:archive:drift
 npm.cmd run eval:reviewer:packet
+npm.cmd run eval:human-rating:packet
 npm.cmd run research:evidence:check
 npm.cmd run content:check
 npm.cmd run asset:check
@@ -96,4 +104,4 @@ git diff --check
 
 ## 7. 下一步
 
-`P_demo.exit` 求职展示线进行中；自动化文档、校验与 Figure/Table 覆盖已收口，下一步优先做真实 Godot 窗口复验并录制 / 截取 60 秒 Godot + Trace 展示素材、GIF 与截图，再把 README / 博客中的占位链接替换为实际素材。详见 `docs/demo_capture_plan.md` 与 `docs/showcase_manifest.md`。
+`P_demo.exit` 求职展示线进行中；自动化文档、校验与 Figure/Table 覆盖已收口。当前下一步优先发放并回收中文 Human Rating blind pilot v0，确认核心 claim 信号后，再做真实 Godot 窗口复验并录制 / 截取 60 秒 Godot + Trace 展示素材、GIF 与截图。详见 `docs/human_rating_pilot_gate.md`、`docs/demo_capture_plan.md` 与 `docs/showcase_manifest.md`。

@@ -28,6 +28,7 @@
     "eval:archive:drift": "python scripts/index_eval_runs.py --runs-dir .run/eval-runs --write-drift-report",
     "eval:archive:promote": "python scripts/index_eval_runs.py --runs-dir .run/eval-runs --promote",
     "eval:reviewer:packet": "python scripts/build_eval_reviewer_packet.py",
+    "eval:human-rating:packet": "python scripts/build_human_rating_pilot_packet.py",
     "research:evidence:check": "python scripts/check_research_evidence.py",
     "content:check": "python scripts/check_npc_codex.py",
     "schema:check": "python scripts/check_schema_registry.py",

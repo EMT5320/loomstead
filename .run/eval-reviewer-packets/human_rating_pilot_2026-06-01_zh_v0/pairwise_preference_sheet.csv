@@ -1,0 +1,4 @@
+pair_id,scenario_title,sample_a_id,sample_b_id,preference_process_believability_A_B_Tie_Unclear,preference_earned_outcome_A_B_Tie_Unclear,confidence_1_to_5,reviewer_notes
+PAIR-001,失信后的修复谈话,HRP-006,HRP-004,,,,
+PAIR-002,带记忆证据的修复对话,HRP-003,HRP-002,,,,
+PAIR-003,共同聊天建立可追溯信任,HRP-005,HRP-001,,,,

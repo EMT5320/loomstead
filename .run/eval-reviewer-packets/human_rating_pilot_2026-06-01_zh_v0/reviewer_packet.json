@@ -1,0 +1,101 @@
+{
+  "packetVersion": "human_rating_pilot_packet.v0",
+  "packetId": "human_rating_pilot_2026-06-01_zh_v0",
+  "createdAt": "2026-06-01T15:36:32+00:00",
+  "language": "zh-CN",
+  "source": {
+    "sourceRunDir": ".run/eval-promoted/run_2026-05-29T13-57-50Z",
+    "suite": "process_fidelity",
+    "runDirName": "run_2026-05-29T13-57-50Z",
+    "manifestSha256": "81c91fe3d8bc6384c965f2a8d7882a35384588ce5a3b2a68094d469241beb8ca",
+    "llmEvidence": {
+      "recordCount": 100,
+      "cloudCallCount": 100,
+      "fallbackCount": 0
+    }
+  },
+  "samplingPolicy": {
+    "scenarios": [
+      "pf.branna_forgiveness_requires_memory",
+      "pf.repair_talk_requires_memory_trace",
+      "pf.shared_chat_builds_traceable_trust"
+    ],
+    "seeds": [
+      1
+    ],
+    "shuffleSeed": 20260601,
+    "reviewerVisibleConditionLabels": false,
+    "rule": "中文内部 blind pilot v0：只暴露样本编号、场景和运行记录；内部条件映射单独保存。",
+    "conditionCount": 2
+  },
+  "manualGate": {
+    "status": "manual_review_required",
+    "reason": "需要 3-5 名非作者中文 reviewer 盲评；脚本只生成材料，不生成研究结论。",
+    "stopCondition": "blind_score_sheet.csv 与 pairwise_preference_sheet.csv 填完后，按 docs/human_rating_pilot_gate.md 的分支判据解读。"
+  },
+  "publicSamples": [
+    {
+      "publicSampleId": "HRP-001",
+      "scenarioTitle": "共同聊天建立可追溯信任",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust",
+      "reviewerCardPath": "reviewer_cards/HRP-001.md"
+    },
+    {
+      "publicSampleId": "HRP-002",
+      "scenarioTitle": "带记忆证据的修复对话",
+      "scenarioId": "pf.repair_talk_requires_memory_trace",
+      "reviewerCardPath": "reviewer_cards/HRP-002.md"
+    },
+    {
+      "publicSampleId": "HRP-003",
+      "scenarioTitle": "带记忆证据的修复对话",
+      "scenarioId": "pf.repair_talk_requires_memory_trace",
+      "reviewerCardPath": "reviewer_cards/HRP-003.md"
+    },
+    {
+      "publicSampleId": "HRP-004",
+      "scenarioTitle": "失信后的修复谈话",
+      "scenarioId": "pf.branna_forgiveness_requires_memory",
+      "reviewerCardPath": "reviewer_cards/HRP-004.md"
+    },
+    {
+      "publicSampleId": "HRP-005",
+      "scenarioTitle": "共同聊天建立可追溯信任",
+      "scenarioId": "pf.shared_chat_builds_traceable_trust",
+      "reviewerCardPath": "reviewer_cards/HRP-005.md"
+    },
+    {
+      "publicSampleId": "HRP-006",
+      "scenarioTitle": "失信后的修复谈话",
+      "scenarioId": "pf.branna_forgiveness_requires_memory",
+      "reviewerCardPath": "reviewer_cards/HRP-006.md"
+    }
+  ],
+  "pairwiseTasks": [
+    {
+      "pair_id": "PAIR-001",
+      "scenario_id": "pf.branna_forgiveness_requires_memory",
+      "scenario_title": "失信后的修复谈话",
+      "seed": "1",
+      "sample_a_id": "HRP-006",
+      "sample_b_id": "HRP-004"
+    },
+    {
+      "pair_id": "PAIR-002",
+      "scenario_id": "pf.repair_talk_requires_memory_trace",
+      "scenario_title": "带记忆证据的修复对话",
+      "seed": "1",
+      "sample_a_id": "HRP-003",
+      "sample_b_id": "HRP-002"
+    },
+    {
+      "pair_id": "PAIR-003",
+      "scenario_id": "pf.shared_chat_builds_traceable_trust",
+      "scenario_title": "共同聊天建立可追溯信任",
+      "seed": "1",
+      "sample_a_id": "HRP-005",
+      "sample_b_id": "HRP-001"
+    }
+  ],
+  "packetSha256": "b66801f5fa38bb7719c68c3b296bb71baa9499531a5c7f71d5ef3226c2dfb692"
+}
