@@ -13,7 +13,7 @@
 - **Watch the demo path**: run the Godot town slice and open the observer dock to see NPC motivation, subjective memory, relationship edges, heuristics, and trace events in one view. Start with the [60-second demo capture plan](docs/demo_capture_plan.md).
 - **Read the research path**: start with [Motivational Delegation](docs/research_framing_motivational_delegation.md), [Process Fidelity Eval](docs/process_fidelity_eval_spec.md), and the owner-approved [claim evidence matrix](paper/claim_evidence_matrix.md).
 
-Current evidence baseline: `C2`/`C3`/`C4` are **promoted with caveat**, backed by `.run/eval-promoted/run_2026-05-29T13-57-50Z` and 100 cloud-provider arbitration records. Final empirical wording still requires human process ratings and broader scenario coverage; the current pilot gate lives in [docs/human_rating_pilot_gate.md](docs/human_rating_pilot_gate.md).
+Current evidence baseline: `C2`/`C3`/`C4` are **promoted with caveat at the metric / explainability level only**, backed by `.run/eval-promoted/run_2026-05-29T13-57-50Z` and 100 cloud-provider arbitration records. A 2026-06-02 review found the human-believability pilot infeasible on current data: Hard Delegation is a metric stub, and the memory / relationship ablation inputs did not produce behavior-divergent `goalToolEvents` in the promoted scenarios. The project scope is narrowed to **agent orchestration / observability / evidence-completeness** rather than human-validated believability. See [docs/human_rating_pilot_gate.md](docs/human_rating_pilot_gate.md) and [docs/portfolio_capability_map.md](docs/portfolio_capability_map.md).
 
 Short research tagline:
 
@@ -86,7 +86,7 @@ Current showcase status:
 
 - Phase 2 research skeleton is artifact backed by promoted eval runs, Debug traces, and Godot observer-mode integration.
 - The latest cloud-backed Process Fidelity bundle covers 4 GoalSpecs × 5 seeds × 5 baselines, with 100 cloud-provider calls and 0 fallback.
-- `C2`/`C3`/`C4` use promoted-with-caveat wording; human believability review, final Godot window capture, and broader scenario coverage remain open.
+- `C2`/`C3`/`C4` use promoted-with-caveat wording at the metric / explainability level only; the human-believability pilot was assessed as infeasible on current data (2026-06-02), so the scope is narrowed to explainability / evidence-completeness rather than human-validated believability.
 
 ### Phase 1: living world slice
 

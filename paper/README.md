@@ -4,11 +4,11 @@ This directory keeps the Loomstead paper workflow tied to concrete repository ev
 
 ## Current writing target
 
-- Working title: **Loomstead: Motivational Delegation for Process-Constrained Goals in Persistent Multi-Agent Narratives**
-- Target shape: research preview / workshop / arXiv technical report draft.
-- Core claim: a Director can shape motivation, opportunity, information, event pressure, resources, and constraints while autonomous NPCs choose actions through their own memory, relationships, heuristics, and tool capabilities.
-- Evidence boundary: `C2`/`C3`/`C4` are owner-approved as promoted-with-caveat claims, backed by the 2026-05-29 cloud Process Fidelity bundle. Human believability scoring, broader scenario coverage, and real Godot observer-mode validation remain open.
-- Current drafting policy: skeleton first. Keep claims narrow, reserve contribution slots, and fill strong empirical language only after the matching evidence is promoted.
+- Working title: **Loomstead: An Explainable Multi-Agent Narrative Runtime**
+- Target shape: portfolio engineering write-up / research-preview notes, not the current thesis or paper mainline.
+- Core claim: the system demonstrates agent orchestration, structured trace observability, legal tool execution, memory / relationship evidence capture, and eval-infra engineering for process auditing.
+- Evidence boundary: `C2`/`C3`/`C4` are owner-approved only at the metric / explainability level, backed by the 2026-05-29 cloud Process Fidelity bundle. Human-believability scoring is closed as infeasible on current data until behavior-divergent baselines exist.
+- Current drafting policy: keep the paper workspace as supporting material for the portfolio story; do not invest in new empirical framing or presentation polish unless Loomstead is re-promoted to a research mainline.
 
 ## Directory layout
 

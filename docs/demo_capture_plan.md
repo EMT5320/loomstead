@@ -59,7 +59,7 @@ Identify which on-screen views MUST be visible during capture (R1.1):
 | 20-35s | NPC decision | Hold on the NPC Decision card and point to the selected NPC on the stage. Voiceover: motivation drives tool choice indirectly. |
 | 35-45s | Trace Evidence strip | Pan attention to the bottom Trace Evidence Strip; show the five-stage causal order and fallback/ready status. |
 | 45-55s | Deep dive | Click `Deep dive`; Observer Dock opens and focuses the relevant NPC / trace filter when trace is available. |
-| 55-60s | Closing frame | Hold ShowcasePanel + Observer Dock side by side if readable; caption: `C2/C3/C4 promoted with caveat`. |
+| 55-60s | Closing frame | Hold ShowcasePanel + Observer Dock side by side if readable; caption: `C2/C3/C4 promoted with caveat (metric / explainability level)`. |
 
 ### Subject → shot coverage (R1.1)
 
@@ -89,7 +89,8 @@ These criteria are written for the operator to check against while recording. Th
 - Use `Few deep NPCs with subjective memory and traceable relationships` for external copy.
 - `Motivational Delegation: shape context, then let NPCs choose actions`.
 - `Process Fidelity: evaluate goal completion together with the path that produced it`.
-- `Current evidence: C2/C3/C4 promoted with caveat; human process review remains pending`.
+- `Explainability focus: trace and audit how each outcome was produced`.
+- `Current evidence: C2/C3/C4 promoted with caveat (metric / explainability level)`.
 
 ## Tick-failure recovery before recording (R1.5)
 

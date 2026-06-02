@@ -4,10 +4,10 @@
 
 ## 1. 项目一句话定位
 
-`Loomstead` 是一个 **narrative-primary 的可解释多 Agent 叙事运行时与研究环境**：通过 Director / Event Skill、主观记忆、关系演化、启发式学习与 Debug Trace，研究 Director 如何以 Motivational Delegation 间接驱动少量深度 NPC 朝过程约束目标演化，并用 Process Fidelity Eval 验证过程可信度。差异化主轴：**少而深 + 可解释 + 可评估**。
+`Loomstead` 是一个 **narrative-primary 的可解释多 Agent 叙事运行时**。2026-06-02 战略收缩后，它不再作为求职 / 论文主力研究线，而是二线 **portfolio 工程展示项目**：通过 Director / Event Skill、NPC runtime、主观记忆、关系演化、Debug Trace 与 Process Fidelity harness 展示 **agent orchestration + observability + eval infra** 能力。C2/C3/C4 仅保留 metric / explainability 级 `promoted with caveat`，不再主张 human-validated believability。
 
 技术骨架：Godot 4.x 客户端 + Python Agent Server + Web Debug / 研究控制台。
-长期源文档：`docs/project_vision.md`、`docs/research_framing_motivational_delegation.md`、`docs/agent_loop_architecture.md`。
+长期源文档：`docs/project_vision.md`、`docs/research_framing_motivational_delegation.md`、`docs/agent_loop_architecture.md`；当前收缩事实入口：`docs/agent_context.md`、`docs/current_status.md`、`docs/phase_checkpoints.md`、`docs/portfolio_capability_map.md`。
 
 ## 2. 必读治理协议
 

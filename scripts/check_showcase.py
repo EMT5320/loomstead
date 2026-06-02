@@ -1584,8 +1584,10 @@ def _format_consistency_block(consistency: ConsistencyResult) -> list[str]:
     lines.extend(
         [
             "",
-            "口径基线：C2 / C3 / C4 为主人确认的 `promoted with caveat`；"
-            "所有 showcase material 提及其状态时必须使用该措辞。",
+            "口径基线：C2 / C3 / C4 为主人确认的 `promoted with caveat`，2026-06-02 "
+            "复盘后限定在 metric / explainability 级"
+            "（human-believability pilot 评估为前提不成立、不执行）；"
+            "所有 showcase material 提及其状态时必须使用 `promoted with caveat` 措辞。",
         ]
     )
     return lines

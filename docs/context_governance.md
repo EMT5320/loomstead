@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: context-governance
-last_verified: 2026-05-29
+last_verified: 2026-06-02
 startup_load: first-read
 source_of_truth: true
 scope: 三层文档边界、改动权限、推进节奏与开发风格硬约束
@@ -156,6 +156,7 @@ C. <选项 C：...>
 | 2026-05-21 | Phase 1 收口，世界默认场景 `world_main.tscn` | 主人窗口验收 | 管控层（roadmap） |
 | 2026-05-28 | 上下文治理改革：三层边界、风格条款、checkpoint 机制 | 上下文反复膨胀、推进感缺失 | 管控层（本协议） |
 | 2026-05-29 | 治理去 KPI 化：加 §3.0 元原则，软化 claim-level / 保守默认 / 24h 重复窗 / blocker 措辞为权衡式；.run 双环境策略落地（eval-runs 回归本地，promote 闸门跨机同步） | 防止能动性条款被当 KPI 盲目优化；eval-runs 全量入库不可持续 | 管控层（本协议 / AGENTS / .gitignore / claim_matrix） |
+| 2026-06-02 | Loomstead 战略收缩为二线 portfolio 工程展示项目；Human Rating pilot 关闭，C2/C3/C4 限定为 metric / explainability 级 `promoted with caveat` | 数据核查发现 `hard_delegation` 是 metric stub，memory / relationship ablation 未在 promoted scenarios 中产生 `goalToolEvents` 行为分化；继续包装 human-believability / 论文主线会造成 overclaim，主人确认 `AlgoCoach-Flywheel` 为求职 + 论文主力 | 管控层（AGENTS / phase_checkpoints / claim_matrix / context entries） |
 
 后续治理级决策按"日期 / 决策 / 触发 / 影响层"四列追加。
 

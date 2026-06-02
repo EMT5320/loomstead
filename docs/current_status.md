@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: project-status
-last_verified: 2026-06-01
+last_verified: 2026-06-02
 startup_load: after-agent-context
 source_of_truth: true
 scope: 当前实现事实、验证状态、人工验收边界
@@ -13,10 +13,11 @@ scope: 当前实现事实、验证状态、人工验收边界
 
 ## 1. 当前阶段
 
-- 项目名：`Loomstead`，narrative-primary 的可解释多 Agent 叙事运行时与研究环境。
+- 项目名：`Loomstead`，narrative-primary 的可解释多 Agent 叙事运行时；2026-06-02 后定位为二线工程展示项目。
 - 技术骨架：Godot 4.x 客户端 + Python Agent Server + Web Debug / 研究控制台。
 - Phase 1（活着的世界）已收口（2026-05-21 主人确认），`world_main.tscn` 为默认完成基线。
-- Phase 2（骨架建立期）rule-level scaffold 已超额完成；`P2.exit` 研究向硬验收已通过 promoted-with-caveat 口径。当前进入 `P_demo.exit` 求职展示线。
+- Phase 2（骨架建立期）rule-level scaffold 已超额完成；`P2.exit` 研究向硬验收已通过 promoted-with-caveat 口径。
+- **2026-06-02 战略收缩**：经两项目对比，主人确认 `AlgoCoach-Flywheel`（另一仓库）为求职 + 论文主力；`Loomstead` 收缩为**可解释多 agent 系统工程展示项目**，停止追 human believability / 论文化 / cloud 重跑。可辩护贡献定位为 agent orchestration / observability / eval infra（详见 §2.1 与 §7）。
 
 ## 2. 当前已验证事实
 
@@ -33,11 +34,11 @@ scope: 当前实现事实、验证状态、人工验收边界
 | 上下文治理 | `docs/context_governance.md` 是治理协议；`AGENTS.md` / `CLAUDE.md` / `docs/agent_context.md` / 本文 / `docs/phase_checkpoints.md` 是当前事实入口；`scripts/build_agent_context.py` 提供 `context:check` / `context:brief` / `context:resume`；旧设计文档（agentic_game_design / gameplay_system_architecture / game_content_storyline / npc_deep_card_spec）已归档至 `docs/archive/`。 |
 | 跨环境 artifact | 双环境只同步已整理证据子树：`.run/eval-promoted/`、`.run/eval-reviewer-packets/`、`.run/process-llm-evidence/` 中的命名证据文件。`.run/eval-runs/` 已回归本地滚动区（`.gitignore` 忽略），`.run/process-llm-evidence/latest*.json` 也是本地 cache（`.gitignore` 忽略）；跨机复盘靠 `eval:archive:promote` 把被 claim 引用的 run 复制到 `eval-promoted`，并用 `cloud-*.json` / summary 命名 artifact 固定 provider usage。Godot 缓存、截图、Mermaid 临时配置、一次性脚本和日志继续按本地临时产物处理。 |
 
-## 2.1 Human Rating Pilot Gate
+## 2.1 Human Rating Pilot Gate（2026-06-02 评估为前提不成立 / 已关闭）
 
-- `code integrated`：`docs/human_rating_pilot_gate.md` 定义中文 blind pilot v0 的范围、rubric、Green / Red / Protocol failure 判据；`scripts/build_human_rating_pilot_packet.py` 从 promoted process artifact 生成盲评材料；`package.json` 提供 `eval:human-rating:packet`。
-- `artifact backed`：`.run/eval-reviewer-packets/human_rating_pilot_2026-06-01_zh_v0/` 已生成 6 张 reviewer card、`blind_score_sheet.csv`、`pairwise_preference_sheet.csv`、`INTERNAL_CONDITION_KEY.csv` 与 packet protocol；reviewer-facing 文件已检查不暴露 `full_motivational_delegation` / `hard_delegation` 条件标签。
-- `manual unverified`：等待 3-5 名非作者中文 reviewer 填写单样本评分与 pairwise preference；pilot 正信号只解锁扩样本和正式 protocol，不能升级 C2/C3/C4 claim。
+- `code integrated`：`docs/human_rating_pilot_gate.md`、`scripts/build_human_rating_pilot_packet.py`、`eval:human-rating:packet` 仍在仓库，作为方法论记录保留。
+- **`artifact backed + owner decision`（2026-06-02 数据核查）**：pilot 前提（baseline 行为分化）不成立。`hard_delegation` 是 metric stub（不跑 runtime）；memory / relationship ablation 输入虽进入决策路径，但 promoted scenarios 中未改变同场景 `goalToolEvents`，现有 believability 梯度只在 evidence/integrity 层，人类盲评无法产生有效系统能力信号。
+- **结论**：blind pilot 不执行；Process Fidelity 收缩为 explainability / 证据完整性度量；C2/C3/C4 已在 `paper/claim_evidence_matrix.md` 降级为 metric / explainability 级。
 
 ## 2.2 Showcase Mode v1
 
@@ -49,8 +50,8 @@ scope: 当前实现事实、验证状态、人工验收边界
 
 - **真实 LLM evidence**：cloud provider usage 已覆盖 4 个 Process Fidelity GoalSpec × 5 seed × 5 baseline，共 100 次 `CloudApiProvider` 调用、0 fallback、约 189,949 tokens / 0.02972032 USD。命名证据：`.run/process-llm-evidence/cloud-branna-forgiveness-2026-05-29.json`、`.run/process-llm-evidence/cloud-3goalspec-2026-05-29.json`、`.run/process-llm-evidence/cloud-4goalspec-summary-2026-05-29.json`；单 seed 跨机记录另存为 `cloud-branna-forgiveness-local-office-2026-05-29.json`。已通过 `eval:process:export` + `eval:archive:promote` 进入 `.run/eval-promoted/run_2026-05-29T13-57-50Z`，其 manifest `llmEvidence.recordCount=100`。C2/C3/C4 已由主人确认升级为 `promoted with caveat`。
 - **证据指针**：`paper/claim_evidence_matrix.md` 当前引用 promoted artifact；Process Fidelity 最新 paper 表来自 `.run/eval-promoted/run_2026-05-29T13-57-50Z`，domain / stability / robustness 仍引用已 promote 的 05-25 / 05-28 证据。05-29 process promotion 额外携带 cloud `llmEvidence`；promotion note 已写入主人确认口径，但 `promotionStatus=needs_manual_review` 仍保留机器层面的 git.dirty 与 drift caveat。
-- **人工 reviewer 抽样**：packet 已生成，停在 `manual_review_required` gate，等待人工填表。
-- **Human Rating blind pilot**：中文 v0 盲评包已生成，停在 `manual_review_required` gate，等待 3-5 名非作者 reviewer 填写；结果按 `docs/human_rating_pilot_gate.md` 预注册分支解释。
+- **人工 reviewer 抽样**：旧 reviewer packet 仅作为 artifact 审核记录保留，不再作为当前 gate。
+- **Human Rating blind pilot**：2026-06-02 评估为前提不成立（baseline 不产生行为分化），不执行；详见 §2.1 与 `docs/human_rating_pilot_gate.md`。该缺口不再追补。
 - **真实 Godot 窗口复验**：最新 Trace 导航 / 中断布局补修代码已落地，真实窗口复验**暂缓**到后端 / Eval 主线稳定后集中处理（治理协议 §3.1：避免每次新增字段后反复进入中间态窗口验收和小修循环）。
 - **Phase 4 候选**：gossip 真扩散、玩家行为传播、emergence scenario 仍未启动。
 - **求职展示线**：README 顶部已收敛为 Watch / Research 两条入口；`paper/blog_main.md`、`docs/demo_capture_plan.md`、`docs/showcase_manifest.md`、`scripts/check_showcase.py` 已落地；Figure/Table 覆盖率已由 Figure 4 SVG 补到 70%（`showcase:check` 通过）。最终视频 / GIF / 截图与真实 Godot 窗口复验仍待人工执行。
@@ -89,7 +90,6 @@ npm.cmd run eval:robustness
 npm.cmd run eval:archive:check
 npm.cmd run eval:archive:drift
 npm.cmd run eval:reviewer:packet
-npm.cmd run eval:human-rating:packet
 npm.cmd run research:evidence:check
 npm.cmd run content:check
 npm.cmd run asset:check
@@ -104,4 +104,4 @@ git diff --check
 
 ## 7. 下一步
 
-`P_demo.exit` 求职展示线进行中；自动化文档、校验与 Figure/Table 覆盖已收口。当前下一步优先发放并回收中文 Human Rating blind pilot v0，确认核心 claim 信号后，再做真实 Godot 窗口复验并录制 / 截取 60 秒 Godot + Trace 展示素材、GIF 与截图。详见 `docs/human_rating_pilot_gate.md`、`docs/demo_capture_plan.md` 与 `docs/showcase_manifest.md`。
+2026-06-02 战略收缩后，`Loomstead` 进入 demo 冻结准备：主力精力转向 `AlgoCoach-Flywheel`。Loomstead 剩余可选低优先工作仅为用现有 promoted 数据 + Godot observer 做低成本截图 / 录屏；如果需要新 UI 开发才能讲清楚，则不继续投入展示层。不再做后端大改、cloud 重跑或 human rating pilot。

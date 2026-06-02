@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: context-governance
-last_verified: 2026-06-01
+last_verified: 2026-06-02
 startup_load: first-read
 source_of_truth: true
 scope: 新对话入口、当前边界、最近下一步
@@ -23,13 +23,14 @@ scope: 新对话入口、当前边界、最近下一步
 
 ## 2. 一句话定位
 
-`Loomstead` 是 narrative-primary 的可解释多 Agent 叙事运行时与研究环境：Director 用 Motivational Delegation 间接驱动少量深度 NPC 朝过程约束目标演化，用 Process Fidelity Eval 验证过程可信度。差异化主轴：**少而深 + 可解释 + 可评估**。
+`Loomstead` 是 narrative-primary 的可解释多 Agent 叙事运行时与二线工程展示项目：Director / Event Skill / NPC runtime / trace / eval 共同展示 **agent orchestration + observability + eval infra** 能力。2026-06-02 后，Process Fidelity 只作为证据完整性 / debug guardrail，不再主张 human-validated believability。
 
 ## 3. 当前阶段
 
+- **2026-06-02 战略收缩**：经两项目对比，主人确认 `AlgoCoach-Flywheel`（另一仓库）为求职 + 论文主力；`Loomstead` 收缩为**可解释多 agent 系统工程展示项目**，停止追 human believability / 论文化 / cloud 重跑。可辩护贡献定位为 agent orchestration / observability / eval infra。
 - Phase 1（活着的世界）已收口；`world_main.tscn` 是默认完成基线。
 - Phase 2（骨架建立期）rule-level scaffold 已超额完成；B 真实 LLM 证据线已完成本轮 artifact 收口。
-- `P2.exit` 研究向硬验收已通过 promoted-with-caveat 口径；当前进入 `P_demo.exit` 求职展示线。
+- `P2.exit` 已通过 promoted-with-caveat 口径；`P_demo.exit` 求职展示线降为可选低优先（仅录制 explainability demo 素材）。
 - 不再扩 Phase 1 旧玩法线；不在已稳定基础设施层（manifest / archive / promote / drift / strict gate）继续无 trigger 加固。
 
 ## 4. 当前边界
@@ -42,14 +43,13 @@ scope: 新对话入口、当前边界、最近下一步
 - 新增 schema、事件字段、Debug 字段、eval artifact、Godot 消费字段前先明确数据契约。
 - claim level 升级只能由主人显式确认；AI 助手只能维持或降级。
 
-## 5. 最近下一步
+## 5. 最近下一步（2026-06-02 战略收缩后）
 
-- Showcase Mode v1 已进入收口批次：后端 `/api/showcase/starlight` + Godot 默认可见 `ShowcasePanel` + `F1` / `Tab` / `Deep dive` 路由已落地；离线门禁已通过，Computer Use 真实窗口 spot-check 已确认首屏摘要、`F1`、`Tab`、`Deep dive` 可用；最终 demo 视频 / GIF / 截图仍待录制。
-- B 真实 LLM 证据线：4 个 Process Fidelity GoalSpec × 5 seed × 5 baseline 的 cloud provider usage 已整理并 promote 到 `.run/eval-promoted/run_2026-05-29T13-57-50Z`；C2/C3/C4 已获主人确认使用 `promoted with caveat`，promotion note 已写入，机器状态仍保留 git.dirty / drift caveat。
-- A 求职展示线（进行中）：README Watch / Research 双入口、`paper/blog_main.md`、`docs/demo_capture_plan.md`、`docs/showcase_manifest.md` 与 `showcase:check` 已落地；Figure/Table 覆盖率已到 70%。当前优先级调整为先执行中文 Human Rating blind pilot v0，验证 Process Fidelity 外部效度信号，再决定最终 demo polish 包装重点。
-- Human Rating Pilot Gate：`docs/human_rating_pilot_gate.md` 已作为当前 gate；`npm.cmd run eval:human-rating:packet -- --packet-id human_rating_pilot_2026-06-01_zh_v0` 生成中文盲评包，等待 3-5 名非作者 reviewer 填写评分。
-- C Phase 4 玩家成为变量线：gossip 真扩散 + 1 跨日 emergence scenario
-- D Phase 3 内容深度线：4 核心 NPC 完整数据 + 5 作物 / 25 物品 / 30 工具
+- **Human Rating pilot 已评估为前提不成立、不执行**：`hard_delegation` 是 metric stub 不跑 runtime；memory / relationship ablation 输入虽进入决策路径，但 promoted scenarios 中未改变 `goalToolEvents`，因此现有 believability 梯度只支持 evidence/integrity 层，不支持人类盲评系统能力结论。详见 `docs/human_rating_pilot_gate.md`。
+- **可辩护贡献收缩为工程展示**：Process Fidelity 定位为证据完整性度量 / debug guardrail（指标对证据缺失 / 归属错乱 / 链接剥离敏感，promoted run 已支持），不再主张 "Full 生成更可信行为"。`paper/claim_evidence_matrix.md` 的 C2/C3/C4 已降级为 metric / explainability 级。
+- **求职展示入口**：`docs/portfolio_capability_map.md` 已把现有资产串联为 capability map（工程能力栈 / 对应岗位 / 面试讲法 / 诚实边界 / 与 AlgoCoach 分工）。
+- **demo 收尾（可选、低优先）**：只用现有 promoted 数据 + Godot observer 做低成本截图 / 录屏；如果讲清楚需要新 UI 开发，则直接不做，不再为包装半成品投入展示层。
+- **主力已转移**：求职 + 论文主力为 `AlgoCoach-Flywheel`（另一仓库）；Loomstead 不再启动 Phase 3 内容深度线、Phase 4 玩家变量线等新开发线。
 
 ## 6. 按开发线读取
 
@@ -77,7 +77,6 @@ npm.cmd run eval:robustness
 npm.cmd run eval:archive:check
 npm.cmd run eval:archive:drift
 npm.cmd run research:evidence:check
-npm.cmd run eval:human-rating:packet
 npm.cmd run client:env
 npm.cmd run client:run:check
 npm.cmd run llm:smoke

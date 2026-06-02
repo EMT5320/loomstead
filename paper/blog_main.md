@@ -1,6 +1,6 @@
 # Loomstead: Motivational Delegation for Process-Constrained Narrative Agents
 
-`Loomstead` is a research-preview multi-agent narrative runtime built around a playable Godot town slice. The project asks a focused question: can a Director steer long-running narrative goals by shaping context while NPCs still choose their own actions through motivation, memory, relationships, tools, and heuristics?
+`Loomstead` is an **explainable multi-agent narrative runtime** built around a playable Godot town slice — a portfolio project demonstrating agent orchestration, observability, and evaluation engineering. The technical question it explores: can a Director steer long-running narrative goals by shaping context while NPCs still choose their own actions through motivation, memory, relationships, tools, and heuristics — and can every such outcome be made *auditable* through a trace?
 
 The current portfolio story has three layers:
 
@@ -64,15 +64,15 @@ It covers:
 - 100 cloud-provider arbitration records,
 - 0 fallback calls.
 
-Current `C2`/`C3`/`C4` claim status is **promoted with caveat** after owner review:
+Current `C2`/`C3`/`C4` claim status is **promoted with caveat** after owner review, scoped to the **metric / explainability level** (a 2026-06-02 review withdrew any human-validated believability wording):
 
-- **C2**: Motivational Delegation satisfies current process constraints while preserving agent-initiated action.
-- **C3**: Hard Delegation reaches final goals while producing shortcut and autonomy violations.
-- **C4**: relationship edges and evidence links act as causal evidence in current ablation and replay scaffolds.
+- **C2**: promoted with caveat at the metric / explainability level; Motivational Delegation satisfies the author-defined Process Fidelity metrics while preserving agent-initiated tool actions (not a human-believability claim).
+- **C3**: promoted with caveat at the metric / explainability level; Hard Delegation reaches final goals while scoring near-zero on Process Fidelity metrics. This is a **metric-construct contrast**: the Hard baseline is a metric stub that does not execute the runtime, so it has no human-readable process to compare against.
+- **C4**: promoted with caveat at the metric / explainability level; Process Fidelity metrics are **sensitive to evidence-completeness degradation**. This is an explainability signal, not a causal claim about behavior: ablation inputs reach the decision path, but in the promoted scenarios they did not produce behavior-divergent `goalToolEvents`.
 
-The key contrast is visible in the Hard Delegation baseline. It reaches `goal_success_rate=1.0`, then collapses path-quality metrics: `required_process_coverage=0.185714`, `forced_action_rate=1.0`, `agent_initiated_action_ratio=0.0`, `causal_trace_coverage=0.0`, and `shortcut_violation_rate=1.0`.
+The metric contrast is visible in the Hard Delegation baseline. It reaches `goal_success_rate=1.0`, then collapses path-quality metrics: `required_process_coverage=0.185714`, `forced_action_rate=1.0`, `agent_initiated_action_ratio=0.0`, `causal_trace_coverage=0.0`, and `shortcut_violation_rate=1.0`.
 
-That result supports the evaluation story: goal completion alone can hide forced or shortcut paths.
+That result supports the explainability story: goal completion alone can hide forced or shortcut paths, and the metrics surface that gap. Because the Hard baseline is a metric stub, this is a metric-construct illustration rather than a behavior-level one.
 
 ## 4. Trace walkthrough: one concrete evidence chain
 
@@ -95,10 +95,10 @@ The same figure also references a Tomas repair trace to show the pattern across 
 
 ## 5. Current caveats
 
-This is research-preview evidence. External wording should keep these boundaries:
+This is research-preview evidence, scoped to **explainability / evidence-completeness** rather than human-validated believability. External wording should keep these boundaries:
 
-- `C2`/`C3`/`C4` can be described as **promoted with caveat**.
-- Final empirical wording still needs human process ratings, broader scenario coverage, and stronger dynamic baselines; the current blind pilot gate is tracked in `docs/human_rating_pilot_gate.md`.
+- `C2`/`C3`/`C4` can be described as **promoted with caveat** at the metric / explainability level only.
+- A 2026-06-02 review found the human-believability pilot **infeasible on current data**: Hard Delegation is a metric stub, and the memory / relationship ablation inputs did not produce behavior-divergent `goalToolEvents` in the promoted scenarios. The project scope is narrowed to explainability rather than human-validated believability. See `docs/human_rating_pilot_gate.md`.
 - The promoted process run still carries a machine-level `needs_manual_review` status because it was exported during a dirty closure pass and drift policy asks for human explanation.
 - Godot observer-mode visuals are implemented, while the newest real-window capture remains a manual verification task.
 
@@ -121,4 +121,4 @@ Use the capture script in [`docs/demo_capture_plan.md`](../docs/demo_capture_pla
 5. trace filtering and copyable evidence,
 6. closing frame with `/api/debug.phase2`.
 
-The intended takeaway is simple: Loomstead is a playable town slice, an explainable agent runtime, and an evaluation harness for whether narrative outcomes were earned through a credible process.
+The intended takeaway is simple: Loomstead is a playable town slice, an explainable agent runtime, and an evaluation harness for *auditing* whether narrative outcomes were produced through a traceable, evidence-complete process. The contribution is explainability and observability engineering, with human-validated believability left as explicit future work.
