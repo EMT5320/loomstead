@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: planning
-last_verified: 2026-06-02
+last_verified: 2026-06-03
 startup_load: on-demand
 source_of_truth: true
 scope: 阶段推进 checkpoint 板与 exit criteria
@@ -16,7 +16,8 @@ scope: 阶段推进 checkpoint 板与 exit criteria
 - 已通过：`P1.exit`（Phase 1 活着的世界，2026-05-21 主人确认）
 - 已完成方向确认：`P2.skeleton`（Phase 2 骨架建立，rule-level scaffold 与 cloud-backed Process Fidelity 证据已收口）
 - 已通过：`P2.exit`（Phase 2 研究向硬验收，2026-05-29 主人确认 C2/C3/C4 `promoted with caveat`）
-- 进行中：`P_demo.exit`（已收缩为二线工程展示 / demo 冻结准备）
+- 进行中：`P_demo.exit`（已收缩为二线兜底工程展示 / demo 冻结准备）
+- 已排队：`P_audit_spike.entry`（P_demo 收尾后，做一次短周期 Auditable Agents 挽救实验）
 - 未解锁：`P3.entry`、`P4.entry`
 
 ## P2.skeleton —— Phase 2 骨架完整性
@@ -65,7 +66,7 @@ E. **Eval Framework 加固延续**（不推荐）
 
 ## P_demo.exit —— 求职展示线收口
 
-> 状态：收缩中。2026-06-02 战略收缩后，`Loomstead` 不再追求 human-believability / 论文主线，定位为二线工程展示项目；`AlgoCoach-Flywheel` 是求职 + 论文主力。
+> 状态：收缩中。2026-06-03 主人确认顺序：先收尾为兜底工程展示项目，再启动一次短周期 Auditable Agents 挽救实验；`AlgoCoach-Flywheel` 仍是求职 + 论文主力。
 
 ### Exit criteria
 
@@ -86,6 +87,31 @@ E. **Eval Framework 加固延续**（不推荐）
 - claim_evidence_matrix C2 / C3 / C4 保留为 metric / explainability 级 promoted with caveat
 - ablation_comparison 包含 Full vs Hard Delegation vs No Subjective Memory vs No Relationship Edge 四对比
 - 真实 provider 跑通后 24h 内不重复 export 同 suite（避免治理 §3.2 违规）
+
+## P_audit_spike.entry —— Auditable Agents 短挽救实验
+
+> 状态：已排队，尚未启动。该实验只在 `P_demo.exit` 兜底收尾后执行，周期应控制在 3-5 天。
+
+### Scope
+
+- 推荐 framing：`Trace-grounded Auditable Agent Runtime` 或 `Agent Action Provenance & Counterfactual Audit Harness`。
+- 复用现有 trace / eval / coding adapter 资产，但重新定义审计语义；避免把旧 Process Fidelity 指标直接改名后升级 claim。
+- 至少新增 2 个高风险工具场景，例如 coding patch 前必须读取 policy / tests、ops 删除或移动文件前必须有 ticket / approval、data export 前必须经过 redaction policy。
+- Baselines 至少包含 Full Runtime、No Policy Evidence、Evidence Link Removal、Shortcut Agent / Direct Executor。
+
+### Exit criteria
+
+- ⚠️ `action_provenance_coverage`：高风险动作必须携带可追踪 `sourceEventIds` / `traceRefs`。
+- ⚠️ `policy_bypass_rate`：shortcut baseline 应明显高于 Full。
+- ⚠️ `counterfactual_action_sensitivity`：至少 2 个场景移除关键 policy / context evidence 后 selected action 或 violation verdict 发生变化。
+- ⚠️ `audit_report_completeness`：每个动作输出 selected tool、risk level、policy evidence、score components、source ids、counterfactual replay result、verdict。
+- ⚠️ 产出一份 reviewer 可读审计报告；若报告无法定位“哪个证据影响了哪个动作”，实验判定失败。
+
+### Claim boundary
+
+- 可说：toy narrative / coding fixture 中的结构化 provenance 与反事实审计 harness。
+- 避免：完全严密因果证明、企业级生产可用、跨域有效性已成立、AI Safety 核心贡献已完成。
+- 如果上述 exit criteria 无法满足，则停止挽救路线，仅保留 portfolio 工程资产。
 
 ## P3.entry / P4.entry —— 后续阶段入口
 

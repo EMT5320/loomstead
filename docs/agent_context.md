@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: context-governance
-last_verified: 2026-06-02
+last_verified: 2026-06-03
 startup_load: first-read
 source_of_truth: true
 scope: 新对话入口、当前边界、最近下一步
@@ -28,6 +28,7 @@ scope: 新对话入口、当前边界、最近下一步
 ## 3. 当前阶段
 
 - **2026-06-02 战略收缩**：经两项目对比，主人确认 `AlgoCoach-Flywheel`（另一仓库）为求职 + 论文主力；`Loomstead` 收缩为**可解释多 agent 系统工程展示项目**，停止追 human believability / 论文化 / cloud 重跑。可辩护贡献定位为 agent orchestration / observability / eval infra。
+- **2026-06-03 后续节奏**：先把 Loomstead 收尾成兜底 portfolio 工程项目；随后只做一个短周期 Auditable Agents / trace-grounded audit 挽救实验。若实验无法产生明确证据分化或审计报告价值，则彻底停止投入。
 - Phase 1（活着的世界）已收口；`world_main.tscn` 是默认完成基线。
 - Phase 2（骨架建立期）rule-level scaffold 已超额完成；B 真实 LLM 证据线已完成本轮 artifact 收口。
 - `P2.exit` 已通过 promoted-with-caveat 口径；`P_demo.exit` 求职展示线降为可选低优先（仅录制 explainability demo 素材）。
@@ -48,7 +49,9 @@ scope: 新对话入口、当前边界、最近下一步
 - **Human Rating pilot 已评估为前提不成立、不执行**：`hard_delegation` 是 metric stub 不跑 runtime；memory / relationship ablation 输入虽进入决策路径，但 promoted scenarios 中未改变 `goalToolEvents`，因此现有 believability 梯度只支持 evidence/integrity 层，不支持人类盲评系统能力结论。详见 `docs/human_rating_pilot_gate.md`。
 - **可辩护贡献收缩为工程展示**：Process Fidelity 定位为证据完整性度量 / debug guardrail（指标对证据缺失 / 归属错乱 / 链接剥离敏感，promoted run 已支持），不再主张 "Full 生成更可信行为"。`paper/claim_evidence_matrix.md` 的 C2/C3/C4 已降级为 metric / explainability 级。
 - **求职展示入口**：`docs/portfolio_capability_map.md` 已把现有资产串联为 capability map（工程能力栈 / 对应岗位 / 面试讲法 / 诚实边界 / 与 AlgoCoach 分工）。
-- **demo 收尾（可选、低优先）**：只用现有 promoted 数据 + Godot observer 做低成本截图 / 录屏；如果讲清楚需要新 UI 开发，则直接不做，不再为包装半成品投入展示层。
+- **兜底工程项目收尾优先**：README / blog / capability map / ShowcasePanel 继续作为 portfolio 入口；只在现有 Godot / Observer 资源足够清楚时录低成本素材，不追加展示层大改。
+- **短挽救实验排队**：兜底收尾后可启动 Auditable Agents spike，推荐口径为 `Trace-grounded Auditable Agent Runtime` 或 `Agent Action Provenance & Counterfactual Audit Harness`；目标是验证 `sourceEventIds` / `traceRefs` / counterfactual replay 能否支撑高风险动作 provenance、policy bypass 与审计报告，避免升级 believability claim。
+- **Go / No-Go**：spike 必须至少产出 2 个高风险非叙事场景、可读审计报告、关键 evidence 移除后的行为分化或违规差异；若达不到，则保留 portfolio 资产并停止继续研究投入。
 - **主力已转移**：求职 + 论文主力为 `AlgoCoach-Flywheel`（另一仓库）；Loomstead 不再启动 Phase 3 内容深度线、Phase 4 玩家变量线等新开发线。
 
 ## 6. 按开发线读取

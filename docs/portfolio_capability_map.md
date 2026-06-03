@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: portfolio-showcase
-last_verified: 2026-06-02
+last_verified: 2026-06-03
 startup_load: on-demand
 source_of_truth: true
 scope: Loomstead 求职展示 capability map（展示的工程能力 / 对应岗位 / 面试讲法 / 诚实边界 / 与 AlgoCoach 分工）
@@ -49,3 +49,9 @@ scope: Loomstead 求职展示 capability map（展示的工程能力 / 对应岗
 
 - **已就绪**：`README.md`（Watch / Research 双入口）、`paper/blog_main.md`（技术博客主文）、Figure 1/2/3/4、trace 走查、Showcase Mode v1（Godot ShowcasePanel + `/api/showcase/starlight`）。
 - **可选录制（manual gate）**：如果现有 Godot / Observer 界面已经足够清晰，可录 30-60 秒 explainability 素材；如果需要新 UI 开发才能讲清楚，则不继续投入展示层，只保留 README / blog / capability map 作为 portfolio 入口。脚本见 `docs/demo_capture_plan.md`，收口追踪见 `docs/showcase_manifest.md`。
+
+## 7. 当前收尾与挽救节奏
+
+- **兜底收尾优先**：当前先把 Loomstead 固化为工程展示项目，主要展示多 agent 编排、trace observability、eval infra 与 Godot 可视化；不为包装继续追加大 UI 或新玩法。
+- **短挽救实验**：兜底收尾后可做一次 Auditable Agents spike，验证 `sourceEventIds` / `traceRefs` / counterfactual replay 能否形成高风险动作 provenance、policy bypass 检测与审计报告。
+- **停止条件**：如果 spike 无法产出明确行为分化、policy bypass 差异或 reviewer 可读审计报告，则结束 Loomstead 研究投入，只保留本 capability map、README、blog 与现有 demo 资产。
