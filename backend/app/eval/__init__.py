@@ -3,6 +3,7 @@ from typing import Any
 from app.eval.scenarios import DEFAULT_L1_SCENARIOS, DEFAULT_PROCESS_GOALS, EvalScenario, ProcessGoalSpec
 
 _LAZY_EXPORTS = {
+    "run_audit_scenarios": ("app.eval.audit", "run_audit_scenarios"),
     "run_cross_domain_adapter_scenarios": ("app.eval.domain_adapter", "run_cross_domain_adapter_scenarios"),
     "run_evidence_robustness_scenarios": ("app.eval.evidence_robustness", "run_evidence_robustness_scenarios"),
     "run_process_fidelity_scenarios": ("app.eval.runner", "run_process_fidelity_scenarios"),
@@ -16,6 +17,7 @@ __all__ = [
     "DEFAULT_PROCESS_GOALS",
     "EvalScenario",
     "ProcessGoalSpec",
+    "run_audit_scenarios",
     "run_cross_domain_adapter_scenarios",
     "run_evidence_robustness_scenarios",
     "run_process_fidelity_scenarios",

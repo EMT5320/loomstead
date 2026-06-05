@@ -28,7 +28,7 @@ scope: 新对话入口、当前边界、最近下一步
 ## 3. 当前阶段
 
 - **2026-06-02 战略收缩**：经两项目对比，主人确认 `AlgoCoach-Flywheel`（另一仓库）为求职 + 论文主力；`Loomstead` 收缩为**可解释多 agent 系统工程展示项目**，停止追 human believability / 论文化 / cloud 重跑。可辩护贡献定位为 agent orchestration / observability / eval infra。
-- **2026-06-03 后续节奏**：先把 Loomstead 收尾成兜底 portfolio 工程项目；随后只做一个短周期 Auditable Agents / trace-grounded audit 挽救实验。若实验无法产生明确证据分化或审计报告价值，则彻底停止投入。
+- **Auditable Agents spike 当前状态**：求职展示录屏 / GIF manual gate 已由主人暂缓；最小 deterministic audit suite 与 reviewer-readable packet 生成器已落地，先验证 trace-grounded action provenance / policy bypass / counterfactual audit report 是否有清晰证据分化。若报告价值不足，则彻底停止研究投入。
 - Phase 1（活着的世界）已收口；`world_main.tscn` 是默认完成基线。
 - Phase 2（骨架建立期）rule-level scaffold 已超额完成；B 真实 LLM 证据线已完成本轮 artifact 收口。
 - `P2.exit` 已通过 promoted-with-caveat 口径；`P_demo.exit` 求职展示线降为可选低优先（仅录制 explainability demo 素材）。
@@ -50,8 +50,8 @@ scope: 新对话入口、当前边界、最近下一步
 - **可辩护贡献收缩为工程展示**：Process Fidelity 定位为证据完整性度量 / debug guardrail（指标对证据缺失 / 归属错乱 / 链接剥离敏感，promoted run 已支持），不再主张 "Full 生成更可信行为"。`paper/claim_evidence_matrix.md` 的 C2/C3/C4 已降级为 metric / explainability 级。
 - **求职展示入口**：`docs/portfolio_capability_map.md` 已把现有资产串联为 capability map（工程能力栈 / 对应岗位 / 面试讲法 / 诚实边界 / 与 AlgoCoach 分工）。
 - **兜底工程项目收尾优先**：README / blog / capability map / ShowcasePanel 继续作为 portfolio 入口；只在现有 Godot / Observer 资源足够清楚时录低成本素材，不追加展示层大改。
-- **短挽救实验排队**：兜底收尾后可启动 Auditable Agents spike，推荐口径为 `Trace-grounded Auditable Agent Runtime` 或 `Agent Action Provenance & Counterfactual Audit Harness`；目标是验证 `sourceEventIds` / `traceRefs` / counterfactual replay 能否支撑高风险动作 provenance、policy bypass 与审计报告，避免升级 believability claim。
-- **Go / No-Go**：spike 必须至少产出 2 个高风险非叙事场景、可读审计报告、关键 evidence 移除后的行为分化或违规差异；若达不到，则保留 portfolio 资产并停止继续研究投入。
+- **短挽救实验已最小实现**：`backend/app/eval/audit.py` + `eval:audit` / `eval:audit:export` 覆盖 3 个高风险非叙事场景、5 个 baseline、`audit.report.v1`、`audit.counterfactual_replay.v1` 与 `audit.go_no_go.v1`；`scripts/build_audit_reviewer_packet.py` + `eval:audit:packet` 生成 README / summary / case studies / raw 附录。当前只支持 toy deterministic 审计 harness claim，避免升级 believability 或 AI Safety 强 claim。
+- **Go / No-Go 当前机器结果**：`npm.cmd run eval:audit` 通过；Full provenance=1.0、Shortcut/Direct bypass=1.0、3 个场景 counterfactual sensitive、15 份 audit report 字段完整。`manual_reviewer_readability` 是人工 gate，最新 packet：`.run/eval-reviewer-packets/audit_reviewer_packet_2026-06-05T08-28-28Z`。
 - **主力已转移**：求职 + 论文主力为 `AlgoCoach-Flywheel`（另一仓库）；Loomstead 不再启动 Phase 3 内容深度线、Phase 4 玩家变量线等新开发线。
 
 ## 6. 按开发线读取
@@ -77,6 +77,9 @@ npm.cmd run eval:process
 npm.cmd run eval:stability
 npm.cmd run eval:domain
 npm.cmd run eval:robustness
+npm.cmd run eval:audit
+npm.cmd run eval:audit:export
+npm.cmd run eval:audit:packet
 npm.cmd run eval:archive:check
 npm.cmd run eval:archive:drift
 npm.cmd run research:evidence:check

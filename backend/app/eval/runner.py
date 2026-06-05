@@ -1840,6 +1840,8 @@ def _write_eval_manifest(
                 "npm.cmd run eval:domain:export",
                 "npm.cmd run eval:robustness",
                 "npm.cmd run eval:robustness:export",
+                "npm.cmd run eval:audit",
+                "npm.cmd run eval:audit:export",
             ],
         },
     }

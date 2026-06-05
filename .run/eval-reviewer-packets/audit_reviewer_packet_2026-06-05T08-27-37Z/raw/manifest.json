@@ -1,0 +1,555 @@
+{
+  "manifestVersion": "phase2.eval_manifest.v1",
+  "exportKind": "audit_dataset",
+  "createdAt": "2026-06-05T08:27:27+00:00",
+  "suite": "audit",
+  "baseline": "full_runtime",
+  "providerMode": null,
+  "seedCount": 1,
+  "ok": true,
+  "runDirName": "audit_2026-06-05T08-27-27Z",
+  "git": {
+    "commit": "aa1dbe539494b507c254ac083faf16e7db6ea7bb",
+    "shortCommit": "aa1dbe5",
+    "branch": "main",
+    "dirty": true,
+    "statusShort": [
+      "M backend/app/eval/__init__.py",
+      " M backend/app/eval/runner.py",
+      " M docs/agent_context.md",
+      " M docs/current_status.md",
+      " M package.json",
+      " M scripts/run_agent_eval.py",
+      "?? backend/app/eval/audit.py",
+      "?? scripts/build_audit_reviewer_packet.py"
+    ]
+  },
+  "schemaRegistry": {
+    "registryVersion": "schema_registry.v1",
+    "schemas": [
+      {
+        "id": "schema_registry",
+        "version": "schema_registry.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Runtime schema registry snapshot exposed by /api/debug.phase2.",
+        "producer": "app.runtime.schema_registry",
+        "debugSurface": "phase2.schemaRegistry",
+        "requiredFields": [
+          "registryVersion",
+          "schemas",
+          "versions"
+        ],
+        "notes": []
+      },
+      {
+        "id": "phase2_trace",
+        "version": "phase2.trace.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Unified trace envelope for Phase 2 decision, tool, budget, and memory events.",
+        "producer": "app.runtime.trace_schema",
+        "debugSurface": "phase2.traceSchemaVersion + phase2.recentTraceEvents[]",
+        "requiredFields": [
+          "traceId",
+          "spanId",
+          "worldTime",
+          "eventType",
+          "summary"
+        ],
+        "notes": []
+      },
+      {
+        "id": "capability_resolution",
+        "version": "capability_resolution.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Five-layer tool capability filtering and routing evidence.",
+        "producer": "app.runtime.capability_registry",
+        "debugSurface": "phase2.motivation.items[].capabilityFilters",
+        "requiredFields": [
+          "context",
+          "layers",
+          "allowedToolIds",
+          "rejectedTools",
+          "decisionBudgets"
+        ],
+        "notes": []
+      },
+      {
+        "id": "decision_budget",
+        "version": "decision_budget.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "NPC / feature / tool-cost decision budget policy and usage snapshot.",
+        "producer": "app.runtime.decision_budget",
+        "debugSurface": "phase2.decisionBudget",
+        "requiredFields": [
+          "policy",
+          "items",
+          "providerActuals"
+        ],
+        "notes": []
+      },
+      {
+        "id": "provider_usage_actual",
+        "version": "provider_usage_actual.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Actual provider usage record for tokens, latency, and cost aggregation.",
+        "producer": "app.runtime.decision_budget",
+        "debugSurface": "phase2.decisionBudget.providerActuals + providerUsageRecord",
+        "requiredFields": [
+          "tick",
+          "npcId",
+          "feature",
+          "provider",
+          "tokens",
+          "latencyMs",
+          "cost"
+        ],
+        "notes": []
+      },
+      {
+        "id": "observer_scope",
+        "version": "observer_scope.v1",
+        "owner": "memory",
+        "status": "active",
+        "description": "Result observer visibility scope with participants, location, and exclusions.",
+        "producer": "app.memory.observer",
+        "debugSurface": "phase2.recentTraceEvents[].details.observerScope",
+        "requiredFields": [
+          "visibility",
+          "actorId",
+          "participantIds",
+          "observerIds",
+          "excludedObserverIds"
+        ],
+        "notes": []
+      },
+      {
+        "id": "observer_spatial_model",
+        "version": "observer_spatial_model.v1",
+        "owner": "memory",
+        "status": "active",
+        "description": "Normalized anchor-distance model used by all_in_location visibility.",
+        "producer": "app.memory.observer",
+        "debugSurface": "phase2.recentTraceEvents[].details.observerScope.spatialModel",
+        "requiredFields": [
+          "distanceUnit",
+          "hearingRadius"
+        ],
+        "notes": []
+      },
+      {
+        "id": "motivation_plan",
+        "version": "motivation_plan.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Read-only Godot-compatible life action plan produced by MotivationEngine.",
+        "producer": "app.runtime.agent_runtime",
+        "debugSurface": "world.lifeActionPlan + world.slice.scheduleSnapshotVersion",
+        "requiredFields": [
+          "day",
+          "phase",
+          "selectedActions",
+          "locationBuckets",
+          "policy"
+        ],
+        "notes": []
+      },
+      {
+        "id": "legacy_life_action_plan",
+        "version": "life_action_plan.v1",
+        "owner": "simulation",
+        "status": "legacy_compat",
+        "description": "Legacy life action plan snapshot kept for direct world_state callers.",
+        "producer": "app.simulation.life_action_planner",
+        "debugSurface": "world.lifeActionPlan before AgentRuntime Phase 2 override",
+        "requiredFields": [
+          "day",
+          "phase",
+          "selectedActions",
+          "locationBuckets",
+          "policy"
+        ],
+        "notes": [
+          "AgentRuntime replaces this with motivation_plan.v1 on the current tick/state path."
+        ]
+      },
+      {
+        "id": "motivation_engine",
+        "version": "motivation_engine.v0",
+        "owner": "runtime",
+        "status": "legacy_compat",
+        "description": "MotivationEngine decision snapshot; v0 kept for current debug compatibility.",
+        "producer": "app.runtime.motivation_engine",
+        "debugSurface": "phase2.motivation",
+        "requiredFields": [
+          "items"
+        ],
+        "notes": [
+          "v0 remains stable until decision snapshot shape is promoted after Phase 2 trace hardening."
+        ]
+      },
+      {
+        "id": "need_accumulator",
+        "version": "need_accumulator.v0",
+        "owner": "runtime",
+        "status": "legacy_compat",
+        "description": "Need scoring snapshot used by MotivationEngine.",
+        "producer": "app.runtime.need_accumulator",
+        "debugSurface": "phase2.needAccumulator",
+        "requiredFields": [
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "tool_runtime",
+        "version": "tool_runtime.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Current ToolExecutor action runtime snapshot for selected NPCs.",
+        "producer": "app.runtime.agent_runtime",
+        "debugSurface": "phase2.toolRuntime",
+        "requiredFields": [
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "world_entities",
+        "version": "world_entities.v1",
+        "owner": "world",
+        "status": "active",
+        "description": "Typed WorldEntity snapshot for FarmPlot, Item, Inventory, Shop, Building, Time, and Weather.",
+        "producer": "app.world.entities.schema",
+        "debugSurface": "phase2.worldEntities",
+        "requiredFields": [
+          "count",
+          "byKind",
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "subjective_memory_store",
+        "version": "subjective_memory_store.v1",
+        "owner": "memory",
+        "status": "active",
+        "description": "Subjective memory debug store snapshot with decay and archive metadata.",
+        "producer": "app.memory.subjective_memory",
+        "debugSurface": "phase2.subjectiveMemory",
+        "requiredFields": [
+          "agentId",
+          "count",
+          "activeCount",
+          "archivedCount",
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "subjective_memory_recall",
+        "version": "subjective_memory_recall.v2",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Subjective memory recall evidence injected into decision scoring, including salience after decay.",
+        "producer": "app.runtime.motivation_engine",
+        "debugSurface": "phase2.motivation.items[].subjectiveMemoryRecall",
+        "requiredFields": [
+          "query",
+          "worldTick",
+          "count",
+          "activeCount",
+          "recordIds",
+          "sourceEventIds"
+        ],
+        "notes": []
+      },
+      {
+        "id": "relationship_edge_store",
+        "version": "relationship_edge_store.v0",
+        "owner": "memory",
+        "status": "legacy_compat",
+        "description": "Relationship edge debug store snapshot with event and trace refs.",
+        "producer": "app.memory.relationship_edges",
+        "debugSurface": "phase2.relationshipEdges",
+        "requiredFields": [
+          "agentId",
+          "count",
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "heuristic_library",
+        "version": "heuristic_library.v0",
+        "owner": "memory",
+        "status": "legacy_compat",
+        "description": "Heuristic memory library snapshot with confidence decay.",
+        "producer": "app.memory.heuristic",
+        "debugSurface": "phase2.heuristics",
+        "requiredFields": [
+          "agentId",
+          "worldTick",
+          "count",
+          "items"
+        ],
+        "notes": []
+      },
+      {
+        "id": "heuristic_recall",
+        "version": "heuristic_recall.v1",
+        "owner": "runtime",
+        "status": "active",
+        "description": "Heuristic recall evidence injected into decision scoring.",
+        "producer": "app.runtime.motivation_engine",
+        "debugSurface": "phase2.motivation.items[].heuristicRecall",
+        "requiredFields": [
+          "worldTick",
+          "count",
+          "activeCount",
+          "heuristicIds",
+          "sourceEventIds"
+        ],
+        "notes": []
+      },
+      {
+        "id": "event_skill_outcome",
+        "version": "event_skill_outcome.v1",
+        "owner": "event_skill",
+        "status": "active",
+        "description": "Event skill outcome record shared by API result, event stream, and completed events.",
+        "producer": "app.skills.event_skill_schema",
+        "debugSurface": "eventResult + completedEvents[].resolution.outcomeRecord",
+        "requiredFields": [
+          "recordVersion",
+          "skillId",
+          "eventId",
+          "choice",
+          "summary"
+        ],
+        "notes": []
+      }
+    ],
+    "versions": {
+      "schema_registry": "schema_registry.v1",
+      "phase2_trace": "phase2.trace.v1",
+      "capability_resolution": "capability_resolution.v1",
+      "decision_budget": "decision_budget.v1",
+      "provider_usage_actual": "provider_usage_actual.v1",
+      "observer_scope": "observer_scope.v1",
+      "observer_spatial_model": "observer_spatial_model.v1",
+      "motivation_plan": "motivation_plan.v1",
+      "legacy_life_action_plan": "life_action_plan.v1",
+      "motivation_engine": "motivation_engine.v0",
+      "need_accumulator": "need_accumulator.v0",
+      "tool_runtime": "tool_runtime.v1",
+      "world_entities": "world_entities.v1",
+      "subjective_memory_store": "subjective_memory_store.v1",
+      "subjective_memory_recall": "subjective_memory_recall.v2",
+      "relationship_edge_store": "relationship_edge_store.v0",
+      "heuristic_library": "heuristic_library.v0",
+      "heuristic_recall": "heuristic_recall.v1",
+      "event_skill_outcome": "event_skill_outcome.v1"
+    }
+  },
+  "metricIds": [
+    "action_provenance_coverage",
+    "audit_report_completeness",
+    "counterfactual_action_sensitivity",
+    "policy_bypass_rate"
+  ],
+  "baselines": [
+    "direct_executor",
+    "evidence_link_removal",
+    "full_runtime",
+    "no_policy_evidence",
+    "shortcut_agent"
+  ],
+  "scenarioIds": [
+    "audit.coding_policy_before_patch",
+    "audit.data_export_redaction",
+    "audit.ops_destructive_file_change"
+  ],
+  "llmEvidence": {},
+  "evalGates": {},
+  "artifacts": [
+    {
+      "path": "summary.json",
+      "kind": "summary_json",
+      "bytes": 21182,
+      "sha256": "a1697ed3f2af1e521832c206805b809ab8d977be9114c39f9693469f18e37058"
+    },
+    {
+      "path": "audit_comparison.json",
+      "kind": "audit_comparison_json",
+      "bytes": 3223,
+      "sha256": "fd7a9becfc10ff078ff5bef05d9a38a9e8f2730c5c199073563815528da52da6"
+    },
+    {
+      "path": "go_no_go.json",
+      "kind": "audit_go_no_go_json",
+      "bytes": 1104,
+      "sha256": "dfc4abfd53cf42f946776c94e3314f8688fc04abcc337e582ec92b62cd906924"
+    },
+    {
+      "path": "per_scenario/audit.coding_policy_before_patch_full_runtime_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 9781,
+      "sha256": "96255715e8d12fbc76b38218f16f582e3788e9732ba40068f0d5745445b0272c",
+      "baseline": "full_runtime",
+      "scenarioId": "audit.coding_policy_before_patch"
+    },
+    {
+      "path": "per_scenario/audit.ops_destructive_file_change_full_runtime_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 8459,
+      "sha256": "58936e70e5abd55dd433c91bb3779e88e7fb65ba5e1758fce10aa4c5e95429b5",
+      "baseline": "full_runtime",
+      "scenarioId": "audit.ops_destructive_file_change"
+    },
+    {
+      "path": "per_scenario/audit.data_export_redaction_full_runtime_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 8325,
+      "sha256": "39c11b9f60d58710cca98e4f71faa0f4438c5af3881023364a98b6362f6b54c7",
+      "baseline": "full_runtime",
+      "scenarioId": "audit.data_export_redaction"
+    },
+    {
+      "path": "per_scenario/audit.coding_policy_before_patch_no_policy_evidence_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 6266,
+      "sha256": "abb41d168c2a35d1380f78b7da5ecd43c14a7702b2cde9c8950b28b5cbac10e6",
+      "baseline": "no_policy_evidence",
+      "scenarioId": "audit.coding_policy_before_patch"
+    },
+    {
+      "path": "per_scenario/audit.ops_destructive_file_change_no_policy_evidence_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 5524,
+      "sha256": "34afe2b088ab5243c608e2b41d1820148017013e62d927cac0f788cc58ad5dbe",
+      "baseline": "no_policy_evidence",
+      "scenarioId": "audit.ops_destructive_file_change"
+    },
+    {
+      "path": "per_scenario/audit.data_export_redaction_no_policy_evidence_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 5469,
+      "sha256": "6643c9d834393d3948fc467dfba7df9687646ba6595d2023d26cdb96fa9b287a",
+      "baseline": "no_policy_evidence",
+      "scenarioId": "audit.data_export_redaction"
+    },
+    {
+      "path": "per_scenario/audit.coding_policy_before_patch_evidence_link_removal_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 7056,
+      "sha256": "e765b37376d8e77362f438894b1dac5e24f60a53397bbe1f590722d05698234d",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "audit.coding_policy_before_patch"
+    },
+    {
+      "path": "per_scenario/audit.ops_destructive_file_change_evidence_link_removal_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 6428,
+      "sha256": "fc5e3c2a7b58b7f0f6323b0efd38ecf27b979d08a56b492746bb4a68ed4a8a1a",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "audit.ops_destructive_file_change"
+    },
+    {
+      "path": "per_scenario/audit.data_export_redaction_evidence_link_removal_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 6400,
+      "sha256": "def9bc2109bc5cd4a9487916a5b4bed17fbaa62943dffb18f34563734436e848",
+      "baseline": "evidence_link_removal",
+      "scenarioId": "audit.data_export_redaction"
+    },
+    {
+      "path": "per_scenario/audit.coding_policy_before_patch_shortcut_agent_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 5749,
+      "sha256": "6124ad2cdf36fa5bd38ac53fd78f8be1d27de4dea05aee12f7f5ae0ad74a17f0",
+      "baseline": "shortcut_agent",
+      "scenarioId": "audit.coding_policy_before_patch"
+    },
+    {
+      "path": "per_scenario/audit.ops_destructive_file_change_shortcut_agent_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 5426,
+      "sha256": "27e8d1b3b501702b7beab9651a07b65201dbc2abf6bbc0632e4ce14ad7c73728",
+      "baseline": "shortcut_agent",
+      "scenarioId": "audit.ops_destructive_file_change"
+    },
+    {
+      "path": "per_scenario/audit.data_export_redaction_shortcut_agent_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 5437,
+      "sha256": "4d099a6d899bf7c0bb9f10d823948d629bbfa4d0548c20f0b476b48d55a9eaa9",
+      "baseline": "shortcut_agent",
+      "scenarioId": "audit.data_export_redaction"
+    },
+    {
+      "path": "per_scenario/audit.coding_policy_before_patch_direct_executor_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 5808,
+      "sha256": "4559c904f1e0c9cb96f8799be91b70feda9e7d3c2cf3e7534c729951fdda5202",
+      "baseline": "direct_executor",
+      "scenarioId": "audit.coding_policy_before_patch"
+    },
+    {
+      "path": "per_scenario/audit.ops_destructive_file_change_direct_executor_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 5449,
+      "sha256": "aa6ae04bd4a1880269306344b19e5e732e1dfb6492bac250da3c78bd60cb9ca2",
+      "baseline": "direct_executor",
+      "scenarioId": "audit.ops_destructive_file_change"
+    },
+    {
+      "path": "per_scenario/audit.data_export_redaction_direct_executor_seed01.json",
+      "kind": "per_scenario_json",
+      "bytes": 5424,
+      "sha256": "3772c4df8e09acac1b06471465c8b373707a04849fc4c31176c109e9afa4a0b1",
+      "baseline": "direct_executor",
+      "scenarioId": "audit.data_export_redaction"
+    },
+    {
+      "path": "audit_reports.jsonl",
+      "kind": "audit_reports_jsonl",
+      "bytes": 38325,
+      "sha256": "30afd04dfc70b56f81fe5efae01999a2a45e8dd379a2d65991a44950610c7d3f",
+      "rowCount": 15
+    },
+    {
+      "path": "counterfactual_replay.jsonl",
+      "kind": "audit_counterfactual_replay_jsonl",
+      "bytes": 12497,
+      "sha256": "9280b3f77b3beadb80333937d0455a2a23d3ae73b0203d2243912d6e319d415f",
+      "rowCount": 15
+    },
+    {
+      "path": "policy_evidence_trace.jsonl",
+      "kind": "audit_policy_evidence_trace_jsonl",
+      "bytes": 9087,
+      "sha256": "cf1156594961523a8143023db12c88153166a355ccbb8837b84709f4c6efda7e",
+      "rowCount": 21
+    }
+  ],
+  "verification": {
+    "summary": "每个 artifact 提供 bytes / sha256；JSONL artifact 额外提供 rowCount，便于后续复核导出完整性。",
+    "localCommands": [
+      "npm.cmd run eval:process",
+      "npm.cmd run eval:process:export",
+      "npm.cmd run eval:stability",
+      "npm.cmd run eval:stability:export",
+      "npm.cmd run eval:domain",
+      "npm.cmd run eval:domain:export",
+      "npm.cmd run eval:robustness",
+      "npm.cmd run eval:robustness:export",
+      "npm.cmd run eval:audit",
+      "npm.cmd run eval:audit:export"
+    ]
+  }
+}

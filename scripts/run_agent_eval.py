@@ -11,6 +11,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "backend"))
 from app.eval import (  # noqa: E402
     DEFAULT_PROCESS_GOALS,
     ProcessGoalSpec,
+    run_audit_scenarios,
     run_cross_domain_adapter_scenarios,
     run_evidence_robustness_scenarios,
     run_process_fidelity_scenarios,
@@ -122,6 +123,21 @@ def _compact_robustness_output(result: dict) -> dict:
     }
 
 
+def _compact_audit_output(result: dict) -> dict:
+    return {
+        "ok": result.get("ok"),
+        "suite": result.get("suite"),
+        "baseline": result.get("baseline"),
+        "seedCount": result.get("seedCount"),
+        "passed": result.get("passed"),
+        "total": result.get("total"),
+        "metrics": result.get("metrics"),
+        "auditComparison": result.get("ablation_comparison"),
+        "goNoGo": result.get("goNoGo"),
+        "export": result.get("export"),
+    }
+
+
 def _select_process_scenarios(scenario_ids: list[str]) -> tuple[ProcessGoalSpec, ...]:
     """按 CLI 指定的 GoalSpec id 过滤 process suite，未指定时保持完整 suite。"""
     if not scenario_ids:
@@ -138,9 +154,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="运行 Loomstead Phase 2 Eval。")
     parser.add_argument(
         "--suite",
-        choices=("rule", "process", "stability", "domain", "robustness"),
+        choices=("rule", "process", "stability", "domain", "robustness", "audit"),
         default="rule",
-        help="选择 L1 rule、Process Fidelity、stability、cross-domain adapter 或 evidence robustness suite。",
+        help="选择 L1 rule、Process Fidelity、stability、cross-domain adapter、evidence robustness 或 audit suite。",
     )
     parser.add_argument("--full", action="store_true", help="输出完整 scenario 明细。")
     parser.add_argument("--export-dir", type=Path, default=None, help="导出 Process Fidelity / stability / domain / robustness 数据集。")
@@ -180,6 +196,9 @@ if __name__ == "__main__":
             export_dir=args.export_dir,
         )
         output = result if args.full else _compact_robustness_output(result)
+    elif args.suite == "audit":
+        result = run_audit_scenarios(export_dir=args.export_dir, seed_count=seed_count)
+        output = result if args.full else _compact_audit_output(result)
     else:
         result = run_rule_scenarios()
         # 默认保持简短输出，避免 npm.cmd run check 被 scenario 明细刷屏；需要明细时用 --full。

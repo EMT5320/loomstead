@@ -18,7 +18,7 @@ scope: 当前实现事实、验证状态、人工验收边界
 - Phase 1（活着的世界）已收口（2026-05-21 主人确认），`world_main.tscn` 为默认完成基线。
 - Phase 2（骨架建立期）rule-level scaffold 已超额完成；`P2.exit` 研究向硬验收已通过 promoted-with-caveat 口径。
 - **2026-06-02 战略收缩**：经两项目对比，主人确认 `AlgoCoach-Flywheel`（另一仓库）为求职 + 论文主力；`Loomstead` 收缩为**可解释多 agent 系统工程展示项目**，停止追 human believability / 论文化 / cloud 重跑。可辩护贡献定位为 agent orchestration / observability / eval infra（详见 §2.1 与 §7）。
-- **2026-06-03 后续选择**：先完成兜底工程项目收尾；随后可做一个短周期 Auditable Agents 挽救实验，验证结构化 provenance / policy audit / counterfactual replay 是否能支撑新的诚实 claim。失败即停止继续投入。
+- **Auditable Agents spike 当前状态**：求职展示录屏 / GIF manual gate 已由主人暂缓；最小 deterministic audit suite 与 reviewer-readable packet 生成器已落地，先验证结构化 provenance、policy bypass 检测与 counterfactual audit report 是否有清晰分化。失败即停止继续研究投入。
 
 ## 2. 当前已验证事实
 
@@ -26,7 +26,7 @@ scope: 当前实现事实、验证状态、人工验收边界
 |---|---|
 | 后端 Runtime | Python Agent Server 是权威世界状态入口；`/api/world/state`、`/api/player/action`、`/api/world/tick`、`/api/debug.phase2` 已开放；规则版 Director v0 与 `event.starlight_festival_shortage` 已运行；tick 主路径走 `MotivationEngine -> ToolExecutor -> ResultObserver`；`schema_registry.v1` 已集中治理主要 schema。`ToolDefinition.served_needs` 与 CapabilityRegistry 显式需求匹配已落地，legacy prefix 仅作未标注 fallback。Arbitration `candidateScores` 输出 `scoreComponentSourceRefs` / `scoreExplanationRefs`。 |
 | Phase 2 trace | `motivation.decision_made`、工具完成 / 失败 / 中断、`memory.result_observed`、`budget.decision_consumed` / `budget.decision_fallback` 全部带 `phase2.trace.v1`，含 `sourceEventIds` 与 `traceRefs`。 |
-| Auditable Agents 候选 | 当前仅是短挽救实验候选，不能直接替换为 AI Safety 强 claim。可复用资产包括 `sourceEventIds`、`traceRefs`、`candidateScores`、`scoreComponentSourceRefs`、counterfactual replay、coding domain adapter、promoted artifact manifest；需要新增高风险工具场景、policy evidence、shortcut baseline 与审计报告 artifact 才能评估价值。 |
+| Auditable Agents spike | `code integrated + command checked`：新增 deterministic `audit` eval suite（`backend/app/eval/audit.py`、`eval:audit`、`eval:audit:export`）与 `eval:audit:packet` reviewer packet 生成器，覆盖 coding patch / ops destructive file change / data export 3 个高风险非叙事场景，5 个 baseline（Full / No Policy Evidence / Evidence Link Removal / Shortcut Agent / Direct Executor），输出 `audit.report.v1`、`audit.counterfactual_replay.v1`、`action_provenance_coverage`、`policy_bypass_rate`、`counterfactual_action_sensitivity`、`audit_report_completeness` 和 `audit.go_no_go.v1`。机器 gate 只检查字段完整；`manual_reviewer_readability` 仍待主人判断。当前只支持 toy deterministic 审计 claim，不能宣称企业级安全、完整因果证明或跨域有效性。 |
 | Eval / Research | `scripts/run_agent_eval.py` 覆盖 rule process suite、stability、stability determinism、domain adapter suite、evidence robustness suite。Process Fidelity Eval 已含 Hard Delegation、No Subjective Memory、No Relationship Edge、Shuffled Owner、Evidence-Link Removal、Branna Forgiveness fixture、Counterfactual Replay、budget decision trace checks。Stability suite 把 `budget_trace_links_decision` 纳入硬门禁。Coding domain 含 8 fixture + derived dependency graph + `dependency_evidence_chain.v2` + reviewer arbitration + `coding.domain_counterfactual_replay.v1`；narrative domain 已接入 `narrative.domain_counterfactual_replay.v1`；domain suite 支持 `--seeds`。Evidence robustness 升级为 `phase2.evidence_robustness.strict_gate.v1`，输出 `phase2.evidence_robustness.domain_signature.v2` 的 coding / narrative 分域签名。`scripts/check_research_evidence.py` 校验 latest promoted robustness。 |
 | 最新 clean evidence | Process suite five-repeat 20/20（`run_2026-05-27T13-37-33Z`）；domain suite five-repeat 55/55（`domain_2026-05-27T13-29-21Z`），aggregate counterfactual mean `0.645238`、town mean `0.333333`、coding mean `0.762203`；robustness five-seed 300/300（`robustness_2026-05-28T03-08-43Z`，已 promote），promotion 为 `needs_manual_review`（drift policy 对 scenarioIds 索引补齐要求人工说明）。 |
 | Godot 客户端 | `clients/godot/` 是 Godot 4.x 项目，默认主场景 `res://scenes/world_main.tscn`；Phase 1 玩家移动、`E` talk、tick NPC 行动、远处事件提示和三场景拼图收口；Research Dock 三 Tab 读取 `/api/debug.phase2` 展示 motivation / 主观记忆 / 关系边 / heuristics / trace timeline；`memory.result_observed` 行、来源跳转按钮、Copy trace JSON、Prev/Next 循环导航、单条 trace 提示、Trace Copy 空态 / 成功 tooltip、Phase 2 Debug 错误提示、`[C]` / `[,]` / `[.]` / 左右方括号热键、NPC 高亮代码已落地。 |
@@ -56,8 +56,8 @@ scope: 当前实现事实、验证状态、人工验收边界
 - **Human Rating blind pilot**：2026-06-02 评估为前提不成立（baseline 不产生行为分化），不执行；详见 §2.1 与 `docs/human_rating_pilot_gate.md`。该缺口不再追补。
 - **真实 Godot 窗口复验**：最新 Trace 导航 / 中断布局补修代码已落地，真实窗口复验**暂缓**到后端 / Eval 主线稳定后集中处理（治理协议 §3.1：避免每次新增字段后反复进入中间态窗口验收和小修循环）。
 - **Phase 4 候选**：gossip 真扩散、玩家行为传播、emergence scenario 仍未启动。
-- **求职展示线**：README 顶部已收敛为 Watch / Research 两条入口；`paper/blog_main.md`、`docs/demo_capture_plan.md`、`docs/showcase_manifest.md`、`scripts/check_showcase.py` 已落地；Figure/Table 覆盖率已由 Figure 4 SVG 补到 70%（`showcase:check` 通过）。最终视频 / GIF / 截图与真实 Godot 窗口复验仍待人工执行。
-- **Auditable Agents 挽救实验**：已沉淀为后续短 spike 候选，详见 `paper/research_claim_review_2026-06-03.md`。当前尚未 code integrated；启动前先完成兜底 portfolio 收尾，且禁止宣称 enterprise-ready、完全因果证明或跨域有效性已成立。
+- **求职展示线**：README 顶部已收敛为 Watch / Research 两条入口；`paper/blog_main.md`、`docs/demo_capture_plan.md`、`docs/showcase_manifest.md`、`scripts/check_showcase.py` 已落地；Figure/Table 覆盖率已由 Figure 4 SVG 补到 70%（`showcase:check` 通过）。最终视频 / GIF / 截图与真实 Godot 窗口复验由主人暂缓，仍是 `manual unverified`。
+- **Auditable Agents 挽救实验**：最小 deterministic suite 已 code integrated；`npm.cmd run eval:audit` 通过，`npm.cmd run eval:audit:export` 导出 `.run/eval-runs/audit_2026-06-05T08-27-27Z`，`npm.cmd run eval:audit:packet` 生成 `.run/eval-reviewer-packets/audit_reviewer_packet_2026-06-05T08-28-28Z`，`eval:archive:check` 识别 `audit_dataset`。下一步是主人判断 reviewer packet 是否足够外部可读；禁止宣称 enterprise-ready、完全因果证明或跨域有效性已成立。
 
 ## 4. 开发前硬约束
 
@@ -90,6 +90,9 @@ npm.cmd run eval:stability:long
 npm.cmd run eval:stability:determinism
 npm.cmd run eval:domain
 npm.cmd run eval:robustness
+npm.cmd run eval:audit
+npm.cmd run eval:audit:export
+npm.cmd run eval:audit:packet
 npm.cmd run eval:archive:check
 npm.cmd run eval:archive:drift
 npm.cmd run eval:reviewer:packet
@@ -107,4 +110,4 @@ git diff --check
 
 ## 7. 下一步
 
-当前顺序：先把 `Loomstead` 收尾为兜底 portfolio 工程项目，保留 README / blog / capability map / ShowcasePanel 等低成本入口；随后只做一个短周期 Auditable Agents 挽救实验，验证结构化 provenance、policy bypass 检测与 counterfactual audit report 是否能产生清晰证据。若 spike 仍达不到预期，则保留既有 portfolio 资产并停止继续研究投入。主力精力继续转向 `AlgoCoach-Flywheel`。
+当前顺序：求职展示录屏 / GIF 暂缓；先由主人审查 `audit_reviewer_packet_2026-06-05T08-28-28Z` 是否足够外部可读。如果 packet 能清楚定位“哪个证据影响了哪个动作”，再考虑 promoted artifact；否则保留既有 portfolio 资产并停止继续研究投入。主力精力继续转向 `AlgoCoach-Flywheel`。

@@ -1,0 +1,141 @@
+{
+  "full_baseline": "full_runtime",
+  "comparison": {
+    "full_runtime": {
+      "action_provenance_coverage": {
+        "mean": 1.0,
+        "std": 0.0,
+        "n": 3
+      },
+      "policy_bypass_rate": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 3
+      },
+      "counterfactual_action_sensitivity": {
+        "mean": 1.0,
+        "std": 0.0,
+        "n": 3
+      },
+      "audit_report_completeness": {
+        "mean": 1.0,
+        "std": 0.0,
+        "n": 3
+      }
+    },
+    "no_policy_evidence": {
+      "action_provenance_coverage": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 3
+      },
+      "policy_bypass_rate": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 3
+      },
+      "counterfactual_action_sensitivity": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 3
+      },
+      "audit_report_completeness": {
+        "mean": 1.0,
+        "std": 0.0,
+        "n": 3
+      }
+    },
+    "evidence_link_removal": {
+      "action_provenance_coverage": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 3
+      },
+      "policy_bypass_rate": {
+        "mean": 1.0,
+        "std": 0.0,
+        "n": 3
+      },
+      "counterfactual_action_sensitivity": {
+        "mean": 1.0,
+        "std": 0.0,
+        "n": 3
+      },
+      "audit_report_completeness": {
+        "mean": 1.0,
+        "std": 0.0,
+        "n": 3
+      }
+    },
+    "shortcut_agent": {
+      "action_provenance_coverage": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 3
+      },
+      "policy_bypass_rate": {
+        "mean": 1.0,
+        "std": 0.0,
+        "n": 3
+      },
+      "counterfactual_action_sensitivity": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 3
+      },
+      "audit_report_completeness": {
+        "mean": 1.0,
+        "std": 0.0,
+        "n": 3
+      }
+    },
+    "direct_executor": {
+      "action_provenance_coverage": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 3
+      },
+      "policy_bypass_rate": {
+        "mean": 1.0,
+        "std": 0.0,
+        "n": 3
+      },
+      "counterfactual_action_sensitivity": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 3
+      },
+      "audit_report_completeness": {
+        "mean": 1.0,
+        "std": 0.0,
+        "n": 3
+      }
+    }
+  },
+  "delta_vs_full": {
+    "no_policy_evidence": {
+      "action_provenance_coverage": -1.0,
+      "policy_bypass_rate": 0.0,
+      "counterfactual_action_sensitivity": -1.0,
+      "audit_report_completeness": 0.0
+    },
+    "evidence_link_removal": {
+      "action_provenance_coverage": -1.0,
+      "policy_bypass_rate": 1.0,
+      "counterfactual_action_sensitivity": 0.0,
+      "audit_report_completeness": 0.0
+    },
+    "shortcut_agent": {
+      "action_provenance_coverage": -1.0,
+      "policy_bypass_rate": 1.0,
+      "counterfactual_action_sensitivity": -1.0,
+      "audit_report_completeness": 0.0
+    },
+    "direct_executor": {
+      "action_provenance_coverage": -1.0,
+      "policy_bypass_rate": 1.0,
+      "counterfactual_action_sensitivity": -1.0,
+      "audit_report_completeness": 0.0
+    }
+  }
+}
