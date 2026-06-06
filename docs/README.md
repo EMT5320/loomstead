@@ -13,7 +13,7 @@ scope: 文档分层索引与渐进式读取路线
 
 ## 1. 当前定位
 
-`Loomstead` 是一个 **narrative-primary 的可解释多 Agent 叙事运行时与研究环境**：通过 Director / Event Skill、主观记忆、关系演化、启发式学习与 Debug Trace，研究 Director 如何以 Motivational Delegation 间接驱动少量深度 NPC 朝过程约束目标演化，并用 Process Fidelity Eval 验证过程可信度。差异化主轴：**少而深 + 可解释 + 可评估**。小镇是 primary validation domain，跨域任务环境只作 secondary validation。
+`Loomstead` 已冻结为 **Agent Behavior Observatory** portfolio 工程展示项目：用 Godot 小镇承载复杂 agent 行为，通过 Director / Event Skill、主观记忆、关系演化、Debug Trace、eval/export pipeline 与 audit/failure-analysis artifacts 展示 **agent orchestration + observability + eval infra** 能力。研究转型、人工评分、指标扩展与 Godot 展示层调优循环均已停止。
 
 ## 2. 新对话最小读取顺序
 
@@ -22,8 +22,9 @@ scope: 文档分层索引与渐进式读取路线
 3. [`context_governance.md`](./context_governance.md)：三层文档边界、改动权限、checkpoint 机制。
 4. [`agent_context.md`](./agent_context.md)：当前边界、命令和最近下一步。
 5. [`phase_checkpoints.md`](./phase_checkpoints.md)：当前阶段位置与下一阶段候选。
-6. [`current_status.md`](./current_status.md)：当前实现事实、缺口与人工验收清单。
-7. [`assistant_continuity.md`](./assistant_continuity.md)：跨家里 / 公司、多助手、子代理接续协议。
+6. [`portfolio_story.md`](./portfolio_story.md)：最终展示叙事与 3 张 case card。
+7. [`current_status.md`](./current_status.md)：当前实现事实、缺口与人工验收清单。
+8. [`assistant_continuity.md`](./assistant_continuity.md)：跨家里 / 公司、多助手、子代理接续协议。
 
 ## 3. 文档分层
 
@@ -50,6 +51,8 @@ scope: 文档分层索引与渐进式读取路线
 - [`current_status.md`](./current_status.md)：当前实现事实。
 - [`assistant_continuity.md`](./assistant_continuity.md)：跨助手接续协议。
 - [`workflows.md`](./workflows.md)：workflow 索引。
+- [`portfolio_story.md`](./portfolio_story.md)：最终展示叙事与 case card。
+- [`portfolio_capability_map.md`](./portfolio_capability_map.md)：求职展示能力地图。
 - [`demo_capture_plan.md`](./demo_capture_plan.md)：求职展示线 60 秒录屏脚本与人工验收边界。
 - [`eval_dataset_archive.md`](./eval_dataset_archive.md)：Eval 归档操作流程。
 - [`eval_reviewer_sampling_packet.md`](./eval_reviewer_sampling_packet.md)：Reviewer packet 操作流程。
@@ -79,6 +82,12 @@ scope: 文档分层索引与渐进式读取路线
 - [`agent_loop_architecture.md`](./agent_loop_architecture.md) §10 Eval Framework
 - [`process_fidelity_eval_spec.md`](./process_fidelity_eval_spec.md)
 - [`eval_dataset_archive.md`](./eval_dataset_archive.md)
+
+### Portfolio / 展示叙事
+- [`portfolio_story.md`](./portfolio_story.md)
+- [`portfolio_capability_map.md`](./portfolio_capability_map.md)
+- [`../paper/blog_main.md`](../paper/blog_main.md)
+- [`../README.md`](../README.md)
 
 ### 研究 framing / 跨域 adapter
 - [`research_framing_motivational_delegation.md`](./research_framing_motivational_delegation.md)

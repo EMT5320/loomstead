@@ -1,250 +1,186 @@
 # Loomstead
 
-![Status: research preview](https://img.shields.io/badge/status-research_preview-6f42c1)
-![Phase: 2 skeleton](https://img.shields.io/badge/phase-2_skeleton-0366d6)
-![Primary domain: narrative town slice](https://img.shields.io/badge/primary_domain-narrative_town_slice-22863a)
+![Status: portfolio freeze](https://img.shields.io/badge/status-portfolio_freeze-6f42c1)
+![Focus: agent observability](https://img.shields.io/badge/focus-agent_observability-0366d6)
+![Surface: Godot town runtime](https://img.shields.io/badge/surface-Godot_town_runtime-22863a)
 
-> An explainable multi-agent narrative runtime for motivational delegation and process fidelity evaluation.
+> **An observability-first multi-agent runtime for tracing, debugging, and auditing autonomous behavior in a simulated town.**
 
-`Loomstead` uses a playable Godot town slice as the primary validation domain for studying process-constrained goals in persistent multi-agent narratives. The project focuses on how a Director can shape motivation, opportunity, information, resources, event pressure, and constraints while autonomous NPC agents retain action selection through legal tools and subjective state.
+`Loomstead` uses a playable Godot town as a concrete surface for complex agent behavior. The project showcases how a multi-agent runtime can make NPC motivation, subjective memory, relationship state, tool execution, LLM decisions, and eval artifacts traceable end-to-end.
+
+The final portfolio framing is **Agent Behavior Observatory**:
+
+```text
+Debugging, tracing, and evaluating autonomous agents in a simulated town.
+```
+
+The town is the interaction surface. The engineering story is the observability stack behind it: decision traces, evidence links, counterfactual replay, audit packets, and reproducible eval exports.
 
 ## 30-second portfolio path
 
-- **Watch the demo path**: run the Godot town slice and open the observer dock to see NPC motivation, subjective memory, relationship edges, heuristics, and trace events in one view. Start with the [60-second demo capture plan](docs/demo_capture_plan.md).
-- **Read the research path**: start with [Motivational Delegation](docs/research_framing_motivational_delegation.md), [Process Fidelity Eval](docs/process_fidelity_eval_spec.md), and the owner-approved [claim evidence matrix](paper/claim_evidence_matrix.md).
+1. **Read the portfolio story**: [docs/portfolio_story.md](docs/portfolio_story.md) explains the final positioning and the three showcase cards.
+2. **Open the capability map**: [docs/portfolio_capability_map.md](docs/portfolio_capability_map.md) maps runtime / observability / eval / audit assets to interview talking points.
+3. **Inspect one trace story**: [paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md](paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md) shows a concrete memory -> relationship -> decision chain.
+4. **Inspect one failure-analysis story**: [.run/eval-reviewer-packets/audit_llm_supplement_2026-06-06T10-59-22Z/README.md](.run/eval-reviewer-packets/audit_llm_supplement_2026-06-06T10-59-22Z/README.md) shows high-risk tool calls under full vs missing policy evidence.
 
-Current evidence baseline: `C2`/`C3`/`C4` are **promoted with caveat at the metric / explainability level only**, backed by `.run/eval-promoted/run_2026-05-29T13-57-50Z` and 100 cloud-provider arbitration records. A 2026-06-02 review found the human-believability pilot infeasible on current data: Hard Delegation is a metric stub, and the memory / relationship ablation inputs did not produce behavior-divergent `goalToolEvents` in the promoted scenarios. The project scope is narrowed to **agent orchestration / observability / evidence-completeness** rather than human-validated believability. See [docs/human_rating_pilot_gate.md](docs/human_rating_pilot_gate.md) and [docs/portfolio_capability_map.md](docs/portfolio_capability_map.md).
+## What this project demonstrates
 
-Short research tagline:
+### 1. Agent runtime architecture
+
+The active Phase 2 decision path is:
 
 ```text
-Motivational Delegation for process-constrained goals in persistent multi-agent narratives.
+MotivationEngine -> ToolExecutor -> ResultObserver
 ```
 
-For orientation, agent assistants can run `npm.cmd run context:resume`, then read [AGENTS.md](AGENTS.md) and [docs/agent_context.md](docs/agent_context.md). Current implementation facts live in [docs/current_status.md](docs/current_status.md), cross-assistant continuity lives in [docs/assistant_continuity.md](docs/assistant_continuity.md), long-term direction in [docs/project_vision.md](docs/project_vision.md), and research framing in [docs/research_framing_motivational_delegation.md](docs/research_framing_motivational_delegation.md).
+The runtime includes:
 
-## Why Loomstead
+- Director / Event Skill pressure for world-level pacing.
+- NPC motivation, capability preferences, and legal tool arbitration.
+- Subjective memory and relationship-edge stores.
+- Heuristic seeds and later decision influence.
+- Authoritative Python Agent Server with Godot as the presentation layer.
 
-`Loom` points to the project’s core mechanic: relationships, memories, interventions, and consequences are woven into traceable processes. `Stead` keeps the homestead / town-slice grounding that makes those processes visible to players and evaluators.
+### 2. Behavior observability
 
-The town is not a generic demo wrapper. It is the primary validation domain because Process Fidelity needs scenes where humans can intuitively judge whether a process feels earned:
+Loomstead records structured evidence while decisions are made:
 
-- “Kai and Mira become close friends” cannot be reduced to a relationship score.
-- “Branna forgives the player” cannot be reduced to `forgiven=true`.
-- “The Starlight Festival succeeds” cannot be reduced to `festival_success=true`.
+- `phase2.trace.v1` for decisions, tool results, interruptions, memory observations, and budget events.
+- `sourceEventIds` and `traceRefs` for evidence provenance.
+- `candidateScores`, `scoreComponentSourceRefs`, and `scoreExplanationRefs` for arbitration inspection.
+- Godot Observer Dock and Web Debug surfaces for local inspection.
 
-The value is in the path: motivation shifts, shared events, misunderstanding repair, witness reactions, subjective memory formation, and later behavior that references those memories.
-
-## Project identity
-
-- **Research status**: research preview.
-- **Current phase**: Phase 1 is closed; Phase 2 runtime skeleton has partially landed and is now in trace / eval tightening.
-- **Primary domain**: narrative town slice.
-- **Secondary domain**: task / coding adapters for portability checks as a secondary research path.
-- **Differentiation**: few-but-deep NPCs, explainable traces, process fidelity evaluation.
-
-Core axes:
-
-- **Few but deep**: 4 core NPCs + 2 stub NPCs in Phase 2, emphasizing subjective memory, relationship evolution, heuristics, and explainable decisions over scale.
-- **Explainable**: Director interventions, Event Skill activation, NPC decisions, tool calls, world changes, subjective memories, and relationship deltas are traceable.
-- **Evaluable**: Process Fidelity Eval checks shortcut violations, forced actions, required process coverage, relationship-memory causal use, and Director overreach.
-- **Player-visible**: research claims surface as on-screen NPC behavior, event reactions, relationship changes, memory differences, observer views, or Debug traces.
-
-## Entry points
-
-### Fast external read
-
-Start here if you want the shortest portfolio / paper-review path:
-
-1. [Blog-style technical overview](paper/blog_main.md): problem, method, evidence, and caveats in one narrative.
-2. [Figure 3 trace walkthrough](paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md): a concrete trace chain from setup to memory, relationship evidence, later decision, and outcome.
-3. [Figure and table plan](paper/figures.md): rendered diagrams and current table targets.
-4. [60-second demo capture plan](docs/demo_capture_plan.md): local recording script for the Godot + Debug showcase.
-
-### For research readers
-
-Start here if you care about the claim surface, evaluation setup, baselines, or future dataset:
-
-1. [Research framing](docs/research_framing_motivational_delegation.md): narrative-primary / task-secondary, Motivational Delegation, Process Fidelity, rebuttal map.
-2. [Process Fidelity Eval spec](docs/process_fidelity_eval_spec.md): metrics, Hard Delegation baseline, ablation protocol, GoalSpec schema, dataset outputs.
-3. [Project vision](docs/project_vision.md): long-term differentiation, success criteria, player-visible experience, research/product boundary.
-4. [Agent loop architecture](docs/agent_loop_architecture.md): NPC motivation loop, tools, subjective memory, heuristic learning, arbitration, eval skeleton.
-5. [Cross-domain adapter](docs/cross_domain_adapter.md): how the same research abstractions may later leave the town domain.
-
-### For developers
-
-Start here if you want to run, modify, or validate the project locally:
-
-1. [Current status](docs/current_status.md): implemented facts, verification state, gaps, and manual validation notes.
-2. [Documentation index](docs/README.md): source-of-truth map and task-line reading routes.
-3. [Godot client README](clients/godot/README.md): client entry point and Godot environment notes.
-4. [Model profile guide](docs/model_profile_template_guide.md): local model config, provider routing, and real LLM smoke workflow.
-
-## Current stage
-
-Current showcase status:
-
-- Phase 2 research skeleton is artifact backed by promoted eval runs, Debug traces, and Godot observer-mode integration.
-- The latest cloud-backed Process Fidelity bundle covers 4 GoalSpecs × 5 seeds × 5 baselines, with 100 cloud-provider calls and 0 fallback.
-- `C2`/`C3`/`C4` use promoted-with-caveat wording at the metric / explainability level only; the human-believability pilot was assessed as infeasible on current data (2026-06-02), so the scope is narrowed to explainability / evidence-completeness rather than human-validated believability.
-
-### Phase 1: living world slice
-
-Closed as the current playable baseline on 2026-05-21:
-
-- Python Agent Server as authoritative world state.
-- `GET /api/world/state`, `POST /api/player/action`, `POST /api/world/tick`, Debug / Memory / model config APIs.
-- Rule-based Director v0 and one Event Skill: Starlight Festival shortage.
-- Godot `world_main.tscn` with player movement, NPC map sprites, tick-driven NPC movement/action states, world pulse panel, remote event compass, `E` talk, and VN feedback panel.
-- Six first-launch NPC deep cards with voice anchors, relationship stages, gift reactions, monologue seeds, gossip hooks, and life-action seeds.
-
-Phase 1 is now frozen for regression fixes only. New agent-system work moves to Phase 2.
-
-### Phase 2: runtime skeleton
-
-First skeleton pass is already in place. Current implemented pieces include:
-
-- ToolDefinition registry and three-layer tool model.
-- MotivationEngine / NeedAccumulator / CapabilityRegistry / ArbitrationLayer as the active tick decision path.
-- ToolExecutor with sustained movement/action state, transaction rollback, first failure trace, and interruption trace.
-- SubjectiveMemoryStore, RelationshipEdgeStore, ResultObserver, and HeuristicLibrary feeding later decisions.
-- `phase2.trace.v1` across decision, tool result, interruption, and memory-observation events.
-- World entity skeleton for farm plots, items, inventories, shops, buildings, time, and weather debug projections.
-- Rule-level Process Fidelity Eval, counterfactual replay, memory / relationship ablations, 24-hour / 72-hour stability eval, determinism guard, manifest-backed local eval exports, and a cross-domain adapter dry-run/export suite with 8 coding fixtures, derived dependency graphs, cross-file regression evidence, reviewer arbitration evidence, and coding-domain counterfactual replay artifacts.
-- Godot ObserverPanel reading `/api/debug.phase2` summaries, filtered recent trace events, and latest trace details for the selected NPC.
-
-The old `LifeActionExecutor` is frozen for regression fixes. Phase 2 does not run a shadow path beside MotivationEngine. Current eval results remain rule-level / posterior ablation guardrails, so they should be described as scaffolding evidence rather than final research proof.
-
-## Runtime shape
+The showcase question is simple:
 
 ```text
-Godot Client
-  ├─ Player movement / VN presentation / NPC and event visualization
-  └─ Observer mode and Debug UI (Phase 2+)
-
-Python Agent Server
-  ├─ World / Simulation: authoritative world state and legal tool execution
-  ├─ Director: low-frequency narrative pacing and indirect interventions
-  ├─ Event Skill: localized pressure, constraints, outcomes, fallback text, asset hints
-  ├─ NPC Agent Loop: motivation, capability filtering, subjective memory, heuristics, arbitration
-  ├─ Provider: RuleBasedProvider + OpenAI-compatible CloudApiProvider
-  └─ Eval / Debug: traces, ablations, Process Fidelity metrics, dataset export
+Why did this agent choose this action, and what evidence influenced it?
 ```
 
-Research chain:
+### 3. Eval and artifact pipeline
+
+The project includes a reproducible eval/export stack:
+
+- Process Fidelity checks for path-quality metrics.
+- Stability, determinism, domain-adapter, and robustness suites.
+- Manifest-backed exports, promoted artifacts, drift notes, and archive checks.
+- Coding-domain adapter fixtures with dependency evidence chains.
+
+Current research-grade claims remain intentionally limited. The Process Fidelity evidence supports metric / explainability-level statements only.
+
+### 4. Failure analysis and audit harness
+
+The final rescue spike is retained as an engineering artifact example:
+
+- 5 high-risk non-narrative audit scenarios.
+- Full / No Policy Evidence / Evidence Link Removal / Shortcut Agent / Direct Executor baselines.
+- Counterfactual evidence removal and audit report generation.
+- Real CloudApiProvider audit smoke over 5 scenarios x 2 evidence conditions.
+- Reviewer-readable supplement and raw artifacts.
+
+Latest useful audit artifacts:
 
 ```text
-Process-constrained Goal
-  -> Director Interventions
-  -> NPC Motivation / Opportunity / Information / Constraint Changes
-  -> Autonomous Tool Actions
-  -> Objective Event Log
-  -> Subjective Memory Views + Relationship Edges
-  -> Process Fidelity Eval + Debug Trace
+.run/eval-reviewer-packets/audit_reviewer_packet_2026-06-06T08-58-33Z
+.run/eval-reviewer-packets/audit_llm_supplement_2026-06-06T10-59-22Z
+```
+
+Use this as a failure-analysis case with a narrow scope.
+
+## Three portfolio case cards
+
+### Case 1 ? Why did Kai choose this action?
+
+Show the runtime trace from motivation, memory, relationship evidence, and tool arbitration to a selected NPC action.
+
+**Takeaway**: the system exposes behavior provenance alongside final state.
+
+### Case 2 ? What changed when evidence was removed?
+
+Show counterfactual replay where removing relationship / memory evidence changes scores or selected behavior.
+
+**Takeaway**: eval artifacts help debug which evidence actually influenced a decision.
+
+### Case 3 ? Why was this high-risk tool call blocked?
+
+Show the audit supplement: full evidence allows the high-risk tool; missing policy evidence routes to a safe review tool.
+
+**Takeaway**: the same trace/evidence idea extends to operational failure analysis.
+
+## Honest boundaries
+
+- Loomstead is frozen as a portfolio engineering project.
+- Human-validated believability is out of scope.
+- Enterprise-ready AI safety and complete causal proof are out of scope.
+- The audit spike supports bounded feasibility and failure-analysis storytelling.
+- Further work should move to clearer research lines unless a concrete demo or interview artifact needs small maintenance.
+
+The strongest project claim is:
+
+```text
+I built a full-stack agent behavior observatory: a playable multi-agent runtime with structured traces, evidence-linked decisions, eval exports, and audit artifacts for debugging complex agent behavior.
 ```
 
 ## Local run
 
-Use Windows PowerShell and `npm.cmd` for the least surprising local behavior.
-
-### Start the Python server
+Use Windows PowerShell and `npm.cmd`.
 
 ```powershell
+npm.cmd run context:resume
+npm.cmd run context:check
+npm.cmd run check
+npm.cmd run client:env
 npm.cmd run start
-```
-
-### Open the Godot client
-
-```powershell
 npm.cmd run client:run
 ```
 
-The default scene is `clients/godot/scenes/world_main.tscn`. The legacy P0 UI remains available:
+The default Godot scene is:
 
-```powershell
-npm.cmd run client:run:legacy
+```text
+clients/godot/scenes/world_main.tscn
 ```
 
-### Common checks
+## Useful validation commands
 
 ```powershell
-npm.cmd run context:check
 npm.cmd run check
 npm.cmd run smoke
 npm.cmd run eval:process
-npm.cmd run eval:stability
-npm.cmd run eval:stability:determinism
-npm.cmd run asset:check
-npm.cmd run client:env
-npm.cmd run client:run:check
+npm.cmd run eval:domain
+npm.cmd run eval:robustness
+npm.cmd run eval:audit
+npm.cmd run eval:audit:llm-contract:full
+npm.cmd run eval:archive:check
 git diff --check
 ```
 
-Choose the smallest relevant command for the task. For context-governance changes, run at least `npm.cmd run context:check` and `git diff --check`.
+Real LLM calls require explicit environment authorization and valid local config:
+
+```powershell
+npm.cmd run eval:audit:llm-smoke:full
+```
 
 ## Model configuration
 
-Committed config defaults to rule fallback so the project can run without secrets.
+Committed defaults are designed to run without secrets. Local model config and API keys stay in ignored files or environment variables.
 
 - Template: `config/models.example.json`
 - Local ignored config: `config/models.json`, `config/models.local.json`
-- Recommended check:
+- Check: `npm.cmd run model:check`
 
-```powershell
-npm.cmd run model:check
-```
+## Repository guide
 
-The current environment-variable prefix is `LOOMSTEAD_*`. The legacy `AGENT_TOWN_*` prefix is still recognized as a fallback so existing scripts, local configs, and smoke tests keep working during the transition; new automation should prefer `LOOMSTEAD_*`.
+- Current state: [docs/current_status.md](docs/current_status.md)
+- Assistant entry: [AGENTS.md](AGENTS.md), [docs/agent_context.md](docs/agent_context.md)
+- Portfolio story: [docs/portfolio_story.md](docs/portfolio_story.md)
+- Capability map: [docs/portfolio_capability_map.md](docs/portfolio_capability_map.md)
+- Technical overview: [paper/blog_main.md](paper/blog_main.md)
+- Godot client: [clients/godot/README.md](clients/godot/README.md)
 
-Examples that intentionally remain valid today:
-
-```powershell
-$env:LOOMSTEAD_REQUIRE_REAL_LLM_SMOKE = "1"
-$env:LOOMSTEAD_MODEL_CONFIG = "config/models.local.json"
-```
-
-Legacy form (still supported, prefer the new one above):
-
-```powershell
-$env:AGENT_TOWN_REQUIRE_REAL_LLM_SMOKE = "1"
-$env:AGENT_TOWN_MODEL_CONFIG = "config/models.local.json"
-```
-
-API keys stay in local ignored config or environment variables, outside committed files.
-
-## Repository metadata checklist
-
-Remote GitHub metadata is managed outside this commit because it affects shared repository state.
-
-Recommended remote updates:
-
-- Rename the repository to `loomstead`; keep GitHub’s automatic redirect from the old URL.
-- Set About / description to:
-
-```text
-A narrative-primary multi-agent runtime for motivational delegation and process fidelity evaluation.
-```
-
-- Set topics:
-
-```text
-multi-agent
-llm-agent
-process-fidelity
-narrative-simulation
-agent-evaluation
-motivational-delegation
-```
-
-## Citation
-
-Citation information will be added when the research preprint or technical report is available.
-
-## Development Notes
+## Development notes
 
 - Backend Runtime owns authoritative world state.
 - Godot reads state, submits legal player actions, and presents results.
 - LLM output enters visible state through parsing, validation, fallback, and event recording.
-- New NPCs, locations, events, tools, save fields, or Debug fields usually start with a data contract.
-- Unverified behavior is tracked as pending or manually unverified rather than completed.
+- New schemas, trace fields, eval artifacts, or Godot consumer fields start with a data contract.
+- Unverified behavior is tracked as pending or manually unverified.
 - Secrets, local absolute paths, unregistered assets, and temporary runtime files stay outside committed files.

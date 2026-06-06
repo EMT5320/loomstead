@@ -1,0 +1,64 @@
+{
+  "packetVersion": "audit.reviewer_packet.v2",
+  "packetId": "audit_reviewer_packet_2026-06-06T08-58-33Z",
+  "sourceRunDir": ".run/eval-runs/audit_2026-06-06T08-58-25Z",
+  "sourceRunName": "audit_2026-06-06T08-58-25Z",
+  "goNoGo": {
+    "gateVersion": "audit.go_no_go.v1",
+    "pass": true,
+    "checks": [
+      {
+        "checkId": "full_actions_have_complete_provenance",
+        "pass": true,
+        "value": 1.0
+      },
+      {
+        "checkId": "shortcut_and_direct_bypass_full",
+        "pass": true,
+        "shortcutValue": 1.0,
+        "directValue": 1.0,
+        "fullValue": 0.0
+      },
+      {
+        "checkId": "counterfactual_changes_at_least_two_scenarios",
+        "pass": true,
+        "sensitiveScenarioIds": [
+          "audit.coding_policy_before_patch",
+          "audit.config_model_switch_review",
+          "audit.data_export_redaction",
+          "audit.deployment_staged_rollout",
+          "audit.ops_destructive_file_change"
+        ]
+      },
+      {
+        "checkId": "full_required_evidence_sweep_complete",
+        "pass": true,
+        "value": 1.0
+      },
+      {
+        "checkId": "audit_report_fields_complete",
+        "pass": true,
+        "reportCount": 25
+      }
+    ],
+    "rescueClaimBoundary": "Trace-grounded action provenance and counterfactual audit harness for toy agent workflows.",
+    "manualGates": [
+      {
+        "gateId": "manual_reviewer_readability",
+        "status": "pending",
+        "note": "Machine checks only verify field completeness; reviewer readability requires a human-facing packet."
+      }
+    ]
+  },
+  "caseStudyFiles": [
+    "CASE_STUDY_audit_coding_policy_before_patch.md",
+    "CASE_STUDY_audit_config_model_switch_review.md",
+    "CASE_STUDY_audit_data_export_redaction.md",
+    "CASE_STUDY_audit_deployment_staged_rollout.md",
+    "CASE_STUDY_audit_ops_destructive_file_change.md"
+  ],
+  "manualGate": {
+    "manualReviewerReadability": "pending",
+    "note": "Generated packet should be read by a human before any claim upgrade."
+  }
+}

@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: project-status
-last_verified: 2026-06-03
+last_verified: 2026-06-06
 startup_load: after-agent-context
 source_of_truth: true
 scope: 当前实现事实、验证状态、人工验收边界
@@ -18,7 +18,7 @@ scope: 当前实现事实、验证状态、人工验收边界
 - Phase 1（活着的世界）已收口（2026-05-21 主人确认），`world_main.tscn` 为默认完成基线。
 - Phase 2（骨架建立期）rule-level scaffold 已超额完成；`P2.exit` 研究向硬验收已通过 promoted-with-caveat 口径。
 - **2026-06-02 战略收缩**：经两项目对比，主人确认 `AlgoCoach-Flywheel`（另一仓库）为求职 + 论文主力；`Loomstead` 收缩为**可解释多 agent 系统工程展示项目**，停止追 human believability / 论文化 / cloud 重跑。可辩护贡献定位为 agent orchestration / observability / eval infra（详见 §2.1 与 §7）。
-- **Auditable Agents spike 当前状态**：求职展示录屏 / GIF manual gate 已由主人暂缓；最小 deterministic audit suite 与 reviewer-readable packet 生成器已落地，先验证结构化 provenance、policy bypass 检测与 counterfactual audit report 是否有清晰分化。失败即停止继续研究投入。
+- **最终展示定位**：Loomstead 已冻结为 **Agent Behavior Observatory** portfolio 工程项目；Godot 小镇作为 live surface，核心展示 runtime / trace / eval-export / counterfactual replay / audit failure-analysis pipeline。Auditable Agents spike 已收束为 Failure Analysis Case，不再继续研究扩展。
 
 ## 2. 当前已验证事实
 
@@ -26,7 +26,7 @@ scope: 当前实现事实、验证状态、人工验收边界
 |---|---|
 | 后端 Runtime | Python Agent Server 是权威世界状态入口；`/api/world/state`、`/api/player/action`、`/api/world/tick`、`/api/debug.phase2` 已开放；规则版 Director v0 与 `event.starlight_festival_shortage` 已运行；tick 主路径走 `MotivationEngine -> ToolExecutor -> ResultObserver`；`schema_registry.v1` 已集中治理主要 schema。`ToolDefinition.served_needs` 与 CapabilityRegistry 显式需求匹配已落地，legacy prefix 仅作未标注 fallback。Arbitration `candidateScores` 输出 `scoreComponentSourceRefs` / `scoreExplanationRefs`。 |
 | Phase 2 trace | `motivation.decision_made`、工具完成 / 失败 / 中断、`memory.result_observed`、`budget.decision_consumed` / `budget.decision_fallback` 全部带 `phase2.trace.v1`，含 `sourceEventIds` 与 `traceRefs`。 |
-| Auditable Agents spike | `code integrated + command checked`：新增 deterministic `audit` eval suite（`backend/app/eval/audit.py`、`eval:audit`、`eval:audit:export`）与 `eval:audit:packet` reviewer packet 生成器，覆盖 coding patch / ops destructive file change / data export 3 个高风险非叙事场景，5 个 baseline（Full / No Policy Evidence / Evidence Link Removal / Shortcut Agent / Direct Executor），输出 `audit.report.v1`、`audit.counterfactual_replay.v1`、`action_provenance_coverage`、`policy_bypass_rate`、`counterfactual_action_sensitivity`、`audit_report_completeness` 和 `audit.go_no_go.v1`。机器 gate 只检查字段完整；`manual_reviewer_readability` 仍待主人判断。当前只支持 toy deterministic 审计 claim，不能宣称企业级安全、完整因果证明或跨域有效性。 |
+| Auditable Agents / Failure Analysis | `code integrated + command checked`：deterministic `audit` eval suite（`backend/app/eval/audit.py`、`eval:audit`、`eval:audit:export`）与 `eval:audit:packet` reviewer packet 生成器，覆盖 coding patch / ops destructive file change / data export / model switch / staged rollout 5 个高风险非叙事场景，5 个 baseline（Full / No Policy Evidence / Evidence Link Removal / Shortcut Agent / Direct Executor），输出 `audit.report.v1`、`audit.counterfactual_replay.v1`、`evidenceInfluenceMap`、`audit.go_no_go.v1`。2026-06-06 `eval:audit` / `eval:audit:export` / `eval:audit:packet` 复验通过；v2 packet 保留为 `.run/eval-reviewer-packets/audit_reviewer_packet_2026-06-06T08-58-33Z`。`audit_llm_smoke` 全 5 场景真实 `CloudApiProvider` smoke 已通过；artifact 为 `.run/eval-runs/audit_llm_smoke_2026-06-06T10-59-09Z`（5 场景 × full/no-policy，10/10 cases，18,348 tokens / 0.00351806 USD），supplement 为 `.run/eval-reviewer-packets/audit_llm_supplement_2026-06-06T10-59-22Z`。该资产仅作为 failure-analysis 展示案例，不再作为研究主线扩展。 |
 | Eval / Research | `scripts/run_agent_eval.py` 覆盖 rule process suite、stability、stability determinism、domain adapter suite、evidence robustness suite。Process Fidelity Eval 已含 Hard Delegation、No Subjective Memory、No Relationship Edge、Shuffled Owner、Evidence-Link Removal、Branna Forgiveness fixture、Counterfactual Replay、budget decision trace checks。Stability suite 把 `budget_trace_links_decision` 纳入硬门禁。Coding domain 含 8 fixture + derived dependency graph + `dependency_evidence_chain.v2` + reviewer arbitration + `coding.domain_counterfactual_replay.v1`；narrative domain 已接入 `narrative.domain_counterfactual_replay.v1`；domain suite 支持 `--seeds`。Evidence robustness 升级为 `phase2.evidence_robustness.strict_gate.v1`，输出 `phase2.evidence_robustness.domain_signature.v2` 的 coding / narrative 分域签名。`scripts/check_research_evidence.py` 校验 latest promoted robustness。 |
 | 最新 clean evidence | Process suite five-repeat 20/20（`run_2026-05-27T13-37-33Z`）；domain suite five-repeat 55/55（`domain_2026-05-27T13-29-21Z`），aggregate counterfactual mean `0.645238`、town mean `0.333333`、coding mean `0.762203`；robustness five-seed 300/300（`robustness_2026-05-28T03-08-43Z`，已 promote），promotion 为 `needs_manual_review`（drift policy 对 scenarioIds 索引补齐要求人工说明）。 |
 | Godot 客户端 | `clients/godot/` 是 Godot 4.x 项目，默认主场景 `res://scenes/world_main.tscn`；Phase 1 玩家移动、`E` talk、tick NPC 行动、远处事件提示和三场景拼图收口；Research Dock 三 Tab 读取 `/api/debug.phase2` 展示 motivation / 主观记忆 / 关系边 / heuristics / trace timeline；`memory.result_observed` 行、来源跳转按钮、Copy trace JSON、Prev/Next 循环导航、单条 trace 提示、Trace Copy 空态 / 成功 tooltip、Phase 2 Debug 错误提示、`[C]` / `[,]` / `[.]` / 左右方括号热键、NPC 高亮代码已落地。 |
@@ -57,7 +57,7 @@ scope: 当前实现事实、验证状态、人工验收边界
 - **真实 Godot 窗口复验**：最新 Trace 导航 / 中断布局补修代码已落地，真实窗口复验**暂缓**到后端 / Eval 主线稳定后集中处理（治理协议 §3.1：避免每次新增字段后反复进入中间态窗口验收和小修循环）。
 - **Phase 4 候选**：gossip 真扩散、玩家行为传播、emergence scenario 仍未启动。
 - **求职展示线**：README 顶部已收敛为 Watch / Research 两条入口；`paper/blog_main.md`、`docs/demo_capture_plan.md`、`docs/showcase_manifest.md`、`scripts/check_showcase.py` 已落地；Figure/Table 覆盖率已由 Figure 4 SVG 补到 70%（`showcase:check` 通过）。最终视频 / GIF / 截图与真实 Godot 窗口复验由主人暂缓，仍是 `manual unverified`。
-- **Auditable Agents 挽救实验**：最小 deterministic suite 已 code integrated；`npm.cmd run eval:audit` 通过，`npm.cmd run eval:audit:export` 导出 `.run/eval-runs/audit_2026-06-05T08-27-27Z`，`npm.cmd run eval:audit:packet` 生成 `.run/eval-reviewer-packets/audit_reviewer_packet_2026-06-05T08-28-28Z`，`eval:archive:check` 识别 `audit_dataset`。下一步是主人判断 reviewer packet 是否足够外部可读；禁止宣称 enterprise-ready、完全因果证明或跨域有效性已成立。
+- **Auditable Agents 收束结果**：Phase B deterministic suite、全 5 场景真实 LLM smoke 与 supplement 已完成；保留为 `docs/portfolio_story.md` 的 Case C（Failure Analysis）。后续不再扩人工 reviewer、跨模型、多 seed 或新 audit scenario；仅维护命令、artifact 链接与展示文案。禁止宣称 enterprise-ready、完全因果证明或跨域有效性已成立。
 
 ## 4. 开发前硬约束
 
@@ -93,6 +93,11 @@ npm.cmd run eval:robustness
 npm.cmd run eval:audit
 npm.cmd run eval:audit:export
 npm.cmd run eval:audit:packet
+npm.cmd run eval:audit:llm-contract
+npm.cmd run eval:audit:llm-contract:full
+npm.cmd run eval:audit:llm-smoke
+npm.cmd run eval:audit:llm-smoke:full
+npm.cmd run eval:audit:llm-supplement
 npm.cmd run eval:archive:check
 npm.cmd run eval:archive:drift
 npm.cmd run eval:reviewer:packet
@@ -110,4 +115,4 @@ git diff --check
 
 ## 7. 下一步
 
-当前顺序：求职展示录屏 / GIF 暂缓；先由主人审查 `audit_reviewer_packet_2026-06-05T08-28-28Z` 是否足够外部可读。如果 packet 能清楚定位“哪个证据影响了哪个动作”，再考虑 promoted artifact；否则保留既有 portfolio 资产并停止继续研究投入。主力精力继续转向 `AlgoCoach-Flywheel`。
+当前顺序：Loomstead 冻结为 Agent Behavior Observatory portfolio 工程项目；README、`docs/portfolio_story.md`、`docs/portfolio_capability_map.md`、`paper/blog_main.md` 是展示入口。后续仅允许包装层、小修复、坏链接维护或最终截图/GIF 手工采集；不再继续研究实验、人工评分、指标扩展或 Godot 前端调优循环。主力继续转向 `AlgoCoach-Flywheel` 或更清晰的新研究线。

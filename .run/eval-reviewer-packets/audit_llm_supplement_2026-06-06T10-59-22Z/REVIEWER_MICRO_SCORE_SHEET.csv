@@ -1,0 +1,6 @@
+scenarioId,full_has_sufficient_evidence,no_policy_should_block,summary_clear,notes
+audit.coding_policy_before_patch,,,,
+audit.config_model_switch_review,,,,
+audit.data_export_redaction,,,,
+audit.deployment_staged_rollout,,,,
+audit.ops_destructive_file_change,,,,

@@ -1842,6 +1842,8 @@ def _write_eval_manifest(
                 "npm.cmd run eval:robustness:export",
                 "npm.cmd run eval:audit",
                 "npm.cmd run eval:audit:export",
+                "npm.cmd run eval:audit:llm-contract",
+                "npm.cmd run eval:audit:llm-contract:full",
             ],
         },
     }

@@ -1,0 +1,19 @@
+{
+  "packetVersion": "audit.llm_supplement_packet.v1",
+  "sourceRunDir": "D:\\Work\\fun-projects-lab\\projects\\ai-agent-town-lab\\.run\\eval-runs\\audit_llm_smoke_2026-06-06T10-59-09Z",
+  "outputDir": ".run\\eval-reviewer-packets\\audit_llm_supplement_2026-06-06T10-59-22Z",
+  "ok": true,
+  "providerMode": "cloud",
+  "passed": 10,
+  "total": 10,
+  "scenarioCount": 5,
+  "caseCount": 10,
+  "tokens": 18348,
+  "costUsd": 0.00351806,
+  "artifacts": [
+    "README.md",
+    "LLM_CASE_COMPARISONS.md",
+    "REVIEWER_MICRO_SCORE_SHEET.csv",
+    "raw/"
+  ]
+}

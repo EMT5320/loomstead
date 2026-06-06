@@ -61,6 +61,7 @@ class CloudApiProvider:
             raise RuntimeError(f"CloudApiProvider 缺少 API Key，请设置 {safe_api_key_env}、LOOMSTEAD_API_KEY (兼容 AGENT_TOWN_API_KEY) 或 OPENAI_API_KEY。")
 
         base_url = str(profile.get("baseUrl") or "https://api.deepseek.com").rstrip("/")
+        chat_completions_url = self._chat_completions_url(base_url)
         model = str(profile.get("model") or "deepseek-chat")
         timeout = int(profile.get("timeoutSeconds", 60))
         payload_data = {
@@ -80,9 +81,15 @@ class CloudApiProvider:
         started = time.time()
         payload = json.dumps(payload_data, ensure_ascii=False).encode("utf-8")
         request = urllib.request.Request(
-            f"{base_url}/chat/completions",
+            chat_completions_url,
             data=payload,
-            headers={"content-type": "application/json", "authorization": f"Bearer {api_key}"},
+            headers={
+                "accept": "application/json",
+                "content-type": "application/json",
+                "authorization": f"Bearer {api_key}",
+                # 部分 OpenAI-compatible 网关会拒绝 Python urllib 默认 UA，显式声明本地工具身份。
+                "user-agent": "Loomstead/0.1 OpenAI-Compatible Client",
+            },
             method="POST",
         )
         data = self._send_request(request, timeout=timeout)
@@ -105,6 +112,13 @@ class CloudApiProvider:
         except HTTPError as error:
             body = error.read().decode("utf-8", errors="replace")
             raise RuntimeError(f"CloudApiProvider HTTP {error.code}: {self._short_error_body(body)}") from error
+
+    def _chat_completions_url(self, base_url: str) -> str:
+        """兼容 API root 与完整 chat completions URL，避免本地配置重复拼接路径。"""
+        normalized = str(base_url or "").rstrip("/")
+        if normalized.endswith("/chat/completions"):
+            return normalized
+        return f"{normalized}/chat/completions"
 
     def _usage_payload(self, usage_data: dict[str, Any], *, profile: dict[str, Any], model: str, latency_ms: int) -> dict[str, Any]:
         """统一整理 tokens、延迟和估算成本，供 Debug 视图直接展示。"""

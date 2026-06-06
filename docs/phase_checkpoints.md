@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: planning
-last_verified: 2026-06-03
+last_verified: 2026-06-06
 startup_load: on-demand
 source_of_truth: true
 scope: 阶段推进 checkpoint 板与 exit criteria
@@ -16,8 +16,8 @@ scope: 阶段推进 checkpoint 板与 exit criteria
 - 已通过：`P1.exit`（Phase 1 活着的世界，2026-05-21 主人确认）
 - 已完成方向确认：`P2.skeleton`（Phase 2 骨架建立，rule-level scaffold 与 cloud-backed Process Fidelity 证据已收口）
 - 已通过：`P2.exit`（Phase 2 研究向硬验收，2026-05-29 主人确认 C2/C3/C4 `promoted with caveat`）
-- 进行中：`P_demo.exit`（已收缩为二线兜底工程展示 / demo 冻结准备）
-- 已排队：`P_audit_spike.entry`（P_demo 收尾后，做一次短周期 Auditable Agents 挽救实验）
+- 进行中：`P_demo.exit`（已收缩为二线兜底工程展示 / demo 冻结准备；最终视频 / GIF 由主人暂缓）
+- 已冻结：`P_portfolio_freeze`（Loomstead 收束为 Agent Behavior Observatory；研究挽救线停止扩展，audit 资产保留为 Failure Analysis Case）
 - 未解锁：`P3.entry`、`P4.entry`
 
 ## P2.skeleton —— Phase 2 骨架完整性
@@ -88,9 +88,37 @@ E. **Eval Framework 加固延续**（不推荐）
 - ablation_comparison 包含 Full vs Hard Delegation vs No Subjective Memory vs No Relationship Edge 四对比
 - 真实 provider 跑通后 24h 内不重复 export 同 suite（避免治理 §3.2 违规）
 
-## P_audit_spike.entry —— Auditable Agents 短挽救实验
+## P_portfolio_freeze —— Agent Behavior Observatory 展示冻结
 
-> 状态：已排队，尚未启动。该实验只在 `P_demo.exit` 兜底收尾后执行，周期应控制在 3-5 天。
+> 状态：已冻结。主人确认继续研究转型会回到“论点难展示 -> 需要人工 review -> 证据更复杂”的循环，因此停止研究挽救线，把当前资产重构为 portfolio 展示项目。
+
+### Exit criteria
+
+- ✅ README 顶部改为 Agent Behavior Observatory：强调 agent runtime / trace / eval / audit，而非 generic agent town。
+- ✅ `docs/portfolio_story.md` 落地 3 张 case card：NPC 决策、证据移除、风险工具阻断。
+- ✅ `docs/portfolio_capability_map.md` 改为能力栈 / 证据 / 岗位信号 / 诚实边界。
+- ✅ `paper/blog_main.md` 改为可观测性工程长文。
+- ✅ Auditable Agents spike 收束为 Failure Analysis Case，保留 v2 packet 与 LLM supplement。
+- ✅ 后续边界明确：只做包装层、小修复、坏链接维护和可选最终截图/GIF；不再扩研究实验、人工评分、指标或 Godot 展示层。
+
+### Claim boundary
+
+- 可说：full-stack agent behavior observatory；structured traces；evidence-linked decisions；eval/export artifacts；failure-analysis audit cases。
+- 避免：human-validated believability、完整因果证明、企业级安全、AI Safety 核心方法、跨域有效性已成立。
+
+### 下一步候选
+
+A. **本地提交并冻结**：保留有用代码、文档和 packet，删除冗余旧 packet，不 push。
+B. **可选截图/GIF**：只在现有 Godot / Observer 已足够清楚时做人工采集；禁止为了截图继续改 UI。
+C. **转向 AlgoCoach-Flywheel**：后续研究和求职主力继续转向更清晰的主线项目。
+
+### 浮浮酱推荐
+
+执行 A，然后停止 Loomstead 研究推进。
+
+## P_audit_spike.entry —— Auditable Agents 短挽救实验（已收束）
+
+> 状态：实验已完成并收束。Phase A/Phase B 机器门禁、全 5 场景真实 `CloudApiProvider` smoke 与 supplement 已通过；该资产保留为 Failure Analysis Case，不再继续研究扩展或 promote。
 
 ### Scope
 
@@ -101,11 +129,15 @@ E. **Eval Framework 加固延续**（不推荐）
 
 ### Exit criteria
 
-- ⚠️ `action_provenance_coverage`：高风险动作必须携带可追踪 `sourceEventIds` / `traceRefs`。
-- ⚠️ `policy_bypass_rate`：shortcut baseline 应明显高于 Full。
-- ⚠️ `counterfactual_action_sensitivity`：至少 2 个场景移除关键 policy / context evidence 后 selected action 或 violation verdict 发生变化。
-- ⚠️ `audit_report_completeness`：每个动作输出 selected tool、risk level、policy evidence、score components、source ids、counterfactual replay result、verdict。
-- ⚠️ 产出一份 reviewer 可读审计报告；若报告无法定位“哪个证据影响了哪个动作”，实验判定失败。
+- ✅ `action_provenance_coverage`：2026-06-06 `eval:audit` 复验 Full=1.0，高风险动作携带可追踪 `sourceEventIds` / `traceRefs`。
+- ✅ `policy_bypass_rate`：2026-06-06 `eval:audit` 复验 Full=0.0，Shortcut / Direct=1.0。
+- ✅ `counterfactual_action_sensitivity`：2026-06-06 `eval:audit` 复验 5 个场景移除关键 evidence 后 selected action 或 violation verdict 发生变化。
+- ✅ `counterfactual_required_evidence_sweep_coverage`：2026-06-06 `eval:audit` 复验 Full=1.0，逐条 required evidence removal 均可见动作或 verdict 变化。
+- ✅ `audit_report_completeness`：2026-06-06 `eval:audit` 复验 25 份 report 字段完整，含 `evidenceInfluenceMap`。
+- ✅ 产出一份 reviewer 可读审计报告：`.run/eval-reviewer-packets/audit_reviewer_packet_2026-06-06T08-58-33Z` 已生成；主人已确认 v2 packet 清晰度足够继续推进。
+- ✅ 真实 provider 前置 LLM contract gate：2026-06-06 `eval:audit:llm-contract:full` fixture mode 通过，覆盖 5 个场景 × full/no-policy 2 条件，验证 prompt/response schema、required source coverage、safe fallback 与 pair counterfactual sensitivity。
+- ✅ 真实 `CloudApiProvider` audit smoke：2026-06-06 `eval:audit:llm-smoke:full` 通过，最新 artifact `.run/eval-runs/audit_llm_smoke_2026-06-06T10-59-09Z`；10/10 cases pass，provider usage=18,348 tokens / 0.00351806 USD；5 个 no-policy cases 通过记录化 `traceRefs_strings_to_objects` normalization 后进入严格 validator。
+- ✅ 真实 LLM supplement：2026-06-06 `eval:audit:llm-supplement` 生成 `.run/eval-reviewer-packets/audit_llm_supplement_2026-06-06T10-59-22Z`，含 Go/No-Go、5 场景 pair overview、case comparisons 与 micro score sheet。
 
 ### Claim boundary
 

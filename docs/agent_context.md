@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: context-governance
-last_verified: 2026-06-03
+last_verified: 2026-06-06
 startup_load: first-read
 source_of_truth: true
 scope: 新对话入口、当前边界、最近下一步
@@ -28,7 +28,7 @@ scope: 新对话入口、当前边界、最近下一步
 ## 3. 当前阶段
 
 - **2026-06-02 战略收缩**：经两项目对比，主人确认 `AlgoCoach-Flywheel`（另一仓库）为求职 + 论文主力；`Loomstead` 收缩为**可解释多 agent 系统工程展示项目**，停止追 human believability / 论文化 / cloud 重跑。可辩护贡献定位为 agent orchestration / observability / eval infra。
-- **Auditable Agents spike 当前状态**：求职展示录屏 / GIF manual gate 已由主人暂缓；最小 deterministic audit suite 与 reviewer-readable packet 生成器已落地，先验证 trace-grounded action provenance / policy bypass / counterfactual audit report 是否有清晰证据分化。若报告价值不足，则彻底停止研究投入。
+- **最终展示定位**：Loomstead 已冻结为 **Agent Behavior Observatory** portfolio 工程项目；Godot 小镇是行为场景，核心资产是 runtime、trace、eval/export、counterfactual replay 与 audit/failure-analysis artifacts。
 - Phase 1（活着的世界）已收口；`world_main.tscn` 是默认完成基线。
 - Phase 2（骨架建立期）rule-level scaffold 已超额完成；B 真实 LLM 证据线已完成本轮 artifact 收口。
 - `P2.exit` 已通过 promoted-with-caveat 口径；`P_demo.exit` 求职展示线降为可选低优先（仅录制 explainability demo 素材）。
@@ -48,10 +48,11 @@ scope: 新对话入口、当前边界、最近下一步
 
 - **Human Rating pilot 已评估为前提不成立、不执行**：`hard_delegation` 是 metric stub 不跑 runtime；memory / relationship ablation 输入虽进入决策路径，但 promoted scenarios 中未改变 `goalToolEvents`，因此现有 believability 梯度只支持 evidence/integrity 层，不支持人类盲评系统能力结论。详见 `docs/human_rating_pilot_gate.md`。
 - **可辩护贡献收缩为工程展示**：Process Fidelity 定位为证据完整性度量 / debug guardrail（指标对证据缺失 / 归属错乱 / 链接剥离敏感，promoted run 已支持），不再主张 "Full 生成更可信行为"。`paper/claim_evidence_matrix.md` 的 C2/C3/C4 已降级为 metric / explainability 级。
-- **求职展示入口**：`docs/portfolio_capability_map.md` 已把现有资产串联为 capability map（工程能力栈 / 对应岗位 / 面试讲法 / 诚实边界 / 与 AlgoCoach 分工）。
-- **兜底工程项目收尾优先**：README / blog / capability map / ShowcasePanel 继续作为 portfolio 入口；只在现有 Godot / Observer 资源足够清楚时录低成本素材，不追加展示层大改。
-- **短挽救实验已最小实现**：`backend/app/eval/audit.py` + `eval:audit` / `eval:audit:export` 覆盖 3 个高风险非叙事场景、5 个 baseline、`audit.report.v1`、`audit.counterfactual_replay.v1` 与 `audit.go_no_go.v1`；`scripts/build_audit_reviewer_packet.py` + `eval:audit:packet` 生成 README / summary / case studies / raw 附录。当前只支持 toy deterministic 审计 harness claim，避免升级 believability 或 AI Safety 强 claim。
-- **Go / No-Go 当前机器结果**：`npm.cmd run eval:audit` 通过；Full provenance=1.0、Shortcut/Direct bypass=1.0、3 个场景 counterfactual sensitive、15 份 audit report 字段完整。`manual_reviewer_readability` 是人工 gate，最新 packet：`.run/eval-reviewer-packets/audit_reviewer_packet_2026-06-05T08-28-28Z`。
+- **求职展示入口**：`README.md`、`docs/portfolio_story.md`、`docs/portfolio_capability_map.md` 与 `paper/blog_main.md` 已统一为 Agent Behavior Observatory 叙事；展示用 3 张 case card（NPC 决策、证据移除、风险工具阻断），避免堆指标。
+- **研究挽救线已收束**：Auditable Agents spike 只保留为 Failure Analysis Case；不再做人工 micro-study、跨模型/多 seed 扩展或 Godot 前端调优循环。后续仅允许包装层、小修复和坏链接维护。
+- **短挽救实验已最小实现**：`backend/app/eval/audit.py` + `eval:audit` / `eval:audit:export` 覆盖 5 个高风险非叙事场景、5 个 baseline、`audit.report.v1`、`audit.counterfactual_replay.v1`、逐条 evidence sweep 与 `audit.go_no_go.v1`；`scripts/build_audit_reviewer_packet.py` + `eval:audit:packet` 生成 README / summary / case studies / raw 附录。当前只支持 toy deterministic 审计 harness claim，避免升级 believability 或 AI Safety 强 claim。
+- **Go / No-Go 当前机器结果**：2026-06-06 `npm.cmd run eval:audit` / `eval:audit:export` / `eval:audit:packet` 复验通过；Full provenance=1.0、Full evidence sweep=1.0、Shortcut/Direct bypass=1.0、5 个场景 counterfactual sensitive、25 份 audit report 字段完整。主人已确认 v2 packet 可读性足够继续推进；最新 packet：`.run/eval-reviewer-packets/audit_reviewer_packet_2026-06-06T08-58-33Z`。
+- **真实 LLM audit smoke 已扩展通过**：`backend/app/eval/audit_llm_smoke.py` + `scripts/run_audit_llm_smoke.py` 支持 2 场景最小 smoke 与 `--all-scenarios` 全 5 场景 smoke；2026-06-06 `npm.cmd run eval:audit:llm-contract:full` 与 `npm.cmd run eval:audit:llm-smoke:full` 均通过。最新真实 provider artifact：`.run/eval-runs/audit_llm_smoke_2026-06-06T10-59-09Z`，10/10 cases pass，provider usage=18,348 tokens / 0.00351806 USD；supplement：`.run/eval-reviewer-packets/audit_llm_supplement_2026-06-06T10-59-22Z`。5 个 no-policy cases 经过记录化 `traceRefs_strings_to_objects` normalization 后通过严格 validator。
 - **主力已转移**：求职 + 论文主力为 `AlgoCoach-Flywheel`（另一仓库）；Loomstead 不再启动 Phase 3 内容深度线、Phase 4 玩家变量线等新开发线。
 
 ## 6. 按开发线读取
@@ -80,6 +81,11 @@ npm.cmd run eval:robustness
 npm.cmd run eval:audit
 npm.cmd run eval:audit:export
 npm.cmd run eval:audit:packet
+npm.cmd run eval:audit:llm-contract
+npm.cmd run eval:audit:llm-contract:full
+npm.cmd run eval:audit:llm-smoke
+npm.cmd run eval:audit:llm-smoke:full
+npm.cmd run eval:audit:llm-supplement
 npm.cmd run eval:archive:check
 npm.cmd run eval:archive:drift
 npm.cmd run research:evidence:check

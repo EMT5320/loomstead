@@ -1,124 +1,177 @@
-# Loomstead: Motivational Delegation for Process-Constrained Narrative Agents
+# Loomstead: Building an Agent Behavior Observatory
 
-`Loomstead` is an **explainable multi-agent narrative runtime** built around a playable Godot town slice — a portfolio project demonstrating agent orchestration, observability, and evaluation engineering. The technical question it explores: can a Director steer long-running narrative goals by shaping context while NPCs still choose their own actions through motivation, memory, relationships, tools, and heuristics — and can every such outcome be made *auditable* through a trace?
+`Loomstead` is a portfolio engineering project about **observability for complex agents**. It uses a playable Godot town as the surface, while the main system value lives in the backend runtime, trace schema, debug panels, eval exports, and audit artifacts.
 
-The current portfolio story has three layers:
+The final story is straightforward:
 
-1. **Playable surface**: a Godot town with NPCs, events, observer mode, and trace inspection.
-2. **Runtime mechanism**: a Python Agent Server where `MotivationEngine -> ToolExecutor -> ResultObserver` is the active decision path.
-3. **Evaluation layer**: Process Fidelity checks whether a goal was achieved through a credible path.
+```text
+How do we debug, trace, and evaluate autonomous agents when their behavior depends on motivation, memory, relationships, tools, and LLM decisions?
+```
 
-Recommended figures:
+Loomstead answers by building a compact, complete agent behavior observatory.
 
-- System overview: [`paper/generated/figures/system_overview.png`](generated/figures/system_overview.png)
-- Motivational Delegation loop: [`paper/generated/figures/motivational_delegation_loop.png`](generated/figures/motivational_delegation_loop.png)
-- Trace evidence chain: [`paper/generated/figures/trace_evidence_chain_figure3.png`](generated/figures/trace_evidence_chain_figure3.png)
+## 1. Why a town?
 
-## 1. The problem: final state is too weak for narrative agents
+A town gives agent behavior enough structure to be interesting:
 
-Persistent narrative goals are often easy to encode as final states:
+- NPCs have social relationships.
+- Events create pressure and opportunities.
+- Memories influence later choices.
+- Tools change world state.
+- The same final outcome can come from very different paths.
 
-- Branna forgives the player.
-- Kai and Mira become close.
-- A festival succeeds.
+The town is the readable surface. The project highlights the infrastructure around that surface: runtime boundaries, traceable decisions, and artifacts that explain behavior after the fact.
 
-Those final states lose the part players care about: the earned path. Loomstead treats these as **process-constrained goals**. A successful run should show intervening events, subjective memory formation, relationship movement, later decisions that reference those memories, and an auditable trace chain.
+## 2. Runtime architecture
 
-The town slice exists because these failures are readable. When an NPC instantly forgives someone after a hidden flag flips, the result feels brittle. When the NPC recalls an event, chooses a social tool, updates trust, and later acts differently, the system exposes the causal path that made the outcome credible.
-
-## 2. The method: Motivational Delegation
-
-Motivational Delegation is the project’s name for indirect Director control. The Director shapes:
-
-- motivation,
-- opportunity,
-- information,
-- event pressure,
-- resource constraints,
-- available tools.
-
-NPCs then arbitrate among legal tools using their own state. The Director can create a reason to act, expose an opportunity, or add pressure, while the runtime keeps action selection inside the NPC loop.
-
-The current implementation routes Phase 2 tick decisions through:
+The backend owns authoritative world state. Godot presents the world and sends legal player actions. Phase 2 agent decisions flow through:
 
 ```text
 MotivationEngine -> ToolExecutor -> ResultObserver
 ```
 
-The supporting stores include subjective memory, relationship edges, heuristic seeds, capability preferences, and trace references. Godot remains the presentation layer; the Python server owns the authoritative world state and legal tool execution.
+The runtime includes:
 
-## 3. The evaluation layer: Process Fidelity
+- Director / Event Skill pressure for world-level pacing.
+- NPC motivation and capability-aware tool arbitration.
+- Subjective memory and relationship-edge stores.
+- Heuristic seeds and later score influence.
+- Tool execution, rollback, interruption, and result observation.
+- OpenAI-compatible cloud provider integration with fallback and usage accounting.
 
-Process Fidelity Eval measures path quality in addition to goal completion. The current promoted process run is:
+This makes Loomstead more useful as a systems project than as a pure game demo: the interesting surface is how agent behavior is represented, constrained, executed, and inspected.
+
+## 3. Observability as a first-class design goal
+
+Agent systems become hard to debug when the only visible output is the final action. Loomstead records structured evidence while decisions are made.
+
+Key fields:
+
+- `sourceEventIds`: what prior event or evidence influenced this decision.
+- `traceRefs`: how to jump from a result back to the decision or evidence span.
+- `candidateScores`: what the agent considered.
+- `scoreComponentSourceRefs`: which evidence affected each score component.
+- `phase2.trace.v1`: the common trace envelope for decision, tool, budget, interruption, and memory events.
+
+The intended debugging question is:
 
 ```text
-.run/eval-promoted/run_2026-05-29T13-57-50Z
+Why did this agent choose this action, and what evidence influenced it?
 ```
 
-It covers:
+## 4. Case card A: why did an NPC act?
 
-- 4 Process Fidelity GoalSpecs,
-- 5 seeds,
-- 5 baselines,
-- 20/20 full-baseline process checks,
-- 100 cloud-provider arbitration records,
-- 0 fallback calls.
-
-Current `C2`/`C3`/`C4` claim status is **promoted with caveat** after owner review, scoped to the **metric / explainability level** (a 2026-06-02 review withdrew any human-validated believability wording):
-
-- **C2**: promoted with caveat at the metric / explainability level; Motivational Delegation satisfies the author-defined Process Fidelity metrics while preserving agent-initiated tool actions (not a human-believability claim).
-- **C3**: promoted with caveat at the metric / explainability level; Hard Delegation reaches final goals while scoring near-zero on Process Fidelity metrics. This is a **metric-construct contrast**: the Hard baseline is a metric stub that does not execute the runtime, so it has no human-readable process to compare against.
-- **C4**: promoted with caveat at the metric / explainability level; Process Fidelity metrics are **sensitive to evidence-completeness degradation**. This is an explainability signal, not a causal claim about behavior: ablation inputs reach the decision path, but in the promoted scenarios they did not produce behavior-divergent `goalToolEvents`.
-
-The metric contrast is visible in the Hard Delegation baseline. It reaches `goal_success_rate=1.0`, then collapses path-quality metrics: `required_process_coverage=0.185714`, `forced_action_rate=1.0`, `agent_initiated_action_ratio=0.0`, `causal_trace_coverage=0.0`, and `shortcut_violation_rate=1.0`.
-
-That result supports the explainability story: goal completion alone can hide forced or shortcut paths, and the metrics surface that gap. Because the Hard baseline is a metric stub, this is a metric-construct illustration rather than a behavior-level one.
-
-## 4. Trace walkthrough: one concrete evidence chain
-
-The Figure 3 walkthrough uses:
+The Figure 3 walkthrough shows a behavior chain around subjective memory and relationship evidence:
 
 ```text
 paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md
 ```
 
-The Branna forgiveness trace shows:
+The story is a compact trace:
 
-1. a seeded harm memory,
-2. a later `social.chat_with` tool event,
-3. a `memory.result_observed` bridge event,
-4. updated subjective memory and relationship edges,
-5. counterfactual replay where the selected tool changes when relationship memory is removed,
-6. full process metrics for the seed.
+1. a seeded relationship or memory condition,
+2. a later tool decision,
+3. a result-observation bridge,
+4. memory / relationship updates,
+5. a later decision that references those records,
+6. counterfactual replay that changes selection when evidence is removed.
 
-The same figure also references a Tomas repair trace to show the pattern across another scenario. The diagram source is [`paper/diagrams/trace_evidence_chain_figure3.mmd`](diagrams/trace_evidence_chain_figure3.mmd), and the rendered PNG is available in [`paper/generated/figures/trace_evidence_chain_figure3.png`](generated/figures/trace_evidence_chain_figure3.png).
+The showcase value is the runtime's ability to expose the behavior path and make it inspectable.
 
-## 5. Current caveats
+## 5. Case card B: what changed when evidence was removed?
 
-This is research-preview evidence, scoped to **explainability / evidence-completeness** rather than human-validated believability. External wording should keep these boundaries:
+The eval layer produces artifacts for process checks, ablations, domain adapters, robustness checks, and counterfactual replay. The strongest way to present those artifacts is a simple before/after story:
 
-- `C2`/`C3`/`C4` can be described as **promoted with caveat** at the metric / explainability level only.
-- A 2026-06-02 review found the human-believability pilot **infeasible on current data**: Hard Delegation is a metric stub, and the memory / relationship ablation inputs did not produce behavior-divergent `goalToolEvents` in the promoted scenarios. The project scope is narrowed to explainability rather than human-validated believability. See `docs/human_rating_pilot_gate.md`.
-- The promoted process run still carries a machine-level `needs_manual_review` status because it was exported during a dirty closure pass and drift policy asks for human explanation.
-- Godot observer-mode visuals are implemented, while the newest real-window capture remains a manual verification task.
+```text
+Full evidence -> selected action / score components
+Removed evidence -> changed score, selected tool, or verdict
+```
 
-## 6. Portfolio demo path
+Metrics remain useful as a verification index. The case card leads the presentation.
 
-For a short showcase, record the Godot town and observer dock with the backend running:
+Useful commands:
 
 ```powershell
+npm.cmd run eval:process
+npm.cmd run eval:domain
+npm.cmd run eval:robustness
+npm.cmd run eval:archive:check
+```
+
+## 6. Case card C: why was a high-risk tool call blocked?
+
+The final audit spike is retained as a failure-analysis artifact.
+
+Useful artifacts:
+
+```text
+.run/eval-reviewer-packets/audit_reviewer_packet_2026-06-06T08-58-33Z
+.run/eval-reviewer-packets/audit_llm_supplement_2026-06-06T10-59-22Z
+```
+
+The audit supplement compares five high-risk tool scenarios under two evidence conditions:
+
+```text
+Full Runtime          -> high-risk tool allowed with complete required evidence
+No Policy Evidence    -> safe review tool selected because required evidence is missing
+```
+
+Latest real provider smoke:
+
+- 5 scenarios x 2 evidence conditions.
+- 10/10 cases passed.
+- 18,348 tokens / 0.00351806 USD.
+- Missing-evidence cases routed to safe review tools.
+
+This supports a bounded engineering point: trace-grounded audit contracts can produce readable failure-analysis artifacts for high-risk tool calls. Broad AI safety and enterprise readiness remain out of scope.
+
+## 7. What changed after the research pivot?
+
+The original research framing around Motivational Delegation and Process Fidelity produced useful infrastructure. Its stronger claims were difficult to demonstrate quickly to outside readers. The project now keeps the useful assets and freezes the research rescue path.
+
+Retained assets:
+
+- Runtime architecture.
+- Trace schema and debug surfaces.
+- Eval/export/archive pipeline.
+- Counterfactual replay.
+- Audit harness and reviewer packets.
+- Godot town as a concrete live surface.
+
+Dropped or frozen directions:
+
+- human-validated believability,
+- broad Process Fidelity research claims,
+- large human review workload,
+- further Godot UI polish for metrics presentation,
+- new research experiments inside Loomstead.
+
+## 8. Current portfolio takeaway
+
+The strongest concise claim is:
+
+> Loomstead is a full-stack agent behavior observatory: a playable multi-agent runtime with structured traces, evidence-linked decisions, eval exports, and audit artifacts for debugging complex agent behavior.
+
+This is an engineering showcase. It demonstrates how to build, instrument, evaluate, and honestly scope a complex agent system.
+
+## 9. Local demo path
+
+```powershell
+npm.cmd run context:resume
+npm.cmd run check
 npm.cmd run client:env
 npm.cmd run start
 npm.cmd run client:run
 ```
 
-Use the capture script in [`docs/demo_capture_plan.md`](../docs/demo_capture_plan.md). The strongest 60-second arc is:
+Recommended demonstration order:
 
-1. living town,
-2. player/NPC interaction,
-3. event result,
-4. observer dock,
-5. trace filtering and copyable evidence,
-6. closing frame with `/api/debug.phase2`.
+1. Show the town surface.
+2. Open Observer Dock or Debug data.
+3. Explain one agent decision with source evidence.
+4. Open one case card from `docs/portfolio_story.md`.
+5. Close with the audit supplement as the failure-analysis example.
 
-The intended takeaway is simple: Loomstead is a playable town slice, an explainable agent runtime, and an evaluation harness for *auditing* whether narrative outcomes were produced through a traceable, evidence-complete process. The contribution is explainability and observability engineering, with human-validated believability left as explicit future work.
+## 10. Honest boundary
+
+Loomstead is frozen as a portfolio project. The final story emphasizes agent observability and eval engineering. Stronger research work should move to a cleaner project with a simpler claim and a lower reviewer-comprehension burden.

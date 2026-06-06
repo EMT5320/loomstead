@@ -1,57 +1,82 @@
 ---
 status: active
 owner_lane: portfolio-showcase
-last_verified: 2026-06-03
+last_verified: 2026-06-06
 startup_load: on-demand
 source_of_truth: true
-scope: Loomstead 求职展示 capability map（展示的工程能力 / 对应岗位 / 面试讲法 / 诚实边界 / 与 AlgoCoach 分工）
+scope: Loomstead 求职展示 capability map：Agent Behavior Observatory、能力栈、面试讲法、诚实边界
 ---
 
 # Loomstead Portfolio Capability Map
 
-> 自管理层文档，软上限 250 行。用途：把 Loomstead 现有资产串联成一份求职展示入口——它展示了哪些工程能力、对应什么岗位、面试怎么讲、诚实边界在哪。2026-06-02 战略收缩后，Loomstead 定位为「可解释多 agent 系统 + 可观测性 / eval 工程」的 portfolio piece，不再追 believability 论文化。
+> 自管理层文档，软上限 250 行。用途：把 Loomstead 现有资产串联成展示入口，主张收束为 Agent Behavior Observatory。
 
 ## 1. 一句话定位
 
-- 中文：一个**可解释的多 agent 叙事运行时**——Director 通过 Motivational Delegation 间接驱动少量深度 NPC，每个结果都能通过结构化 trace 审计「为什么发生」，并配一套 Process Fidelity eval 飞轮。
-- EN（简历/面试用）：*An explainable multi-agent narrative runtime where a Director steers deep NPCs through motivational delegation, every outcome is auditable via a structured trace, and a Process Fidelity eval harness scores not just goal completion but the path that produced it.*
+- 中文：一个**面向复杂 Agent 行为调试与审计的可观测叙事运行时**，用 Godot 小镇承载 NPC 行为，用 Python runtime 记录动机、记忆、关系、工具调用、LLM 输出和 eval artifact。
+- EN：*An observability-first multi-agent runtime for debugging, tracing, and evaluating autonomous behavior in a simulated town.*
 
-## 2. 工程能力栈 → 证据 → 对应岗位
+最终展示主张：
 
-| 能力域 | 具体做了什么（真实代码 / artifact） | 对应岗位信号 |
-| --- | --- | --- |
-| **多 agent 编排** | `MotivationEngine -> ToolExecutor -> ResultObserver` tick 主路径；规则版 Director v0 + Event Skill（`event.starlight_festival_shortage`）；NPC arbitration 输出 `candidateScores` + `scoreComponentSourceRefs` / `scoreExplanationRefs`；`ToolDefinition.served_needs` + `CapabilityRegistry` 显式需求匹配。 | Agent infra / LLM application engineer |
-| **可观测性工程** | `phase2.trace.v1` 覆盖 `motivation.decision_made`、工具完成/失败/中断、`memory.result_observed`、`budget.decision_consumed` / `budget.decision_fallback`，每条带 `sourceEventIds` + `traceRefs` 形成证据链；`GET /api/debug.phase2`；Godot Observer Dock + Web Debug（Heuristic Library / Arbitration Trace / Rashomon Memory）。 | Platform / observability / debugging tools |
-| **Eval 工程** | `scripts/run_agent_eval.py` 覆盖 process / stability / determinism / domain / robustness suite；Process Fidelity 含 5 种 ablation baseline + counterfactual replay + budget trace check；跨域 adapter（town / coding，8 fixture + `dependency_evidence_chain.v2`）；`phase2.evidence_robustness.strict_gate.v1`；四层 provenance 飞轮（`eval:archive:promote` + drift policy + named cloud artifact）。 | ML / research engineer / eval infra |
-| **全栈系统** | Python Agent Server（权威世界状态）+ Godot 4.x 客户端（表现层）+ Web Debug 控制台；LLM provider 抽象（`RuleBasedProvider` + OpenAI-compatible `CloudApiProvider` + fallback + cost 总览）；`schema_registry.v1` 集中 schema 治理。 | 全栈 / 系统 / backend engineer |
+> Loomstead 展示 agent behavior observability；believability 只作为历史背景和明确边界。
 
-## 3. 面试 talking points
+## 2. 能力栈 -> 证据 -> 岗位信号
 
-- **Motivational Delegation 的设计选择**：Director 不直接命令 NPC，而是塑造动机 / 机会 / 信息 / 事件压力 / 资源约束 / 可用工具，NPC 在合法工具间用自身状态仲裁。这是 agent 自主性与可控性之间的工程权衡。
-- **可审计性如何落地**：不是事后日志，而是决策时就写结构化 trace——每个 tool 选择带 `sourceEventIds` 指回触发它的记忆 / 关系 / 预算事件，在 Observer Dock 里可逐步还原因果链。
-- **eval 为什么不只看 goal success**：goal success 会掩盖「强推 / 走捷径」的路径，所以 Process Fidelity 同时度量路径质量（process coverage / agent-initiated ratio / shortcut violation / causal trace coverage），并用 ablation + counterfactual replay 验证指标对证据完整性敏感。
-- **真实 LLM 证据**：4 GoalSpec × 5 seed × 5 baseline 跑通 100 次 cloud 调用、0 fallback、约 19 万 token / $0.03，并经 promote + drift policy 固化为命名 artifact。
-- **最强信号——诚实降级（见 §4）**：主动发现自己的实验设计缺陷并显式降级 claim，是研究素养而非弱点。
+| 能力栈 | 具体资产 | 岗位信号 |
+|---|---|---|
+| **Agent runtime architecture** | `MotivationEngine -> ToolExecutor -> ResultObserver` tick 主路径；Director v0 + Event Skill；ToolDefinition / CapabilityRegistry / ArbitrationLayer；subjective memory、relationship edge、heuristics。 | Agent infra / LLM application engineer |
+| **Behavior observability** | `phase2.trace.v1`、`sourceEventIds`、`traceRefs`、`candidateScores`、`scoreComponentSourceRefs`、Godot Observer Dock、Web Debug。 | Observability / debugging tools / platform engineer |
+| **Eval infrastructure** | `scripts/run_agent_eval.py` 覆盖 process / stability / determinism / domain / robustness；manifest-backed exports；promoted artifacts；drift notes。 | Eval infra / ML systems / research engineer |
+| **Failure analysis / audit artifacts** | `backend/app/eval/audit.py`、`audit.go_no_go.v1`、counterfactual evidence removal、v2 reviewer packet、real LLM smoke supplement。 | Agent reliability / safety tooling / backend systems |
+| **Full-stack integration** | Python Agent Server + Godot 4 client + Web Debug + OpenAI-compatible provider + schema registry。 | Full-stack / backend / systems engineer |
 
-## 4. 诚实边界（必须主动说，是加分项）
+## 3. 三个展示案例
 
-- 当前结果是 **metric / explainability 级**：指标对证据缺失 / 归属错乱 / 链接剥离敏感（可验证、已支持）。
-- **不主张** human-validated believability：2026-06-02 复盘发现 baseline 之间不产生行为分化（`hard_delegation` 是 metric stub 不跑 runtime；memory / relationship ablation 输入进入决策路径，但在 promoted scenarios 中没有改变 `goalToolEvents`），所以「Full 生成更可信行为」的因果前提不成立，已显式降级并记录（`docs/human_rating_pilot_gate.md`、`paper/claim_evidence_matrix.md` C2/C3/C4）。
-- 面试讲法：「我设计了 ablation 对照，但在投入人类盲评前核查发现 baseline 不产生可感知的行为分化，所以这个对照只能支撑 explainability 而非 believability 因果。我把 claim 降级、记录了根因，并把行为分化 baseline 列为 future work。」
+### A. NPC 行为为什么发生
 
-## 5. 与 AlgoCoach 的分工（两个项目互补）
+- 入口：Godot Observer Dock、`/api/debug.phase2`、Figure 3 trace walkthrough。
+- 讲法：从动机、记忆、关系、候选工具分数追到 selected action。
+- 边界：不要把它讲成玩家一定会觉得 believable。
 
-- **AlgoCoach-Flywheel**（求职 + 论文主力）：post-training 纵深——verifier-backed eval、7B QLoRA SFT/DPO、推理部署、provenance 数据飞轮。
-- **Loomstead**（互补第二项目）：系统 / agent 编排 / 可观测性广度——多 agent runtime、trace schema、Godot 可视化、跨域 eval。
-- 简历叙事：AlgoCoach 证明「能把模型训出来、评得准、部署上线」；Loomstead 证明「能设计可解释的 agent 系统并做可观测性 / eval 工程」。
+### B. 移除证据后发生什么
 
-## 6. 求职材料清单
+- 入口：Process Fidelity / counterfactual replay / domain adapter artifacts。
+- 讲法：展示证据移除如何改变候选分数、工具选择或 verdict。
+- 边界：指标作为复查索引，case card 承担第一屏解释。
 
-- **已就绪**：`README.md`（Watch / Research 双入口）、`paper/blog_main.md`（技术博客主文）、Figure 1/2/3/4、trace 走查、Showcase Mode v1（Godot ShowcasePanel + `/api/showcase/starlight`）。
-- **可选录制（manual gate）**：如果现有 Godot / Observer 界面已经足够清晰，可录 30-60 秒 explainability 素材；如果需要新 UI 开发才能讲清楚，则不继续投入展示层，只保留 README / blog / capability map 作为 portfolio 入口。脚本见 `docs/demo_capture_plan.md`，收口追踪见 `docs/showcase_manifest.md`。
+### C. 高风险工具调用如何被阻断
 
-## 7. 当前收尾与挽救节奏
+- 入口：`.run/eval-reviewer-packets/audit_llm_supplement_2026-06-06T10-59-22Z`。
+- 讲法：Full evidence 允许执行；No Policy Evidence 进入 safe review tool。
+- 边界：不要宣称企业级安全或跨域有效性。
 
-- **兜底收尾优先**：当前先把 Loomstead 固化为工程展示项目，主要展示多 agent 编排、trace observability、eval infra 与 Godot 可视化；不为包装继续追加大 UI 或新玩法。
-- **短挽救实验**：兜底收尾后可做一次 Auditable Agents spike，验证 `sourceEventIds` / `traceRefs` / counterfactual replay 能否形成高风险动作 provenance、policy bypass 检测与审计报告。
-- **停止条件**：如果 spike 无法产出明确行为分化、policy bypass 差异或 reviewer 可读审计报告，则结束 Loomstead 研究投入，只保留本 capability map、README、blog 与现有 demo 资产。
+## 4. 面试 talking points
+
+- **系统设计**：后端持有权威世界状态，Godot 做表现层，agent loop 与工具执行在 Python runtime 内有清晰边界。
+- **可观测性设计**：决策时写 trace，trace 带 `sourceEventIds` 和 `traceRefs`，后续 Debug / Eval / Audit 共用同一套证据语言。
+- **评测工程**：每条 evidence、baseline、export 都有 manifest 和 archive 检查，支持复查。
+- **研究素养**：主动降级 claim，保留能证明的工程事实，停止扩张难以验证的 believability / safety 论断。
+- **项目复盘**：最终把复杂系统从“论文证明型”收束为“agent behavior observability 展示型”，让资产更适合面试和工程讨论。
+
+## 5. 诚实边界
+
+- 当前结果支持工程展示，不支持 human-validated believability。
+- Process Fidelity 只作为 evidence / explainability 层指标，无法承载强因果证明。
+- Audit spike 只作为 failure-analysis artifact，无法承载完整 AI Safety 方法。
+- Godot 视觉展示作为 live surface，核心讲法依赖 case card 和 trace 摘要。
+- 项目冻结后不再扩研究实验、指标和 UI。
+
+## 6. 与 AlgoCoach 的分工
+
+- **AlgoCoach-Flywheel**：求职 + 论文主力，偏 post-training / verifier-backed eval / model improvement loop。
+- **Loomstead**：第二展示项目，偏 agent runtime / observability / eval artifact / full-stack integration。
+
+简历叙事：
+
+> AlgoCoach demonstrates model-training and verifier-backed improvement. Loomstead demonstrates agent-system architecture and observability engineering.
+
+## 7. 当前收束状态
+
+- 保留：runtime、trace、eval、audit harness、v2 packet、LLM supplement、portfolio story。
+- 丢弃：冗余旧 packet、继续扩实验、人工大规模 review 计划。
+- 冻结：只允许包装层、小修复和坏链接维护。

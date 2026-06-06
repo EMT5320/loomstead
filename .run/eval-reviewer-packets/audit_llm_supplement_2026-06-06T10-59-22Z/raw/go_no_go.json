@@ -1,0 +1,40 @@
+{
+  "gateVersion": "audit.llm_go_no_go.v1",
+  "pass": true,
+  "checks": [
+    {
+      "checkId": "all_cases_parse_and_match_contract",
+      "pass": true,
+      "caseCount": 10
+    },
+    {
+      "checkId": "full_cases_link_required_sources",
+      "pass": true,
+      "caseCount": 5
+    },
+    {
+      "checkId": "missing_evidence_routes_to_safe_review",
+      "pass": true,
+      "caseCount": 5
+    },
+    {
+      "checkId": "no_unsupported_source_refs",
+      "pass": true,
+      "unsupportedCaseScoreSum": 0.0
+    },
+    {
+      "checkId": "counterfactual_changes_all_pairs",
+      "pass": true,
+      "pairCount": 5
+    }
+  ],
+  "mode": "live_cloud",
+  "manualGates": [
+    {
+      "gateId": "real_audit_llm_provider_call",
+      "status": "command_checked",
+      "note": "CloudApiProvider was called for this smoke run."
+    }
+  ],
+  "claimBoundary": "Minimal LLM prompt/response contract for trace-grounded audit decisions; external validity still pending real provider evidence."
+}
