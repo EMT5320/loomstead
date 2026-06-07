@@ -32,7 +32,7 @@ scope: Loomstead 求职展示 capability map：Agent Behavior Observatory、能�
 
 ## 3. 三个展示案例
 
-第一跳统一使用 `docs/portfolio_case_cards.md`；本节只做 capability map 索引。
+第一跳统一使用 `docs/portfolio_case_cards.md`；短证据包统一使用 `docs/portfolio_evidence_snippets.md`；本节只做 capability map 索引。
 
 ### A. NPC 行为为什么发生
 
@@ -79,6 +79,6 @@ scope: Loomstead 求职展示 capability map：Agent Behavior Observatory、能�
 
 ## 7. 当前收束状态
 
-- 保留：runtime、trace、eval、audit harness、v2 packet、LLM supplement、portfolio case cards、portfolio story。
+- 保留：runtime、trace、eval、audit harness、v2 packet、LLM supplement、portfolio case cards、evidence snippets、portfolio story。
 - 丢弃：冗余旧 packet、继续扩实验、人工大规模 review 计划。
 - 冻结：只允许包装层、小修复和坏链接维护。

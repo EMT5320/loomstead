@@ -25,6 +25,15 @@ scope: Loomstead 对外求职展示三张 case card：读者问题、展示路�
 4. Eval / audit pipeline 把 trace 变成可复查 artifact。
 5. 结论限定在 engineering showcase / explainability / failure analysis 层。
 
+入口健康检查：
+
+```powershell
+npm.cmd run portfolio:snippets
+npm.cmd run portfolio:check
+```
+
+最短证据包：`docs/portfolio_evidence_snippets.md`。
+
 ## Card A — Why did this NPC choose that action?
 
 ### 读者问题

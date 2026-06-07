@@ -19,9 +19,10 @@ I built a full-stack agent behavior observatory for debugging complex agent beha
 Read in this order:
 
 1. **Start with the case cards**: [docs/portfolio_case_cards.md](docs/portfolio_case_cards.md) gives three externally readable examples: NPC decision provenance, evidence-removal replay, and high-risk tool audit.
-2. **Map the skills**: [docs/portfolio_capability_map.md](docs/portfolio_capability_map.md) connects runtime / observability / eval / audit assets to interview signals.
-3. **Read the short story**: [docs/portfolio_story.md](docs/portfolio_story.md) freezes the Agent Behavior Observatory positioning and honest boundaries.
-4. **Use appendices only when needed**: [paper/blog_main.md](paper/blog_main.md), [paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md](paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md), and the audit supplement provide deeper evidence.
+2. **Open the evidence snippets**: [docs/portfolio_evidence_snippets.md](docs/portfolio_evidence_snippets.md) compresses the key promoted artifacts into one short Markdown proof packet.
+3. **Map the skills**: [docs/portfolio_capability_map.md](docs/portfolio_capability_map.md) connects runtime / observability / eval / audit assets to interview signals.
+4. **Read the short story**: [docs/portfolio_story.md](docs/portfolio_story.md) freezes the Agent Behavior Observatory positioning and honest boundaries.
+5. **Use appendices only when needed**: [paper/blog_main.md](paper/blog_main.md), [paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md](paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md), and the audit supplement provide deeper evidence.
 
 ## Three portfolio case cards
 
@@ -144,6 +145,8 @@ npm.cmd run eval:robustness
 npm.cmd run eval:audit
 npm.cmd run eval:audit:llm-contract:full
 npm.cmd run eval:archive:check
+npm.cmd run portfolio:snippets
+npm.cmd run portfolio:check
 git diff --check
 ```
 
@@ -166,6 +169,7 @@ Committed defaults are designed to run without secrets. Local model config and A
 - Current state: [docs/current_status.md](docs/current_status.md)
 - Assistant entry: [AGENTS.md](AGENTS.md), [docs/agent_context.md](docs/agent_context.md)
 - Portfolio case cards: [docs/portfolio_case_cards.md](docs/portfolio_case_cards.md)
+- Portfolio evidence snippets: [docs/portfolio_evidence_snippets.md](docs/portfolio_evidence_snippets.md)
 - Portfolio story: [docs/portfolio_story.md](docs/portfolio_story.md)
 - Capability map: [docs/portfolio_capability_map.md](docs/portfolio_capability_map.md)
 - Technical overview: [paper/blog_main.md](paper/blog_main.md)

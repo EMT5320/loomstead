@@ -42,7 +42,7 @@ scope: Loomstead 最终展示叙事：Agent Behavior Observatory 与 case-card-f
 
 ## 3. Case-card-first 对外入口
 
-主入口：`docs/portfolio_case_cards.md`。该文档承载外部读者第一跳，按“读者问题 -> 展示路径 -> 30 秒讲法 -> 关键证据 -> 诚实边界”组织。
+主入口：`docs/portfolio_case_cards.md`。该文档承载外部读者第一跳，按“读者问题 -> 展示路径 -> 30 秒讲法 -> 关键证据 -> 诚实边界”组织。最短证据包为 `docs/portfolio_evidence_snippets.md`。
 
 本页只保留三张卡的叙事骨架：
 
@@ -99,6 +99,7 @@ scope: Loomstead 最终展示叙事：Agent Behavior Observatory 与 case-card-f
 | 展示面 | 首选材料 | 用法 |
 |---|---|---|
 | Case cards | `docs/portfolio_case_cards.md` | 第一跳展示入口 |
+| Evidence snippets | `docs/portfolio_evidence_snippets.md` | 三张卡的短证据包 |
 | Runtime | `backend/app/runtime/`、`docs/agent_loop_architecture.md` | 讲系统架构 |
 | Trace | `phase2.trace.v1`、`GET /api/debug.phase2`、Godot Observer Dock | 讲可观测性 |
 | Eval | `.run/eval-promoted/run_2026-05-29T13-57-50Z`、`scripts/run_agent_eval.py` | 讲可复查 artifact pipeline |

@@ -39,6 +39,8 @@ scope: 展示层收口追踪（P_demo.exit 五条 exit criteria 状态与人工�
 | trace_walkthrough | R5 | command checked | no | `paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md` 已落地（六阶段 + 反事实 + promoted with caveat artifact 引用），并纳入 C2/C3/C4 promoted with caveat 口径扫描 |
 | figure_table_render | R6 | command checked | no | `paper/generated/` 已渲染 Figure 1/2/3/4 + 多 Table；覆盖率由 `showcase:check` 回填 |
 | showcase_check_script | R6, R10, R11 | command checked | no | 三合一校验脚本 `scripts/check_showcase.py` + npm `showcase:check` 已实现；输出 JSON 报告并回填 coverage / consistency / readiness |
+| portfolio_entry_check | R7 | command checked | no | `scripts/check_portfolio_entry.py` + npm `portfolio:check` 已实现；校验 case-card-first 入口文档、promoted process artifact 与 audit packet 关键路径 |
+| portfolio_evidence_snippets | R7 | command checked | no | `scripts/build_portfolio_evidence_snippets.py` + npm `portfolio:snippets` 已实现；从现有 promoted process / audit artifacts 生成 `docs/portfolio_evidence_snippets.md` |
 | showcase_mode_v1 | R1, R2, R4 | code integrated | no | Godot 默认可见 `ShowcasePanel` + 后端只读 `/api/showcase/starlight` 聚合包已落地；覆盖 `星灯祭供应短缺` 的 Goal / Director Beat / Event Skill / NPC Decision / Trace Evidence 摘要链；真实窗口观感仍见 `showcase_mode_window_recheck` |
 | observer_dock_increment | R4 | code integrated | no | Observer Dock trace 50 条/排序、Copy ≥2s、loading vs placeholder、同步失败指示、Prev/Next clamp+indicator 已落地；真实窗口复验另见 `godot_window_recheck` |
 | backend_unreachable_indicator | R2 | code integrated | no | 后端 5 秒连接超时「后端不可达」可见指示已落地；真实窗口表现另需人工复验（见 `godot_window_recheck`） |

@@ -48,7 +48,7 @@ scope: 新对话入口、当前边界、最近下一步
 
 - **Human Rating pilot 已评估为前提不成立、不执行**：`hard_delegation` 是 metric stub 不跑 runtime；memory / relationship ablation 输入虽进入决策路径，但 promoted scenarios 中未改变 `goalToolEvents`，因此现有 believability 梯度只支持 evidence/integrity 层，不支持人类盲评系统能力结论。详见 `docs/human_rating_pilot_gate.md`。
 - **可辩护贡献收缩为工程展示**：Process Fidelity 定位为证据完整性度量 / debug guardrail（指标对证据缺失 / 归属错乱 / 链接剥离敏感，promoted run 已支持），不再主张 "Full 生成更可信行为"。`paper/claim_evidence_matrix.md` 的 C2/C3/C4 已降级为 metric / explainability 级。
-- **求职展示入口**：`README.md`、`docs/portfolio_case_cards.md`、`docs/portfolio_story.md`、`docs/portfolio_capability_map.md` 与 `paper/blog_main.md` 已统一为 Agent Behavior Observatory 叙事；展示用 3 张 case card（NPC 决策、证据移除、风险工具阻断），避免堆指标。
+- **求职展示入口**：`README.md`、`docs/portfolio_case_cards.md`、`docs/portfolio_evidence_snippets.md`、`docs/portfolio_story.md`、`docs/portfolio_capability_map.md` 与 `paper/blog_main.md` 已统一为 Agent Behavior Observatory 叙事；展示用 3 张 case card（NPC 决策、证据移除、风险工具阻断），避免堆指标。
 - **研究挽救线已收束**：Auditable Agents spike 只保留为 Failure Analysis Case；不再做人工 micro-study、跨模型/多 seed 扩展或 Godot 前端调优循环。后续仅允许包装层、小修复和坏链接维护。
 - **短挽救实验已最小实现**：`backend/app/eval/audit.py` + `eval:audit` / `eval:audit:export` 覆盖 5 个高风险非叙事场景、5 个 baseline、`audit.report.v1`、`audit.counterfactual_replay.v1`、逐条 evidence sweep 与 `audit.go_no_go.v1`；`scripts/build_audit_reviewer_packet.py` + `eval:audit:packet` 生成 README / summary / case studies / raw 附录。当前只支持 toy deterministic 审计 harness claim，避免升级 believability 或 AI Safety 强 claim。
 - **Go / No-Go 当前机器结果**：2026-06-06 `npm.cmd run eval:audit` / `eval:audit:export` / `eval:audit:packet` 复验通过；Full provenance=1.0、Full evidence sweep=1.0、Shortcut/Direct bypass=1.0、5 个场景 counterfactual sensitive、25 份 audit report 字段完整。主人已确认 v2 packet 可读性足够继续推进；最新 packet：`.run/eval-reviewer-packets/audit_reviewer_packet_2026-06-06T08-58-33Z`。
@@ -89,6 +89,8 @@ npm.cmd run eval:audit:llm-supplement
 npm.cmd run eval:archive:check
 npm.cmd run eval:archive:drift
 npm.cmd run research:evidence:check
+npm.cmd run portfolio:snippets
+npm.cmd run portfolio:check
 npm.cmd run client:env
 npm.cmd run client:run:check
 npm.cmd run llm:smoke
