@@ -1,13 +1,15 @@
 ---
 status: active
 owner_lane: portfolio-showcase
-last_verified: 2026-05-30
+last_verified: 2026-06-07
 startup_load: on-demand
 source_of_truth: true
 scope: 60 秒求职展示录屏脚本、启动命令与人工验收边界
 ---
 
 # Loomstead 60-second demo capture plan
+
+> 冻结说明（2026-06-07）：最终视频 / GIF / 截图已按主人决策暂缓，当前主展示路径是 case cards + evidence snippets + trace walkthrough + audit packet。本文保留为以后人工录制时的操作脚本，不再构成当前 portfolio readiness blocker。
 
 > 自管理层文档。用于求职展示线的录屏准备；真实窗口观感与最终视频文件仍属于 `manual unverified`，需要人工录制后确认。
 

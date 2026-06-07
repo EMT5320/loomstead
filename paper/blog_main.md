@@ -125,9 +125,9 @@ Latest real provider smoke:
 
 This supports a bounded engineering point: trace-grounded audit contracts can produce readable failure-analysis artifacts for high-risk tool calls. Broad AI safety and enterprise readiness remain out of scope.
 
-## 7. What changed after the research pivot?
+## 7. Design evolution and honest scoping
 
-The original research framing around Motivational Delegation and Process Fidelity produced useful infrastructure. Its stronger claims were difficult to demonstrate quickly to outside readers. The project now keeps the useful assets and freezes the research rescue path.
+The original research framing around Motivational Delegation and Process Fidelity revealed that the most deliverable engineering contribution was the observability stack built around agent behavior: structured traces, evidence links, counterfactual replay, eval exports, and audit harnesses. The project now centers those assets. Stronger behavioral claims remain out of scope; the evidence supports explainability, metric-level guardrails, and failure-analysis storytelling.
 
 Retained assets:
 

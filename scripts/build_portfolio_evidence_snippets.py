@@ -39,13 +39,21 @@ def load_json(path: Path) -> Any:
         return json.load(file)
 
 
-def metric(summary: dict[str, Any], metric_name: str) -> dict[str, Any]:
-    """按 metric 名称提取 aggregate 指标。"""
+def metric(
+    summary: dict[str, Any],
+    metric_name: str,
+    baseline: str = "full_motivational_delegation",
+) -> dict[str, Any]:
+    """按 baseline 与 metric 名称提取 aggregate 指标。"""
 
     for row in summary.get("metrics", []):
-        if row.get("metric") == metric_name and row.get("scenarioId") == "aggregate":
+        if (
+            row.get("metric") == metric_name
+            and row.get("baseline") == baseline
+            and row.get("scenarioId") == "aggregate"
+        ):
             return row
-    raise KeyError(f"missing aggregate metric: {metric_name}")
+    raise KeyError(f"missing aggregate metric: {baseline}.{metric_name}")
 
 
 def first_candidate(score_rows: list[dict[str, Any]]) -> dict[str, Any]:
@@ -72,6 +80,26 @@ def bool_word(value: Any) -> str:
     return "true" if bool(value) else "false"
 
 
+def score_delta(left: dict[str, Any], right: dict[str, Any]) -> str:
+    """格式化两个候选工具分数差，突出 near-tie 场景。"""
+
+    return f"`{left['toolId']}` `{left['score']}` vs `{right['toolId']}` `{right['score']}`"
+
+
+def first_replay_comparison(
+    replay: dict[str, Any],
+    record_id_suffix: str,
+) -> dict[str, Any]:
+    """从单条记忆移除 replay 中提取指定 record 的首个 comparison。"""
+
+    comparisons = replay.get("toolSelectionReplay", {}).get("comparisons", [])
+    for comparison in comparisons:
+        record_id = str(comparison.get("removedSubjectiveMemoryRecordId", ""))
+        if record_id.endswith(record_id_suffix):
+            return comparison
+    raise KeyError(f"missing replay comparison for suffix: {record_id_suffix}")
+
+
 def build_markdown() -> str:
     """构造稳定 Markdown 输出。"""
 
@@ -90,11 +118,37 @@ def build_markdown() -> str:
     trace_refs = goal_details.get("traceRefs", [])
     replay = evidence["counterfactualReplay"]
     with_memory = first_candidate(replay["candidateScoresWithRelationshipMemory"])
+    with_memory_runner_up = replay["candidateScoresWithRelationshipMemory"][1]
+    without_edges = first_candidate(replay["candidateScoresWithoutRelationshipEdges"])
+    without_edges_runner_up = replay["candidateScoresWithoutRelationshipEdges"][1]
     without_memory = first_candidate(replay["candidateScoresWithoutRelationshipMemory"])
+    without_memory_runner_up = replay["candidateScoresWithoutRelationshipMemory"][1]
+    harm_memory = next(
+        ref
+        for ref in replay.get("subjectiveMemoryRefs", [])
+        if str(ref.get("recordId", "")).endswith(":bram:harm")
+    )
+    interaction_memory = next(
+        ref
+        for ref in replay.get("subjectiveMemoryRefs", [])
+        if not str(ref.get("recordId", "")).endswith(":bram:harm")
+    )
+    harm_replay = first_replay_comparison(replay, ":bram:harm")
+    interaction_replay = first_replay_comparison(replay, ":bram")
 
     causal_trace = metric(summary, "causal_trace_coverage")
     counterfactual_change = metric(summary, "counterfactual_tool_selection_change_rate")
     required_process = metric(summary, "required_process_coverage")
+    no_relationship_change = metric(
+        summary,
+        "counterfactual_tool_selection_change_rate",
+        baseline="no_relationship_edge",
+    )
+    no_subjective_change = metric(
+        summary,
+        "counterfactual_tool_selection_change_rate",
+        baseline="no_subjective_memory",
+    )
 
     go_no_go = audit_packet["goNoGo"]
     sensitive_check = next(
@@ -125,11 +179,14 @@ def build_markdown() -> str:
         "|---|---|",
         f"| A / B | `{CARD_A_SCENARIO_PATH.relative_to(ROOT).as_posix()}` |",
         f"| B aggregate | `{(PROCESS_RUN_DIR / 'summary.json').relative_to(ROOT).as_posix()}` |",
+        f"| B baselines | `{(PROCESS_RUN_DIR / 'ablation_comparison.json').relative_to(ROOT).as_posix()}` |",
         f"| B promotion | `{(PROCESS_RUN_DIR / 'PROMOTION.md').relative_to(ROOT).as_posix()}` |",
         f"| C deterministic | `{(AUDIT_PACKET_DIR / 'reviewer_packet.json').relative_to(ROOT).as_posix()}` |",
         f"| C LLM smoke | `{(AUDIT_LLM_DIR / 'packet_summary.json').relative_to(ROOT).as_posix()}` |",
         "",
         "## Card A — NPC decision provenance",
+        "",
+        "Why it matters：复杂 agent 的最终动作需要能追到候选排序、证据来源和 near-tie 翻转点。",
         "",
         "| Field | Evidence |",
         "|---|---|",
@@ -140,10 +197,16 @@ def build_markdown() -> str:
         f"| traceRefs | `{count_trace_ref_types(trace_refs)}` |",
         f"| memory result bridge | `{len(evidence.get('memoryTraceLinks', []))}` memory trace link(s) |",
         f"| relationship sources | `{len(evidence.get('relationshipSourceIds', []))}` source id(s) |",
+        f"| full ranking | {score_delta(with_memory, with_memory_runner_up)} |",
+        f"| relationship-edge-only removal | selected `{replay['selectedWithoutRelationshipEdges']}`; {score_delta(without_edges, without_edges_runner_up)} |",
+        f"| harm memory valence | `{harm_memory['emotionalValence']}`; single-record removal changed=`{bool_word(harm_replay['changed'])}` |",
+        f"| interaction memory valence | `{interaction_memory['emotionalValence']}`; single-record removal changed=`{bool_word(interaction_replay['changed'])}` |",
         "",
-        "30 秒讲法：NPC 的 selected action 可反向追到 motivation decision trace、subjective memory refs、heuristic refs 与 relationship sources。",
+        "30 秒讲法：NPC 的 selected action 可反向追到 motivation decision trace、subjective memory refs、heuristic refs 与 relationship sources。Bram 案例中，relationship-edge-only removal 只缩小分差；interaction memory removal 才把 replay 翻到 `social.give_gift`。",
         "",
         "## Card B — Evidence removal delta",
+        "",
+        "Why it matters：反事实 replay 把“证据缺失后发生什么”变成可复查的分数、工具选择和 verdict 差异。",
         "",
         "| Field | Evidence |",
         "|---|---|",
@@ -152,14 +215,19 @@ def build_markdown() -> str:
         f"| toolSelectionChanged | `{bool_word(replay['toolSelectionChanged'])}` |",
         f"| top score with memory | `{with_memory['toolId']}` score `{with_memory['score']}` |",
         f"| top score without memory | `{without_memory['toolId']}` score `{without_memory['score']}` |",
+        f"| no-memory ranking | {score_delta(without_memory, without_memory_runner_up)} |",
         f"| aggregate causal_trace_coverage | mean `{causal_trace['mean']}` over n=`{causal_trace['n']}` |",
         f"| aggregate required_process_coverage | mean `{required_process['mean']}` over n=`{required_process['n']}` |",
         f"| aggregate counterfactual_tool_selection_change_rate | mean `{counterfactual_change['mean']}` over n=`{counterfactual_change['n']}` |",
+        f"| no_relationship_edge change_rate | mean `{no_relationship_change['mean']}` over n=`{no_relationship_change['n']}` |",
+        f"| no_subjective_memory change_rate | mean `{no_subjective_change['mean']}` over n=`{no_subjective_change['n']}` |",
         f"| llmEvidence.recordCount | `{manifest['llmEvidence']['recordCount']}` |",
         "",
-        "30 秒讲法：Full 条件保留 evidence links；移除 relationship memory 后，工具选择从 `social.chat_with` 变为 `social.give_gift`。",
+        "30 秒讲法：Full 条件保留 evidence links；移除 memory / relationship evidence 后，工具选择、分数或 verdict 会被记录。Branna 单例提供可读故事，aggregate 数字约束外推边界。",
         "",
         "## Card C — High-risk tool audit",
+        "",
+        "Why it matters：高风险 agent 工具需要执行前 evidence contract；缺 policy evidence 时，系统应给出可追溯阻断理由。",
         "",
         "| Field | Evidence |",
         "|---|---|",
@@ -180,6 +248,7 @@ def build_markdown() -> str:
         "## Boundary",
         "",
         "- 这些 snippets 支持 engineering showcase / explainability / failure analysis 层展示。",
+        "- `process_believability_score` 仍存在于历史 JSON artifact；本 snippets 有意不输出该字段，避免把兼容字段当作 believability claim。",
         "- Human-validated believability、enterprise-ready AI safety、完整因果证明均为 out of scope。",
         "- 需要更新 snippets 时先确认 source artifact，再运行 `npm.cmd run portfolio:snippets` 与 `npm.cmd run portfolio:check`。",
         "",

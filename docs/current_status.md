@@ -56,7 +56,7 @@ scope: 当前实现事实、验证状态、人工验收边界
 - **Human Rating blind pilot**：2026-06-02 评估为前提不成立（baseline 不产生行为分化），不执行；详见 §2.1 与 `docs/human_rating_pilot_gate.md`。该缺口不再追补。
 - **真实 Godot 窗口复验**：最新 Trace 导航 / 中断布局补修代码已落地，真实窗口复验**暂缓**到后端 / Eval 主线稳定后集中处理（治理协议 §3.1：避免每次新增字段后反复进入中间态窗口验收和小修循环）。
 - **Phase 4 候选**：gossip 真扩散、玩家行为传播、emergence scenario 仍未启动。
-- **求职展示线**：README 顶部已收敛为 case-card-first 入口；`docs/portfolio_case_cards.md`、`docs/portfolio_evidence_snippets.md`、`paper/blog_main.md`、`docs/demo_capture_plan.md`、`docs/showcase_manifest.md`、`scripts/check_showcase.py` 已落地；Figure/Table 覆盖率已由 Figure 4 SVG 补到 70%（`showcase:check` 通过）。最终视频 / GIF / 截图与真实 Godot 窗口复验由主人暂缓，仍是 `manual unverified`。
+- **求职展示线**：README 顶部已收敛为 case-card-first 入口；`docs/portfolio_case_cards.md`、`docs/portfolio_evidence_snippets.md`、`paper/blog_main.md`、`docs/demo_capture_plan.md`、`docs/showcase_manifest.md`、`scripts/check_showcase.py` 已落地；Figure/Table 覆盖率已由 Figure 4 SVG 补到 70%（`showcase:check` 通过）。2026-06-07 portfolio review 已吸收：case cards 增补 value proposition，Bram trace walkthrough 改用当前 promoted artifact ID，snippets 有意排除 `process_believability_score`。最终视频 / GIF / 截图按主人决策暂缓，`demo_recording` 与 `shareable_assets` 已标为 `not-accepted`，`showcase:check` readiness 为 `ready for owner review`；真实 Godot 窗口复验仍按 manual gate 保留。
 - **Auditable Agents 收束结果**：Phase B deterministic suite、全 5 场景真实 LLM smoke 与 supplement 已完成；保留为 `docs/portfolio_story.md` 的 Case C（Failure Analysis）。后续不再扩人工 reviewer、跨模型、多 seed 或新 audit scenario；仅维护命令、artifact 链接与展示文案。禁止宣称 enterprise-ready、完全因果证明或跨域有效性已成立。
 
 ## 4. 开发前硬约束
@@ -73,7 +73,7 @@ scope: 当前实现事实、验证状态、人工验收边界
 ## 5. 人工验收
 
 - `manual verified`：2026-05-21 Phase 1 收口；2026-05-25 UI 重设计观感与可读性；2026-05-26 Trace `memory.result_observed` 可发现性 + 来源跳转；2026-05-29 C2/C3/C4 `promoted with caveat` claim-level 口径；2026-05-30 ShowcasePanel 首屏 / F1 / Tab / Deep dive Computer Use spot-check。
-- `manual unverified`：最新 Trace 50 条排序、Prev/Next clamp、Copy ≥2s、后端不可达横幅与中断布局真实窗口复验；`.run/eval-promoted/run_2026-05-29T13-57-50Z` 机器层 promotion status 仍是 `needs_manual_review`（git.dirty / drift caveat 已写说明）；`.run/eval-promoted/stability_2026-05-25T07-34-55Z` promotion 的 drift 人工说明；`prompt_ready` 资产生成与登记；求职展示线最终视频 / GIF / 截图。
+- `manual unverified`：最新 Trace 50 条排序、Prev/Next clamp、Copy ≥2s、后端不可达横幅与中断布局真实窗口复验；`.run/eval-promoted/run_2026-05-29T13-57-50Z` 机器层 promotion status 仍是 `needs_manual_review`（git.dirty / drift caveat 已写说明）；`.run/eval-promoted/stability_2026-05-25T07-34-55Z` promotion 的 drift 人工说明；`prompt_ready` 资产生成与登记；求职展示线最终视频 / GIF / 截图已按主人决策转为可选人工资产，不再阻塞 portfolio readiness。
 
 ## 6. 当前可运行命令
 
@@ -118,4 +118,4 @@ git diff --check
 
 ## 7. 下一步
 
-当前顺序：Loomstead 冻结为 Agent Behavior Observatory portfolio 工程项目；README、`docs/portfolio_case_cards.md`、`docs/portfolio_evidence_snippets.md`、`docs/portfolio_story.md`、`docs/portfolio_capability_map.md`、`paper/blog_main.md` 是展示入口。后续仅允许包装层、小修复、坏链接维护或最终截图/GIF 手工采集；不再继续研究实验、人工评分、指标扩展或 Godot 前端调优循环。主力继续转向 `AlgoCoach-Flywheel` 或更清晰的新研究线。
+当前顺序：Loomstead 冻结为 Agent Behavior Observatory portfolio 工程项目；README、`docs/portfolio_case_cards.md`、`docs/portfolio_evidence_snippets.md`、`docs/portfolio_story.md`、`docs/portfolio_capability_map.md`、`paper/blog_main.md` 是展示入口。`npm.cmd run portfolio:verify` 已覆盖 snippets freshness、入口链接、artifact 存在性、showcase readiness。后续仅允许包装层、小修复、坏链接维护或主人手工补截图/GIF；不再继续研究实验、人工评分、指标扩展或 Godot 前端调优循环。主力继续转向 `AlgoCoach-Flywheel` 或更清晰的新研究线。

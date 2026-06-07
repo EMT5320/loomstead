@@ -23,10 +23,10 @@ scope: 展示层收口追踪（P_demo.exit 五条 exit criteria 状态与人工�
 
 | exit_id | title | status | verification_state | blocking_reason |
 | --- | --- | --- | --- | --- |
-| demo_recording | ≤60 秒 demo 录屏（NPC 自主生活 / Trace 因果链 / Rashomon 记忆任选其一） | pending | manual unverified | 最终 demo 视频依赖真实 Godot 窗口人工录制；录屏脚本已落 `docs/demo_capture_plan.md` |
+| demo_recording | ≤60 秒 demo 录屏（NPC 自主生活 / Trace 因果链 / Rashomon 记忆任选其一） | not-accepted | manual unverified | Optional visual artifacts deferred per owner decision; case-card + trace + audit packet path is the primary showcase |
 | blog_main | 技术博客主文（少而深 framing + Motivational Delegation + Process Fidelity 数据） | done | command checked | 初稿已落 `paper/blog_main.md`；`showcase:check` 覆盖 C2/C3/C4 口径一致性，主人仍可继续做文风润色 |
 | readme_entry | README 顶部 30 秒求职展示入口 | done | command checked | `README.md` 顶部已收敛为 case-card-first 路径；`docs/portfolio_case_cards.md` 成为外部读者第一跳，证据基线降为附录说明 |
-| shareable_assets | ≥1 组对外可分享的 GIF / 截图集 | pending | manual unverified | GIF / 截图依赖真实 Godot 窗口人工捕获 |
+| shareable_assets | ≥1 组对外可分享的 GIF / 截图集 | not-accepted | manual unverified | Optional visual artifacts deferred per owner decision; current reusable package is the case-card + evidence-snippet + audit-packet path |
 | figure_coverage | claim_evidence_matrix 的 Figure/Table target ≥70% 已渲染 | done | command checked | 已渲染 Figure 1/2/3/4 + 多 Table（`paper/generated/`）；`showcase:check` 回填覆盖率 ≥70% |
 
 ## Deliverables
@@ -77,8 +77,8 @@ scope: 展示层收口追踪（P_demo.exit 五条 exit criteria 状态与人工�
 
 > 由 `showcase:check`（任务 5.1）回填，规则见 R11.4 / R11.5。
 
-- `readiness`: not ready for owner review
-- `pending_exit_ids`: demo_recording, shareable_assets
-- `blocking_manual_gates`: final_demo_video, showcase_mode_window_recheck, godot_window_recheck, shareable_gif_screenshots
+- `readiness`: ready for owner review
+- `pending_exit_ids`: 无
+- `blocking_manual_gates`: 无
 
-当且仅当 5 条 exit criteria 全部非 pending 时报 ready for owner review；当前仍有 pending exit criteria（demo_recording, shareable_assets），故 not ready。
+5 条 exit criteria 全部非 pending，展示线 ready for owner review。

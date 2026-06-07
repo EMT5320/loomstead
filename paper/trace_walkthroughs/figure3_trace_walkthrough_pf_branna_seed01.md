@@ -4,7 +4,8 @@
 
 - Intended figure: Figure 3 (`intervention -> event -> subjective memory -> relationship/heuristic -> later decision -> outcome`)
 - Evidence boundary: promoted-with-caveat, metric / explainability level.
-- This walkthrough uses the current promoted process export for both trace lanes and aggregate metrics from the generated paper tables. Use it as appendix evidence for the portfolio case cards, not as a primary research claim.
+- ID binding: this walkthrough is bound to the current promoted process export `.run/eval-promoted/run_2026-05-29T13-57-50Z`. If that artifact is refreshed, rerun `npm.cmd run portfolio:snippets` and update this appendix together.
+- Usage: appendix evidence for portfolio case cards. The first-screen path remains `docs/portfolio_case_cards.md` plus `docs/portfolio_evidence_snippets.md`.
 
 ## Source artifact
 
@@ -15,11 +16,10 @@
   - `git.dirty=true`
   - Dirty export caveat is documented in the promoted run `PROMOTION.md`; the owner approved promoted-with-caveat claim wording on 2026-05-29.
   - `seedCount=5`
-- Per-scenario file:
+- Trace A per-scenario file:
   - `.run/eval-promoted/run_2026-05-29T13-57-50Z/per_scenario/pf.branna_forgiveness_requires_memory_full_motivational_delegation_seed01.json`
-- Second trace source:
+- Trace B per-scenario file:
   - `.run/eval-promoted/run_2026-05-29T13-57-50Z/per_scenario/pf.repair_talk_requires_memory_trace_full_motivational_delegation_seed01.json`
-  - Same manifest: `ok=true`, `git.shortCommit=25c053d`, `git.dirty=true`, `seedCount=5`, with the same promoted-with-caveat note in `PROMOTION.md`.
 
 ## Candidate trace chain for Figure 3
 
@@ -32,44 +32,46 @@ The figure source uses curated labels from the evidence below. It avoids relying
 1. **Intervention/setup anchor**
    - `scenarioId=pf.branna_forgiveness_requires_memory`
    - `setupKind=forgiveness_memory`
-   - Seeded harm memory: `harmEventId=evt_23610b252185405b98964b4dd06abf8f`, `recordId=evt_23610b252185405b98964b4dd06abf8f:bram:harm`
+   - Seeded harm memory: `harmEventId=evt_512d3011ef624d95adffe43979a05208`, `recordId=evt_512d3011ef624d95adffe43979a05208:bram:harm`, `emotionalValence=-0.7976000000000001`
 
 2. **Tool event (goal-relevant action)**
    - `eventType=tool.execution_completed`
-   - `eventId=evt_1d1e79ac8322464fb5bdf2ea9f16f779`
+   - `eventId=evt_5df32c5b59614a4a81caecd8b23aafd9`
    - `toolId=social.chat_with`
    - `targetNpcId=player`
-   - Trace refs include subjective memory refs (`count=1`), heuristic refs (`count=1`), and motivation decision trace (`eventId=evt_41f9c18817c84abea138bde5e6cc2b99`).
+   - Direct `sourceEventIds`: `evt_138fb9fe526c4918bffac68d93162296`
+   - Motivation decision trace: `eventId=evt_dd21b7b4fdf5404690c5d90b89fbcfc3`, `traceId=trace_708567a85c4a4c2b97608bd561367641`, `selectedToolId=social.chat_with`
 
 3. **Observed memory result (trace-link bridge)**
    - `eventType=memory.result_observed`
-   - `eventId=evt_dc118721774042e481de495af597288f`
-   - `sourceEventId=evt_1d1e79ac8322464fb5bdf2ea9f16f779`
+   - `eventId=evt_4e9c8173ebfd4faca73804478bbd4c1e`
+   - `sourceEventId=evt_5df32c5b59614a4a81caecd8b23aafd9`
    - `observerVisibility=participants_only`
    - `memoryCount=2`
    - `relationshipEdgeCount=3`
 
 4. **Subjective memory + relationship + heuristic evidence**
-   - Subjective memory records include `evt_23610b252185405b98964b4dd06abf8f:bram:harm` (negative valence) and `evt_1d1e79ac8322464fb5bdf2ea9f16f779:bram` (current interaction).
+   - Subjective memory records include seeded harm memory `evt_512d3011ef624d95adffe43979a05208:bram:harm` and interaction memory `evt_5df32c5b59614a4a81caecd8b23aafd9:bram` (`emotionalValence=0.25`).
    - Relationship edges include `bram::player::trust` (`strength=0.52`) and `bram::player::affection` (`strength=0.53`).
-   - Heuristic refs include designer seed and preference heuristics.
+   - Heuristic refs include `bram:designer:avoid_bram_force_chat_when_angry` and `bram:prefer_social_when_affiliation_high`.
 
 5. **Later decision and counterfactual replay**
-   - With relationship memory: `social.chat_with`
-   - Without relationship memory: `social.give_gift`
-   - `toolSelectionChanged=true`
-   - `counterfactualToolSelectionChangeRate=0.5`
-   - Replay stats:
-     - `cycleCount=24`
-     - `comparisonCount=48`
-     - `changedDecisionCount=24`
+   - With full relationship/memory evidence: `social.chat_with` wins (`0.956874` vs `social.give_gift=0.902323`).
+   - Relationship-edge-only removal: `social.chat_with` still wins (`0.893874` vs `social.give_gift=0.886573`), with `relationshipDecisionEffect=false`.
+   - Top-level no-memory replay: `selectedWithoutRelationshipMemory=social.give_gift` (`0.845833` vs `social.chat_with=0.845`).
+   - Single-record replay:
+     - remove `evt_512d3011ef624d95adffe43979a05208:bram:harm` -> `social.chat_with`, `changed=false`
+     - remove `evt_5df32c5b59614a4a81caecd8b23aafd9:bram` -> `social.give_gift`, `changed=true`
+   - Replay stats: `cycleCount=24`, `comparisonCount=48`, `changedDecisionCount=24`, `changeRate=0.5`.
+   - Reason labels: `reasonWithRelationshipMemory=memory_and_heuristic_weighted_fit`, `reasonWithoutRelationshipEdges=memory_and_heuristic_weighted_fit`, `reasonWithoutRelationshipMemory=highest_rule_tier_fit`.
 
 6. **Outcome snapshot (for this seed)**
    - `goal_success_rate=1.0`
    - `required_process_coverage=1.0`
    - `causal_trace_coverage=1.0`
    - `relationship_memory_causal_use_rate=1.0`
-   - `process_believability_score=1.0`
+   - `counterfactual_tool_selection_change_rate=0.5`
+   - Legacy JSON field `process_believability_score=1.0` is retained for artifact compatibility; portfolio material treats it as a compatibility-only historical index and excludes it from human-believability claim language.
    - Process checks listed in the artifact are all `true`.
 
 ### Trace B: Tomas repair trace
@@ -82,40 +84,38 @@ The figure source uses curated labels from the evidence below. It avoids relying
 
 2. **Tool event (goal-relevant action)**
    - `eventType=tool.execution_completed`
-   - `eventId=evt_64b6f17377694f12a1ee184d2deaa46a`
+   - `eventId=evt_882df3594cc64086b9f95b317c9b1184`
    - `toolId=social.give_gift`
    - `targetNpcId=mira`
-   - Motivation decision trace selected `social.give_gift` (`eventId=evt_4391fca1d95a44bea6948de1e3537ca0`).
+   - Direct `sourceEventIds`: `evt_d10c2e764fb94ee98068f37acaca32a9`
+   - Motivation decision trace: `eventId=evt_f44e7c27e1794e9e9f97d7265d91b5f7`, `traceId=trace_b005eb5e6a6a42b39849636dafbf147e`, `selectedToolId=social.give_gift`
 
 3. **Observed memory result (trace-link bridge)**
    - `eventType=memory.result_observed`
-   - `eventId=evt_79220d486b674ff6988532ee8e6ac407`
-   - `sourceEventId=evt_64b6f17377694f12a1ee184d2deaa46a`
+   - `eventId=evt_66533174ecb8415e8781fb379e981508`
+   - `sourceEventId=evt_882df3594cc64086b9f95b317c9b1184`
    - `observerVisibility=participants_only`
    - `memoryCount=2`
    - `relationshipEdgeCount=2`
 
 4. **Subjective memory + relationship + heuristic evidence**
-   - Subjective memory record: `evt_64b6f17377694f12a1ee184d2deaa46a:tomas`.
+   - Subjective memory record: `evt_882df3594cc64086b9f95b317c9b1184:tomas`.
    - Relationship edges include `mira::tomas::trust` (`strength=0.52`) and `mira::tomas::affection` (`strength=0.54`).
-   - Heuristic refs include `designer_seed:tomas:designer_prefer_open_shop_money_anxiety` and `tomas:prefer_successful_tool:social.give_gift`.
+   - Heuristic refs include `tomas:prefer_social_when_affiliation_high` and `tomas:prefer_successful_tool:social.give_gift`.
 
 5. **Later decision and counterfactual replay**
-   - With memory: `social.give_gift`
-   - Without memory: `social.chat_with`
-   - `toolSelectionChanged=true`
-   - `counterfactualToolSelectionChangeRate=1.0`
-   - Replay stats:
-     - `cycleCount=24`
-     - `comparisonCount=24`
-     - `changedDecisionCount=24`
+   - With full relationship/memory evidence: `social.give_gift` wins (`0.986233` vs `social.chat_with=0.9626`).
+   - Relationship-edge-only removal: `social.give_gift` still wins (`0.970333` vs `social.chat_with=0.899`), with `relationshipDecisionEffect=false`.
+   - Single-record replay removes `evt_882df3594cc64086b9f95b317c9b1184:tomas`: cycle-level selected tool changes from `social.give_gift` to `social.chat_with` in 24/24 comparisons.
+   - Replay stats: `cycleCount=24`, `comparisonCount=24`, `changedDecisionCount=24`, `changeRate=1.0`.
 
-6. **Outcome snapshot (for this trace)**
+6. **Outcome snapshot (for this seed)**
    - `goal_success_rate=1.0`
    - `required_process_coverage=1.0`
    - `causal_trace_coverage=1.0`
    - `relationship_memory_causal_use_rate=1.0`
-   - `process_believability_score=1.0`
+   - `counterfactual_tool_selection_change_rate=1.0`
+   - Legacy JSON field `process_believability_score=1.0` is retained for artifact compatibility and excluded from current portfolio claim language.
 
 ### Aggregate guardrail annotation
 
@@ -123,6 +123,8 @@ The figure source uses curated labels from the evidence below. It avoids relying
    - Source: `paper/generated/eval_summary_tables.md` and `.run/eval-promoted/run_2026-05-29T13-57-50Z/summary.json`.
    - Full Motivational Delegation process aggregate: `n=20` (`5 seeds x 4 scenarios`).
    - `counterfactual_tool_selection_change_rate=0.375`.
+   - `no_relationship_edge` baseline `counterfactual_tool_selection_change_rate=0.25`.
+   - `no_subjective_memory` baseline `counterfactual_tool_selection_change_rate=0.0`.
    - `causal_trace_coverage=1.0`.
    - `forced_action_rate=0`, `agent_initiated_action_ratio=1.0`.
    - This annotation is a promoted-with-caveat guardrail summary for metric / explainability discussion.
@@ -130,6 +132,6 @@ The figure source uses curated labels from the evidence below. It avoids relying
 ## Appendix figure notes
 
 - Mermaid graph source is ready at `paper/diagrams/trace_evidence_chain_figure3.mmd` and is referenced by the LaTeX Figure 3 placeholder.
-- Both trace lanes now point at the same current promoted five-seed process export.
+- Both trace lanes point at the same current promoted five-seed process export.
 - Rendered labels should continue to use curated wording instead of raw summary text.
 - External release can use this walkthrough as appendix material; the first-screen portfolio path should start from `docs/portfolio_case_cards.md`.

@@ -24,6 +24,12 @@ Read in this order:
 4. **Read the short story**: [docs/portfolio_story.md](docs/portfolio_story.md) freezes the Agent Behavior Observatory positioning and honest boundaries.
 5. **Use appendices only when needed**: [paper/blog_main.md](paper/blog_main.md), [paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md](paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md), and the audit supplement provide deeper evidence.
 
+### Quick proof points
+
+- Process artifact: 4 scenarios x 5 seeds, aggregate `causal_trace_coverage=1.0`, `required_process_coverage=1.0`, `counterfactual_tool_selection_change_rate=0.375`.
+- Bram story: `social.chat_with` wins with full evidence (`0.956874` vs `0.902323`); relationship-edge-only removal keeps the same selected tool; interaction-memory removal flips the replay to `social.give_gift`.
+- Audit artifact: real `CloudApiProvider` smoke covers 5 high-risk scenarios x 2 evidence conditions, 10/10 cases passed, cost `0.00351806` USD.
+
 ## Three portfolio case cards
 
 ### Case A: Why did this NPC choose that action?

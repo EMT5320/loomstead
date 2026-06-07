@@ -41,6 +41,10 @@ npm.cmd run portfolio:verify
 
 > 一个 NPC 为什么选择这个动作，并放弃其他候选动作？
 
+### Why it matters
+
+关键决策的调试价值来自“为什么”：当 agent 的动作受动机、记忆、关系和 heuristic 共同影响时，最终动作本身无法说明候选项如何被排序，也无法说明哪些证据改变了 ranking。
+
 ### 首选展示路径
 
 1. Godot ShowcasePanel 或 Observer Dock：显示 Goal / Director Beat / Event Skill / NPC Decision / Trace Evidence。
@@ -49,7 +53,11 @@ npm.cmd run portfolio:verify
 
 ### 30 秒讲法
 
-> Loomstead 不只记录最终动作。NPC 的动机、记忆、关系、候选工具分数和结果观察都会进入 `phase2.trace.v1`。调试时可以从 selected action 反向跳到 `sourceEventIds` 与 `traceRefs`，定位哪些证据影响了行为。
+> Loomstead 记录最终动作及其证据路径。NPC 的动机、记忆、关系、候选工具分数和结果观察都会进入 `phase2.trace.v1`。调试时可以从 selected action 反向跳到 `sourceEventIds` 与 `traceRefs`，定位哪些证据影响了行为。
+
+### 叙事桥接：Bram 近似平分案例
+
+当前 promoted artifact 中，Bram 在伤害记忆仍存在时选择 `social.chat_with`，分数为 `0.956874`，领先 `social.give_gift` 的 `0.902323`。单独移除 relationship edges 后，选择仍是 `social.chat_with`（`0.893874` vs `0.886573`）；单条 replay 显示移除 harm memory 也不改变选择。移除后续 interaction memory 时，选择翻转为 `social.give_gift`。这个例子把讲法从字段清单推进到可复查问题：哪些证据组合改变了候选动作排序？
 
 ### 关键证据
 
@@ -73,6 +81,10 @@ npm.cmd run portfolio:verify
 
 > 如果移除某条记忆、关系或 evidence link，系统会显示什么差异？
 
+### Why it matters
+
+反事实 replay 让读者看到“证据缺失后发生什么”：如果移除 memory、relationship 或 evidence link 后的排序、动作、verdict 都不可复查，复杂 agent 的成功很难被调试或解释。
+
 ### 首选展示路径
 
 1. `.run/eval-promoted/run_2026-05-29T13-57-50Z`：读取 promoted process artifact。
@@ -82,6 +94,10 @@ npm.cmd run portfolio:verify
 ### 30 秒讲法
 
 > Loomstead 的 eval 层把复杂行为转成 before/after 对照。Full 条件下保留完整 evidence；移除 memory、relationship 或 evidence link 后，artifact 会记录 score、selected tool 或 verdict 是否变化。指标用于索引复查，case comparison 承担第一屏解释。
+
+### Aggregate 诚实补注
+
+全量 process suite 的 aggregate `counterfactual_tool_selection_change_rate` 为 `0.375`（n=`20`）。对照 baseline 中，`no_relationship_edge` 为 `0.25`，`no_subjective_memory` 为 `0.0`。因此 Card B 适合展示 evidence / relationship / trace 链路的敏感性；Branna 单例是可读故事入口，aggregate 数字用于约束外推范围。
 
 ### 关键证据
 
@@ -104,6 +120,10 @@ npm.cmd run portfolio:verify
 ### 读者问题
 
 > 当 agent 要执行高风险工具时，缺少 policy evidence 会发生什么？
+
+### Why it matters
+
+高风险工具调用需要执行前证据契约：修改代码、删除文件、导出数据或切换模型这类动作，应能说明 required evidence 是否齐全，并在缺证据时留下可复查的阻断理由。
 
 ### 首选展示路径
 
