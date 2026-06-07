@@ -1,10 +1,10 @@
 ---
 status: active
 owner_lane: portfolio-showcase
-last_verified: 2026-06-06
+last_verified: 2026-06-07
 startup_load: on-demand
 source_of_truth: true
-scope: Loomstead 最终展示叙事：Agent Behavior Observatory 与 3 张 case card
+scope: Loomstead 最终展示叙事：Agent Behavior Observatory 与 case-card-first 对外入口
 ---
 
 # Loomstead Portfolio Story
@@ -40,11 +40,15 @@ scope: Loomstead 最终展示叙事：Agent Behavior Observatory 与 3 张 case 
 - Eval infrastructure：如何把复杂行为转成可复查 artifact。
 - Failure analysis：缺证据、断链接、shortcut 行为如何被暴露。
 
-## 3. 3 张展示卡
+## 3. Case-card-first 对外入口
+
+主入口：`docs/portfolio_case_cards.md`。该文档承载外部读者第一跳，按“读者问题 -> 展示路径 -> 30 秒讲法 -> 关键证据 -> 诚实边界”组织。
+
+本页只保留三张卡的叙事骨架：
 
 ### Card A — Why did this NPC choose that action?
 
-素材来源：Godot Observer Dock / `/api/debug.phase2` / Figure 3 trace walkthrough。
+素材来源：Godot Observer Dock / `/api/debug.phase2` / portfolio appendix trace walkthrough。
 
 展示结构：
 
@@ -66,7 +70,7 @@ scope: Loomstead 最终展示叙事：Agent Behavior Observatory 与 3 张 case 
 1. Full 条件下的选中动作。
 2. 移除 memory / relationship / evidence link。
 3. 候选分数、selected tool 或 verdict 变化。
-4. 指标只作为复查索引，不作为主展示。
+4. 指标作为复查索引，第一屏看 case comparison。
 
 一句话 takeaway：
 
@@ -94,6 +98,7 @@ scope: Loomstead 最终展示叙事：Agent Behavior Observatory 与 3 张 case 
 
 | 展示面 | 首选材料 | 用法 |
 |---|---|---|
+| Case cards | `docs/portfolio_case_cards.md` | 第一跳展示入口 |
 | Runtime | `backend/app/runtime/`、`docs/agent_loop_architecture.md` | 讲系统架构 |
 | Trace | `phase2.trace.v1`、`GET /api/debug.phase2`、Godot Observer Dock | 讲可观测性 |
 | Eval | `.run/eval-promoted/run_2026-05-29T13-57-50Z`、`scripts/run_agent_eval.py` | 讲可复查 artifact pipeline |

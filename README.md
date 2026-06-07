@@ -6,22 +6,42 @@
 
 > **An observability-first multi-agent runtime for tracing, debugging, and auditing autonomous behavior in a simulated town.**
 
-`Loomstead` uses a playable Godot town as a concrete surface for complex agent behavior. The project showcases how a multi-agent runtime can make NPC motivation, subjective memory, relationship state, tool execution, LLM decisions, and eval artifacts traceable end-to-end.
+`Loomstead` uses a playable Godot town as the live surface for complex agent behavior. The portfolio story centers on the engineering stack behind that surface: an authoritative Python agent runtime, structured traces, evidence-linked decisions, eval exports, counterfactual replay, and audit packets.
 
-The final portfolio framing is **Agent Behavior Observatory**:
+The strongest concise claim is:
 
 ```text
-Debugging, tracing, and evaluating autonomous agents in a simulated town.
+I built a full-stack agent behavior observatory for debugging complex agent behavior.
 ```
-
-The town is the interaction surface. The engineering story is the observability stack behind it: decision traces, evidence links, counterfactual replay, audit packets, and reproducible eval exports.
 
 ## 30-second portfolio path
 
-1. **Read the portfolio story**: [docs/portfolio_story.md](docs/portfolio_story.md) explains the final positioning and the three showcase cards.
-2. **Open the capability map**: [docs/portfolio_capability_map.md](docs/portfolio_capability_map.md) maps runtime / observability / eval / audit assets to interview talking points.
-3. **Inspect one trace story**: [paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md](paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md) shows a concrete memory -> relationship -> decision chain.
-4. **Inspect one failure-analysis story**: [.run/eval-reviewer-packets/audit_llm_supplement_2026-06-06T10-59-22Z/README.md](.run/eval-reviewer-packets/audit_llm_supplement_2026-06-06T10-59-22Z/README.md) shows high-risk tool calls under full vs missing policy evidence.
+Read in this order:
+
+1. **Start with the case cards**: [docs/portfolio_case_cards.md](docs/portfolio_case_cards.md) gives three externally readable examples: NPC decision provenance, evidence-removal replay, and high-risk tool audit.
+2. **Map the skills**: [docs/portfolio_capability_map.md](docs/portfolio_capability_map.md) connects runtime / observability / eval / audit assets to interview signals.
+3. **Read the short story**: [docs/portfolio_story.md](docs/portfolio_story.md) freezes the Agent Behavior Observatory positioning and honest boundaries.
+4. **Use appendices only when needed**: [paper/blog_main.md](paper/blog_main.md), [paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md](paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md), and the audit supplement provide deeper evidence.
+
+## Three portfolio case cards
+
+### Case A: Why did this NPC choose that action?
+
+Show the runtime path from motivation, memory, relationship evidence, candidate tool scores, and `traceRefs` to the selected NPC action.
+
+**Takeaway**: the system exposes behavior provenance alongside final state.
+
+### Case B: What changed when evidence was removed?
+
+Show counterfactual replay where removing memory, relationship, or evidence links changes scores, selected tools, or verdicts.
+
+**Takeaway**: eval artifacts turn opaque behavior into an evidence-difference story.
+
+### Case C: Why was this high-risk tool call blocked?
+
+Show the audit supplement: full evidence allows a high-risk tool; missing policy evidence routes to a safe review tool.
+
+**Takeaway**: the same trace/evidence language supports operational failure analysis.
 
 ## What this project demonstrates
 
@@ -60,7 +80,7 @@ Why did this agent choose this action, and what evidence influenced it?
 
 The project includes a reproducible eval/export stack:
 
-- Process Fidelity checks for path-quality metrics.
+- Process Fidelity checks for evidence-completeness and path-quality guardrails.
 - Stability, determinism, domain-adapter, and robustness suites.
 - Manifest-backed exports, promoted artifacts, drift notes, and archive checks.
 - Coding-domain adapter fixtures with dependency evidence chains.
@@ -86,39 +106,13 @@ Latest useful audit artifacts:
 
 Use this as a failure-analysis case with a narrow scope.
 
-## Three portfolio case cards
-
-### Case 1 ? Why did Kai choose this action?
-
-Show the runtime trace from motivation, memory, relationship evidence, and tool arbitration to a selected NPC action.
-
-**Takeaway**: the system exposes behavior provenance alongside final state.
-
-### Case 2 ? What changed when evidence was removed?
-
-Show counterfactual replay where removing relationship / memory evidence changes scores or selected behavior.
-
-**Takeaway**: eval artifacts help debug which evidence actually influenced a decision.
-
-### Case 3 ? Why was this high-risk tool call blocked?
-
-Show the audit supplement: full evidence allows the high-risk tool; missing policy evidence routes to a safe review tool.
-
-**Takeaway**: the same trace/evidence idea extends to operational failure analysis.
-
 ## Honest boundaries
 
 - Loomstead is frozen as a portfolio engineering project.
 - Human-validated believability is out of scope.
 - Enterprise-ready AI safety and complete causal proof are out of scope.
 - The audit spike supports bounded feasibility and failure-analysis storytelling.
-- Further work should move to clearer research lines unless a concrete demo or interview artifact needs small maintenance.
-
-The strongest project claim is:
-
-```text
-I built a full-stack agent behavior observatory: a playable multi-agent runtime with structured traces, evidence-linked decisions, eval exports, and audit artifacts for debugging complex agent behavior.
-```
+- Final video / GIF / screenshots are optional manual artifacts; the current reusable package is the case-card + trace + audit packet path.
 
 ## Local run
 
@@ -171,6 +165,7 @@ Committed defaults are designed to run without secrets. Local model config and A
 
 - Current state: [docs/current_status.md](docs/current_status.md)
 - Assistant entry: [AGENTS.md](AGENTS.md), [docs/agent_context.md](docs/agent_context.md)
+- Portfolio case cards: [docs/portfolio_case_cards.md](docs/portfolio_case_cards.md)
 - Portfolio story: [docs/portfolio_story.md](docs/portfolio_story.md)
 - Capability map: [docs/portfolio_capability_map.md](docs/portfolio_capability_map.md)
 - Technical overview: [paper/blog_main.md](paper/blog_main.md)

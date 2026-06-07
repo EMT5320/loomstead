@@ -1,10 +1,10 @@
 ---
 status: active
 owner_lane: portfolio-showcase
-last_verified: 2026-06-06
+last_verified: 2026-06-07
 startup_load: on-demand
 source_of_truth: true
-scope: Loomstead 求职展示 capability map：Agent Behavior Observatory、能力栈、面试讲法、诚实边界
+scope: Loomstead 求职展示 capability map：Agent Behavior Observatory、能力栈、case cards、面试讲法、诚实边界
 ---
 
 # Loomstead Portfolio Capability Map
@@ -32,21 +32,23 @@ scope: Loomstead 求职展示 capability map：Agent Behavior Observatory、能�
 
 ## 3. 三个展示案例
 
+第一跳统一使用 `docs/portfolio_case_cards.md`；本节只做 capability map 索引。
+
 ### A. NPC 行为为什么发生
 
-- 入口：Godot Observer Dock、`/api/debug.phase2`、Figure 3 trace walkthrough。
+- 入口：`docs/portfolio_case_cards.md`、Godot Observer Dock、`/api/debug.phase2`、portfolio appendix trace walkthrough。
 - 讲法：从动机、记忆、关系、候选工具分数追到 selected action。
 - 边界：不要把它讲成玩家一定会觉得 believable。
 
 ### B. 移除证据后发生什么
 
-- 入口：Process Fidelity / counterfactual replay / domain adapter artifacts。
+- 入口：`docs/portfolio_case_cards.md`、Process Fidelity / counterfactual replay / domain adapter artifacts。
 - 讲法：展示证据移除如何改变候选分数、工具选择或 verdict。
 - 边界：指标作为复查索引，case card 承担第一屏解释。
 
 ### C. 高风险工具调用如何被阻断
 
-- 入口：`.run/eval-reviewer-packets/audit_llm_supplement_2026-06-06T10-59-22Z`。
+- 入口：`docs/portfolio_case_cards.md`、`.run/eval-reviewer-packets/audit_llm_supplement_2026-06-06T10-59-22Z`。
 - 讲法：Full evidence 允许执行；No Policy Evidence 进入 safe review tool。
 - 边界：不要宣称企业级安全或跨域有效性。
 
@@ -77,6 +79,6 @@ scope: Loomstead 求职展示 capability map：Agent Behavior Observatory、能�
 
 ## 7. 当前收束状态
 
-- 保留：runtime、trace、eval、audit harness、v2 packet、LLM supplement、portfolio story。
+- 保留：runtime、trace、eval、audit harness、v2 packet、LLM supplement、portfolio case cards、portfolio story。
 - 丢弃：冗余旧 packet、继续扩实验、人工大规模 review 计划。
 - 冻结：只允许包装层、小修复和坏链接维护。

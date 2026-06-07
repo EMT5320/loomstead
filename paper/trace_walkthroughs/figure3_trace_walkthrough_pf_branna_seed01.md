@@ -1,10 +1,10 @@
-# Figure 3 Trace Walkthrough (research-preview)
+# Figure 3 Trace Walkthrough (portfolio appendix)
 
-## Scope and evidence level
+## Scope and evidence boundary
 
 - Intended figure: Figure 3 (`intervention -> event -> subjective memory -> relationship/heuristic -> later decision -> outcome`)
-- Claim level target: L2 local guardrail evidence (per `paper/claim_policy.md`)
-- This walkthrough uses the current promoted process export for both trace lanes and aggregate metrics from the generated paper tables. Wording stays at interface/research-preview level.
+- Evidence boundary: promoted-with-caveat, metric / explainability level.
+- This walkthrough uses the current promoted process export for both trace lanes and aggregate metrics from the generated paper tables. Use it as appendix evidence for the portfolio case cards, not as a primary research claim.
 
 ## Source artifact
 
@@ -125,11 +125,11 @@ The figure source uses curated labels from the evidence below. It avoids relying
    - `counterfactual_tool_selection_change_rate=0.375`.
    - `causal_trace_coverage=1.0`.
    - `forced_action_rate=0`, `agent_initiated_action_ratio=1.0`.
-   - This annotation is a promoted-with-caveat guardrail summary, with final empirical wording still pending human process review.
+   - This annotation is a promoted-with-caveat guardrail summary for metric / explainability discussion.
 
-## Figure drafting notes (manual follow-up required)
+## Appendix figure notes
 
 - Mermaid graph source is ready at `paper/diagrams/trace_evidence_chain_figure3.mmd` and is referenced by the LaTeX Figure 3 placeholder.
 - Both trace lanes now point at the same current promoted five-seed process export.
 - Rendered labels should continue to use curated wording instead of raw summary text.
-- Publication-ready Figure 3 may still need visual hierarchy/layout polish before external release.
+- External release can use this walkthrough as appendix material; the first-screen portfolio path should start from `docs/portfolio_case_cards.md`.

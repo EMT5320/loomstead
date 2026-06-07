@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: portfolio-showcase
-last_verified: 2026-05-30
+last_verified: 2026-06-07
 startup_load: on-demand
 source_of_truth: true
 scope: 展示层收口追踪（P_demo.exit 五条 exit criteria 状态与人工待办）
@@ -25,7 +25,7 @@ scope: 展示层收口追踪（P_demo.exit 五条 exit criteria 状态与人工�
 | --- | --- | --- | --- | --- |
 | demo_recording | ≤60 秒 demo 录屏（NPC 自主生活 / Trace 因果链 / Rashomon 记忆任选其一） | pending | manual unverified | 最终 demo 视频依赖真实 Godot 窗口人工录制；录屏脚本已落 `docs/demo_capture_plan.md` |
 | blog_main | 技术博客主文（少而深 framing + Motivational Delegation + Process Fidelity 数据） | done | command checked | 初稿已落 `paper/blog_main.md`；`showcase:check` 覆盖 C2/C3/C4 口径一致性，主人仍可继续做文风润色 |
-| readme_entry | README 顶部「快速看 demo / 快速看研究」两条 30 秒入口 | done | command checked | `README.md` 顶部已收敛为 watch / research 两条入口；证据基线降为补充说明 |
+| readme_entry | README 顶部 30 秒求职展示入口 | done | command checked | `README.md` 顶部已收敛为 case-card-first 路径；`docs/portfolio_case_cards.md` 成为外部读者第一跳，证据基线降为附录说明 |
 | shareable_assets | ≥1 组对外可分享的 GIF / 截图集 | pending | manual unverified | GIF / 截图依赖真实 Godot 窗口人工捕获 |
 | figure_coverage | claim_evidence_matrix 的 Figure/Table target ≥70% 已渲染 | done | command checked | 已渲染 Figure 1/2/3/4 + 多 Table（`paper/generated/`）；`showcase:check` 回填覆盖率 ≥70% |
 
@@ -34,7 +34,7 @@ scope: 展示层收口追踪（P_demo.exit 五条 exit criteria 状态与人工�
 | deliverable_id | requirement | verification_state | manual_gate | notes |
 | --- | --- | --- | --- | --- |
 | capture_plan | R1 | command checked | no | 录屏脚本 / shot list / 启动命令 / caption stack 已落 `docs/demo_capture_plan.md`；example 测试覆盖 duration 20–60s / subject ≥5s / caption ≥3s 判据 |
-| readme_dual_entry | R7 | command checked | no | `README.md` 顶部已收敛为 Watch / Research 两条入口；证据基线作为补充说明 |
+| readme_dual_entry | R7 | command checked | no | `README.md` 顶部已收敛为 case-card-first 路径；证据基线作为附录说明 |
 | blog_main_article | R8 | command checked | no | `paper/blog_main.md` 初稿已落地（framing + Motivational Delegation + Process Fidelity）；口径一致性由 `showcase:check` 扫描 |
 | trace_walkthrough | R5 | command checked | no | `paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md` 已落地（六阶段 + 反事实 + promoted with caveat artifact 引用），并纳入 C2/C3/C4 promoted with caveat 口径扫描 |
 | figure_table_render | R6 | command checked | no | `paper/generated/` 已渲染 Figure 1/2/3/4 + 多 Table；覆盖率由 `showcase:check` 回填 |

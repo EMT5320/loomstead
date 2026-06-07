@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: project-status
-last_verified: 2026-06-06
+last_verified: 2026-06-07
 startup_load: after-agent-context
 source_of_truth: true
 scope: 当前实现事实、验证状态、人工验收边界
@@ -56,7 +56,7 @@ scope: 当前实现事实、验证状态、人工验收边界
 - **Human Rating blind pilot**：2026-06-02 评估为前提不成立（baseline 不产生行为分化），不执行；详见 §2.1 与 `docs/human_rating_pilot_gate.md`。该缺口不再追补。
 - **真实 Godot 窗口复验**：最新 Trace 导航 / 中断布局补修代码已落地，真实窗口复验**暂缓**到后端 / Eval 主线稳定后集中处理（治理协议 §3.1：避免每次新增字段后反复进入中间态窗口验收和小修循环）。
 - **Phase 4 候选**：gossip 真扩散、玩家行为传播、emergence scenario 仍未启动。
-- **求职展示线**：README 顶部已收敛为 Watch / Research 两条入口；`paper/blog_main.md`、`docs/demo_capture_plan.md`、`docs/showcase_manifest.md`、`scripts/check_showcase.py` 已落地；Figure/Table 覆盖率已由 Figure 4 SVG 补到 70%（`showcase:check` 通过）。最终视频 / GIF / 截图与真实 Godot 窗口复验由主人暂缓，仍是 `manual unverified`。
+- **求职展示线**：README 顶部已收敛为 case-card-first 入口；`docs/portfolio_case_cards.md`、`paper/blog_main.md`、`docs/demo_capture_plan.md`、`docs/showcase_manifest.md`、`scripts/check_showcase.py` 已落地；Figure/Table 覆盖率已由 Figure 4 SVG 补到 70%（`showcase:check` 通过）。最终视频 / GIF / 截图与真实 Godot 窗口复验由主人暂缓，仍是 `manual unverified`。
 - **Auditable Agents 收束结果**：Phase B deterministic suite、全 5 场景真实 LLM smoke 与 supplement 已完成；保留为 `docs/portfolio_story.md` 的 Case C（Failure Analysis）。后续不再扩人工 reviewer、跨模型、多 seed 或新 audit scenario；仅维护命令、artifact 链接与展示文案。禁止宣称 enterprise-ready、完全因果证明或跨域有效性已成立。
 
 ## 4. 开发前硬约束
@@ -115,4 +115,4 @@ git diff --check
 
 ## 7. 下一步
 
-当前顺序：Loomstead 冻结为 Agent Behavior Observatory portfolio 工程项目；README、`docs/portfolio_story.md`、`docs/portfolio_capability_map.md`、`paper/blog_main.md` 是展示入口。后续仅允许包装层、小修复、坏链接维护或最终截图/GIF 手工采集；不再继续研究实验、人工评分、指标扩展或 Godot 前端调优循环。主力继续转向 `AlgoCoach-Flywheel` 或更清晰的新研究线。
+当前顺序：Loomstead 冻结为 Agent Behavior Observatory portfolio 工程项目；README、`docs/portfolio_case_cards.md`、`docs/portfolio_story.md`、`docs/portfolio_capability_map.md`、`paper/blog_main.md` 是展示入口。后续仅允许包装层、小修复、坏链接维护或最终截图/GIF 手工采集；不再继续研究实验、人工评分、指标扩展或 Godot 前端调优循环。主力继续转向 `AlgoCoach-Flywheel` 或更清晰的新研究线。
