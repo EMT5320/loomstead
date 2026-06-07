@@ -91,6 +91,7 @@ npm.cmd run eval:archive:drift
 npm.cmd run research:evidence:check
 npm.cmd run portfolio:snippets
 npm.cmd run portfolio:check
+npm.cmd run portfolio:verify
 npm.cmd run client:env
 npm.cmd run client:run:check
 npm.cmd run llm:smoke

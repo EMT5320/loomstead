@@ -147,6 +147,7 @@ npm.cmd run eval:audit:llm-contract:full
 npm.cmd run eval:archive:check
 npm.cmd run portfolio:snippets
 npm.cmd run portfolio:check
+npm.cmd run portfolio:verify
 git diff --check
 ```
 

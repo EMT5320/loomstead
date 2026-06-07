@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Callable
+
+from build_portfolio_evidence_snippets import OUTPUT_PATH, build_markdown
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -137,6 +140,17 @@ TEXT_EXPECTATIONS: dict[str, tuple[str, ...]] = {
     ),
 }
 
+MARKDOWN_LINK_SOURCE_FILES = (
+    "README.md",
+    "docs/portfolio_case_cards.md",
+    "docs/portfolio_evidence_snippets.md",
+    "docs/portfolio_story.md",
+    "docs/portfolio_capability_map.md",
+)
+
+_MARKDOWN_LINK_PATTERN = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
+_FENCED_CODE_BLOCK_PATTERN = re.compile(r"```.*?```", re.DOTALL)
+
 
 def relative(path: Path) -> str:
     """把绝对路径转成仓库相对路径，方便报告稳定输出。"""
@@ -187,6 +201,63 @@ def read_text(path: Path, errors: list[str]) -> str:
     except OSError as exc:
         errors.append(f"cannot read text: {relative(path)} -> {exc}")
     return ""
+
+
+def strip_fenced_code_blocks(text: str) -> str:
+    """移除 fenced code block，避免把代码样例里的括号误判为 Markdown 链接。"""
+
+    return _FENCED_CODE_BLOCK_PATTERN.sub("", text)
+
+
+def is_external_link(target: str) -> bool:
+    """判断链接是否属于外部 URL、邮件或纯锚点。"""
+
+    lowered = target.lower()
+    return (
+        lowered.startswith(("http://", "https://", "mailto:"))
+        or target.startswith("#")
+        or not target
+    )
+
+
+def resolve_markdown_link(source_file: Path, target: str) -> Path:
+    """按 Markdown 文件所在目录解析相对链接。"""
+
+    clean_target = target.split("#", 1)[0]
+    return (source_file.parent / clean_target).resolve()
+
+
+def check_markdown_links() -> list[str]:
+    """扫描显式 Markdown 链接，确保对外入口没有坏链接。"""
+
+    errors: list[str] = []
+    for rel_path in MARKDOWN_LINK_SOURCE_FILES:
+        source_file = ROOT / rel_path
+        if not source_file.exists():
+            continue
+        text = strip_fenced_code_blocks(read_text(source_file, errors))
+        for match in _MARKDOWN_LINK_PATTERN.finditer(text):
+            target = match.group(1).strip()
+            if is_external_link(target):
+                continue
+            resolved = resolve_markdown_link(source_file, target)
+            if not resolved.exists():
+                errors.append(f"{rel_path} has broken Markdown link: {target}")
+    return errors
+
+
+def check_snippets_current() -> list[str]:
+    """检查 snippets 是否与当前源 artifact 生成结果一致。"""
+
+    errors: list[str] = []
+    if not OUTPUT_PATH.exists():
+        errors.append(f"missing generated snippets: {OUTPUT_PATH.relative_to(ROOT).as_posix()}")
+        return errors
+    current = read_text(OUTPUT_PATH, errors)
+    expected = build_markdown()
+    if current != expected:
+        errors.append("docs/portfolio_evidence_snippets.md is stale; run npm.cmd run portfolio:snippets")
+    return errors
 
 
 def check_text_expectations() -> list[str]:
@@ -278,7 +349,9 @@ def main() -> int:
     path_checks, path_errors = check_required_paths()
     text_errors = check_text_expectations()
     json_errors = check_json_artifacts()
-    errors = path_errors + text_errors + json_errors
+    markdown_link_errors = check_markdown_links()
+    snippets_errors = check_snippets_current()
+    errors = path_errors + text_errors + json_errors + markdown_link_errors + snippets_errors
     report = {
         "ok": not errors,
         "check": "portfolio.entry",
@@ -286,6 +359,8 @@ def main() -> int:
         "warnings": [],
         "paths": [asdict(check) for check in path_checks],
         "textExpectationFiles": sorted(TEXT_EXPECTATIONS),
+        "markdownLinkFiles": list(MARKDOWN_LINK_SOURCE_FILES),
+        "snippetsCurrent": not snippets_errors,
     }
     print(json.dumps(report, ensure_ascii=False, indent=2))
     return 1 if errors else 0

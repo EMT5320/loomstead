@@ -52,6 +52,7 @@
     "showcase:check": "python scripts/check_showcase.py",
     "portfolio:check": "python scripts/check_portfolio_entry.py",
     "portfolio:snippets": "python scripts/build_portfolio_evidence_snippets.py",
+    "portfolio:verify": "npm.cmd run portfolio:snippets && npm.cmd run portfolio:check && npm.cmd run showcase:check",
     "paper:tooling": "python scripts/check_paper_tooling.py --json",
     "paper:tables": "python scripts/paper_extract_eval_tables.py",
     "paper:figures": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/render_mermaid_figures.ps1",
