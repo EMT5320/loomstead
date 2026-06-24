@@ -190,3 +190,7 @@ Committed defaults are designed to run without secrets. Local model config and A
 - New schemas, trace fields, eval artifacts, or Godot consumer fields start with a data contract.
 - Unverified behavior is tracked as pending or manually unverified.
 - Secrets, local absolute paths, unregistered assets, and temporary runtime files stay outside committed files.
+
+## License
+
+MIT. See [`LICENSE`](LICENSE).
