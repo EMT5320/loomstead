@@ -24,6 +24,14 @@ Read in this order:
 4. **Read the short story**: [docs/portfolio_story.md](docs/portfolio_story.md) freezes the Agent Behavior Observatory positioning and honest boundaries.
 5. **Use appendices only when needed**: [paper/blog_main.md](paper/blog_main.md), [paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md](paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md), and the audit supplement provide deeper evidence.
 
+### Agent interview route
+
+Use the same case-card path as an interview translation layer:
+
+- **Trace schema design**: Card A explains why `sourceEventIds`, `traceRefs`, `candidateScores`, and score-source links exist: a final action needs a navigable path back to evidence, alternatives, and ranking reasons.
+- **Evidence-removal replay**: Card B explains observability through controlled before/after artifacts. The replay records when removed evidence changes score, selected tool, or verdict, and when it has no effect.
+- **High-risk audit**: Card C explains the shared abstraction with ContextGuard-style evidence-gated execution: required evidence, policy verdict, safe fallback, and counterfactual evidence removal.
+
 ### Quick proof points
 
 - Process artifact: 4 scenarios x 5 seeds, aggregate `causal_trace_coverage=1.0`, `required_process_coverage=1.0`, `counterfactual_tool_selection_change_rate=0.375`.

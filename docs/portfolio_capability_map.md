@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: portfolio-showcase
-last_verified: 2026-06-07
+last_verified: 2026-06-29
 startup_load: on-demand
 source_of_truth: true
 scope: Loomstead 求职展示 capability map：Agent Behavior Observatory、能力栈、case cards、面试讲法、诚实边界
@@ -30,6 +30,16 @@ scope: Loomstead 求职展示 capability map：Agent Behavior Observatory、能�
 | **Failure analysis / audit artifacts** | `backend/app/eval/audit.py`、`audit.go_no_go.v1`、counterfactual evidence removal、v2 reviewer packet、real LLM smoke supplement。 | Agent reliability / safety tooling / backend systems |
 | **Full-stack integration** | Python Agent Server + Godot 4 client + Web Debug + OpenAI-compatible provider + schema registry。 | Full-stack / backend / systems engineer |
 
+## 2.1 Agent 面试翻译矩阵
+
+| 面试追问 | Loomstead 的回答 | 首选证据 |
+|---|---|---|
+| Trace schema 为什么这样设计？ | 从 selected action 追到 source evidence、trace span、候选分数和分数来源。 | Card A、`phase2.trace.v1`、`sourceEventIds`、`traceRefs`、`candidateScores` |
+| Replay 如何说明可观测性？ | 固定 scenario / seed 后移除 evidence，记录 score、selected tool 或 verdict 的变化与无变化。 | Card B、`counterfactual_replay.jsonl`、summary aggregate |
+| 高风险工具 audit 如何讲？ | required evidence -> policy verdict -> safe fallback -> counterfactual removal，形成可复查执行前门禁。 | Card C、audit reviewer packet、LLM supplement |
+| 与 AlgoCoach / ContextGuard 如何连起来？ | AlgoCoach 体现 verifier-backed eval discipline；ContextGuard 体现 evidence-gated execution；Loomstead 体现 agent behavior observability。 | portfolio story、capability map、case cards |
+| 哪些 claim 已降级？ | 保留工程展示、explainability、failure analysis；关闭 believability、完整因果和企业级安全强结论。 | honest boundaries、portfolio brief |
+
 ## 3. 三个展示案例
 
 第一跳统一使用 `docs/portfolio_case_cards.md`；短证据包统一使用 `docs/portfolio_evidence_snippets.md`；本节只做 capability map 索引。
@@ -55,9 +65,9 @@ scope: Loomstead 求职展示 capability map：Agent Behavior Observatory、能�
 ## 4. 面试 talking points
 
 - **系统设计**：后端持有权威世界状态，Godot 做表现层，agent loop 与工具执行在 Python runtime 内有清晰边界。
-- **可观测性设计**：决策时写 trace，trace 带 `sourceEventIds` 和 `traceRefs`，后续 Debug / Eval / Audit 共用同一套证据语言。
+- **可观测性设计**：决策时写 trace，trace 带 `sourceEventIds`、`traceRefs`、候选分数和分数来源，后续 Debug / Eval / Audit 共用同一套证据语言。
 - **评测工程**：每条 evidence、baseline、export 都有 manifest 和 archive 检查，支持复查。
-- **研究素养**：主动降级 claim，保留能证明的工程事实，停止扩张难以验证的 believability / safety 论断。
+- **研究素养**：主动降级 claim，保留能证明的工程事实，停止扩张难以验证的 believability / safety 论断；这条线可与 AlgoCoach 的 claim discipline 形成统一个人品牌。
 - **项目复盘**：最终把复杂系统从“论文证明型”收束为“agent behavior observability 展示型”，让资产更适合面试和工程讨论。
 
 ## 5. 诚实边界

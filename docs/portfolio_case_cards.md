@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: portfolio-showcase
-last_verified: 2026-06-07
+last_verified: 2026-06-29
 startup_load: on-demand
 source_of_truth: true
 scope: Loomstead 对外求职展示三张 case card：读者问题、展示路径、30 秒讲法与诚实边界
@@ -55,6 +55,10 @@ npm.cmd run portfolio:verify
 
 > Loomstead 记录最终动作及其证据路径。NPC 的动机、记忆、关系、候选工具分数和结果观察都会进入 `phase2.trace.v1`。调试时可以从 selected action 反向跳到 `sourceEventIds` 与 `traceRefs`，定位哪些证据影响了行为。
 
+### 面试翻译
+
+这张卡对应 runtime trace schema 设计。面试中可强调：`sourceEventIds` 负责证据归因，`traceRefs` 负责跳转复查，`candidateScores` 暴露替代动作，`scoreComponentSourceRefs` 把分数拆到具体证据。它回答的工程问题是：一个 Agent 行为如何从最终动作回溯到动机、记忆、关系和工具约束。
+
 ### 叙事桥接：Bram 近似平分案例
 
 当前 promoted artifact 中，Bram 在伤害记忆仍存在时选择 `social.chat_with`，分数为 `0.956874`，领先 `social.give_gift` 的 `0.902323`。单独移除 relationship edges 后，选择仍是 `social.chat_with`（`0.893874` vs `0.886573`）；单条 replay 显示移除 harm memory 也不改变选择。移除后续 interaction memory 时，选择翻转为 `social.give_gift`。这个例子把讲法从字段清单推进到可复查问题：哪些证据组合改变了候选动作排序？
@@ -95,6 +99,10 @@ npm.cmd run portfolio:verify
 
 > Loomstead 的 eval 层把复杂行为转成 before/after 对照。Full 条件下保留完整 evidence；移除 memory、relationship 或 evidence link 后，artifact 会记录 score、selected tool 或 verdict 是否变化。指标用于索引复查，case comparison 承担第一屏解释。
 
+### 面试翻译
+
+这张卡对应 observability proof。面试中可强调：replay 固定 scenario / seed，只改变 evidence 条件，输出 score、selected tool 或 verdict 的差异；无变化同样记录，避免把单例故事包装成强因果结论。它证明的是证据依赖可以被复查和定位。
+
 ### Aggregate 诚实补注
 
 全量 process suite 的 aggregate `counterfactual_tool_selection_change_rate` 为 `0.375`（n=`20`）。对照 baseline 中，`no_relationship_edge` 为 `0.25`，`no_subjective_memory` 为 `0.0`。因此 Card B 适合展示 evidence / relationship / trace 链路的敏感性；Branna 单例是可读故事入口，aggregate 数字用于约束外推范围。
@@ -134,6 +142,10 @@ npm.cmd run portfolio:verify
 ### 30 秒讲法
 
 > Audit harness 把高风险工具调用拆成 required evidence、policy verdict 和 counterfactual evidence removal。Full 条件下证据齐全，高风险工具可以被允许；No Policy Evidence 条件下，系统转向 safe review tool。真实 `CloudApiProvider` smoke 覆盖 5 个场景 x 2 evidence 条件，10/10 cases pass。
+
+### 面试翻译
+
+这张卡对应 tool-risk audit。面试中可强调：高风险动作先检查 required evidence，再生成 policy verdict；缺 policy evidence 时进入 safe review tool；counterfactual removal 用来复查 verdict 对证据的依赖。它与 ContextGuard 的 evidence-gated execution 共享同一套抽象。
 
 ### 关键证据
 

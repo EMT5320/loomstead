@@ -46,7 +46,7 @@
 > 
 > 展示时我用三张 case card：第一，解释 NPC 为什么选中某个动作；第二，展示移除 memory / relationship / evidence link 后 score 或 selected tool 如何变化；第三，展示高风险工具调用在缺少 policy evidence 时如何转向 safe review tool。  
 > 
-> 这个项目也经历了研究 claim 收束：我没有继续宣称 human-validated believability，而是把证据限定在 explainability、metric-level guardrail 和 failure-analysis。最终成果是一个能展示复杂 agent 系统设计、trace 设计、eval artifact 管理和诚实 scope 控制的求职工程项目。
+> 这个项目也经历了研究 claim 收束：human-validated believability 已退出主张范围，证据限定在 explainability、metric-level guardrail 和 failure-analysis。最终成果是一个能展示复杂 agent 系统设计、trace 设计、eval artifact 管理和诚实 scope 控制的求职工程项目。
 
 ## 4. 面试 5 分钟深讲结构
 
@@ -57,6 +57,32 @@
 5. **Eval 与 artifact**：process suite、stability、domain adapter、robustness、archive/promote；用 promoted artifact 作为稳定证据源。
 6. **Audit spike**：高风险工具场景、required evidence、policy verdict、counterfactual evidence removal、LLM contract-following smoke。
 7. **收束决策**：human-believability pilot 前提不足，研究强 claim 关闭；项目转为工程展示，保留能复查的 trace/eval/audit 资产。
+
+## 4.1 Agent 面试深挖故事
+
+### 4.1.1 Trace schema 为什么这样设计
+
+面试问题：为什么不只记录最终动作和日志文本？
+
+推荐回答：复杂 Agent 的调试需要同时看到动作、候选项、证据来源和可跳转位置。`sourceEventIds` 说明当前决策受哪些历史事件或证据影响；`traceRefs` 让读者从结论跳回 decision / memory / heuristic / budget span；`candidateScores` 暴露被放弃的候选工具；`scoreComponentSourceRefs` 把分数拆到关系、记忆、工具定义和 heuristic 证据。这样设计后，面试时可以从 selected action 反向解释“为什么是这个动作”和“哪些证据改变了排序”。
+
+### 4.1.2 Evidence-removal replay 证明了什么
+
+面试问题：counterfactual replay 如何支持可观测性？
+
+推荐回答：它把复杂行为变成同一 scenario / seed 下的 before-after 对照。Full 条件保留完整 evidence；移除 memory、relationship 或 evidence link 后，artifact 记录 score、selected tool 或 verdict 的变化，也记录没有变化的情况。Branna 单例提供可读故事，aggregate `counterfactual_tool_selection_change_rate=0.375` 用来约束外推范围。这个证据支持的是“行为依赖关系可复查”，不升级成完整因果证明。
+
+### 4.1.3 High-risk audit 与 ContextGuard 的共同抽象
+
+面试问题：Loomstead audit 和 ContextGuard evidence-gated execution 有什么共同点？
+
+推荐回答：两者都把 Agent 动作执行前的信任判断拆成四件事：required evidence 是否齐全、policy verdict 如何产生、缺证据时进入哪个 safe fallback、移除关键 evidence 后动作或 verdict 是否变化。ContextGuard 面向 RAG / tool execution 的引用与护栏策略，Loomstead 面向 runtime trace / audit artifact；共同卖点是 evidence-gated execution 和可复查 failure analysis。
+
+### 4.1.4 哪些 claim 主动降级
+
+面试问题：项目为什么最终冻结为 portfolio engineering showcase？
+
+推荐回答：复查 evidence 后，human-validated believability、完整 causal proof、enterprise-ready safety 都缺少对应验证，因此全部保留为边界。保留的强项是可复查工程事实：agent runtime、trace schema、eval/export、counterfactual replay、audit packet 和 claim discipline。这个决策展示的是我会判断 Agent 系统在什么证据下可信，在什么证据下需要降级。
 
 ## 5. 技术架构回忆
 
@@ -187,7 +213,7 @@ Director / Event Skill
 简历价值：
 
 - 说明项目有真实运行 surface。
-- 说明不是纯文档或纯 notebook。
+- 说明项目具备真实运行 surface。
 
 ### Phase 2：Agent runtime 骨架
 
