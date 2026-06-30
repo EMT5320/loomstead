@@ -1,5 +1,7 @@
 # Loomstead 跨助手协作入口
 
+> **对外读者说明**：本文件及 `docs/context_governance.md`、`docs/agent_context.md`、`docs/assistant_continuity.md` 共同构成一套 **AI 辅助开发治理协议**——定义多 AI 助手协作时的文档分层、改动权限、上下文冷启动顺序和验证纪律。它是项目工程实践的一部分，展示如何让多个 AI agent 在同一代码库上可控协作而不互相覆盖。如果只想看项目本身的展示内容，请从 [`README.md`](README.md) 或 [`docs/portfolio_case_cards.md`](docs/portfolio_case_cards.md) 进入。
+
 本文是 `Loomstead` 所有 AI 助手（Codex / Claude Code / Kiro / 浮浮酱等）的唯一指令入口。其他指令文档（`CLAUDE.md`、`.claude/rules/*.md`）均为薄适配层，规则冲突时以本文与 `docs/context_governance.md` 为准。
 
 ## 1. 项目一句话定位
