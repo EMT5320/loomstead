@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -163,7 +164,7 @@ def build_markdown() -> str:
         "---",
         "status: active",
         "owner_lane: portfolio-showcase",
-        "last_verified: 2026-06-07",
+        "last_verified: {today}".format(today=date.today().isoformat()),
         "startup_load: on-demand",
         "source_of_truth: true",
         "scope: Loomstead 三张 portfolio case card 的轻量 evidence snippets",

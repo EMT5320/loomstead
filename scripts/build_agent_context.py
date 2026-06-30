@@ -59,7 +59,7 @@ MANUAL_GATE_MAX_ITEMS = 10
 
 # brief / resume 提取依赖的标题锚点，必须与目标文档保持同步，避免提取静默退化为 fallback。
 BRIEF_RESUME_HEADINGS = [
-    ("docs/project_vision.md", "## 一句话定位"),
+    ("docs/agent_context.md", "## 2. 一句话定位"),
     ("docs/current_status.md", "## 1. 当前阶段"),
     ("docs/current_status.md", "## 5. 人工验收"),
     ("docs/agent_context.md", "## 3. 当前阶段"),
@@ -464,10 +464,9 @@ def build_doc_inventory() -> str:
 def build_brief() -> str:
     """基于现有文档生成轻量 brief 草稿。"""
     agent_context = read_text("docs/agent_context.md")
-    vision = read_text("docs/project_vision.md")
     status = read_text("docs/current_status.md")
 
-    one_liner = extract_section_after_heading(vision, "## 一句话定位", max_lines=1)
+    one_liner = extract_section_after_heading(agent_context, "## 2. 一句话定位", max_lines=1)
     phase_items = extract_bullet_section(status, "## 1. 当前阶段", max_items=6)
     next_steps = extract_bullet_section(agent_context, "## 5. 最近下一步", max_items=5)
     collaboration_notes = extract_bullet_section(agent_context, "## 8. 协作约束", max_items=5)
@@ -508,13 +507,12 @@ def build_brief() -> str:
 def build_resume() -> str:
     """生成跨环境和多助手接续用的短摘要。"""
     agent_context = read_text("docs/agent_context.md")
-    vision = read_text("docs/project_vision.md")
     status = read_text("docs/current_status.md")
 
     branch = run_git_command(["branch", "--show-current"]) or "unknown"
     dirty = run_git_command(["status", "--short"])
     recent_commits = run_git_command(["log", "--oneline", "-3"])
-    one_liner = extract_section_after_heading(vision, "## 一句话定位", max_lines=1)
+    one_liner = extract_section_after_heading(agent_context, "## 2. 一句话定位", max_lines=1)
     current_state = extract_bullet_section(agent_context, "## 3. 当前阶段", max_items=5)
     next_steps = extract_bullet_section(agent_context, "## 5. 最近下一步", max_items=4)
     manual_gates = extract_bullet_section(status, "## 5. 人工验收", max_items=MANUAL_GATE_MAX_ITEMS)

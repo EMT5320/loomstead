@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: portfolio-showcase
-last_verified: 2026-06-07
+last_verified: 2026-06-30
 startup_load: on-demand
 source_of_truth: true
 scope: Loomstead 最终展示叙事：Agent Behavior Observatory 与 case-card-first 对外入口
