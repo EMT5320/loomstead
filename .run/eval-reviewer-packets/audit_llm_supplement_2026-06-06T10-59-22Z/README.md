@@ -6,7 +6,7 @@
 
 ## Source Run
 
-- source run: `D:\Work\fun-projects-lab\projects\ai-agent-town-lab\.run\eval-runs\audit_llm_smoke_2026-06-06T10-59-09Z`
+- source run: `.run/eval-runs/audit_llm_smoke_2026-06-06T10-59-09Z`
 - createdAt: `2026-06-06T10:59:09+00:00`
 - providerMode: `cloud`
 - passed: `10/10`

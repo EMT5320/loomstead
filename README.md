@@ -1,20 +1,31 @@
 # Loomstead
 
-![Status: portfolio freeze](https://img.shields.io/badge/status-portfolio_freeze-6f42c1)
 ![Focus: agent observability](https://img.shields.io/badge/focus-agent_observability-0366d6)
 ![Surface: Godot town runtime](https://img.shields.io/badge/surface-Godot_town_runtime-22863a)
+![License: MIT](https://img.shields.io/badge/license-MIT-blue)
 
 > **An observability-first multi-agent runtime for tracing, debugging, and auditing autonomous behavior in a simulated town.**
 
-`Loomstead` uses a playable Godot town as the live surface for complex agent behavior. The portfolio story centers on the engineering stack behind that surface: an authoritative Python agent runtime, structured traces, evidence-linked decisions, eval exports, counterfactual replay, and audit packets.
+Loomstead uses a playable Godot town as the live surface for complex agent behavior. The engineering stack behind that surface is an authoritative Python agent runtime with structured traces, evidence-linked decisions, eval exports, counterfactual replay, and audit packets — turning opaque agent behavior into inspectable, replayable, auditable artifacts.
 
-The strongest concise claim is:
+## Key Metrics
 
-```text
-I built a full-stack agent behavior observatory for debugging complex agent behavior.
-```
+| Metric | Value |
+|---|---|
+| Process Fidelity coverage | 4 scenarios × 5 seeds |
+| `causal_trace_coverage` | 1.0 |
+| `required_process_coverage` | 1.0 |
+| `counterfactual_tool_selection_change_rate` | 0.375 |
+| Bram decision (full evidence) | `chat_with 0.956874` vs `give_gift 0.902323` |
+| `no_relationship_edge` change rate | 0.25 |
+| `no_subjective_memory` change rate | 0.0 |
+| LLM evidence records | 100 |
+| Audit deterministic suite | 5 scenarios × 5 baselines |
+| Real provider audit smoke | 5 scenarios × 2 evidence conditions, 10/10 passed |
+| Smoke cost / tokens | 0.00351806 USD / 18,348 tokens |
+| Assets manifest | 55 items |
 
-## 30-second portfolio path
+## Quick Tour
 
 Read in this order:
 
@@ -24,13 +35,11 @@ Read in this order:
 4. **Read the short story**: [docs/portfolio_story.md](docs/portfolio_story.md) freezes the Agent Behavior Observatory positioning and honest boundaries.
 5. **Use appendices only when needed**: [paper/blog_main.md](paper/blog_main.md), [paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md](paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md), and the audit supplement provide deeper evidence.
 
-### Agent interview route
+### What the case cards demonstrate
 
-Use the same case-card path as an interview translation layer:
-
-- **Trace schema design**: Card A explains why `sourceEventIds`, `traceRefs`, `candidateScores`, and score-source links exist: a final action needs a navigable path back to evidence, alternatives, and ranking reasons.
-- **Evidence-removal replay**: Card B explains observability through controlled before/after artifacts. The replay records when removed evidence changes score, selected tool, or verdict, and when it has no effect.
-- **High-risk audit**: Card C explains the shared abstraction with ContextGuard-style evidence-gated execution: required evidence, policy verdict, safe fallback, and counterfactual evidence removal.
+- **Trace schema design**: Card A shows why `sourceEventIds`, `traceRefs`, `candidateScores`, and score-source links exist — a final action has a navigable path back to evidence, alternatives, and ranking reasons.
+- **Evidence-removal replay**: Card B shows observability through controlled before/after artifacts. The replay records when removed evidence changes score, selected tool, or verdict, and when it has no effect.
+- **High-risk audit**: Card C shows the shared abstraction with ContextGuard-style evidence-gated execution: required evidence, policy verdict, safe fallback, and counterfactual evidence removal.
 
 ### Quick proof points
 
@@ -61,6 +70,22 @@ Show the audit supplement: full evidence allows a high-risk tool; missing policy
 ## What this project demonstrates
 
 ### 1. Agent runtime architecture
+
+```mermaid
+flowchart LR
+  Godot["Godot client<br/>(live surface)"] <-->|HTTP| Server["Python Agent Server<br/>(authoritative world state)"]
+  Web["Web Debug / research console"] <-->|HTTP| Server
+  Server --> Motivation["MotivationEngine"]
+  Server --> Capability["CapabilityRegistry"]
+  Server --> Arbitration["ArbitrationLayer"]
+  Server --> Tool["ToolExecutor"]
+  Server --> Result["ResultObserver"]
+  Server --> Memory["SubjectiveMemoryStore"]
+  Server --> Relation["RelationshipEdgeStore"]
+  Server --> Heuristic["HeuristicLibrary"]
+  Server --> Eval["eval pipeline<br/>(process / stability / domain / robustness / counterfactual replay)"]
+  Server --> Audit["audit harness<br/>(5 scenarios x 5 baselines, evidence removal, reviewer packet)"]
+```
 
 The active Phase 2 decision path is:
 
@@ -119,15 +144,12 @@ Latest useful audit artifacts:
 .run/eval-reviewer-packets/audit_llm_supplement_2026-06-06T10-59-22Z
 ```
 
-Use this as a failure-analysis case with a narrow scope.
+## Project Status & Scope
 
-## Honest boundaries
-
-- Loomstead is frozen as a portfolio engineering project.
-- Human-validated believability is out of scope.
-- Enterprise-ready AI safety and complete causal proof are out of scope.
-- The audit spike supports bounded feasibility and failure-analysis storytelling.
-- Final video / GIF / screenshots are optional manual artifacts; the current reusable package is the case-card + trace + audit packet path.
+- **Status**: feature-complete engineering showcase. The runtime, eval pipeline, and audit harness are stable and reproducible — `npm.cmd run portfolio:verify` checks the evidence chain end to end.
+- **Process Fidelity**: the evidence supports metric-level and explainability-level statements. Human-validated believability, enterprise-ready AI safety, and complete causal proof are out of scope.
+- **Audit spike**: supports feasibility and failure-analysis storytelling over a bounded scenario set.
+- **Visuals**: screenshots and GIFs are optional manual add-ons; the reusable package is the case-card + trace + audit-packet path.
 
 ## Local run
 

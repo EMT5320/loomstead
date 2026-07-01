@@ -1,5 +1,7 @@
 # Loomstead Portfolio Brief
 
+> Internal memo — the author's job-search prep notebook (resume bullets, interview talking tracks, development recall). Not the public project entry point; see [README.md](README.md) for the project overview.
+
 > 用途：这份文档是 Loomstead 冻结后的最终求职展示备忘。它同时服务三件事：简历 bullet、面试口述、未来重新回忆项目开发过程。
 
 ## 0. 最终一句话

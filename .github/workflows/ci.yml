@@ -1,0 +1,37 @@
+name: Loomstead CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    name: Static check and portfolio entry verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      # Run the Python entry points directly so the CI does not depend on
+      # the Windows-only `npm.cmd` aliases used in package.json scripts.
+      - name: Compile and static check
+        run: |
+          python -m compileall -q backend scripts
+          python scripts/check.py
+
+      - name: Portfolio entry check
+        run: |
+          python scripts/check_portfolio_entry.py

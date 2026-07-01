@@ -23,14 +23,14 @@ Use this route for new sources:
 3. Verify the item exists in Zotero:
 
 ```powershell
-python C:/Users/Administrator/.codex/plugins/cache/openai-curated/zotero/6188456f/skills/zotero/scripts/zotero.py search "<title keyword>" --json
+python <zotero-cli-path>/zotero.py search "<title keyword>" --json
 ```
 
 4. Record the Zotero item key and planned BibTeX key in `paper/lit_review/reading_queue.md`.
 5. Export or sync BibTeX into both bibliography files until a single-source export path is automated:
 
 ```powershell
-python C:/Users/Administrator/.codex/plugins/cache/openai-curated/zotero/6188456f/skills/zotero/scripts/zotero.py export-bibtex --out paper/references.bib
+python <zotero-cli-path>/zotero.py export-bibtex --out paper/references.bib
 Copy-Item -LiteralPath paper/references.bib -Destination paper/latex/references.bib
 ```
 

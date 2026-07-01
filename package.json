@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Narrative-primary explainable multi-agent runtime research environment.",
+  "description": "An observability-first multi-agent runtime for tracing, debugging, and auditing autonomous behavior.",
   "scripts": {
     "start": "python scripts/start_server.py",
     "check": "python scripts/check.py",

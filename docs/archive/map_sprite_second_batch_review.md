@@ -46,7 +46,7 @@ scope: second map-sprite review snapshot and promotion notes
 | `npc_kai_map_idle` | `ig_02b9e0c8567ffda2016a08023af430819092ee203392785a2d.png` | 红发、暖色披肩和乐手气质更明显，64px/32px 下主体完整。 |
 | `npc_bram_map_idle` | `ig_02b9e0c8567ffda2016a0802b9ec508190aa0e5866db954800.png` | 草帽、棕色工作服和农场主剪影清楚，修正了上一版木箱/几何块压过角色的问题。 |
 
-原始生成目录：`C:\Users\Administrator\.codex\generated_images\019e2f41-7101-72a1-b294-271937c83b81\`
+原始生成目录：`<local-generated-images-dir>/019e2f41-7101-72a1-b294-271937c83b81/`
 
 ## 64x64 / 32x32 检查
 
