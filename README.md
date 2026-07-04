@@ -47,6 +47,8 @@ Read in this order:
 - Bram story: `social.chat_with` wins with full evidence (`0.956874` vs `0.902323`); relationship-edge-only removal keeps the same selected tool; interaction-memory removal flips the replay to `social.give_gift`.
 - Audit artifact: real `CloudApiProvider` smoke covers 5 high-risk scenarios x 2 evidence conditions, 10/10 cases passed, cost `0.00351806` USD.
 
+![Trace Evidence Chain — provenance from events and evidence to final NPC action selection](paper/generated/figures/trace_evidence_chain_figure3.png)
+
 ## Three portfolio case cards
 
 ### Case A: Why did this NPC choose that action?
