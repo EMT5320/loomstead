@@ -149,7 +149,7 @@ Latest useful audit artifacts:
 ## Project Status & Scope
 
 - **Status**: feature-complete engineering showcase. The runtime, eval pipeline, and audit harness are stable and reproducible — `npm.cmd run portfolio:verify` checks the evidence chain end to end.
-- **Process Fidelity**: the evidence supports metric-level and explainability-level statements. Human-validated believability, enterprise-ready AI safety, and complete causal proof are out of scope.
+- **Process Fidelity**: the evidence supports metric-level and explainability-level statements. Human-validated believability is out of scope; enterprise-ready AI safety and complete causal proof are also out of scope.
 - **Audit spike**: supports feasibility and failure-analysis storytelling over a bounded scenario set.
 - **Visuals**: screenshots and GIFs are optional manual add-ons; the reusable package is the case-card + trace + audit-packet path.
 
