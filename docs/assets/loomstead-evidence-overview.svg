@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
+  <title id="title">Loomstead behavior evidence overview</title>
+  <desc id="desc">An agent behavior observatory linking a Godot surface to an authoritative runtime, traces, counterfactual replay, and audit artifacts.</desc>
+  <rect width="1200" height="620" fill="#f4f1e8"/>
+  <text x="54" y="50" fill="#4f6754" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="15" letter-spacing="2">LOOMSTEAD / AGENT BEHAVIOR OBSERVATORY</text>
+  <text x="54" y="82" fill="#1b2326" font-family="ui-sans-serif, system-ui, sans-serif" font-size="25" font-weight="700">From live behavior to traceable evidence and replayable differences</text>
+
+  <g font-family="ui-sans-serif, system-ui, sans-serif">
+    <rect x="42" y="126" width="292" height="182" fill="#fffdf8" stroke="#716a60"/>
+    <text x="62" y="155" fill="#4f6754" font-family="ui-monospace, monospace" font-size="12">LIVE SURFACE</text>
+    <text x="62" y="190" fill="#1b2326" font-size="21" font-weight="700">Godot town</text>
+    <text x="62" y="220" fill="#5f5a51" font-size="14">ShowcasePanel · Observer Dock</text>
+    <text x="62" y="248" fill="#5f5a51" font-size="14">NPC decisions under world pressure</text>
+    <text x="62" y="283" fill="#1b2326" font-size="14" font-weight="700">Presentation layer</text>
+
+    <path d="M334 217H442" stroke="#4f6754" stroke-width="3"/>
+    <path d="M432 209L446 217L432 225" fill="none" stroke="#4f6754" stroke-width="3"/>
+
+    <rect x="442" y="126" width="316" height="182" fill="#fffdf8" stroke="#716a60"/>
+    <text x="462" y="155" fill="#4f6754" font-family="ui-monospace, monospace" font-size="12">AUTHORITATIVE RUNTIME</text>
+    <text x="462" y="190" fill="#1b2326" font-size="21" font-weight="700">Python Agent Server</text>
+    <text x="462" y="220" fill="#5f5a51" font-size="14">Motivation → Tool → Result</text>
+    <text x="462" y="248" fill="#5f5a51" font-size="14">memory · relationships · arbitration</text>
+    <text x="462" y="283" fill="#1b2326" font-size="14" font-weight="700">State + decision boundary</text>
+
+    <path d="M758 217H866" stroke="#4f6754" stroke-width="3"/>
+    <path d="M856 209L870 217L856 225" fill="none" stroke="#4f6754" stroke-width="3"/>
+
+    <rect x="866" y="126" width="292" height="182" fill="#1b2326" stroke="#1b2326"/>
+    <text x="886" y="155" fill="#b7cab9" font-family="ui-monospace, monospace" font-size="12">ARTIFACT LAYER</text>
+    <text x="886" y="190" fill="#fffdf8" font-size="21" font-weight="700">Trace · Eval · Audit</text>
+    <text x="886" y="220" fill="#d9d2c6" font-size="14">sourceEventIds · traceRefs</text>
+    <text x="886" y="248" fill="#d9d2c6" font-size="14">replay · reviewer packet</text>
+    <text x="886" y="283" fill="#b7cab9" font-size="14" font-weight="700">Inspectable receipts</text>
+  </g>
+
+  <g font-family="ui-sans-serif, system-ui, sans-serif">
+    <text x="54" y="360" fill="#1b2326" font-size="15" font-weight="700">PROMOTED ARTIFACT / BRAM DECISION</text>
+    <line x1="54" y1="375" x2="1148" y2="375" stroke="#716a60"/>
+
+    <text x="54" y="416" fill="#5f5a51" font-size="13">FULL EVIDENCE</text>
+    <text x="54" y="447" fill="#1b2326" font-size="19" font-weight="700">chat_with 0.956874</text>
+    <text x="246" y="447" fill="#5f5a51" font-size="16">vs</text>
+    <text x="282" y="447" fill="#1b2326" font-size="19">give_gift 0.902323</text>
+
+    <text x="620" y="416" fill="#5f5a51" font-size="13">REMOVE INTERACTION MEMORY</text>
+    <text x="620" y="447" fill="#4f6754" font-size="19" font-weight="700">selection flips → give_gift</text>
+
+    <text x="54" y="498" fill="#5f5a51" font-size="13">AGGREGATE GUARDRAIL</text>
+    <text x="54" y="531" fill="#1b2326" font-size="16" font-weight="700">trace coverage 1.0 · required process 1.0 · selection change 0.375 · n=20</text>
+    <text x="54" y="565" fill="#5f5a51" font-size="13">100 LLM evidence records · audit smoke 5 scenarios × 2 conditions · 10/10 pass</text>
+  </g>
+
+  <text x="1148" y="592" fill="#4f6754" font-family="ui-monospace, monospace" font-size="12" text-anchor="end">engineering showcase · explainability / failure-analysis boundary</text>
+</svg>

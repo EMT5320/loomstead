@@ -4,50 +4,49 @@
 ![Surface: Godot town runtime](https://img.shields.io/badge/surface-Godot_town_runtime-22863a)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
 
-> **An observability-first multi-agent runtime for tracing, debugging, and auditing autonomous behavior in a simulated town.**
+> **Agent Behavior Observatory — a playable multi-agent runtime with structured traces, evidence-linked decisions, counterfactual replay, and audit artifacts.**
 
-Loomstead uses a playable Godot town as the live surface for complex agent behavior. The engineering stack behind that surface is an authoritative Python agent runtime with structured traces, evidence-linked decisions, eval exports, counterfactual replay, and audit packets — turning opaque agent behavior into inspectable, replayable, auditable artifacts.
+The Godot town is the live behavior surface. An authoritative Python runtime owns
+world state and agent decisions; trace, eval, replay, and reviewer packets turn
+those decisions into inspectable engineering receipts.
 
-## Key Metrics
+[See the three case cards](docs/portfolio_case_cards.md) ·
+[Open the compact evidence packet](docs/portfolio_evidence_snippets.md) ·
+[Map capabilities to interview signals](docs/portfolio_capability_map.md) ·
+[Review the honest boundary](docs/portfolio_story.md)
 
-| Metric | Value |
+<p align="center">
+  <img src="docs/assets/loomstead-evidence-overview.svg" alt="Loomstead architecture from Godot live surface through authoritative agent runtime to trace, replay, and audit artifacts" width="1100">
+</p>
+
+> The ranking and replay values above are derived from the committed promoted
+> artifact summarized in `docs/portfolio_evidence_snippets.md`; they support
+> explainability and failure-analysis claims only.
+
+## 10-second evidence ledger
+
+| Evidence surface | Receipt |
+|---|---:|
+| Process suite | 4 scenarios × 5 seeds |
+| Trace / required-process coverage | 1.0 / 1.0 |
+| Counterfactual selection change | 0.375 over n=20 |
+| Real-provider process evidence | 100 records |
+| Audit smoke | 5 scenarios × 2 evidence conditions · 10/10 pass |
+| Runtime surface | Godot 4.x + Python Agent Server |
+
+## Three questions the project answers
+
+| Reader question | Inspectable artifact |
 |---|---|
-| Process Fidelity coverage | 4 scenarios × 5 seeds |
-| `causal_trace_coverage` | 1.0 |
-| `required_process_coverage` | 1.0 |
-| `counterfactual_tool_selection_change_rate` | 0.375 |
-| Bram decision (full evidence) | `chat_with 0.956874` vs `give_gift 0.902323` |
-| `no_relationship_edge` change rate | 0.25 |
-| `no_subjective_memory` change rate | 0.0 |
-| LLM evidence records | 100 |
-| Audit deterministic suite | 5 scenarios × 5 baselines |
-| Real provider audit smoke | 5 scenarios × 2 evidence conditions, 10/10 passed |
-| Smoke cost / tokens | 0.00351806 USD / 18,348 tokens |
-| Assets manifest | 55 items |
+| Why did this NPC choose that action? | `sourceEventIds`, `traceRefs`, candidate scores, Observer Dock |
+| What changed when evidence was removed? | before/after replay, score and selected-tool delta |
+| Why was this high-risk call blocked? | required evidence, policy verdict, safe fallback, audit packet |
 
-## Quick Tour
+## Reviewer path
 
-Read in this order:
-
-1. **Start with the case cards**: [docs/portfolio_case_cards.md](docs/portfolio_case_cards.md) gives three externally readable examples: NPC decision provenance, evidence-removal replay, and high-risk tool audit.
-2. **Open the evidence snippets**: [docs/portfolio_evidence_snippets.md](docs/portfolio_evidence_snippets.md) compresses the key promoted artifacts into one short Markdown proof packet.
-3. **Map the skills**: [docs/portfolio_capability_map.md](docs/portfolio_capability_map.md) connects runtime / observability / eval / audit assets to interview signals.
-4. **Read the short story**: [docs/portfolio_story.md](docs/portfolio_story.md) freezes the Agent Behavior Observatory positioning and honest boundaries.
-5. **Use appendices only when needed**: [paper/blog_main.md](paper/blog_main.md), [paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md](paper/trace_walkthroughs/figure3_trace_walkthrough_pf_branna_seed01.md), and the audit supplement provide deeper evidence.
-
-### What the case cards demonstrate
-
-- **Trace schema design**: Card A shows why `sourceEventIds`, `traceRefs`, `candidateScores`, and score-source links exist — a final action has a navigable path back to evidence, alternatives, and ranking reasons.
-- **Evidence-removal replay**: Card B shows observability through controlled before/after artifacts. The replay records when removed evidence changes score, selected tool, or verdict, and when it has no effect.
-- **High-risk audit**: Card C shows the shared abstraction with ContextGuard-style evidence-gated execution: required evidence, policy verdict, safe fallback, and counterfactual evidence removal.
-
-### Quick proof points
-
-- Process artifact: 4 scenarios x 5 seeds, aggregate `causal_trace_coverage=1.0`, `required_process_coverage=1.0`, `counterfactual_tool_selection_change_rate=0.375`.
-- Bram story: `social.chat_with` wins with full evidence (`0.956874` vs `0.902323`); relationship-edge-only removal keeps the same selected tool; interaction-memory removal flips the replay to `social.give_gift`.
-- Audit artifact: real `CloudApiProvider` smoke covers 5 high-risk scenarios x 2 evidence conditions, 10/10 cases passed, cost `0.00351806` USD.
-
-![Trace Evidence Chain — provenance from events and evidence to final NPC action selection](paper/generated/figures/trace_evidence_chain_figure3.png)
+1. Start with the case cards for the readable story.
+2. Open the evidence snippets for exact fields and promoted artifact pointers.
+3. Use the [trace evidence chain](paper/generated/figures/trace_evidence_chain_figure3.png) or the full walkthrough only for a deeper review.
 
 ## Three portfolio case cards
 

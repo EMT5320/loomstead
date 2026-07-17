@@ -1,7 +1,7 @@
 ---
 status: active
 owner_lane: portfolio-showcase
-last_verified: 2026-07-11
+last_verified: 2026-07-17
 startup_load: on-demand
 source_of_truth: true
 scope: Loomstead 三张 portfolio case card 的轻量 evidence snippets
