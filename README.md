@@ -4,26 +4,27 @@
 ![Surface: Godot town runtime](https://img.shields.io/badge/surface-Godot_town_runtime-22863a)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
 
-> **Agent Behavior Observatory — a playable multi-agent runtime with structured traces, evidence-linked decisions, counterfactual replay, and audit artifacts.**
+> **Agent 行为观测台：一个可玩的多 Agent 运行时，每个动作都能回溯到动机、记忆、关系和证据——支持结构化 trace、反事实 replay 与审计 artifact。**
+>
+> *Agent Behavior Observatory — a playable multi-agent runtime with structured traces, evidence-linked decisions, counterfactual replay, and audit artifacts.*
 
-The Godot town is the live behavior surface. An authoritative Python runtime owns
+Godot 小镇是活的行为表面；Python 权威运行时持有世界状态与 Agent 决策，
+trace、eval、replay 和 reviewer packet 把这些决策变成可查的工程回执。
+
+*The Godot town is the live behavior surface. An authoritative Python runtime owns
 world state and agent decisions; trace, eval, replay, and reviewer packets turn
-those decisions into inspectable engineering receipts.
+those decisions into inspectable engineering receipts.*
 
-[See the three case cards](docs/portfolio_case_cards.md) ·
-[Open the compact evidence packet](docs/portfolio_evidence_snippets.md) ·
-[Map capabilities to interview signals](docs/portfolio_capability_map.md) ·
-[Review the honest boundary](docs/portfolio_story.md)
+[查看三个案例卡](docs/portfolio_case_cards.md) ·
+[打开紧凑证据包](docs/portfolio_evidence_snippets.md) ·
+[能力到面试信号映射](docs/portfolio_capability_map.md) ·
+[阅读诚实边界](docs/portfolio_story.md)
 
 <p align="center">
   <img src="docs/assets/loomstead-evidence-overview.svg" alt="Loomstead architecture from Godot live surface through authoritative agent runtime to trace, replay, and audit artifacts" width="1100">
 </p>
 
-> The ranking and replay values above are derived from the committed promoted
-> artifact summarized in `docs/portfolio_evidence_snippets.md`; they support
-> explainability and failure-analysis claims only.
-
-## 10-second evidence ledger
+## 10-second evidence ledger / 10 秒证据台账
 
 | Evidence surface | Receipt |
 |---|---:|
@@ -33,6 +34,8 @@ those decisions into inspectable engineering receipts.
 | Real-provider process evidence | 100 records |
 | Audit smoke | 5 scenarios × 2 evidence conditions · 10/10 pass |
 | Runtime surface | Godot 4.x + Python Agent Server |
+
+> 上表的 ranking 与 replay 数值来自 `docs/portfolio_evidence_snippets.md` 汇总的已提交 promoted artifact，支撑可解释性与 failure-analysis claim。
 
 ## Three questions the project answers
 
