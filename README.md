@@ -35,8 +35,6 @@ those decisions into inspectable engineering receipts.*
 | Audit smoke | 5 scenarios × 2 evidence conditions · 10/10 pass |
 | Runtime surface | Godot 4.x + Python Agent Server |
 
-> 上表的 ranking 与 replay 数值来自 `docs/portfolio_evidence_snippets.md` 汇总的已提交 promoted artifact，支撑可解释性与 failure-analysis claim。
-
 ## Three questions the project answers
 
 | Reader question | Inspectable artifact |
