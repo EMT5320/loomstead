@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import json
-from datetime import date
 from pathlib import Path
 from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_PATH = ROOT / "docs" / "portfolio_evidence_snippets.md"
+
+# 对齐 2026-07-17 portfolio 验收；不能取 CI 当天日期，否则生成结果每天都会漂移。
+EVIDENCE_SNAPSHOT_VERIFIED_DATE = "2026-07-17"
 
 PROCESS_RUN_DIR = ROOT / ".run" / "eval-promoted" / "run_2026-05-29T13-57-50Z"
 CARD_A_SCENARIO_PATH = (
@@ -164,7 +166,7 @@ def build_markdown() -> str:
         "---",
         "status: active",
         "owner_lane: portfolio-showcase",
-        "last_verified: {today}".format(today=date.today().isoformat()),
+        f"last_verified: {EVIDENCE_SNAPSHOT_VERIFIED_DATE}",
         "startup_load: on-demand",
         "source_of_truth: true",
         "scope: Loomstead 三张 portfolio case card 的轻量 evidence snippets",

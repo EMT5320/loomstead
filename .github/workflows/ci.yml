@@ -32,6 +32,10 @@ jobs:
           python -m compileall -q backend scripts
           python scripts/check.py
 
+      - name: Run presentation tests
+        run: |
+          python -m pytest -q scripts/tests
+
       - name: Portfolio entry check
         run: |
           python scripts/check_portfolio_entry.py

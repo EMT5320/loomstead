@@ -15,10 +15,10 @@ trace、eval、replay 和 reviewer packet 把这些决策变成可查的工程�
 world state and agent decisions; trace, eval, replay, and reviewer packets turn
 those decisions into inspectable engineering receipts.*
 
-[查看三个案例卡](docs/portfolio_case_cards.md) ·
-[打开紧凑证据包](docs/portfolio_evidence_snippets.md) ·
-[能力到面试信号映射](docs/portfolio_capability_map.md) ·
-[阅读诚实边界](docs/portfolio_story.md)
+[打开三张案例卡](docs/portfolio_case_cards.md) ·
+[查看 Evidence Snippets](docs/portfolio_evidence_snippets.md) ·
+[运行作品集 Gate](#30-second-verification) ·
+[查看能力地图](docs/portfolio_capability_map.md)
 
 <p align="center">
   <img src="docs/assets/loomstead-evidence-overview.svg" alt="Loomstead architecture from Godot live surface through authoritative agent runtime to trace, replay, and audit artifacts" width="1100">
