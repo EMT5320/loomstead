@@ -21,8 +21,10 @@ those decisions into inspectable engineering receipts.*
 [查看能力地图](docs/portfolio_capability_map.md)
 
 <p align="center">
-  <img src="docs/assets/loomstead-evidence-overview.svg" alt="Loomstead architecture from Godot live surface through authoritative agent runtime to trace, replay, and audit artifacts" width="1100">
+  <img src="docs/assets/loomstead-runtime-showcase.png" alt="Loomstead Godot runtime showing the live town, NPCs, Showcase Mode causal cards, and trace evidence strip" width="1100">
 </p>
+
+<p align="center"><sub>Real Godot runtime · live town and NPC surface · Goal → Director Beat → Event Skill → NPC Decision → Trace Evidence</sub></p>
 
 ## 10-second evidence ledger / 10 秒证据台账
 
@@ -72,6 +74,10 @@ Show the audit supplement: full evidence allows a high-risk tool; missing policy
 ## What this project demonstrates
 
 ### 1. Agent runtime architecture
+
+<p align="center">
+  <img src="docs/assets/loomstead-evidence-overview.svg" alt="Loomstead architecture from Godot live surface through authoritative agent runtime to trace, replay, and audit artifacts" width="1100">
+</p>
 
 ```mermaid
 flowchart LR
@@ -127,7 +133,7 @@ The project includes a reproducible eval/export stack:
 - Manifest-backed exports, promoted artifacts, drift notes, and archive checks.
 - Coding-domain adapter fixtures with dependency evidence chains.
 
-Current research-grade claims remain intentionally limited. The Process Fidelity evidence supports metric / explainability-level statements only.
+Current evidence covers Process Fidelity, behavior provenance, evidence-removal replay, and bounded audit scenarios.
 
 ### 4. Failure analysis and audit harness
 
@@ -149,9 +155,9 @@ Latest useful audit artifacts:
 ## Project Status & Scope
 
 - **Status**: feature-complete engineering showcase. The runtime, eval pipeline, and audit harness are stable and reproducible — `npm.cmd run portfolio:verify` checks the evidence chain end to end.
-- **Process Fidelity**: the evidence supports metric-level and explainability-level statements. Human-validated believability is out of scope; enterprise-ready AI safety and complete causal proof are also out of scope.
-- **Audit spike**: supports feasibility and failure-analysis storytelling over a bounded scenario set.
-- **Visuals**: screenshots and GIFs are optional manual add-ons; the reusable package is the case-card + trace + audit-packet path.
+- **Evidence coverage**: Process Fidelity, behavior provenance, evidence-removal replay, and bounded audit scenarios are backed by reproducible artifacts.
+- **Next validation target**: human-perceived behavior quality and longer-horizon behavior stability.
+- **Audit scope**: the bounded scenario set supports feasibility and failure-analysis inspection.
 
 ## Local run
 

@@ -37,6 +37,11 @@ class PathCheck:
 
 REQUIRED_PATHS: tuple[RequiredPath, ...] = (
     RequiredPath("README.md", "entry", "repository first screen"),
+    RequiredPath(
+        "docs/assets/loomstead-runtime-showcase.png",
+        "entry",
+        "real Godot runtime capture",
+    ),
     RequiredPath("docs/portfolio_case_cards.md", "entry", "case-card-first portfolio path"),
     RequiredPath("docs/portfolio_evidence_snippets.md", "entry", "case-card evidence snippets"),
     RequiredPath("docs/portfolio_capability_map.md", "entry", "interview capability map"),
@@ -113,8 +118,9 @@ REQUIRED_PATHS: tuple[RequiredPath, ...] = (
 TEXT_EXPECTATIONS: dict[str, tuple[str, ...]] = {
     "README.md": (
         "docs/portfolio_case_cards.md",
-        "case-card",
-        "Human-validated believability is out of scope",
+        "docs/assets/loomstead-runtime-showcase.png",
+        "Three portfolio case cards",
+        "Current evidence covers Process Fidelity, behavior provenance, evidence-removal replay, and bounded audit scenarios.",
     ),
     "docs/portfolio_case_cards.md": (
         "Card A",
