@@ -154,22 +154,23 @@ Latest useful audit artifacts:
 
 ## Project Status & Scope
 
-- **Status**: feature-complete engineering showcase. The runtime, eval pipeline, and audit harness are stable and reproducible — `npm.cmd run portfolio:verify` checks the evidence chain end to end.
+- **Status**: feature-complete engineering showcase. The runtime, eval pipeline, and audit harness are stable and reproducible — `npm run portfolio:verify` checks the evidence chain end to end.
 - **Evidence coverage**: Process Fidelity, behavior provenance, evidence-removal replay, and bounded audit scenarios are backed by reproducible artifacts.
 - **Next validation target**: human-perceived behavior quality and longer-horizon behavior stability.
 - **Audit scope**: the bounded scenario set supports feasibility and failure-analysis inspection.
 
 ## Local run
 
-Use Windows PowerShell and `npm.cmd`.
+Runs on Windows, Linux, and macOS. Requires Node >= 18 and Python >= 3.10; the
+npm scripts resolve a suitable interpreter, or set `LOOMSTEAD_PYTHON` to pick one.
 
-```powershell
-npm.cmd run context:resume
-npm.cmd run context:check
-npm.cmd run check
-npm.cmd run client:env
-npm.cmd run start
-npm.cmd run client:run
+```bash
+npm run context:resume
+npm run context:check
+npm run check
+npm run client:env
+npm run start
+npm run client:run
 ```
 
 The default Godot scene is:
@@ -180,25 +181,25 @@ clients/godot/scenes/world_main.tscn
 
 ## Useful validation commands
 
-```powershell
-npm.cmd run check
-npm.cmd run smoke
-npm.cmd run eval:process
-npm.cmd run eval:domain
-npm.cmd run eval:robustness
-npm.cmd run eval:audit
-npm.cmd run eval:audit:llm-contract:full
-npm.cmd run eval:archive:check
-npm.cmd run portfolio:snippets
-npm.cmd run portfolio:check
-npm.cmd run portfolio:verify
+```bash
+npm run check
+npm run smoke
+npm run eval:process
+npm run eval:domain
+npm run eval:robustness
+npm run eval:audit
+npm run eval:audit:llm-contract:full
+npm run eval:archive:check
+npm run portfolio:snippets
+npm run portfolio:check
+npm run portfolio:verify
 git diff --check
 ```
 
 Real LLM calls require explicit environment authorization and valid local config:
 
-```powershell
-npm.cmd run eval:audit:llm-smoke:full
+```bash
+npm run eval:audit:llm-smoke:full
 ```
 
 ## Model configuration
@@ -207,7 +208,7 @@ Committed defaults are designed to run without secrets. Local model config and A
 
 - Template: `config/models.example.json`
 - Local ignored config: `config/models.json`, `config/models.local.json`
-- Check: `npm.cmd run model:check`
+- Check: `npm run model:check`
 
 ## Repository guide
 

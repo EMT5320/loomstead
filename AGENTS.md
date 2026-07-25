@@ -35,7 +35,7 @@
 
 ## 4. 新会话最小读取顺序
 
-1. 运行 `npm.cmd run context:resume`，确认分支 / 脏区 / 当前阶段 / manual gate。
+1. 运行 `npm run context:resume`，确认分支 / 脏区 / 当前阶段 / manual gate。
 2. 读 `docs/context_governance.md`（圣经级治理协议，不读不能动）。
 3. 读 `docs/agent_context.md`（当前入口、命令、最近下一步）。
 4. 读 `docs/phase_checkpoints.md`（当前位置与下一阶段候选）。
@@ -67,30 +67,30 @@
 
 ## 7. 常用验证命令
 
-```powershell
-npm.cmd run context:resume
-npm.cmd run context:check
-npm.cmd run context:handoff
-npm.cmd run check
-npm.cmd run smoke
-npm.cmd run schema:check
-npm.cmd run eval:process
-npm.cmd run eval:stability
-npm.cmd run eval:domain
-npm.cmd run eval:robustness
-npm.cmd run eval:audit
-npm.cmd run eval:audit:llm-contract:full
-npm.cmd run eval:audit:llm-supplement
-npm.cmd run eval:archive:check
-npm.cmd run eval:archive:drift
-npm.cmd run research:evidence:check
-npm.cmd run client:env
-npm.cmd run client:run:check
-npm.cmd run llm:smoke
+```bash
+npm run context:resume
+npm run context:check
+npm run context:handoff
+npm run check
+npm run smoke
+npm run schema:check
+npm run eval:process
+npm run eval:stability
+npm run eval:domain
+npm run eval:robustness
+npm run eval:audit
+npm run eval:audit:llm-contract:full
+npm run eval:audit:llm-supplement
+npm run eval:archive:check
+npm run eval:archive:drift
+npm run research:evidence:check
+npm run client:env
+npm run client:run:check
+npm run llm:smoke
 git diff --check
 ```
 
-按任务线选择最小必要命令。`check` / `smoke` 默认不访问真实 LLM；真实 provider / 真实 Godot 窗口 / 玩家手感属于人工验收，不属于离线门禁。调整治理入口或本文件后建议运行 `npm.cmd run context:check` 和 `git diff --check`。
+按任务线选择最小必要命令。`check` / `smoke` 默认不访问真实 LLM；真实 provider / 真实 Godot 窗口 / 玩家手感属于人工验收，不属于离线门禁。调整治理入口或本文件后建议运行 `npm run context:check` 和 `git diff --check`。
 
 ## 8. 助手适配说明
 
