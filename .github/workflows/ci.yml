@@ -9,7 +9,10 @@ on:
 jobs:
   verify:
     name: Static check and portfolio entry verification
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Check out repository
@@ -25,8 +28,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
-      # Run the Python entry points directly so the CI does not depend on
-      # the Windows-only `npm.cmd` aliases used in package.json scripts.
+      # Run the Python entry points directly to keep these checks explicit.
       - name: Compile and static check
         run: |
           python -m compileall -q backend scripts
@@ -39,3 +41,18 @@ jobs:
       - name: Portfolio entry check
         run: |
           python scripts/check_portfolio_entry.py
+
+      # The steps above call `python` directly, which setup-python always
+      # provides. That masked the npm entry points staying Windows-only, so the
+      # documented public interface is now exercised as well.
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Verify documented npm entry points
+        run: |
+          npm run schema:check
+          npm run content:check
+          npm run portfolio:check
+          npm run portfolio:verify
