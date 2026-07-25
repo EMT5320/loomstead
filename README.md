@@ -161,8 +161,17 @@ Latest useful audit artifacts:
 
 ## Local run
 
-Runs on Windows, Linux, and macOS. Requires Node >= 18 and Python >= 3.10; the
-npm scripts resolve a suitable interpreter, or set `LOOMSTEAD_PYTHON` to pick one.
+Runs on Windows, Linux, and macOS. Requires Node >= 18 and Python >= 3.10.
+
+Install the Python dependencies once:
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+```
+
+The npm scripts pick up `.venv` automatically. To use a different interpreter,
+set `LOOMSTEAD_PYTHON` to its path.
 
 ```bash
 npm run context:resume

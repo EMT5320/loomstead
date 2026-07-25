@@ -13,8 +13,34 @@
 //   node scripts/py.mjs --env KEY=VALUE [--env KEY=VALUE ...] <python arguments>
 
 import { spawn, spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const MINIMUM_VERSION = [3, 10];
+
+const REPOSITORY_ROOT = join(fileURLToPath(new URL(".", import.meta.url)), "..");
+
+// The documented setup installs requirements into a repository-local virtual
+// environment, but npm scripts do not inherit an activated environment. Without
+// this lookup the launcher picks a bare interpreter from PATH and every
+// dependency import fails.
+function virtualEnvironmentInterpreters() {
+  const roots = [process.env.VIRTUAL_ENV, join(REPOSITORY_ROOT, ".venv"), join(REPOSITORY_ROOT, "venv")];
+  const found = [];
+  for (const root of roots) {
+    if (!root) {
+      continue;
+    }
+    for (const relative of ["bin/python", "Scripts/python.exe"]) {
+      const candidate = join(root, relative);
+      if (existsSync(candidate)) {
+        found.push(candidate);
+      }
+    }
+  }
+  return found;
+}
 
 const args = process.argv.slice(2);
 const childEnv = { ...process.env };
@@ -36,11 +62,13 @@ while (args[0] === "--env") {
   );
 }
 
-// Explicit override first, then newest known minor versions, then the generic
-// names. Ordering matters: `python3` is checked late because on macOS it is
-// frequently the system 3.9.
+// Explicit override first, then the project environment where dependencies
+// actually live, then newest known minor versions, then the generic names.
+// Ordering matters: `python3` is checked late because on macOS it is frequently
+// the system 3.9.
 const CANDIDATES = [
   process.env.LOOMSTEAD_PYTHON,
+  ...virtualEnvironmentInterpreters(),
   "python3.13",
   "python3.12",
   "python3.11",
