@@ -20,6 +20,14 @@ those decisions into inspectable engineering receipts.*
 [运行作品集 Gate](#30-second-verification) ·
 [查看能力地图](docs/portfolio_capability_map.md)
 
+> **这个项目最有价值的结论是一个否定结论。** 本仓库的成功指标一半在测自己的埋点，
+> 因此「证据移除改变行为」无法被验证，预注册盲评于 2026-06-02 关闭、可信度措辞撤回。
+> 推导、撤回记录，以及为此造的下一台仪器 [Tsukumo](https://github.com/EMT5320/tsukumo)：
+> [研究 → 产品接力](docs/research_to_product_relay.md)。
+>
+> *The most valuable result here is a negative one, and the follow-up instrument it produced:
+> [research → product relay](docs/research_to_product_relay.md).*
+
 <p align="center">
   <img src="docs/assets/loomstead-runtime-showcase.png" alt="Loomstead Godot runtime showing the live town, NPCs, Showcase Mode causal cards, and trace evidence strip" width="1100">
 </p>
@@ -163,15 +171,17 @@ Latest useful audit artifacts:
 
 Runs on Windows, Linux, and macOS. Requires Node >= 18 and Python >= 3.10.
 
-Install the Python dependencies once:
+Install the Python dependencies once. Name the interpreter explicitly: on macOS
+a bare `python3` is often 3.9, which the backend's 3.10 syntax rejects.
 
 ```bash
-python3 -m venv .venv
+python3.11 -m venv .venv          # or any python3.10+
 .venv/bin/python -m pip install -r requirements.txt
 ```
 
-The npm scripts pick up `.venv` automatically. To use a different interpreter,
-set `LOOMSTEAD_PYTHON` to its path.
+The npm scripts pick up `.venv` automatically, and refuse any interpreter below
+3.10 rather than failing later inside the call stack. To point them elsewhere,
+set `LOOMSTEAD_PYTHON` to a suitable interpreter.
 
 ```bash
 npm run context:resume

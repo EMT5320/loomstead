@@ -123,6 +123,13 @@ npm.cmd run portfolio:verify
 - 不主张 Full 条件生成了人类盲评验证过的更可信行为。
 - `promotionStatus=needs_manual_review` 与 `promoted with caveat` 同时保留：前者是机器层 caveat，后者是主人确认的展示口径。
 
+### 这张卡为什么没有更强的结论
+
+行为层没有分化，原因可以定位到一行指标定义：`goal_success_rate` 一半在测行为、一半在测埋点是否完好。
+证据链被打断时指标会动，动作不会动——因为在这个 runtime 里，证据只对指标承重，不对下一次动作承重。
+
+完整推导、撤回记录，以及为此造的下一台仪器：[`research_to_product_relay.md`](research_to_product_relay.md)。
+
 ## Card C — Why was this high-risk tool call blocked?
 
 ### 读者问题
