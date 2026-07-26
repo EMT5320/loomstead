@@ -1,10 +1,20 @@
 ﻿# Loomstead 后端依赖
-# 第一版 Python 后端当前仅使用标准库，便于主人无需安装依赖即可运行。
+# Agent Server 本身仅使用标准库，无需安装依赖即可运行。
 # 后续接入 FastAPI / SQLite / 向量记忆时再逐步加入依赖。
-# ---- 开发 / 测试依赖（dev-only）----
-# 仅供展示层（presentation-showcase）纯函数 PBT/example 测试使用：
-#   - scripts/tests/ 下的 Property-Based Testing（Hypothesis）与 example/unit 测试（pytest）。
-# 运行时后端仍保持只依赖标准库，主人正常运行后端无需安装本区块依赖。
-# 安装（仅在需要跑测试时）：python -m pip install hypothesis pytest
-hypothesis>=6.100
+
+# ---- 评测依赖（cross-domain coding eval 必需）----
+# pytest 不只是测试框架，它是 coding domain adapter 的被测运行时：
+#   backend/app/domain/coding/adapter.py 会 spawn [sys.executable, "-m", "pytest", ...]
+#   让 repo fixture 走真实 test runner 而不是模拟结果（见 _repo_fixture_pytest_script）。
+# 缺少 pytest 时，`npm run eval:domain` 的 cross_domain_adapter suite 从 11/11 降到 7/11，
+# 且不输出任何诊断信息，`npm run check` 会在该步静默失败。
 pytest>=8.0
+
+# ---- 开发 / 测试依赖（dev-only）----
+# 仅供展示层（presentation-showcase）纯函数 PBT 测试使用：
+#   - scripts/tests/ 下的 Property-Based Testing（Hypothesis）。
+hypothesis>=6.100
+
+# 安装（推荐建仓内 venv，npm scripts 会自动识别 .venv）：
+#   python3.11 -m venv .venv          # 或任意 python3.10+
+#   .venv/bin/python -m pip install -r requirements.txt
